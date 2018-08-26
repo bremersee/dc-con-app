@@ -1,0 +1,31 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+
+    <id>debian9</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    <baseDirectory>/</baseDirectory>
+    <files>
+        <file>
+            <source>src/assembly/debian9/smb-con.conf</source>
+            <outputDirectory>var/lib/smb-con</outputDirectory>
+            <filtered>false</filtered>
+            <fileMode>600</fileMode>
+        </file>
+        <file>
+            <source>src/assembly/debian9/smb-con.service</source>
+            <outputDirectory>lib/systemd/system</outputDirectory>
+            <filtered>false</filtered>
+            <fileMode>644</fileMode>
+        </file>
+        <file>
+            <source>target/smb-con.jar</source>
+            <outputDirectory>var/lib/smb-con</outputDirectory>
+            <destName>smb-con.jar</destName>
+            <filtered>false</filtered>
+            <fileMode>755</fileMode>
+        </file>
+    </files>
+</assembly>

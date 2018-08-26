@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -e /etc/systemd/system/smb-con.service ]; then
+    /bin/systemctl stop smb-con.service
+    /bin/systemctl disable smb-con.service
+fi
+
+if [ -e /var/lib/smb-con/smb-con.conf ]; then
+    cp /var/lib/smb-con/smb-con.conf /var/lib/smb-con/smb-con.conf.user
+fi
+
+exit 0

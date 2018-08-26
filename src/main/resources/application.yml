@@ -1,0 +1,110 @@
+bremersee:
+  actuator:
+    users:
+      - name: actuator
+        password: secret4ACTUATOR
+        authorities:
+          - ROLE_ACTUATOR
+  ldaptive:
+    ldap-url: ${LDAP_URL:ldaps://example.org:636}
+    use-ssl: ${LDAP_SSL:true}
+    use-start-tls: ${LDAP_START_TLS:false}
+    bind-dn: ${LDAP_BIND_DN:areader@example.org}
+    bind-credential: ${LDAP_BIND_PASSWORD:changeit}
+    pooled: true
+    min-pool-size: 3
+    max-pool-size: 10
+    validate-on-check-in: false
+    validate-on-check-out: false
+    validate-periodically: true
+    validate-period: 300
+    idle-time: 600
+    block-wait-time: 10000
+    search-validator:
+      search-request:
+        base-dn: ${LDAP_BASE_DN:dc=example,dc=org}
+        search-filter:
+          filter: ${LDAP_VALIDATION_FILTER:(cn=Administrator)}
+        size-limit: 1
+        search-scope: ONELEVEL
+        return-attributes:
+          - cn
+  samba-domain:
+    group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
+    user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
+    name-server-host: ${NAME_SERVER_HOST:ns.example.org}
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: true
+    prefer-same-zone-eureka: true
+    service-url:
+      defaultZone: http://192.168.1.16:8761/eureka/
+  instance:
+    health-check-url-path: /actuator/health
+    home-page-url-path: /actuator/info
+
+logging:
+  level:
+    ROOT: info
+    org.bremersee: debug
+    org.springframework: info
+#    org.springframework.security.oauth2: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env
+
+server:
+  port: ${SERVER_PORT:8090}
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
+    port-header: x-forwarded-port
+
+security:
+  oauth2:
+    client:
+      client-id: internal-client
+      client-secret: secret4INTERNAL
+    resource:
+      jwt:
+        key-uri: ${OAUTH2_PUBLIC_KEY_URI:http://localhost:8080/oauth/token_key}
+      token-info-uri: ${OAUTH2_TOKEN_INFO_URI:http://localhost:8080/oauth/check_token}
+      prefer-token-info: true
+
+spring:
+  jackson:
+    date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
+    default-property-inclusion: non_null
+    property-naming-strategy: LOWER_CAMEL_CASE
+    locale: de_DE
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    time-zone: Europe/Berlin
+  sleuth:
+    sampler:
+      probability: 1.0
+  zipkin:
+    enabled: false
+    base-url: http://localhost:9411/
+
+---
+
+spring:
+  profiles: debian9
+
+logging:
+  path: /var/log/smb-con
+  file:
+    max-history: 25
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /var/log/smb-con
+

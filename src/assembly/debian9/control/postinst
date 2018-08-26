@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+SUDO_FILE=/etc/sudoers
+SUDO_ENTRY="smb-con ALL = NOPASSWD: /usr/bin/samba-tool"
+
+/usr/bin/getent passwd smb-con
+if [ ! $? -eq 0 ]; then
+  /usr/sbin/adduser --system --home /var/lib/smb-con --shell /bin/false --no-create-home --group --disabled-login smb-con
+fi
+
+/bin/mkdir -p /var/lib/smb-con
+/bin/chown -R smb-con:smb-con /var/lib/smb-con
+/bin/chmod -R u+rwx /var/lib/smb-con
+
+/bin/mkdir -p /var/log/smb-con
+/bin/chown -R smb-con:smb-con /var/log/smb-con
+/bin/chmod u+rwx /var/log/smb-con
+
+if [ ! -e /etc/systemd/system/smb-con.service ]; then
+  ln -s /lib/systemd/system/smb-con.service /etc/systemd/system/smb-con.service
+fi
+
+grep -q "$SUDO_ENTRY" "$SUDO_FILE"
+if [ $? -eq 1 ]; then
+  echo -e "$SUDO_ENTRY" >> "$SUDO_FILE"
+fi
+
+/bin/systemctl enable smb-con.service
+if [ -e /var/lib/smb-con/smb-con.conf.user ]; then
+    cp /var/lib/smb-con/smb-con.conf /var/lib/smb-con/smb-con.conf.package
+    cp /var/lib/smb-con/smb-con.conf.user /var/lib/smb-con/smb-con.conf
+    rm -f /var/lib/smb-con/smb-con.conf.user
+    /bin/systemctl start smb-con.service
+fi
+
+exit 0

@@ -1,0 +1,11 @@
+[Unit]
+Description=Samba Connector
+After=syslog.target
+
+[Service]
+User=smb-con
+ExecStart=/var/lib/smb-con/smb-con.jar
+SuccessExitStatus=1 4 3
+
+[Install]
+WantedBy=multi-user.target

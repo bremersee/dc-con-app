@@ -1,0 +1,6 @@
+#!/bin/bash
+
+/bin/systemctl stop smb-con.service
+/bin/systemctl disable smb-con.service
+
+exit 0
