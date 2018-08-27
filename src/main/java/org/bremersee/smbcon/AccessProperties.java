@@ -54,6 +54,7 @@ public class AccessProperties {
       + "or hasIpAddress('::1') "
       + "or " + IS_AUTHENTICATED;
 
+  @SuppressWarnings("WeakerAccess")
   public String buildAccess() {
     if (authorities.isEmpty() && ipAddresses.isEmpty()) {
       log.info("Actuator access = {}", defaultAccess);
@@ -77,6 +78,7 @@ public class AccessProperties {
     return access;
   }
 
+  @SuppressWarnings("WeakerAccess")
   @Getter
   @Setter
   @ToString(exclude = "password")
