@@ -48,7 +48,7 @@ public class AccessProperties {
 
   private List<String> ipAddresses = new ArrayList<>();
 
-  private boolean withIsAuthenticated = true;
+  private boolean withIsAuthenticated = false;
 
   private String defaultAccess = "hasIpAddress('127.0.0.1') "
       + "or hasIpAddress('::1') "
