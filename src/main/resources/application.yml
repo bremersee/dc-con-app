@@ -1,5 +1,11 @@
 bremersee:
-  actuator:
+  access:
+    authorities:
+      - ROLE_ACTUATOR
+    ip-addresses:
+      - "127.0.0.1"
+      - "::1"
+    with-is-authenticated: true
     users:
       - name: actuator
         password: secret4ACTUATOR

@@ -38,14 +38,14 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
  */
 @Order(101)
 @Configuration
-@EnableConfigurationProperties(ActuatorProperties.class)
+@EnableConfigurationProperties(AccessProperties.class)
 @Slf4j
 public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
 
-  private final ActuatorProperties properties;
+  private final AccessProperties properties;
 
   @Autowired
-  public ActuatorSecurity(ActuatorProperties properties) {
+  public ActuatorSecurity(AccessProperties properties) {
     this.properties = properties;
   }
 
@@ -53,7 +53,6 @@ public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     http
         .requestMatcher(EndpointRequest.toAnyEndpoint())
-        .userDetailsService(userDetailsService())
         .csrf().disable()
         .httpBasic().realmName("actuator")
         .and()
@@ -62,7 +61,7 @@ public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
         .antMatchers(HttpMethod.GET, "/actuator/info").permitAll()
         .anyRequest()
-        .hasAuthority("ROLE_ACTUATOR");
+        .access(properties.buildAccess());
   }
 
   @Bean
@@ -76,7 +75,7 @@ public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
             .username(simpleUser.getName())
             .password(simpleUser.getPassword())
             .authorities(
-                simpleUser.getAuthorities().toArray(new String[simpleUser.getAuthorities().size()]))
+                simpleUser.getAuthorities().toArray(new String[0]))
             .passwordEncoder(encoder::encode)
             .build())
         .toArray(UserDetails[]::new);
