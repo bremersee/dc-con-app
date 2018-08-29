@@ -39,7 +39,7 @@ public class AlreadyExistsException extends RuntimeException {
   }
 
   private AlreadyExistsException(String name, boolean isUser) {
-    super((isUser ? "User " : "Group ") + name + " already exists.");
+    super((isUser ? "User " : "Group [") + name + "] already exists.");
   }
 
   /**
@@ -48,7 +48,7 @@ public class AlreadyExistsException extends RuntimeException {
    * @param sambaGroup the samba group
    */
   public AlreadyExistsException(SambaGroup sambaGroup) {
-    this(sambaGroup.getName(), false);
+    this(sambaGroup == null ? "UNSPECIFIED" : sambaGroup.getName(), false);
   }
 
 }

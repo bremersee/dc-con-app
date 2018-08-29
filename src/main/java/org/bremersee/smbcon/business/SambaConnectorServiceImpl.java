@@ -104,7 +104,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
       conn = getConnection();
       final SearchOperation so = new SearchOperation(conn);
       final SearchResult searchResult = so.execute(sr).getResult();
-      List<SambaGroupItem> groups = searchResult.getEntries()
+      final List<SambaGroupItem> groups = searchResult.getEntries()
           .stream()
           .map(mapper::mapLdapEntryToSambaGroupItem)
           .collect(Collectors.toList());

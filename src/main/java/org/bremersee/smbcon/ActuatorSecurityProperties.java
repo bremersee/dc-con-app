@@ -38,13 +38,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @EqualsAndHashCode
 @NoArgsConstructor
 @Slf4j
-public class AccessProperties {
+public class ActuatorSecurityProperties {
+
+  private static final String ROLE_ACTUATOR = "ROLE_ACTUATOR";
 
   private static final String IS_AUTHENTICATED = "isAuthenticated()";
 
   private List<SimpleUser> users = new ArrayList<>();
-
-  private List<String> authorities = new ArrayList<>();
 
   private List<String> ipAddresses = new ArrayList<>();
 
@@ -56,35 +56,21 @@ public class AccessProperties {
 
   @SuppressWarnings("WeakerAccess")
   public String buildAccess() {
-    if (authorities.isEmpty() && ipAddresses.isEmpty()) {
-      log.info("Actuator access = {}", defaultAccess);
-      return defaultAccess;
-    }
-    final String or = " or ";
     final StringBuilder sb = new StringBuilder();
-    authorities.forEach(
-        authority -> sb.append("hasAuthority('").append(authority).append("')").append(or));
+    sb.append("hasAuthority('").append(ROLE_ACTUATOR).append("')");
     ipAddresses.forEach(
-        ipAddress -> sb.append("hasIpAddress('").append(ipAddress).append("')").append(or));
-    sb.append("isAuthenticated()");
-    final String access;
-    if (withIsAuthenticated ) {
-      sb.append("isAuthenticated()");
-      access = sb.toString();
-    } else {
-      access = sb.substring(0, sb.length() - or.length());
-    }
+        ipAddress -> sb.append(" or ").append("hasIpAddress('").append(ipAddress).append("')"));
+    final String access = sb.toString();
     log.info("Actuator access = {}", access);
     return access;
   }
 
-  @SuppressWarnings("WeakerAccess")
   @Getter
   @Setter
   @ToString(exclude = "password")
   @EqualsAndHashCode(exclude = "password")
   @NoArgsConstructor
-  public static class SimpleUser implements Serializable, Principal {
+  static class SimpleUser implements Serializable, Principal {
 
     private static final long serialVersionUID = -1393400622632455935L;
 
@@ -92,7 +78,9 @@ public class AccessProperties {
 
     private String password;
 
-    private List<String> authorities = new ArrayList<>();
+    String[] buildAuthorities() {
+      return new String[]{ROLE_ACTUATOR};
+    }
 
   }
 
