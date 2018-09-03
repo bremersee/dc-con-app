@@ -73,7 +73,8 @@ security:
       client-secret: secret4INTERNAL
     resource:
       jwt:
-#        key-uri: ${OAUTH2_PUBLIC_KEY_URI:http://localhost:8080/oauth/token_key}
+        # TODO configs will be merged: so no default key here! 'key-value' has higher priority!
+        #key-uri: ${OAUTH2_PUBLIC_KEY_URI:http://localhost:8080/oauth/token_key}
         key-value: |
           -----BEGIN PUBLIC KEY-----
           MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAthqh5Zo/B0D3ug7WILth
