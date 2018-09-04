@@ -95,10 +95,6 @@ public class SambaToolImpl implements SambaTool {
   private static final String DNS_CMD_UPDATE = "update";
 
 
-  private static final String DNS_SIMPLE_BIND_DN = "--simple-bind-dn=\"{}\"";
-
-  private static final String DNS_SIMPLE_BIND_PASSWORD = "--password=\"{}\""; // NOSONAR
-
   private static final Object KINIT_LOG = new Object();
 
   private static final String KINIT_PASSWORD_FILE = "--password-file={}";
@@ -119,20 +115,20 @@ public class SambaToolImpl implements SambaTool {
    */
   @PostConstruct
   public void init() {
-    if (properties.isUsingKinit()) {
-      Assert.hasText(properties.getKinitPasswordFile(),
-          "Kinit password file must be specified.");
-      final File file = new File(properties.getKinitPasswordFile());
-      if (!file.exists()) {
-        try (final FileOutputStream out = new FileOutputStream(file)) {
-          out.write(adProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
-          out.flush();
-        } catch (IOException e) {
-          log.error("Creating kinit password file failed.");
-        }
+    Assert.hasText(properties.getKinitAdministratorName(),
+        "Kinit administrator name must bne present.");
+    Assert.hasText(properties.getKinitPasswordFile(),
+        "Kinit password file must be specified.");
+    final File file = new File(properties.getKinitPasswordFile());
+    if (!file.exists()) {
+      try (final FileOutputStream out = new FileOutputStream(file)) {
+        out.write(adProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
+        out.flush();
+      } catch (IOException e) {
+        log.error("Creating kinit password file failed.");
       }
-      Assert.isTrue(file.exists(), "Kinit password file must exist.");
     }
+    Assert.isTrue(file.exists(), "Kinit password file must exist.");
 
     log.info("Making some tests ...");
     final List<DnsZone> zones = getDnsZones();
@@ -165,14 +161,12 @@ public class SambaToolImpl implements SambaTool {
   }
 
   private void kinit() {
-    if (properties.isUsingKinit()) {
-      synchronized (KINIT_LOG) {
-        List<String> commands = new ArrayList<>();
-        commands.add(properties.getKinitBinary());
-        commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
-        commands.add(properties.getKinitAdministratorName());
-        CommandExecutor.exec(commands, properties.getSambaToolExecDir());
-      }
+    synchronized (KINIT_LOG) {
+      List<String> commands = new ArrayList<>();
+      commands.add(properties.getKinitBinary());
+      commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
+      commands.add(properties.getKinitAdministratorName());
+      CommandExecutor.exec(commands, properties.getSambaToolExecDir());
     }
   }
 
@@ -183,13 +177,8 @@ public class SambaToolImpl implements SambaTool {
   }
 
   private void auth(List<String> commands) {
-    if (properties.isUsingKinit()) {
-      commands.add(USE_KERBEROS);
-      commands.add(YES);
-    } else {
-      commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
-      commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
-    }
+    commands.add(USE_KERBEROS);
+    commands.add(YES);
   }
 
   @Override
