@@ -83,7 +83,7 @@ public class SambaDomainProperties implements Serializable {
 
   private String sambaToolBinary = "/usr/bin/samba-tool";
 
-  private String sambaToolExecDir = "/root";
+  private String sambaToolExecDir = "/tmp";
 
   private String loginShell = "/bin/bash";
 

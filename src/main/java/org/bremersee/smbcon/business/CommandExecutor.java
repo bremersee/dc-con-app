@@ -19,13 +19,13 @@ package org.bremersee.smbcon.business;
 import java.io.File;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.common.exhandling.ServiceException;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
 
 /**
  * The interface Command executor.
@@ -99,4 +99,19 @@ public abstract class CommandExecutor {
           e);
     }
   }
+
+  /*
+  public static void main(String[] args) {
+    CommandExecutorResponse r = exec(Arrays.asList(new String[] {
+        "sudo",
+        "echo",
+        "-n",
+        "Hallo",
+        "&",
+        "echo",
+        "Christian"
+    }),
+        "/Users/cbr");
+  }
+  */
 }

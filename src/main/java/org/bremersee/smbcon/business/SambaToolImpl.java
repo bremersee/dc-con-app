@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,6 @@ import org.springframework.util.StringUtils;
 @Component
 @Slf4j
 public class SambaToolImpl implements SambaTool {
-
-  //samba-tool nameserver query dc.eixe.bremersee.org eixe.bremersee.org @ ALL --simple-bind-dn="cn=administrator,cn=users,dc=eixe,dc=bremersee,dc=org" --password="{}"
 
   private static final String SUB_CMD_USER_MANAGEMENT = "user";
 
@@ -98,6 +97,8 @@ public class SambaToolImpl implements SambaTool {
 
   private static final String DNS_SIMPLE_BIND_PASSWORD = "--password=\"{}\""; // NOSONAR
 
+  private static final Object KINIT_LOG = new Object();
+
   private static final String KINIT_PASSWORD_FILE = "--password-file={}";
 
   private static final String USE_KERBEROS = "-k";
@@ -118,7 +119,7 @@ public class SambaToolImpl implements SambaTool {
           "Kinit password file must be specified.");
       final File file = new File(properties.getKinitPasswordFile());
       if (!file.exists()) {
-        try (FileOutputStream out = new FileOutputStream(file)) {
+        try (final FileOutputStream out = new FileOutputStream(file)) {
           out.write(adProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
           out.flush();
         } catch (IOException e) {
@@ -127,6 +128,18 @@ public class SambaToolImpl implements SambaTool {
       }
       Assert.isTrue(file.exists(), "Kinit password file must exist.");
     }
+
+    log.info("Making some tests ...");
+    final List<DnsZone> zones = getDnsZones();
+    log.info("Zones: {}", zones.stream().map(DnsZone::getPszZoneName).collect(Collectors.toList()));
+    if (!zones.isEmpty()) {
+      final List<DnsEntry> entries = getDnsRecords(zones.get(0).getPszZoneName());
+      if (!entries.isEmpty()) {
+        log.info("Entries: {}",
+            entries.stream().map(DnsEntry::getName).collect(Collectors.toList()));
+      }
+    }
+    log.info("Tests done.");
   }
 
   @Autowired
@@ -139,12 +152,14 @@ public class SambaToolImpl implements SambaTool {
     this.responseParser = responseParser;
   }
 
-  private void kinit(List<String> commands) {
+  private void kinit() {
     if (properties.isUsingKinit()) {
-      commands.add(properties.getKinitBinary());
-      commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
-      commands.add(properties.getKinitDevNull());
-      commands.add("&");
+      synchronized (KINIT_LOG) {
+        List<String> commands = new ArrayList<>();
+        commands.add(properties.getKinitBinary());
+        commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
+        CommandExecutor.exec(commands, properties.getSambaToolExecDir());
+      }
     }
   }
 
@@ -167,8 +182,8 @@ public class SambaToolImpl implements SambaTool {
   @Override
   public List<DnsZone> getDnsZones() {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
@@ -195,8 +210,8 @@ public class SambaToolImpl implements SambaTool {
       @NotNull final String dnsCommand,
       @NotNull final String zoneName) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
@@ -219,8 +234,8 @@ public class SambaToolImpl implements SambaTool {
   @Override
   public List<DnsEntry> getDnsRecords(@NotNull final String zoneName) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
@@ -275,8 +290,8 @@ public class SambaToolImpl implements SambaTool {
       @NotNull final String data,
       final String newData) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
@@ -311,8 +326,8 @@ public class SambaToolImpl implements SambaTool {
       final String mobile) {
 
     final String unixHomeDir = properties.getUnixHomeDirTemplate().replace("{}", userName);
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
@@ -345,8 +360,8 @@ public class SambaToolImpl implements SambaTool {
   @Override
   public void deleteUser(@NotNull final String userName) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
@@ -368,8 +383,8 @@ public class SambaToolImpl implements SambaTool {
       @NotNull final String userName,
       @NotNull final String newPassword) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
@@ -392,8 +407,8 @@ public class SambaToolImpl implements SambaTool {
   @Override
   public void addGroup(String groupName) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_GROUP_MANAGEMENT);
@@ -415,8 +430,8 @@ public class SambaToolImpl implements SambaTool {
   @Override
   public void deleteGroup(String groupName) {
 
+    kinit();
     final List<String> commands = new ArrayList<>();
-    kinit(commands);
     sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_GROUP_MANAGEMENT);

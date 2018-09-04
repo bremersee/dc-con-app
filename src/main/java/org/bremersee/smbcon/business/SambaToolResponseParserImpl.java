@@ -201,23 +201,29 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
   private List<DnsEntry> parseDnsRecords( // NOSONAR
       @NotNull final BufferedReader reader) throws IOException {
 
+    log.debug("Parsing dns records ...");
     final List<DnsEntry> entryList = new ArrayList<>();
     DnsEntry dnsEntry = null;
     String line;
     while ((line = reader.readLine()) != null) {
       line = line.trim();
+      log.debug("Line: {}", line);
       final int nameSeparator = line.indexOf(',', DNS_ENTRY_NAME.length());
       final int recordSeparator = line.indexOf(':');
       final int infoStart = line.lastIndexOf('(');
       final int infoEnd = line.lastIndexOf(')');
+      log.debug("Indexes: nameSeparator={} recordSeparator={} infoStart={} infoEnd={}",
+          nameSeparator, recordSeparator, infoStart, infoEnd);
       if (line.startsWith(DNS_ENTRY_NAME) && nameSeparator > 0) {
+        log.debug("Line with entry name.");
         line = line.substring(DNS_ENTRY_NAME.length(), nameSeparator);
         dnsEntry = new DnsEntry().name(line);
         entryList.add(dnsEntry);
       } else if (dnsEntry != null && recordSeparator > 0 && recordSeparator < infoStart
           && infoStart < infoEnd) {
+        log.debug("Line with record.");
         final String recordType = line.substring(0, recordSeparator).trim();
-        final String recordValue = line.substring(nameSeparator + 1, infoStart).trim();
+        final String recordValue = line.substring(recordSeparator + 1, infoStart).trim();
         if (StringUtils.hasText(recordType) && StringUtils.hasText(recordValue)) {
           final DnsRecord dnsRecord = new DnsRecord()
               .recordType(recordType)
@@ -241,6 +247,8 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
 
           }
         }
+      } else {
+        log.debug("No dns record relevant line.");
       }
     }
     return entryList;
