@@ -116,7 +116,7 @@ public class SambaToolImpl implements SambaTool {
   @PostConstruct
   public void init() {
     Assert.hasText(properties.getKinitAdministratorName(),
-        "Kinit administrator name must bne present.");
+        "Kinit administrator name must be present.");
     Assert.hasText(properties.getKinitPasswordFile(),
         "Kinit password file must be specified.");
     final File file = new File(properties.getKinitPasswordFile());
