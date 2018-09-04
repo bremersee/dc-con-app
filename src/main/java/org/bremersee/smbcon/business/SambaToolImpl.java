@@ -158,6 +158,7 @@ public class SambaToolImpl implements SambaTool {
         List<String> commands = new ArrayList<>();
         commands.add(properties.getKinitBinary());
         commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
+        commands.add(properties.getKinitAdministratorName());
         CommandExecutor.exec(commands, properties.getSambaToolExecDir());
       }
     }

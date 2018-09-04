@@ -75,6 +75,8 @@ public class SambaDomainProperties implements Serializable {
 
   private boolean usingKinit = true;
 
+  private String kinitAdministratorName = "Administrator";
+
   private String kinitPasswordFile = "/var/lib/smb-con/smb-pass.txt";
 
   private String sudoBinary = "/usr/bin/sudo";
