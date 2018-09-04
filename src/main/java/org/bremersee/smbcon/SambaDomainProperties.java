@@ -28,6 +28,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
+ * The samba domain properties.
+ *
  * @author Christian Bremer
  */
 @ConfigurationProperties(prefix = "bremersee.samba-domain")
@@ -95,6 +97,11 @@ public class SambaDomainProperties implements Serializable {
   private String nameServerHost = "ns.example.org";
 
 
+  /**
+   * Build info info.
+   *
+   * @return the info
+   */
   public Info buildInfo() {
     return new Info()
         .nameServerHost(nameServerHost);

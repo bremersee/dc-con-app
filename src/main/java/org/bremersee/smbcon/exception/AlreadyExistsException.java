@@ -21,7 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * The Already exists exception is throws when an entity should be created bit is already exists.
+ * The already exists exception is throws when an entity should be created but it already exists.
  *
  * @author Christian Bremer
  */
@@ -31,7 +31,7 @@ public class AlreadyExistsException extends RuntimeException {
   private static final long serialVersionUID = 151901075326068266L;
 
   /**
-   * Instantiates a new Already exists exception.
+   * Instantiates a new already exists exception.
    */
   @SuppressWarnings("unused")
   public AlreadyExistsException() {
@@ -43,7 +43,7 @@ public class AlreadyExistsException extends RuntimeException {
   }
 
   /**
-   * Instantiates a new Already exists exception for the given Samba group.
+   * Instantiates a new already exists exception for the given samba group.
    *
    * @param sambaGroup the samba group
    */

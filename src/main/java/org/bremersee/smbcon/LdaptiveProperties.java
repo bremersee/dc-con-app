@@ -26,6 +26,8 @@ import org.ldaptive.pool.SearchValidator;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
+ * The type ldaptive properties.
+ *
  * @author Christian Bremer
  */
 @ConfigurationProperties(prefix = "bremersee.ldaptive")
@@ -61,8 +63,6 @@ public class LdaptiveProperties {
    */
   private boolean useStartTls;
 
-  // X509CredentialConfig, but there may be more to create a
-  // org.ldaptive.ssl.CredentialConfig
   /**
    * Name of the trust certificates to use for the SSL connection.
    */
@@ -78,7 +78,6 @@ public class LdaptiveProperties {
    */
   private String authenticationKey;
 
-  // BindConnectionInitializer, sasl is not supported at the moment
   /**
    * DN to bind as before performing operations.
    */

@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * The Not found exception is throws when an entity could not be found.
+ * The not found exception is throws when an entity could not be found.
  *
  * @author Christian Bremer
  */
@@ -30,7 +30,7 @@ public class NotFoundException extends RuntimeException {
   private static final long serialVersionUID = 2235473063263765047L;
 
   /**
-   * Instantiates a new Not found exception.
+   * Instantiates a new not found exception.
    */
   public NotFoundException() {
     super("Not found.");

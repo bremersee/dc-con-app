@@ -65,6 +65,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
+ * The sSamba connector service implementation.
+ *
  * @author Christian Bremer
  */
 @Component
@@ -79,6 +81,14 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
 
   private final SambaTool sambaTool;
 
+  /**
+   * Instantiates a new Samba connector service.
+   *
+   * @param properties        the properties
+   * @param mapper            the mapper
+   * @param connectionFactory the connection factory
+   * @param sambaTool         the samba tool
+   */
   @Autowired
   public SambaConnectorServiceImpl(
       final SambaDomainProperties properties,

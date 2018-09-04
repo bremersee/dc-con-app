@@ -35,6 +35,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
+ * The samba tool response parser implementation.
+ *
  * @author Christian Bremer
  */
 @Component

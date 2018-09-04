@@ -41,6 +41,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 /**
+ * The ldaptive configuration.
+ *
  * @author Christian Bremer
  */
 @Configuration
@@ -50,11 +52,21 @@ public class LdaptiveConfiguration {
 
   private final LdaptiveProperties properties;
 
+  /**
+   * Instantiates a new ldaptive configuration.
+   *
+   * @param ldaptiveProperties the ldaptive properties
+   */
   @Autowired
   public LdaptiveConfiguration(LdaptiveProperties ldaptiveProperties) {
     this.properties = ldaptiveProperties;
   }
 
+  /**
+   * Connection factory connection factory.
+   *
+   * @return the connection factory
+   */
   @Bean
   public ConnectionFactory connectionFactory() {
 

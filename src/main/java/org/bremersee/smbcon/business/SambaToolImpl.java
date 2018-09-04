@@ -37,6 +37,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
+ * The samba tool implementation.
+ *
  * @author Christian Bremer
  */
 @Component
@@ -112,6 +114,9 @@ public class SambaToolImpl implements SambaTool {
 
   private final SambaToolResponseParser responseParser;
 
+  /**
+   * Init.
+   */
   @PostConstruct
   public void init() {
     if (properties.isUsingKinit()) {
@@ -142,6 +147,13 @@ public class SambaToolImpl implements SambaTool {
     log.info("Tests done.");
   }
 
+  /**
+   * Instantiates a new Samba tool.
+   *
+   * @param properties     the properties
+   * @param adProperties   the ad properties
+   * @param responseParser the response parser
+   */
   @Autowired
   public SambaToolImpl(
       final SambaDomainProperties properties,

@@ -34,6 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
+ * The default implementation of the ldap entry mapper.
+ *
  * @author Christian Bremer
  */
 @Component
@@ -46,6 +48,11 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
 
   private final SambaDomainProperties properties;
 
+  /**
+   * Instantiates a new ldap entry mapper.
+   *
+   * @param properties the properties
+   */
   @Autowired
   public LdapEntryMapperImpl(final SambaDomainProperties properties) {
     this.properties = properties;

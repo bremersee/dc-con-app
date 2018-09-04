@@ -31,6 +31,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
+ * The web mvc configuration.
+ *
  * @author Christian Bremer
  */
 @Configuration
@@ -40,6 +42,13 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final ApiExceptionResolver apiExceptionResolver;
 
+  /**
+   * Instantiates a new web mvc configuration.
+   *
+   * @param env                            the env
+   * @param apiExceptionResolverProperties the api exception resolver properties
+   * @param objectMapperBuilder            the object mapper builder
+   */
   @Autowired
   public WebMvcConfiguration(
       final Environment env,

@@ -30,50 +30,162 @@ import org.bremersee.smbcon.model.SambaUser;
 import org.bremersee.smbcon.model.SambaUserAddRequest;
 
 /**
+ * The samba connector service interface.
+ *
  * @author Christian Bremer
  */
 public interface SambaConnectorService {
 
+  /**
+   * Gets samba groups.
+   *
+   * @return the groups
+   */
   List<SambaGroupItem> getGroups();
 
+  /**
+   * Add samba group.
+   *
+   * @param group the group
+   * @return the samba group
+   */
   SambaGroup addGroup(@Valid SambaGroup group);
 
+  /**
+   * Gets group by name.
+   *
+   * @param groupName the group name
+   * @return the group by name
+   */
   SambaGroup getGroupByName(@NotNull String groupName);
 
+  /**
+   * Update group members of samba group.
+   *
+   * @param groupName the group name
+   * @param members   the members
+   * @return the samba group
+   */
   SambaGroup updateGroupMembers(@NotNull String groupName, @Valid Names members);
 
+  /**
+   * Delete group.
+   *
+   * @param groupName the group name
+   */
   void deleteGroup(@NotNull String groupName);
 
 
+  /**
+   * Add samba user.
+   *
+   * @param sambaUser the samba user
+   * @return the samba user
+   */
   SambaUser addUser(@Valid SambaUserAddRequest sambaUser);
 
+  /**
+   * Does user exist?
+   *
+   * @param userName the user name
+   * @return the boolean
+   */
   boolean userExists(@NotNull String userName);
 
+  /**
+   * Gets user.
+   *
+   * @param userName the user name
+   * @return the user
+   */
   SambaUser getUser(@NotNull String userName);
 
+  /**
+   * Update samba user.
+   *
+   * @param userName  the user name
+   * @param sambaUser the samba user
+   * @return the samba user
+   */
   SambaUser updateUser(@NotNull String userName, @Valid SambaUser sambaUser);
 
+  /**
+   * Update groups of samba user.
+   *
+   * @param userName the user name
+   * @param groups   the groups
+   * @return the samba user
+   */
   SambaUser updateUserGroups(@NotNull String userName, @Valid Names groups);
 
+  /**
+   * Update user password.
+   *
+   * @param userName    the user name
+   * @param newPassword the new password
+   */
   void updateUserPassword(@NotNull String userName, @Valid Password newPassword);
 
+  /**
+   * Delete user.
+   *
+   * @param userName the user name
+   */
   void deleteUser(@NotNull String userName);
 
 
+  /**
+   * Gets dns zones.
+   *
+   * @return the dns zones
+   */
   List<DnsZone> getDnsZones();
 
+  /**
+   * Create dns zone.
+   *
+   * @param zoneName the zone name
+   */
   void createDnsZone(@NotNull String zoneName);
 
+  /**
+   * Delete dns zone.
+   *
+   * @param zoneName the zone name
+   */
   void deleteDnsZone(@NotNull String zoneName);
 
+  /**
+   * Gets dns records.
+   *
+   * @param zoneName the zone name
+   * @return the dns records
+   */
   List<DnsEntry> getDnsRecords(@NotNull String zoneName);
 
+  /**
+   * Add dns record.
+   *
+   * @param zoneName   the zone name
+   * @param name       the name
+   * @param recordType the record type
+   * @param data       the data
+   */
   void addDnsRecord(
       @NotNull String zoneName,
       @NotNull String name,
       @NotNull DnsRecordType recordType,
       @NotNull String data);
 
+  /**
+   * Update dns record.
+   *
+   * @param zoneName   the zone name
+   * @param name       the name
+   * @param recordType the record type
+   * @param oldData    the old data
+   * @param newData    the new data
+   */
   void updateDnsRecord(
       @NotNull String zoneName,
       @NotNull String name,
@@ -81,6 +193,14 @@ public interface SambaConnectorService {
       @NotNull String oldData,
       @NotNull String newData);
 
+  /**
+   * Delete dns record.
+   *
+   * @param zoneName   the zone name
+   * @param name       the name
+   * @param recordType the record type
+   * @param data       the data
+   */
   void deleteDnsRecord(
       @NotNull String zoneName,
       @NotNull String name,

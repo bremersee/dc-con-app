@@ -33,7 +33,7 @@ import org.ldaptive.LdapEntry;
 import org.springframework.util.StringUtils;
 
 /**
- * The type Ldap entry utils.
+ * The type ldap entry utilities.
  *
  * @author Christian Bremer
  */

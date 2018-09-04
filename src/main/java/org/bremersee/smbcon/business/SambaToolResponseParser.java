@@ -22,12 +22,26 @@ import org.bremersee.smbcon.model.DnsEntry;
 import org.bremersee.smbcon.model.DnsZone;
 
 /**
+ * The samba tool response parser interface.
+ *
  * @author Christian Bremer
  */
 public interface SambaToolResponseParser {
 
+  /**
+   * Parse dns zones list.
+   *
+   * @param response the response
+   * @return the list
+   */
   List<DnsZone> parseDnsZones(@NotNull CommandExecutorResponse response);
 
+  /**
+   * Parse dns records list.
+   *
+   * @param response the response
+   * @return the list
+   */
   List<DnsEntry> parseDnsRecords(@NotNull CommandExecutorResponse response);
 
 }

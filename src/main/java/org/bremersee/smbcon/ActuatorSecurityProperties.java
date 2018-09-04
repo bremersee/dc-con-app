@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
+ * The type actuator security properties.
+ *
  * @author Christian Bremer
  */
 @ConfigurationProperties(prefix = "bremersee.access")
@@ -54,6 +56,11 @@ public class ActuatorSecurityProperties {
       + "or hasIpAddress('::1') "
       + "or " + IS_AUTHENTICATED;
 
+  /**
+   * Build access string.
+   *
+   * @return the string
+   */
   @SuppressWarnings("WeakerAccess")
   public String buildAccess() {
     final StringBuilder sb = new StringBuilder();
@@ -61,10 +68,13 @@ public class ActuatorSecurityProperties {
     ipAddresses.forEach(
         ipAddress -> sb.append(" or ").append("hasIpAddress('").append(ipAddress).append("')"));
     final String access = sb.toString();
-    log.info("Actuator access = {}", access);
+    log.info("msg=[Actuator access expression created.] expression=[{}]", access);
     return access;
   }
 
+  /**
+   * A simple user.
+   */
   @Getter
   @Setter
   @ToString(exclude = "password")
@@ -78,6 +88,11 @@ public class ActuatorSecurityProperties {
 
     private String password;
 
+    /**
+     * Build authorities.
+     *
+     * @return the authorities
+     */
     String[] buildAuthorities() {
       return new String[]{ROLE_ACTUATOR};
     }

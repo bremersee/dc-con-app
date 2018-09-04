@@ -35,6 +35,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 /**
+ * The actuator security configuration.
+ *
  * @author Christian Bremer
  */
 @Order(101)
@@ -45,6 +47,11 @@ public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
 
   private final ActuatorSecurityProperties properties;
 
+  /**
+   * Instantiates a new actuator security configuration.
+   *
+   * @param properties the properties
+   */
   @Autowired
   public ActuatorSecurity(ActuatorSecurityProperties properties) {
     this.properties = properties;
@@ -69,7 +76,7 @@ public class ActuatorSecurity extends WebSecurityConfigurerAdapter {
   @Override
   public UserDetailsService userDetailsService() {
 
-    log.info("Building user details service with {}", properties);
+    log.info("msg=[Building user details service] properties=[{}]", properties);
     final PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
     final UserDetails[] userDetails = properties.getUsers().stream().map(
         simpleUser -> User.builder()

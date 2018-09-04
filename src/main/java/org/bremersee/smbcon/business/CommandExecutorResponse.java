@@ -23,6 +23,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
+ * The command executor response.
+ *
  * @author Christian Bremer
  */
 @Getter

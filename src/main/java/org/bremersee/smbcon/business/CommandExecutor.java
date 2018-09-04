@@ -19,7 +19,6 @@ package org.bremersee.smbcon.business;
 import java.io.File;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,7 @@ import org.bremersee.common.exhandling.ServiceException;
 import org.springframework.http.HttpStatus;
 
 /**
- * The interface Command executor.
+ * The command executor.
  *
  * @author Christian Bremer
  */
@@ -76,7 +75,7 @@ public abstract class CommandExecutor {
       }
 
       if (log.isDebugEnabled()) {
-        log.debug("Running commands {}", commands);
+        log.debug("msg=[Running external program.] commands=[{}]", commands);
       }
       final Process p = pb.start();
       final StringWriter out = new StringWriter();
@@ -87,8 +86,8 @@ public abstract class CommandExecutor {
       final String output = out.toString();
       final String error = err.toString();
       if (log.isDebugEnabled()) {
-        log.debug("Output:\n{}", output);
-        log.debug("Error:\n{}", error);
+        log.debug("msg=[Program output]\n{}", output);
+        log.debug("msg=[Program error output]\n{}", error);
       }
       return new CommandExecutorResponse(output, error);
 
@@ -100,18 +99,4 @@ public abstract class CommandExecutor {
     }
   }
 
-  /*
-  public static void main(String[] args) {
-    CommandExecutorResponse r = exec(Arrays.asList(new String[] {
-        "sudo",
-        "echo",
-        "-n",
-        "Hallo",
-        "&",
-        "echo",
-        "Christian"
-    }),
-        "/Users/cbr");
-  }
-  */
 }
