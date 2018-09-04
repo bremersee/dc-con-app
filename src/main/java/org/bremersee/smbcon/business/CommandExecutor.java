@@ -21,16 +21,23 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.common.exhandling.ServiceException;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 
 /**
  * The interface Command executor.
  *
  * @author Christian Bremer
  */
-public interface CommandExecutor {
+@SuppressWarnings("WeakerAccess")
+@Slf4j
+public abstract class CommandExecutor {
+
+  private CommandExecutor() {
+  }
 
   /**
    * Exec command executor response.
@@ -39,7 +46,7 @@ public interface CommandExecutor {
    * @param dir      the dir
    * @return the command executor response
    */
-  static CommandExecutorResponse exec(
+  public static CommandExecutorResponse exec(
       final List<String> commands,
       final String dir) {
 
@@ -54,7 +61,7 @@ public interface CommandExecutor {
    * @param dir      the dir
    * @return the command executor response
    */
-  static CommandExecutorResponse exec(
+  public static CommandExecutorResponse exec(
       final List<String> commands,
       final Map<String, String> env,
       final String dir) {
@@ -68,15 +75,24 @@ public interface CommandExecutor {
         pb.environment().putAll(env);
       }
 
+      if (log.isDebugEnabled()) {
+        log.debug("Running commands {}", commands);
+      }
       final Process p = pb.start();
       final StringWriter out = new StringWriter();
       final StringWriter err = new StringWriter();
       IOUtils.copy(p.getInputStream(), out, StandardCharsets.UTF_8);
       IOUtils.copy(p.getErrorStream(), err, StandardCharsets.UTF_8);
       p.waitFor();
-      return new CommandExecutorResponse(out.toString(), err.toString());
+      final String output = out.toString();
+      final String error = err.toString();
+      if (log.isDebugEnabled()) {
+        log.debug("Output:\n{}", output);
+        log.debug("Error:\n{}", error);
+      }
+      return new CommandExecutorResponse(output, error);
 
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new ServiceException(
           HttpStatus.INTERNAL_SERVER_ERROR.value(),
           "Running commands " + commands + " failed.",

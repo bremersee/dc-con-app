@@ -69,9 +69,17 @@ public class SambaDomainProperties implements Serializable {
 
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
 
-  private boolean usingSudo = true;
+  private String kinitBinary = "/usr/bin/kinit";
+
+  private String kinitDevNull = "2&>/dev/null";
+
+  private boolean usingKinit = true;
+
+  private String kinitPasswordFile = "/var/lib/smb-con/smb-pass.txt";
 
   private String sudoBinary = "/usr/bin/sudo";
+
+  private boolean usingSudo = true;
 
   private String sambaToolBinary = "/usr/bin/samba-tool";
 

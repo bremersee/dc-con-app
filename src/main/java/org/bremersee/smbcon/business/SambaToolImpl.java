@@ -16,8 +16,13 @@
 
 package org.bremersee.smbcon.business;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.smbcon.LdaptiveProperties;
@@ -27,6 +32,7 @@ import org.bremersee.smbcon.model.DnsRecordType;
 import org.bremersee.smbcon.model.DnsZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -70,7 +76,7 @@ public class SambaToolImpl implements SambaTool {
   private static final String GROUP_CMD_DELETE = "delete";
 
 
-  private static final String SUB_CMD_DNS_MANAGEMENT = "nameserver";
+  private static final String SUB_CMD_DNS_MANAGEMENT = "dns";
 
 
   private static final String DNS_CMD_ZONELIST = "zonelist";
@@ -92,12 +98,36 @@ public class SambaToolImpl implements SambaTool {
 
   private static final String DNS_SIMPLE_BIND_PASSWORD = "--password=\"{}\""; // NOSONAR
 
+  private static final String KINIT_PASSWORD_FILE = "--password-file={}";
+
+  private static final String USE_KERBEROS = "-k";
+
+  private static final String YES = "yes";
+
 
   private final SambaDomainProperties properties;
 
   private final LdaptiveProperties adProperties;
 
   private final SambaToolResponseParser responseParser;
+
+  @PostConstruct
+  public void init() {
+    if (properties.isUsingKinit()) {
+      Assert.hasText(properties.getKinitPasswordFile(),
+          "Kinit password file must be specified.");
+      final File file = new File(properties.getKinitPasswordFile());
+      if (!file.exists()) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
+          out.write(adProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
+          out.flush();
+        } catch (IOException e) {
+          log.error("Creating kinit password file failed.");
+        }
+      }
+      Assert.isTrue(file.exists(), "Kinit password file must exist.");
+    }
+  }
 
   @Autowired
   public SambaToolImpl(
@@ -109,19 +139,42 @@ public class SambaToolImpl implements SambaTool {
     this.responseParser = responseParser;
   }
 
+  private void kinit(List<String> commands) {
+    if (properties.isUsingKinit()) {
+      commands.add(properties.getKinitBinary());
+      commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
+      commands.add(properties.getKinitDevNull());
+      commands.add("&");
+    }
+  }
+
+  private void sudo(List<String> commands) {
+    if (properties.isUsingSudo()) {
+      commands.add(properties.getSudoBinary());
+    }
+  }
+
+  private void auth(List<String> commands) {
+    if (properties.isUsingKinit()) {
+      commands.add(USE_KERBEROS);
+      commands.add(YES);
+    } else {
+      commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
+      commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
+    }
+  }
+
   @Override
   public List<DnsZone> getDnsZones() {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
     commands.add(DNS_CMD_ZONELIST);
     commands.add(properties.getNameServerHost());
-    commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
-    commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -143,16 +196,14 @@ public class SambaToolImpl implements SambaTool {
       @NotNull final String zoneName) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
     commands.add(dnsCommand);
     commands.add(properties.getNameServerHost());
     commands.add(zoneName);
-    commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
-    commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -169,9 +220,8 @@ public class SambaToolImpl implements SambaTool {
   public List<DnsEntry> getDnsRecords(@NotNull final String zoneName) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
     commands.add(DNS_CMD_QUERY);
@@ -179,8 +229,7 @@ public class SambaToolImpl implements SambaTool {
     commands.add(zoneName);
     commands.add("@");
     commands.add("ALL");
-    commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
-    commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -227,9 +276,8 @@ public class SambaToolImpl implements SambaTool {
       final String newData) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_DNS_MANAGEMENT);
     commands.add(dnsCommand);
@@ -241,8 +289,7 @@ public class SambaToolImpl implements SambaTool {
     if (DNS_CMD_UPDATE.equals(dnsCommand) && StringUtils.hasText(newData)) {
       commands.add(newData);
     }
-    commands.add(DNS_SIMPLE_BIND_DN.replace("{}", adProperties.getBindDn()));
-    commands.add(DNS_SIMPLE_BIND_PASSWORD.replace("{}", adProperties.getBindCredential()));
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -265,9 +312,8 @@ public class SambaToolImpl implements SambaTool {
 
     final String unixHomeDir = properties.getUnixHomeDirTemplate().replace("{}", userName);
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
     commands.add(USER_CMD_CREATE);
@@ -285,6 +331,7 @@ public class SambaToolImpl implements SambaTool {
     if (StringUtils.hasText(mobile)) {
       commands.add(USER_OPTION_MOBILE.replace("{}", mobile));
     }
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -299,13 +346,13 @@ public class SambaToolImpl implements SambaTool {
   public void deleteUser(@NotNull final String userName) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
     commands.add(USER_CMD_DELETE);
     commands.add(userName);
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -322,14 +369,14 @@ public class SambaToolImpl implements SambaTool {
       @NotNull final String newPassword) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_USER_MANAGEMENT);
     commands.add(USER_CMD_SET_PASSWORD);
     commands.add(userName);
     commands.add(USER_OPTION_NEW_PASSWORD.replace("{}", newPassword));
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -346,13 +393,13 @@ public class SambaToolImpl implements SambaTool {
   public void addGroup(String groupName) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_GROUP_MANAGEMENT);
     commands.add(GROUP_CMD_ADD);
     commands.add(groupName);
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
@@ -369,13 +416,13 @@ public class SambaToolImpl implements SambaTool {
   public void deleteGroup(String groupName) {
 
     final List<String> commands = new ArrayList<>();
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
-    }
+    kinit(commands);
+    sudo(commands);
     commands.add(properties.getSambaToolBinary());
     commands.add(SUB_CMD_GROUP_MANAGEMENT);
     commands.add(GROUP_CMD_DELETE);
     commands.add(groupName);
+    auth(commands);
 
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
