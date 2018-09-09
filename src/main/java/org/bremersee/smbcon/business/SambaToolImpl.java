@@ -163,6 +163,7 @@ public class SambaToolImpl implements SambaTool {
   private void kinit() {
     synchronized (KINIT_LOG) {
       List<String> commands = new ArrayList<>();
+      sudo(commands);
       commands.add(properties.getKinitBinary());
       commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
       commands.add(properties.getKinitAdministratorName());

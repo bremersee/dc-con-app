@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SUDO_FILE=/etc/sudoers
-SUDO_ENTRY="smb-con ALL = NOPASSWD: /usr/bin/samba-tool"
+SUDO_ENTRY="smb-con ALL = NOPASSWD: /usr/bin/samba-tool, /usr/bin/kinit"
 
 /usr/bin/getent passwd smb-con
 if [ ! $? -eq 0 ]; then
