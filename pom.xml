@@ -51,6 +51,7 @@
     </sonar.jacoco.reportPath>
     <sonar.language>java</sonar.language>
     <sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
+    <springfox.version>2.9.2</springfox.version>
     <swagger-annotations.version>1.5.18</swagger-annotations.version>
     <swagger-base-package>org.bremersee.smbcon</swagger-base-package>
     <swagger-codegen-maven-plugin.version>2.3.1</swagger-codegen-maven-plugin.version>
@@ -195,6 +196,11 @@
       <groupId>io.swagger</groupId>
       <artifactId>swagger-annotations</artifactId>
       <version>${swagger-annotations.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-swagger2</artifactId>
+      <version>${springfox.version}</version>
     </dependency>
 
     <dependency>
