@@ -17,7 +17,6 @@
 package org.bremersee.smbcon.business;
 
 import java.util.List;
-import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.bremersee.smbcon.model.DnsEntry;
