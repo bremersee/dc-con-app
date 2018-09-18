@@ -17,6 +17,7 @@
 package org.bremersee.smbcon.business;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.bremersee.smbcon.model.DnsEntry;
@@ -135,11 +136,25 @@ public interface SambaConnectorService {
 
 
   /**
-   * Gets dns zones.
+   * Gets all dns zones.
    *
    * @return the dns zones
    */
   List<DnsZone> getDnsZones();
+
+  /**
+   * Gets all dns reverse zones.
+   *
+   * @return the dns reverse zones
+   */
+  List<DnsZone> getDnsReverseZones();
+
+  /**
+   * Gets all dns zones which are not reverse ones.
+   *
+   * @return the dns zones which are not reverse ones
+   */
+  List<DnsZone> getDnsNonReverseZones();
 
   /**
    * Create dns zone.
@@ -164,7 +179,22 @@ public interface SambaConnectorService {
   List<DnsEntry> getDnsRecords(@NotNull String zoneName);
 
   /**
-   * Add dns record.
+   * Checks whether a dns record exists or not.
+   *
+   * @param zoneName   the zone name
+   * @param name       the name
+   * @param recordType the record type
+   * @param data       the data
+   * @return {@code true} if the record exists otherwise {@code false}
+   */
+  boolean dnsRecordExists(
+      @NotNull String zoneName,
+      @NotNull String name,
+      @NotNull DnsRecordType recordType,
+      @NotNull String data);
+
+  /**
+   * Adds a dns record.
    *
    * @param zoneName   the zone name
    * @param name       the name

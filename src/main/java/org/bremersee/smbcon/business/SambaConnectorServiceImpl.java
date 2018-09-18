@@ -26,10 +26,12 @@ import static org.bremersee.smbcon.business.LdapEntryUtils.getUserAccountControl
 import static org.bremersee.smbcon.business.LdapEntryUtils.updateAttribute;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -72,6 +74,10 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class SambaConnectorServiceImpl implements SambaConnectorService {
+
+  private final DnsZoneComparator dnsZoneComparator = new DnsZoneComparator();
+
+  private final DnsEntryComparator dnsEntryComparator = new DnsEntryComparator();
 
   private final SambaDomainProperties properties;
 
@@ -559,7 +565,56 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   @Override
   public List<DnsZone> getDnsZones() {
     log.info("msg=[Getting name server zones.]");
-    return sambaTool.getDnsZones();
+    return sambaTool.getDnsZones()
+        .stream()
+        .filter(this::isNonExcludedDnsZone)
+        .sorted(dnsZoneComparator)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<DnsZone> getDnsReverseZones() {
+    log.info("msg=[Getting name server reverse zones.]");
+    return sambaTool.getDnsZones()
+        .stream()
+        .filter(this::isNonExcludedDnsZone)
+        .filter(this::isDnsReverseZone)
+        .sorted(dnsZoneComparator)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<DnsZone> getDnsNonReverseZones() {
+    log.info("msg=[Getting name server non reverse zones.]");
+    return sambaTool.getDnsZones()
+        .stream()
+        .filter(this::isNonExcludedDnsZone)
+        .filter(this::isNonDnsReverseZone)
+        .sorted(dnsZoneComparator)
+        .collect(Collectors.toList());
+  }
+
+  private Optional<DnsZone> findDnsReverseZone(@NotNull final String ip) {
+    return getDnsReverseZones()
+        .stream()
+        .filter(dnsZone -> ipMatchesDnsReverseZone(ip, dnsZone))
+        .findFirst();
+  }
+
+  private Optional<DnsZone> findDnsZone(@NotNull final String domainName) {
+    final List<DnsZone> zones = getDnsNonReverseZones();
+    String domain = domainName;
+    int index = domain.indexOf('.');
+    while (index > 0 && domain.length() > index + 1) {
+      domain = domain.substring(index + 1);
+      for (DnsZone zone : zones) {
+        if (domain.equals(zone.getPszZoneName())) {
+          return Optional.of(zone);
+        }
+      }
+      index = domain.indexOf('.');
+    }
+    return Optional.empty();
   }
 
   @Override
@@ -577,7 +632,42 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   @Override
   public List<DnsEntry> getDnsRecords(@NotNull final String zoneName) {
     log.info("msg=[Getting name server records.] zone=[{}]", zoneName);
-    return sambaTool.getDnsRecords(zoneName);
+    return sambaTool
+        .getDnsRecords(zoneName)
+        .stream()
+        .filter(this::isNonExcludedDnsEntry)
+        .sorted(dnsEntryComparator)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean dnsRecordExists(
+      @NotNull final String zoneName,
+      @NotNull final String name,
+      @NotNull final DnsRecordType recordType,
+      @NotNull final String data) {
+    return sambaTool.getDnsRecords(zoneName)
+        .parallelStream()
+        .anyMatch(entry -> entry
+            .getName().equals(name)
+            && entry.getRecords()
+            .parallelStream()
+            .anyMatch(record -> recordType.name()
+                .equals(record.getRecordType())
+                && data.equals(record.getRecordValue())));
+  }
+
+  private void doAddDnsRecord(
+      @NotNull final String zoneName,
+      @NotNull final String name,
+      @NotNull final DnsRecordType recordType,
+      @NotNull final String data) {
+
+    log.info("msg=[Adding name server record] zoneName=[{}] name=[{}] recordType=[{}] data=[{}]",
+        zoneName, name, recordType, data);
+    if (!dnsRecordExists(zoneName, name, recordType, data)) {
+      sambaTool.addDnsRecord(zoneName, name, recordType, data);
+    }
   }
 
   @Override
@@ -587,9 +677,40 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
       @NotNull final DnsRecordType recordType,
       @NotNull final String data) {
 
-    log.info("msg=[Adding name server record] zoneName=[{}] name=[{}] recordType=[{}] data=[{}]",
-        zoneName, name, recordType, data);
-    sambaTool.addDnsRecord(zoneName, name, recordType, data);
+    if (isDnsReverseZone(zoneName)) {
+      doAddDnsRecord(zoneName, name, recordType, data);
+      if (DnsRecordType.PTR.equals(recordType)) {
+        // zone name is something like 1.168.192.in-addr.arpa
+        // name is the end of the ip address,
+        // e. g.
+        //       113   in  1.168.192.in-addr.arpa
+        // or
+        //       113.1 in  168.192.in-addr.arpa
+        // data is the full domain name, e. g. forelle.eixe.bremersee.org
+        findDnsZone(data)
+            .ifPresent(dnsZone -> doAddDnsRecord(
+                dnsZone.getPszZoneName(), // something like eixe.bremersee.org
+                data.substring(0, data.length() - (dnsZone.getPszZoneName().length() + 1)),
+                DnsRecordType.A,
+                name + "." + zoneName
+                    .substring(
+                        0,
+                        zoneName.length() - properties.getReverseZoneSuffix().length())));
+      }
+    } else {
+      doAddDnsRecord(zoneName, name, recordType, data);
+      if (DnsRecordType.A.equals(recordType)) {
+        // zone name equals the domain, e. g. eixe.bremersee.org
+        // name is the host name, e. g. forelle
+        // data is the ip address, e. g. 192.168.1.113
+        findDnsReverseZone(data)
+            .ifPresent(dnsZone -> doAddDnsRecord(
+                dnsZone.getPszZoneName(),
+                getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
+                DnsRecordType.PTR,
+                name + "." + zoneName));
+      }
+    }
   }
 
   @Override
@@ -616,6 +737,155 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
             + "oldData=[{}], newData=[{}]",
         zoneName, name, recordType, newData, oldData);
     sambaTool.updateDnsRecord(zoneName, name, recordType, oldData, newData);
+  }
+
+  private boolean isNonExcludedDnsZone(DnsZone zone) {
+    return zone != null && !isExcludedDnsZone(zone);
+  }
+
+  private boolean isExcludedDnsZone(DnsZone zone) {
+    return zone != null && isExcludedDnsZone(zone.getPszZoneName());
+  }
+
+  private boolean isExcludedDnsZone(String zoneName) {
+    if (zoneName == null) {
+      return true;
+    }
+    for (final String regex : properties.getExcludedZoneRegexList()) {
+      if (Pattern.compile(regex).matcher(zoneName).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isNonExcludedDnsEntry(DnsEntry entry) {
+    return entry != null && !isExcludedDnsEntry(entry);
+  }
+
+  private boolean isExcludedDnsEntry(DnsEntry entry) {
+    return entry != null && isExcludedDnsEntry(entry.getName());
+  }
+
+  private boolean isExcludedDnsEntry(String entryName) {
+    if (entryName == null) {
+      return true;
+    }
+    for (final String regex : properties.getExcludedEntryRegexList()) {
+      if (Pattern.compile(regex).matcher(entryName).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isNonDnsReverseZone(DnsZone zone) {
+    return zone != null && !isDnsReverseZone(zone.getPszZoneName());
+  }
+
+  private boolean isDnsReverseZone(DnsZone zone) {
+    return zone != null && isDnsReverseZone(zone.getPszZoneName());
+  }
+
+  private boolean isDnsReverseZone(String zoneName) {
+    return zoneName != null && zoneName.endsWith(properties.getReverseZoneSuffix());
+  }
+
+  private boolean ipMatchesDnsReverseZone(String ip, DnsZone zone) {
+    return zone != null && ipMatchesDnsReverseZone(ip, zone.getPszZoneName());
+  }
+
+  private boolean ipMatchesDnsReverseZone(String ip, String zoneName) {
+    if (ip != null && isDnsReverseZone(zoneName)) {
+      final String tmp = zoneName
+          .substring(0, zoneName.length() - properties.getReverseZoneSuffix().length());
+      final String[] reverseParts = tmp.split(Pattern.quote("."));
+      final StringBuilder ipBuilder = new StringBuilder();
+      for (int i = reverseParts.length - 1; i >= 0; i--) {
+        ipBuilder.append(reverseParts[i]).append('.');
+      }
+      return ip.startsWith(ipBuilder.toString());
+    }
+    return false;
+  }
+
+  private String getDnsReverseEntryName(String ip, String zoneName) {
+    if (ip != null && isDnsReverseZone(zoneName)) {
+      final String tmp = zoneName
+          .substring(0, zoneName.length() - properties.getReverseZoneSuffix().length());
+      final String[] reverseParts = tmp.split(Pattern.quote("."));
+      final StringBuilder ipBuilder = new StringBuilder();
+      for (int i = reverseParts.length - 1; i >= 0; i--) {
+        ipBuilder.append(reverseParts[i]).append('.');
+      }
+      final String ipPrefix = ipBuilder.toString();
+      if (ipPrefix.length() < ip.length()) {
+        return ip.substring(ipPrefix.length());
+      }
+    }
+    return null;
+  }
+
+  private class DnsZoneComparator implements Comparator<DnsZone> {
+
+    @Override
+    public int compare(DnsZone o1, DnsZone o2) {
+      final String s1 = o1 != null && o1.getPszZoneName() != null ? o1.getPszZoneName() : "";
+      final String s2 = o2 != null && o2.getPszZoneName() != null ? o2.getPszZoneName() : "";
+      if (isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
+        final String[] sa1 = s1.split(Pattern.quote("."));
+        final String[] sa2 = s2.split(Pattern.quote("."));
+        int c = sa2.length - sa1.length;
+        if (c != 0) {
+          return c;
+        }
+        return compare(sa1, sa2);
+      } else if (!isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
+        return -1;
+      } else if (isDnsReverseZone(s1) && !isDnsReverseZone(s2)) {
+        return 1;
+      }
+      return s1.compareTo(s2);
+    }
+
+    private int compare(String[] sa1, String[] sa2) {
+      final String[] sav1 = sa1 != null ? sa1 : new String[0];
+      final String[] sav2 = sa2 != null ? sa2 : new String[0];
+      final int len = Math.min(sav1.length, sav2.length);
+      for (int i = len - 1; i >= 0; i--) {
+        int c = compare(sav1[i], sav2[i]);
+        if (c != 0) {
+          return c;
+        }
+      }
+      return 0;
+    }
+
+    private int compare(String s1, String s2) {
+      try {
+        return compare(Integer.parseInt(s1), Integer.parseInt(s2));
+      } catch (final Throwable t) {
+        return (s1 != null ? s1 : "").compareToIgnoreCase(s2 != null ? s2 : "");
+      }
+    }
+
+    private int compare(int i1, int i2) {
+      return Integer.compare(i1, i2);
+    }
+  }
+
+  private class DnsEntryComparator implements Comparator<DnsEntry> {
+
+    @Override
+    public int compare(DnsEntry o1, DnsEntry o2) {
+      final String s1 = o1 != null && o1.getName() != null ? o1.getName() : "";
+      final String s2 = o2 != null && o2.getName() != null ? o2.getName() : "";
+      try {
+        return Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
+      } catch (final Throwable t) {
+        return s1.compareToIgnoreCase(s2);
+      }
+    }
   }
 
 }

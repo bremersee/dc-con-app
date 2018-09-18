@@ -17,9 +17,10 @@
 package org.bremersee.smbcon;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.bremersee.smbcon.model.Info;
@@ -38,7 +39,6 @@ import org.springframework.stereotype.Component;
 @Setter
 @ToString
 @EqualsAndHashCode
-@NoArgsConstructor
 public class SambaDomainProperties implements Serializable {
 
   private static final long serialVersionUID = 606284794541721895L;
@@ -92,6 +92,21 @@ public class SambaDomainProperties implements Serializable {
 
   private String nameServerHost = "ns.example.org";
 
+  private String reverseZoneSuffix = ".in-addr.arpa";
+
+  private List<String> excludedZoneRegexList = new ArrayList<>();
+
+  private List<String> excludedEntryRegexList = new ArrayList<>();
+
+  public SambaDomainProperties() {
+    excludedZoneRegexList.add("^msdcs\\..*$");
+
+    excludedEntryRegexList.add("^$");
+    excludedEntryRegexList.add("_msdcs");
+    excludedEntryRegexList.add("_sites");
+    excludedEntryRegexList.add("_tcp");
+    excludedEntryRegexList.add("_udp");
+  }
 
   /**
    * Build info info.

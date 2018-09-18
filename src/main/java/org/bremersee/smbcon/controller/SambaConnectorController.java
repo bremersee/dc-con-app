@@ -63,13 +63,13 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     this.sambaConnectorService = sambaConnectorService;
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsZone>> getDnsZones() {
     return ResponseEntity.ok(sambaConnectorService.getDnsZones());
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsEntry>> getDnsRecords(
       @Valid @RequestParam(value = "zoneName") String zoneName) {
@@ -77,7 +77,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.getDnsRecords(zoneName));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaGroup> addGroup(
       @Valid @RequestBody SambaGroup group) {
@@ -85,7 +85,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.addGroup(group));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaUser> addUser(
       @Valid @RequestBody SambaUserAddRequest sambaUser) {
@@ -93,7 +93,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.addUser(sambaUser));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> createDnsZone(
       @Valid @RequestBody DnsZoneCreateRequest request) {
@@ -102,7 +102,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> createOrDeleteDnsRecord(
       @Valid @RequestParam(value = "action") final String action,
@@ -122,7 +122,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> deleteDnsZone(
       @Valid @RequestParam(value = "zoneName") final String zoneName) {
@@ -131,7 +131,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return null;
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> deleteGroup(
       @PathVariable("groupName") String groupName) {
@@ -140,7 +140,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> deleteUser(
       @PathVariable("userName") String userName) {
@@ -149,7 +149,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaGroup> getGroupByName(
       @PathVariable("groupName") String groupName) {
@@ -157,19 +157,19 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.getGroupByName(groupName));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<List<SambaGroupItem>> getGroups() {
     return ResponseEntity.ok(sambaConnectorService.getGroups());
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Info> getInfo() {
     return ResponseEntity.ok(sambaDomainProperties.buildInfo());
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<BooleanWrapper> userExists(
       @PathVariable("userName") String userName) {
@@ -179,7 +179,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(wrapper);
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaUser> getUser(
       @PathVariable("userName") String userName) {
@@ -187,7 +187,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.getUser(userName));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> updateDnsRecord(@Valid @RequestBody DnsRecordUpdateRequest request) {
 
@@ -200,7 +200,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaGroup> updateGroupMembers(
       @PathVariable("groupName") String groupName,
@@ -209,7 +209,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.updateGroupMembers(groupName, members));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaUser> updateUser(
       @PathVariable("userName") String userName,
@@ -218,7 +218,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.updateUser(userName, sambaUser));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<SambaUser> updateUserGroups(
       @PathVariable("userName") String userName,
@@ -227,7 +227,7 @@ public class SambaConnectorController implements SambaConnectorControllerApi {
     return ResponseEntity.ok(sambaConnectorService.updateUserGroups(userName, groups));
   }
 
-  @PreAuthorize("#oauth2.hasScope('samba:admin')")
+  @PreAuthorize("#oauth2.hasScope('samba:admin') or hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> updateUserPassword(
       @PathVariable("userName") String userName,
