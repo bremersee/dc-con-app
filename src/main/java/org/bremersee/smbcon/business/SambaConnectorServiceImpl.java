@@ -924,10 +924,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         final String[] sa1 = s1.split(Pattern.quote("."));
         final String[] sa2 = s2.split(Pattern.quote("."));
         int c = sa2.length - sa1.length;
-        if (c != 0) {
-          return c;
+        if (c == 0) {
+          c =  compare(sa1, sa2);
         }
-        c =  compare(sa1, sa2);
         log.debug("msg=[Both zones are dns reverse zones.] result=[{}]", c);
         return c;
       } else if (!isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
@@ -939,7 +938,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
             + "first=[{}] second=[{}] result=[1]", s1, s2);
         return 1;
       }
-      final int result = s1.compareTo(s2);
+      final int result = s1.compareToIgnoreCase(s2);
       log.debug("msg=[Both zones are non dns reverse zones.] result=[{}]", result);
       return result;
     }
