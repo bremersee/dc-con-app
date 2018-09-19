@@ -65,6 +65,7 @@ import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 /**
  * The sSamba connector service implementation.
@@ -594,6 +595,12 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Returns the dns reverse zone of an IPv4.
+   *
+   * @param ip the IPv4
+   * @return the dns reverse zone or {@code empty}
+   */
   private Optional<DnsZone> findDnsReverseZone(@NotNull final String ip) {
     return getDnsReverseZones()
         .stream()
@@ -601,19 +608,27 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         .findFirst();
   }
 
+  /**
+   * Returns the zone of the domain name. The domain name can be a full qualified host name, e. g.
+   * {@code forelle.eixe.bremersee.org}.
+   *
+   * @param domainName the domain name or a full qualified host name
+   * @return the dns zone or {@code empty}
+   */
   private Optional<DnsZone> findDnsZone(@NotNull final String domainName) {
     final List<DnsZone> zones = getDnsNonReverseZones();
+
+    int index;
     String domain = domainName;
-    int index = domain.indexOf('.');
-    while (index > 0 && domain.length() > index + 1) {
-      domain = domain.substring(index + 1);
+    do {
       for (DnsZone zone : zones) {
         if (domain.equals(zone.getPszZoneName())) {
           return Optional.of(zone);
         }
       }
       index = domain.indexOf('.');
-    }
+      domain = domain.substring(index + 1);
+    } while (index >= 0 && domain.length() > index + 1);
     return Optional.empty();
   }
 
@@ -690,12 +705,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         findDnsZone(data)
             .ifPresent(dnsZone -> doAddDnsRecord(
                 dnsZone.getPszZoneName(), // something like eixe.bremersee.org
-                data.substring(0, data.length() - (dnsZone.getPszZoneName().length() + 1)),
+                getDnsEntryName(data, dnsZone.getPszZoneName()),
                 DnsRecordType.A,
-                name + "." + zoneName
-                    .substring(
-                        0,
-                        zoneName.length() - properties.getReverseZoneSuffix().length())));
+                getIpV4(name, zoneName)));
       }
     } else {
       doAddDnsRecord(zoneName, name, recordType, data);
@@ -739,15 +751,15 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     sambaTool.updateDnsRecord(zoneName, name, recordType, oldData, newData);
   }
 
-  private boolean isNonExcludedDnsZone(DnsZone zone) {
+  private boolean isNonExcludedDnsZone(final DnsZone zone) {
     return zone != null && !isExcludedDnsZone(zone);
   }
 
-  private boolean isExcludedDnsZone(DnsZone zone) {
+  private boolean isExcludedDnsZone(final DnsZone zone) {
     return zone != null && isExcludedDnsZone(zone.getPszZoneName());
   }
 
-  private boolean isExcludedDnsZone(String zoneName) {
+  private boolean isExcludedDnsZone(final String zoneName) {
     if (zoneName == null) {
       return true;
     }
@@ -759,15 +771,15 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     return false;
   }
 
-  private boolean isNonExcludedDnsEntry(DnsEntry entry) {
+  private boolean isNonExcludedDnsEntry(final DnsEntry entry) {
     return entry != null && !isExcludedDnsEntry(entry);
   }
 
-  private boolean isExcludedDnsEntry(DnsEntry entry) {
+  private boolean isExcludedDnsEntry(final DnsEntry entry) {
     return entry != null && isExcludedDnsEntry(entry.getName());
   }
 
-  private boolean isExcludedDnsEntry(String entryName) {
+  private boolean isExcludedDnsEntry(final String entryName) {
     if (entryName == null) {
       return true;
     }
@@ -779,51 +791,124 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     return false;
   }
 
-  private boolean isNonDnsReverseZone(DnsZone zone) {
+  private boolean isNonDnsReverseZone(final DnsZone zone) {
     return zone != null && !isDnsReverseZone(zone.getPszZoneName());
   }
 
-  private boolean isDnsReverseZone(DnsZone zone) {
+  private boolean isDnsReverseZone(final DnsZone zone) {
     return zone != null && isDnsReverseZone(zone.getPszZoneName());
   }
 
-  private boolean isDnsReverseZone(String zoneName) {
+  private boolean isDnsReverseZone(final String zoneName) {
     return zoneName != null && zoneName.endsWith(properties.getReverseZoneSuffix());
   }
 
-  private boolean ipMatchesDnsReverseZone(String ip, DnsZone zone) {
-    return zone != null && ipMatchesDnsReverseZone(ip, zone.getPszZoneName());
+  /**
+   * Checks whether the given IPv4 (e. g. {@code 192.168.1.123}) matches the given dns reverse zone
+   * (e. g. with name {@code 1.168.192.in-addr.arpa}).
+   *
+   * @param ip             the IPv4 (e. g. {@code 192.168.1.123})
+   * @param dnsReverseZone the dns reverse zone (e. g. with name {@code 1.168.192.in-addr.arpa})
+   * @return {@code true} if the ip matches the dns reverse zone, otherwise {@code false}
+   */
+  private boolean ipMatchesDnsReverseZone(final String ip, final DnsZone dnsReverseZone) {
+    return dnsReverseZone != null && ipMatchesDnsReverseZone(ip, dnsReverseZone.getPszZoneName());
   }
 
-  private boolean ipMatchesDnsReverseZone(String ip, String zoneName) {
-    if (ip != null && isDnsReverseZone(zoneName)) {
-      final String tmp = zoneName
-          .substring(0, zoneName.length() - properties.getReverseZoneSuffix().length());
-      final String[] reverseParts = tmp.split(Pattern.quote("."));
+  /**
+   * Checks whether the given IPv4 (e. g. {@code 192.168.1.123}) matches the given dns reverse zone
+   * name (e. g. {@code 1.168.192.in-addr.arpa}).
+   *
+   * @param ip                 the IPv4 (e. g. {@code 192.168.1.123})
+   * @param dnsReverseZoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa})
+   * @return {@code true} if the ip matches the dns reverse zone, otherwise {@code false}
+   */
+  private boolean ipMatchesDnsReverseZone(final String ip, final String dnsReverseZoneName) {
+    if (ip != null && isDnsReverseZone(dnsReverseZoneName)) {
+      final String ipPart = dnsReverseZoneName.substring(
+          0,
+          dnsReverseZoneName.length() - properties.getReverseZoneSuffix().length());
+      final String[] ipParts = ipPart.split(Pattern.quote("."));
       final StringBuilder ipBuilder = new StringBuilder();
-      for (int i = reverseParts.length - 1; i >= 0; i--) {
-        ipBuilder.append(reverseParts[i]).append('.');
+      for (int i = ipPart.length() - 1; i >= 0; i--) {
+        ipBuilder.append(ipParts[i]).append('.');
       }
       return ip.startsWith(ipBuilder.toString());
     }
     return false;
   }
 
-  private String getDnsReverseEntryName(String ip, String zoneName) {
-    if (ip != null && isDnsReverseZone(zoneName)) {
-      final String tmp = zoneName
-          .substring(0, zoneName.length() - properties.getReverseZoneSuffix().length());
-      final String[] reverseParts = tmp.split(Pattern.quote("."));
-      final StringBuilder ipBuilder = new StringBuilder();
-      for (int i = reverseParts.length - 1; i >= 0; i--) {
-        ipBuilder.append(reverseParts[i]).append('.');
-      }
-      final String ipPrefix = ipBuilder.toString();
-      if (ipPrefix.length() < ip.length()) {
-        return ip.substring(ipPrefix.length());
-      }
+  /**
+   * Returns the host name without domain (= the name of a dns record in a dns zone). The given host
+   * name must end with the given dns zone name.
+   *
+   * @param fullQualifiedHostName the full qualified host name, e. g. {@code forelle.eixe.bremersee.org}
+   * @param dnsZoneName           the name of the dns zone, e. g. {@code eixe.bremersee.org}
+   * @return the host name without domain
+   */
+  private String getDnsEntryName(final String fullQualifiedHostName, final String dnsZoneName) {
+    Assert.hasText(fullQualifiedHostName,
+        "Host name [" + fullQualifiedHostName + "] must not be null or empty.");
+    Assert.hasText(dnsZoneName,
+        "Dns zone name [" + dnsZoneName + "] must not be null or empty.");
+    Assert.isTrue(fullQualifiedHostName.endsWith(dnsZoneName),
+        "Host name [" + fullQualifiedHostName + "] must end with zone name ["
+            + dnsZoneName + "].");
+    return fullQualifiedHostName.substring(
+        0,
+        fullQualifiedHostName.length() - (dnsZoneName.length() + 1));
+  }
+
+  /**
+   * Returns the IPv4 from the given dns reverse record name (e. g. {@code 123}) and the given dns
+   * reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}).
+   *
+   * @param dnsReverseEntryName the dns reverse record name (e. g. {@code 123})
+   * @param dnsReverseZoneName  the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa})
+   * @return the IPv4
+   */
+  private String getIpV4(final String dnsReverseEntryName, final String dnsReverseZoneName) {
+    Assert.hasText(dnsReverseEntryName,
+        "Dns reverse entry name [" + dnsReverseEntryName + "] must not be null or empty.");
+    Assert.hasText(dnsReverseZoneName,
+        "Dns reverse zone name [" + dnsReverseZoneName + "] must not be null or empty.");
+    final String ipPart = dnsReverseZoneName.substring(
+        0,
+        dnsReverseZoneName.length() - properties.getReverseZoneSuffix().length());
+    final String[] ipParts = ipPart.split(Pattern.quote("."));
+    final StringBuilder ipBuilder = new StringBuilder();
+    for (int i = ipPart.length() - 1; i >= 0; i--) {
+      ipBuilder.append(ipParts[i]).append('.');
     }
-    return null;
+    ipBuilder.append(dnsReverseEntryName);
+    final String ip = ipBuilder.toString();
+    Assert.isTrue(ipMatchesDnsReverseZone(ip, dnsReverseZoneName),
+        "IP [" + ip + "] must match dns reverse zone name [" + dnsReverseZoneName + "].");
+    return ip;
+  }
+
+  /**
+   * Returns the dns reverse entry name.
+   *
+   * @param ip                 the IPv4 (e. g. {@code 192.168.1.123}
+   * @param dnsReverseZoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
+   * @return the dns reverse entry name (e. g. {@code 123}
+   */
+  private String getDnsReverseEntryName(final String ip, final String dnsReverseZoneName) {
+    Assert.hasText(ip, "IP must not be null or empty.");
+    Assert.hasText(dnsReverseZoneName, "Dns reverse zone name must not be null or empty.");
+    final String ipPart = dnsReverseZoneName.substring(
+        0,
+        dnsReverseZoneName.length() - properties.getReverseZoneSuffix().length());
+    final String[] ipParts = ipPart.split(Pattern.quote("."));
+    final StringBuilder ipBuilder = new StringBuilder();
+    for (int i = ipParts.length - 1; i >= 0; i--) {
+      ipBuilder.append(ipParts[i]).append('.');
+    }
+    final String ipPrefix = ipBuilder.toString();
+    Assert.isTrue(ip.startsWith(ipPrefix),
+        "IP [" + ip + "] must start with [" + ipPrefix + "].");
+    return ip.substring(ipPrefix.length());
   }
 
   private class DnsZoneComparator implements Comparator<DnsZone> {

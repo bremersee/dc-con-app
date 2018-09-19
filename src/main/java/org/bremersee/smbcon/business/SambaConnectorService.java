@@ -28,12 +28,14 @@ import org.bremersee.smbcon.model.SambaGroup;
 import org.bremersee.smbcon.model.SambaGroupItem;
 import org.bremersee.smbcon.model.SambaUser;
 import org.bremersee.smbcon.model.SambaUserAddRequest;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The samba connector service interface.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface SambaConnectorService {
 
   /**
