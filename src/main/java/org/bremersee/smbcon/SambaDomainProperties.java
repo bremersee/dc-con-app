@@ -99,7 +99,7 @@ public class SambaDomainProperties implements Serializable {
   private List<String> excludedEntryRegexList = new ArrayList<>();
 
   public SambaDomainProperties() {
-    excludedZoneRegexList.add("^msdcs\\..*$");
+    excludedZoneRegexList.add("^_msdcs\\..*$");
 
     excludedEntryRegexList.add("^$");
     excludedEntryRegexList.add("_msdcs");

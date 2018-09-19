@@ -800,7 +800,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   private boolean isDnsReverseZone(final String zoneName) {
-    return zoneName != null && zoneName.endsWith(properties.getReverseZoneSuffix());
+    final boolean result = zoneName != null && zoneName.endsWith(properties.getReverseZoneSuffix());
+    log.debug("msg=[Is dns reverse zone?] zone=[{}] result=[{}]", zoneName, result);
+    return result;
   }
 
   /**
@@ -917,6 +919,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     public int compare(DnsZone o1, DnsZone o2) {
       final String s1 = o1 != null && o1.getPszZoneName() != null ? o1.getPszZoneName() : "";
       final String s2 = o2 != null && o2.getPszZoneName() != null ? o2.getPszZoneName() : "";
+      log.debug("msg=[Comparing zones.] zone1=[{}] zone2=[{}]", s1, s2);
       if (isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
         final String[] sa1 = s1.split(Pattern.quote("."));
         final String[] sa2 = s2.split(Pattern.quote("."));
@@ -924,13 +927,21 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         if (c != 0) {
           return c;
         }
-        return compare(sa1, sa2);
+        c =  compare(sa1, sa2);
+        log.debug("msg=[Both zones are dns reverse zones.] result=[{}]", c);
+        return c;
       } else if (!isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
+        log.debug("msg=[First is non reverse zone, second is reverse zone.] "
+            + "first=[{}] second=[{}] result=[-1]", s1, s2);
         return -1;
       } else if (isDnsReverseZone(s1) && !isDnsReverseZone(s2)) {
+        log.debug("msg=[First is reverse zone, second is non reverse zone.] "
+            + "first=[{}] second=[{}] result=[1]", s1, s2);
         return 1;
       }
-      return s1.compareTo(s2);
+      final int result = s1.compareTo(s2);
+      log.debug("msg=[Both zones are non dns reverse zones.] result=[{}]", result);
+      return result;
     }
 
     private int compare(String[] sa1, String[] sa2) {
