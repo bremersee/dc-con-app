@@ -43,6 +43,7 @@ import org.springframework.util.StringUtils;
  */
 @Component
 @Slf4j
+@SuppressWarnings("Duplicates")
 public class SambaToolImpl implements SambaTool {
 
   private static final String SUB_CMD_USER_MANAGEMENT = "user";
@@ -61,6 +62,11 @@ public class SambaToolImpl implements SambaTool {
   private static final String USER_OPTION_MAIL_ADDRESS = "--mail-address='{}'";
 
   private static final String USER_OPTION_MOBILE = "--telephone-number='{}'";
+
+
+  private static final String USER_CMD_SETEXPIRY = "setexpiry";
+
+  private static final String USER_NOEXPIRY_OPTION = "--noexpiry";
 
 
   private static final String USER_CMD_DELETE = "delete";
@@ -144,7 +150,7 @@ public class SambaToolImpl implements SambaTool {
   }
 
   /**
-   * Instantiates a new Samba tool.
+   * Instantiates a new samba tool.
    *
    * @param properties     the properties
    * @param adProperties   the ad properties
@@ -227,7 +233,7 @@ public class SambaToolImpl implements SambaTool {
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
       log.warn("Executing '{}' zone name '{}' failed:\n{}",
-          dnsCommand, zoneName, response.getOutput());
+          dnsCommand, zoneName, response.getError());
     } else {
       log.info("Executing '{}' zone name '{}' with response:\n{}",
           dnsCommand, zoneName, response.getOutput());
@@ -313,7 +319,7 @@ public class SambaToolImpl implements SambaTool {
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
       log.warn("Executing '{}' {} Record of hostname {} failed:\n{}",
-          dnsCommand, recordType, name, response.getOutput());
+          dnsCommand, recordType, name, response.getError());
     } else {
       log.info("Executing '{}' {} Record of hostname {} with response:\n{}",
           dnsCommand, recordType, name, response.getOutput());
@@ -351,12 +357,29 @@ public class SambaToolImpl implements SambaTool {
     }
     auth(commands);
 
-    final CommandExecutorResponse response = CommandExecutor.exec(
+    CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
-      log.warn("Creating user {} with error:\n{}", userName, response.getOutput());
+      log.warn("Creating user {} with error:\n{}", userName, response.getError());
     } else {
       log.info("Creating user {} with response:\n{}", userName, response.getOutput());
+    }
+
+    commands.clear();
+    sudo(commands);
+    commands.add(properties.getSambaToolBinary());
+    commands.add(SUB_CMD_USER_MANAGEMENT);
+    commands.add(USER_CMD_SETEXPIRY);
+    commands.add(userName);
+    commands.add(USER_NOEXPIRY_OPTION);
+    response = CommandExecutor.exec(
+        commands, properties.getSambaToolExecDir());
+    if (StringUtils.hasText(response.getError())) {
+      log.warn("Setting noexpiry of user {} password with error:\n{}",
+          userName, response.getError());
+    } else {
+      log.warn("Setting noexpiry of user {} password with response:\n{}",
+          userName, response.getOutput());
     }
   }
 
@@ -375,7 +398,7 @@ public class SambaToolImpl implements SambaTool {
     final CommandExecutorResponse response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
-      log.warn("Deleting user {} with error:\n{}", userName, response.getOutput());
+      log.warn("Deleting user {} with error:\n{}", userName, response.getError());
     } else {
       log.info("Deleting user {} with response:\n{}", userName, response.getOutput());
     }
@@ -400,7 +423,7 @@ public class SambaToolImpl implements SambaTool {
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
       log.warn("Setting new password of user {} with error:\n{}",
-          userName, response.getOutput());
+          userName, response.getError());
     } else {
       log.info("Setting new password of user {} with response:\n{}",
           userName, response.getOutput());
@@ -423,7 +446,7 @@ public class SambaToolImpl implements SambaTool {
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
       log.warn("Adding group {} with error:\n{}",
-          groupName, response.getOutput());
+          groupName, response.getError());
     } else {
       log.info("Adding group {} with response:\n{}",
           groupName, response.getOutput());
@@ -446,7 +469,7 @@ public class SambaToolImpl implements SambaTool {
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {
       log.warn("Deleting group {} with error:\n{}",
-          groupName, response.getOutput());
+          groupName, response.getError());
     } else {
       log.info("Deleting group {} with response:\n{}",
           groupName, response.getOutput());
