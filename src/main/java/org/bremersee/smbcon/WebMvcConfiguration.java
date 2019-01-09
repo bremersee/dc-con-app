@@ -18,10 +18,9 @@ package org.bremersee.smbcon;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.common.exhandling.ApiExceptionMapper;
-import org.bremersee.common.exhandling.ApiExceptionMapperImpl;
-import org.bremersee.common.exhandling.ApiExceptionResolver;
-import org.bremersee.common.exhandling.ApiExceptionResolverProperties;
+import org.bremersee.exception.RestApiExceptionMapperImpl;
+import org.bremersee.exception.RestApiExceptionMapperProperties;
+import org.bremersee.web.servlet.ApiExceptionResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +35,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Christian Bremer
  */
 @Configuration
-@EnableConfigurationProperties({ApiExceptionResolverProperties.class})
+@EnableConfigurationProperties({RestApiExceptionMapperProperties.class})
 @Slf4j
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
@@ -52,16 +51,14 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
   @Autowired
   public WebMvcConfiguration(
       final Environment env,
-      final ApiExceptionResolverProperties apiExceptionResolverProperties,
+      final RestApiExceptionMapperProperties apiExceptionResolverProperties,
       final Jackson2ObjectMapperBuilder objectMapperBuilder) {
 
-    final ApiExceptionMapper apiExceptionMapper = new ApiExceptionMapperImpl(
+    final RestApiExceptionMapperImpl apiExceptionMapper = new RestApiExceptionMapperImpl(
         apiExceptionResolverProperties,
         env.getProperty("spring.application.name"));
 
-    this.apiExceptionResolver = new ApiExceptionResolver(
-        apiExceptionResolverProperties,
-        apiExceptionMapper);
+    this.apiExceptionResolver = new ApiExceptionResolver(apiExceptionMapper);
     this.apiExceptionResolver.setObjectMapperBuilder(objectMapperBuilder);
   }
 

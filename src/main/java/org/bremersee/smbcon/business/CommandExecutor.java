@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.bremersee.common.exhandling.ServiceException;
+import org.bremersee.exception.ServiceException;
 import org.springframework.http.HttpStatus;
 
 /**

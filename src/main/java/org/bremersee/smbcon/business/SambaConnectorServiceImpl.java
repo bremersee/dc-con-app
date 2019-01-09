@@ -16,7 +16,7 @@
 
 package org.bremersee.smbcon.business;
 
-import static org.bremersee.common.exhandling.ServiceException.internalServerError;
+import static org.bremersee.exception.ServiceException.internalServerError;
 import static org.bremersee.smbcon.business.LdapEntryUtils.UF_ACCOUNT_DISABLED;
 import static org.bremersee.smbcon.business.LdapEntryUtils.UF_DONT_EXPIRE_PASSWD;
 import static org.bremersee.smbcon.business.LdapEntryUtils.UF_NORMAL_ACCOUNT;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.common.exhandling.ServiceException;
+import org.bremersee.exception.ServiceException;
 import org.bremersee.smbcon.SambaDomainProperties;
 import org.bremersee.smbcon.exception.AlreadyExistsException;
 import org.bremersee.smbcon.exception.NotFoundException;
