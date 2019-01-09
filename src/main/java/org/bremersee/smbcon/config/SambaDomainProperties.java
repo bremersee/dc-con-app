@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
 import java.io.Serializable;
 import java.util.ArrayList;

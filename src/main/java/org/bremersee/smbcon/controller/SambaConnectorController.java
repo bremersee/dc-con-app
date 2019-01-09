@@ -18,7 +18,7 @@ package org.bremersee.smbcon.controller;
 
 import java.util.List;
 import javax.validation.Valid;
-import org.bremersee.smbcon.SambaDomainProperties;
+import org.bremersee.smbcon.config.SambaDomainProperties;
 import org.bremersee.smbcon.api.SambaConnectorControllerApi;
 import org.bremersee.smbcon.business.SambaConnectorService;
 import org.bremersee.smbcon.model.BooleanWrapper;

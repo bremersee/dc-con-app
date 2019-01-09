@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;

@@ -37,7 +37,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.smbcon.SambaDomainProperties;
+import org.bremersee.smbcon.config.SambaDomainProperties;
 import org.bremersee.smbcon.exception.AlreadyExistsException;
 import org.bremersee.smbcon.exception.NotFoundException;
 import org.bremersee.smbcon.model.DnsEntry;

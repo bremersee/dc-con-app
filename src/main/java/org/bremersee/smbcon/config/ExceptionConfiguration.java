@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.bremersee.exception.RestApiExceptionMapperImpl;
 import org.bremersee.exception.RestApiExceptionMapperProperties;
 import org.bremersee.web.servlet.ApiExceptionResolver;
@@ -30,26 +29,25 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * The web mvc configuration.
+ * The exception configuration.
  *
  * @author Christian Bremer
  */
 @Configuration
 @EnableConfigurationProperties({RestApiExceptionMapperProperties.class})
-@Slf4j
-public class WebMvcConfiguration implements WebMvcConfigurer {
+public class ExceptionConfiguration implements WebMvcConfigurer {
 
   private final ApiExceptionResolver apiExceptionResolver;
 
   /**
-   * Instantiates a new web mvc configuration.
+   * Instantiates a new exception configuration.
    *
    * @param env                            the env
    * @param apiExceptionResolverProperties the api exception resolver properties
    * @param objectMapperBuilder            the object mapper builder
    */
   @Autowired
-  public WebMvcConfiguration(
+  public ExceptionConfiguration(
       final Environment env,
       final RestApiExceptionMapperProperties apiExceptionResolverProperties,
       final Jackson2ObjectMapperBuilder objectMapperBuilder) {

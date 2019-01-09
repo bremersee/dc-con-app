@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.util.StringUtils;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -36,24 +33,16 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 /**
  * @author Christian Bremer
  */
-@Order(102)
 @Configuration
 @EnableConfigurationProperties({SwaggerProperties.class})
 @EnableSwagger2
-public class SwaggerConfiguration extends WebSecurityConfigurerAdapter {
+public class SwaggerConfiguration {
 
   private SwaggerProperties swaggerProperties;
 
   @Autowired
   public SwaggerConfiguration(SwaggerProperties swaggerProperties) {
     this.swaggerProperties = swaggerProperties;
-  }
-
-  @Override
-  public void configure(WebSecurity web) {
-    web.ignoring().antMatchers(
-        "/v2/api-docs",
-        "/v2/api-docs/**");
   }
 
   /**
@@ -70,8 +59,7 @@ public class SwaggerConfiguration extends WebSecurityConfigurerAdapter {
         .paths(PathSelectors.ant("/api/**"))
         .build()
         .pathMapping(swaggerProperties.getPathMapping())
-        .apiInfo(apiInfo())
-        ;
+        .apiInfo(apiInfo());
   }
 
   private ApiInfo apiInfo() {

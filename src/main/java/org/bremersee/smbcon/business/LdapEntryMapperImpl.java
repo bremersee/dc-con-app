@@ -23,7 +23,7 @@ import static org.bremersee.smbcon.business.LdapEntryUtils.whenTimeToOffsetDateT
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.smbcon.SambaDomainProperties;
+import org.bremersee.smbcon.config.SambaDomainProperties;
 import org.bremersee.smbcon.model.Name;
 import org.bremersee.smbcon.model.SambaGroup;
 import org.bremersee.smbcon.model.SambaGroupItem;

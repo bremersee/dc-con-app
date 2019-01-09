@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

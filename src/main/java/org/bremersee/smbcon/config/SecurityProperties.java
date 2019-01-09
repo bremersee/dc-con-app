@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package org.bremersee.smbcon;
+package org.bremersee.smbcon.config;
 
-import java.io.Serializable;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -29,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The type actuator security properties.
+ * The security properties.
  *
  * @author Christian Bremer
  */
@@ -40,17 +38,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @EqualsAndHashCode
 @NoArgsConstructor
 @Slf4j
-public class ActuatorSecurityProperties {
+public class SecurityProperties {
 
   private static final String ROLE_ACTUATOR = "ROLE_ACTUATOR";
 
   private static final String IS_AUTHENTICATED = "isAuthenticated()";
 
-  private List<SimpleUser> users = new ArrayList<>();
-
   private List<String> ipAddresses = new ArrayList<>();
-
-  private boolean withIsAuthenticated = false;
 
   private String defaultAccess = "hasIpAddress('127.0.0.1') "
       + "or hasIpAddress('::1') "
@@ -61,8 +55,7 @@ public class ActuatorSecurityProperties {
    *
    * @return the string
    */
-  @SuppressWarnings("WeakerAccess")
-  public String buildAccess() {
+  String buildAccess() {
     final StringBuilder sb = new StringBuilder();
     sb.append("hasAuthority('").append(ROLE_ACTUATOR).append("')");
     ipAddresses.forEach(
@@ -70,33 +63,6 @@ public class ActuatorSecurityProperties {
     final String access = sb.toString();
     log.info("msg=[Actuator access expression created.] expression=[{}]", access);
     return access;
-  }
-
-  /**
-   * A simple user.
-   */
-  @Getter
-  @Setter
-  @ToString(exclude = "password")
-  @EqualsAndHashCode(exclude = "password")
-  @NoArgsConstructor
-  static class SimpleUser implements Serializable, Principal {
-
-    private static final long serialVersionUID = -1393400622632455935L;
-
-    private String name;
-
-    private String password;
-
-    /**
-     * Build authorities.
-     *
-     * @return the authorities
-     */
-    String[] buildAuthorities() {
-      return new String[]{ROLE_ACTUATOR};
-    }
-
   }
 
 }
