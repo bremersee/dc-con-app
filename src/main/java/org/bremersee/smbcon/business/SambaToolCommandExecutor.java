@@ -32,6 +32,7 @@ import org.bremersee.smbcon.model.DnsEntry;
 import org.bremersee.smbcon.model.DnsRecordType;
 import org.bremersee.smbcon.model.DnsZone;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -41,10 +42,11 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
+@Profile("!in-memory")
 @Component
 @Slf4j
 @SuppressWarnings("Duplicates")
-public class SambaToolImpl implements SambaTool {
+public class SambaToolCommandExecutor implements SambaTool {
 
   private static final String SUB_CMD_USER_MANAGEMENT = "user";
 
@@ -157,7 +159,7 @@ public class SambaToolImpl implements SambaTool {
    * @param responseParser the response parser
    */
   @Autowired
-  public SambaToolImpl(
+  public SambaToolCommandExecutor(
       final SambaDomainProperties properties,
       final LdaptiveProperties adProperties,
       final SambaToolResponseParser responseParser) {

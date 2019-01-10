@@ -1,8 +1,8 @@
 bremersee:
   access:
     ip-addresses:
-    - "127.0.0.1"
-    - "::1"
+      - "127.0.0.1"
+      - "::1"
   security:
     oauth2:
       password-flow:
@@ -35,7 +35,7 @@ bremersee:
         size-limit: 1
         search-scope: ONELEVEL
         return-attributes:
-        - cn
+          - cn
   samba-domain:
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
@@ -43,11 +43,11 @@ bremersee:
 
 eureka:
   client:
-    enabled: false
+    enabled: ${EUREKA_CLIENT_ENABLED:false}
     register-with-eureka: true
     prefer-same-zone-eureka: true
     service-url:
-      defaultZone: http://192.168.1.16:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
   instance:
     health-check-url-path: /actuator/health
     home-page-url-path: /actuator/info
@@ -78,11 +78,12 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
     time-zone: GMT
   sleuth:
+    enabled: ${SLEUTH_ENABLED:false}
     sampler:
-      probability: 1.0
+      probability: ${SLEUTH_PROBABILITY:1.0}
   zipkin:
-    enabled: false
-    base-url: http://localhost:9411/
+    enabled: ${ZIPKIN_ENABLED:false}
+    base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
   security:
     oauth2:
       resourceserver:
@@ -105,3 +106,7 @@ server:
       enabled: true
       directory: /var/log/smb-con
 
+---
+
+spring:
+  profiles: in-memory

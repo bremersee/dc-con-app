@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,26 @@
 
 package org.bremersee.smbcon.exception;
 
+import org.bremersee.exception.annotation.ErrorCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
- * The not found exception is throws when an entity could not be found.
+ * The type Group already exists exception.
  *
  * @author Christian Bremer
  */
-public class NotFoundException extends RuntimeException {
-
-  private static final long serialVersionUID = 2235473063263765047L;
-
-  /**
-   * Instantiates a new not found exception.
-   */
-  NotFoundException() {
-    super("Not found.");
-  }
+@ResponseStatus(code = HttpStatus.NOT_ACCEPTABLE, reason = "Already exists.")
+@ErrorCode("SMB_CON:G409")
+public class GroupAlreadyExistsException extends RuntimeException {
 
   /**
-   * Instantiates a new not found exception.
+   * Instantiates a new group already exists exception.
    *
-   * @param message the message
+   * @param groupName the group name
    */
-  NotFoundException(String message) {
-    super(message);
+  public GroupAlreadyExistsException(String groupName) {
+    super(String.format("Group [%s] already exists.", groupName));
   }
+
 }

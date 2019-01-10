@@ -38,8 +38,10 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.smbcon.config.SambaDomainProperties;
-import org.bremersee.smbcon.exception.AlreadyExistsException;
+import org.bremersee.smbcon.exception.GroupAlreadyExistsException;
+import org.bremersee.smbcon.exception.GroupNotFoundException;
 import org.bremersee.smbcon.exception.NotFoundException;
+import org.bremersee.smbcon.exception.UserNotFoundException;
 import org.bremersee.smbcon.model.DnsEntry;
 import org.bremersee.smbcon.model.DnsRecordType;
 import org.bremersee.smbcon.model.DnsZone;
@@ -64,6 +66,7 @@ import org.ldaptive.SearchOperation;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -72,6 +75,8 @@ import org.springframework.util.Assert;
  *
  * @author Christian Bremer
  */
+@SuppressWarnings("Duplicates")
+@Profile("!in-memory")
 @Component
 @Slf4j
 public class SambaConnectorServiceImpl implements SambaConnectorService {
@@ -146,7 +151,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     log.info("msg=[Adding samba group] group=[{}]", group);
     try {
       getGroupByName(group.getName());
-      throw new AlreadyExistsException(group);
+      throw new GroupAlreadyExistsException(group.getName());
 
     } catch (final NotFoundException nfe) {
 
@@ -178,8 +183,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     Connection conn = null;
     try {
       conn = getConnection();
-      final SambaGroup group = mapper.mapLdapEntryToSambaGroup(
-          findGroupByName(groupName, conn).orElseThrow(NotFoundException::new));
+      final SambaGroup group = mapper
+          .mapLdapEntryToSambaGroup(findGroupByName(groupName, conn)
+              .orElseThrow(GroupNotFoundException.supplier(groupName)));
       log.info("msg=[Getting samba group by name] name=[{}] group=[{}]", groupName, group);
       return group;
 
@@ -204,7 +210,8 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     Connection conn = null;
     try {
       conn = getConnection();
-      LdapEntry ldapEntry = findGroupByName(groupName, conn).orElseThrow(NotFoundException::new);
+      LdapEntry ldapEntry = findGroupByName(groupName, conn)
+          .orElseThrow(GroupNotFoundException.supplier(groupName));
 
       final LdapAttribute memberAttr = ldapEntry.getAttribute(properties.getGroupMemberAttr());
       final boolean hasMemberAttr = memberAttr != null;
@@ -356,8 +363,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     Connection conn = null;
     try {
       conn = getConnection();
-      final SambaUser user = mapper.mapLdapEntryToSambaUser(
-          findUserByName(userName, conn).orElseThrow(NotFoundException::new));
+      final SambaUser user = mapper
+          .mapLdapEntryToSambaUser(findUserByName(userName, conn)
+              .orElseThrow(UserNotFoundException.supplier(userName)));
       log.info("msg=[Getting samba user by name.] name=[{}] user=[{}]", userName, user);
       return user;
 
@@ -381,7 +389,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     try {
       conn = getConnection();
       final LdapEntry ldapEntry = findUserByName(userName, conn)
-          .orElseThrow(NotFoundException::new);
+          .orElseThrow(UserNotFoundException.supplier(userName));
 
       int userAccountControl = getUserAccountControl(ldapEntry);
       if ((userAccountControl & UF_NORMAL_ACCOUNT) != UF_NORMAL_ACCOUNT) {
@@ -505,7 +513,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
     try {
       conn = getConnection();
       final LdapEntry ldapEntry = findUserByName(userName, conn)
-          .orElseThrow(NotFoundException::new);
+          .orElseThrow(UserNotFoundException.supplier(userName));
       updateUserGroups(ldapEntry, groups.getValues(), conn);
       final SambaUser user = mapper.mapLdapEntryToSambaUser(ldapEntry);
       log.info("Samba user's group successfully updated: {}", user);
@@ -925,7 +933,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
         final String[] sa2 = s2.split(Pattern.quote("."));
         int c = sa2.length - sa1.length;
         if (c == 0) {
-          c =  compare(sa1, sa2);
+          c = compare(sa1, sa2);
         }
         log.debug("msg=[Both zones are dns reverse zones.] result=[{}]", c);
         return c;
