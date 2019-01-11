@@ -110,3 +110,32 @@ server:
 
 spring:
   profiles: in-memory
+
+---
+
+spring:
+  profiles: basic-auth
+
+---
+
+spring:
+  profiles: test
+
+bremersee:
+  access:
+    ip-addresses:
+      - "8.8.8.0"
+    basic-auth-users:
+      - name: "admin"
+        password: "admin"
+        authorities:
+          - "ROLE_USER"
+          - "ROLE_ADMIN"
+      - name: "actuator"
+        password: "actuator"
+        authorities:
+          - "ROLE_ACTUATOR"
+      - name: "user"
+        password: "user"
+        authorities:
+          - "ROLE_USER"

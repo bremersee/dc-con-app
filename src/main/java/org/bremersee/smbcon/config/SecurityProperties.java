@@ -16,6 +16,8 @@
 
 package org.bremersee.smbcon.config;
 
+import java.io.Serializable;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -25,6 +27,10 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * The security properties.
@@ -46,9 +52,7 @@ public class SecurityProperties {
 
   private List<String> ipAddresses = new ArrayList<>();
 
-  private String defaultAccess = "hasIpAddress('127.0.0.1') "
-      + "or hasIpAddress('::1') "
-      + "or " + IS_AUTHENTICATED;
+  private List<SimpleUser> basicAuthUsers = new ArrayList<>();
 
   /**
    * Build access string.
@@ -65,4 +69,52 @@ public class SecurityProperties {
     return access;
   }
 
+  /**
+   * Build basic auth user details user details [ ].
+   *
+   * @return the user details [ ]
+   */
+  UserDetails[] buildBasicAuthUserDetails() {
+    final PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    return getBasicAuthUsers().stream().map(
+        simpleUser -> User.builder()
+            .username(simpleUser.getName())
+            .password(simpleUser.getPassword())
+            .authorities(simpleUser.buildAuthorities())
+            .passwordEncoder(encoder::encode)
+            .build())
+        .toArray(UserDetails[]::new);
+  }
+
+  /**
+   * A simple user.
+   */
+  @Getter
+  @Setter
+  @ToString(exclude = "password")
+  @EqualsAndHashCode(exclude = "password")
+  @NoArgsConstructor
+  static class SimpleUser implements Serializable, Principal {
+
+    private static final long serialVersionUID = -1393400622632455935L;
+
+    private String name;
+
+    private String password;
+
+    private List<String> authorities = new ArrayList<>();
+
+    /**
+     * Build authorities.
+     *
+     * @return the authorities
+     */
+    String[] buildAuthorities() {
+      if (authorities == null || authorities.isEmpty()) {
+        return new String[]{"ROLE_USER"};
+      }
+      return authorities.toArray(new String[0]);
+    }
+
+  }
 }

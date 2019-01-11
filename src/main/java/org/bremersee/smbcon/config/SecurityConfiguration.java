@@ -16,6 +16,8 @@
 
 package org.bremersee.smbcon.config;
 
+import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.security.authentication.KeycloakJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +25,19 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointR
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 /**
  * The security configuration.
@@ -38,13 +46,16 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
  */
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
   /**
    * The resource server security configuration.
    */
+  @Profile("!basic-auth")
   @Order(51)
   @Configuration
+  @Slf4j
   static class ResourceServer extends WebSecurityConfigurerAdapter {
 
     private KeycloakJwtConverter keycloakJwtConverter;
@@ -58,6 +69,14 @@ public class SecurityConfiguration {
     public ResourceServer(
         KeycloakJwtConverter keycloakJwtConverter) {
       this.keycloakJwtConverter = keycloakJwtConverter;
+    }
+
+    /**
+     * Init.
+     */
+    @PostConstruct
+    public void init() {
+      log.info("msg=[Using keycloak authentication.]");
     }
 
     @Override
@@ -75,8 +94,53 @@ public class SecurityConfiguration {
   }
 
   /**
+   * The type resource server with basic auth.
+   */
+  @Profile("basic-auth")
+  @Order(51)
+  @Configuration
+  @EnableConfigurationProperties(SecurityProperties.class)
+  static class ResourceServerBasicAuth extends WebSecurityConfigurerAdapter {
+
+    private final SecurityProperties securityProperties;
+
+    /**
+     * Instantiates a new resource server for basic auth.
+     *
+     * @param securityProperties the security properties
+     */
+    public ResourceServerBasicAuth(SecurityProperties securityProperties) {
+      this.securityProperties = securityProperties;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http
+          .antMatcher("/api/**")
+          .authorizeRequests()
+          .antMatchers(HttpMethod.OPTIONS).permitAll()
+          .anyRequest().authenticated()
+          .and()
+          .cors().disable()
+          .csrf().disable()
+          .httpBasic()
+          .realmName("smb-con")
+          .and()
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
+
+    @Bean
+    @Override
+    public UserDetailsService userDetailsService() {
+      return new InMemoryUserDetailsManager(securityProperties.buildBasicAuthUserDetails());
+    }
+  }
+
+  /**
    * The actuator security configuration.
    */
+  @Profile("!basic-auth")
   @Order(52)
   @Configuration
   @EnableConfigurationProperties(SecurityProperties.class)
@@ -115,7 +179,52 @@ public class SecurityConfiguration {
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
           .anyRequest()
-          .access(properties.buildAccess());
+          .access(properties.buildAccess())
+          .and()
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
+  }
+
+  /**
+   * The actuator security configuration for basic auth.
+   */
+  @Profile("basic-auth")
+  @Order(52)
+  @Configuration
+  @EnableConfigurationProperties(SecurityProperties.class)
+  static class ActuatorBasicAuth extends WebSecurityConfigurerAdapter {
+
+    private final SecurityProperties properties;
+
+    /**
+     * Instantiates a new actuator security configuration for basic auth.
+     *
+     * @param properties the properties
+     */
+    @Autowired
+    public ActuatorBasicAuth(final SecurityProperties properties) {
+      this.properties = properties;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http
+          .requestMatcher(EndpointRequest.toAnyEndpoint())
+          .cors().disable()
+          .csrf().disable()
+          .httpBasic()
+          .realmName("actuator")
+          .and()
+          .requestMatcher(EndpointRequest.toAnyEndpoint())
+          .authorizeRequests()
+          .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
+          .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
+          .anyRequest()
+          .access(properties.buildAccess())
+          .and()
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
   }
 
