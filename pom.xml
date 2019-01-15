@@ -41,6 +41,10 @@
     <dockerfile.skip>true</dockerfile.skip>
     <dockerfile.tag>${project.version}</dockerfile.tag>
     <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+
+    <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
+    <maven-surefire-report-plugin.version>3.0.0-M3</maven-surefire-report-plugin.version>
+
     <plantuml.version>1.2018.11</plantuml.version>
     <wagon-webdav-jackrabbit.version>3.0.0</wagon-webdav-jackrabbit.version>
     <wagon-ssh-external.version>3.0.0</wagon-ssh-external.version>
@@ -198,25 +202,6 @@
       <version>${springfox.version}</version>
     </dependency>
 
-    <!--
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-config</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-oauth2</artifactId>
-    </dependency>
-    -->
-
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
@@ -242,12 +227,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
@@ -559,7 +538,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
-        <version>3.0.0-M3</version>
+        <version>${maven-surefire-report-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
