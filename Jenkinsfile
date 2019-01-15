@@ -13,7 +13,7 @@ pipeline {
     }
     stage('Site') {
       steps {
-        sh 'mvn site site:deploy'
+        sh 'mvn site-deploy'
       }
     }
   }
