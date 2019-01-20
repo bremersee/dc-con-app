@@ -36,7 +36,7 @@ bremersee:
         search-scope: ONELEVEL
         return-attributes:
           - cn
-  samba-domain:
+  domain-controller:
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}

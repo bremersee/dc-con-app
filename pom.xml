@@ -5,11 +5,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.bremersee</groupId>
-  <artifactId>smb-con-app</artifactId>
+  <artifactId>dc-con-app</artifactId>
   <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>smb-con-app</name>
+  <name>dc-con-app</name>
   <description>Samba Connector Application</description>
 
   <parent>
@@ -27,7 +27,7 @@
     <product.vendor>bremersee.org</product.vendor>
     <inceptionYear>2019</inceptionYear>
 
-    <start-class>org.bremersee.smbcon.Application</start-class>
+    <start-class>org.bremersee.dccon.Application</start-class>
 
     <spring-cloud.version>Greenwich.RC2</spring-cloud.version>
 
@@ -35,7 +35,6 @@
     <ldaptive.version>1.2.3</ldaptive.version>
     <springfox.version>2.9.2</springfox.version>
     <swagger-annotations.version>1.5.18</swagger-annotations.version>
-    <swagger-base-package>org.bremersee.smbcon</swagger-base-package>
 
     <dockerfile-maven-version>1.4.0</dockerfile-maven-version>
     <dockerfile.skip>true</dockerfile.skip>
@@ -79,11 +78,11 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com:bremersee/smb-con-app.git</connection>
+    <connection>scm:git:ssh://git@github.com:bremersee/dc-con-app.git</connection>
     <developerConnection>
-      scm:git:ssh://git@github.com:bremersee/smb-con-app.git
+      scm:git:ssh://git@github.com:bremersee/dc-con-app.git
     </developerConnection>
-    <url>https://github.com/bremersee/smb-con-app</url>
+    <url>https://github.com/bremersee/dc-con-app</url>
   </scm>
 
   <issueManagement>
@@ -109,7 +108,7 @@
     <site>
       <id>bremersee-sites</id>
       <url>
-        dav:https://nexus.bremersee.org/repository/maven-sites/smb-con-app/${project.version}
+        dav:https://nexus.bremersee.org/repository/maven-sites/dc-con-app/${project.version}
       </url>
     </site>
   </distributionManagement>
@@ -156,7 +155,7 @@
   <dependencies>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>smb-con-api-spring</artifactId>
+      <artifactId>dc-con-api-spring</artifactId>
       <version>1.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -291,7 +290,7 @@
   </dependencies>
 
   <build>
-    <finalName>smb-con</finalName>
+    <finalName>dc-con</finalName>
 
     <pluginManagement>
       <plugins>
@@ -638,7 +637,7 @@
         <assembly-config>debian9.xml</assembly-config>
       </properties>
       <build>
-        <finalName>smb-con</finalName>
+        <finalName>dc-con</finalName>
         <plugins>
           <plugin>
             <groupId>org.springframework.boot</groupId>
@@ -679,16 +678,16 @@
                   <verbose>true</verbose>
                   <!--suppress MavenModelInspection -->
                   <deb>
-                    ${project.basedir}/target/smb-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.deb
+                    ${project.basedir}/target/dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.deb
                   </deb>
                   <!--suppress MavenModelInspection -->
                   <changesOut>
-                    ${project.basedir}/target/smb-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.changes
+                    ${project.basedir}/target/dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.changes
                   </changesOut>
                   <controlDir>${basedir}/src/assembly/debian9/control</controlDir>
                   <dataSet>
                     <data>
-                      <src>${project.basedir}/target/smb-con-debian9.tar.gz</src>
+                      <src>${project.basedir}/target/dc-con-debian9.tar.gz</src>
                       <type>archive</type>
                       <mapper>
                         <type>perm</type>
