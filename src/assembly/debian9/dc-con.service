@@ -1,10 +1,10 @@
 [Unit]
-Description=Samba Connector
+Description=Domain Controller Connector
 After=syslog.target
 
 [Service]
-User=smb-con
-ExecStart=/var/lib/smb-con/smb-con.jar
+User=dc-con
+ExecStart=/var/lib/dc-con/dc-con.jar
 SuccessExitStatus=1 4 3
 
 [Install]

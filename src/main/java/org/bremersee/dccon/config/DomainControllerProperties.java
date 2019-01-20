@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
 @Setter
 @ToString
 @EqualsAndHashCode
-public class SambaDomainProperties implements Serializable {
+public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 606284794541721895L;
 
@@ -75,7 +75,7 @@ public class SambaDomainProperties implements Serializable {
 
   private String kinitAdministratorName = "Administrator";
 
-  private String kinitPasswordFile = "/var/lib/smb-con/smb-pass.txt";
+  private String kinitPasswordFile = "/var/lib/dc-con/dc-pass.txt";
 
   private String sudoBinary = "/usr/bin/sudo";
 
@@ -98,7 +98,7 @@ public class SambaDomainProperties implements Serializable {
 
   private List<String> excludedEntryRegexList = new ArrayList<>();
 
-  public SambaDomainProperties() {
+  public DomainControllerProperties() {
     excludedZoneRegexList.add("^_msdcs\\..*$");
 
     excludedEntryRegexList.add("^$");

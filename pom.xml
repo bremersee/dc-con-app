@@ -10,7 +10,7 @@
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
-  <description>Samba Connector Application</description>
+  <description>Domain Controller Connector Application</description>
 
   <parent>
     <groupId>org.springframework.boot</groupId>

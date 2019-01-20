@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Christian Bremer
  */
 @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "Group not found.")
-@ErrorCode("SMB_CON:G404")
+@ErrorCode("DC_CON:G404")
 public class GroupNotFoundException extends NotFoundException {
 
   /**

@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Christian Bremer
  */
 @ResponseStatus(code = HttpStatus.NOT_ACCEPTABLE, reason = "Already exists.")
-@ErrorCode("SMB_CON:G409")
+@ErrorCode("DC_CON:G409")
 public class GroupAlreadyExistsException extends RuntimeException {
 
   /**

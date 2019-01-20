@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.dccon.config.SambaDomainProperties;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
@@ -48,10 +48,10 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.Name;
 import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
-import org.bremersee.dccon.model.SambaUserAddRequest;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserAddRequest;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.AttributeModificationType;
 import org.ldaptive.Connection;
@@ -71,7 +71,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
- * The sSamba connector service implementation.
+ * The sDomain connector service implementation.
  *
  * @author Christian Bremer
  */
@@ -79,13 +79,13 @@ import org.springframework.util.Assert;
 @Profile("!in-memory")
 @Component
 @Slf4j
-public class SambaConnectorServiceImpl implements SambaConnectorService {
+public class DomainControllerConnectorServiceImpl implements DomainControllerConnectorService {
 
   private final DnsZoneComparator dnsZoneComparator = new DnsZoneComparator();
 
   private final DnsEntryComparator dnsEntryComparator = new DnsEntryComparator();
 
-  private final SambaDomainProperties properties;
+  private final DomainControllerProperties properties;
 
   private final LdapEntryMapper mapper;
 
@@ -94,7 +94,7 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   private final SambaTool sambaTool;
 
   /**
-   * Instantiates a new Samba connector service.
+   * Instantiates a new Domain connector service.
    *
    * @param properties        the properties
    * @param mapper            the mapper
@@ -102,8 +102,8 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
    * @param sambaTool         the samba tool
    */
   @Autowired
-  public SambaConnectorServiceImpl(
-      final SambaDomainProperties properties,
+  public DomainControllerConnectorServiceImpl(
+      final DomainControllerProperties properties,
       final LdapEntryMapper mapper,
       final ConnectionFactory connectionFactory,
       final SambaTool sambaTool) {
@@ -115,9 +115,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public List<SambaGroupItem> getGroups() {
+  public List<DomainGroupItem> getGroups() {
 
-    log.info("msg=[Getting samba groups]");
+    log.info("msg=[Getting domain groups]");
     final SearchFilter sf = new SearchFilter(properties.getGroupFindAllFilter());
     final SearchRequest sr = new SearchRequest(properties.getGroupBaseDn(), sf);
     sr.setSearchScope(properties.getGroupFindAllSearchScope());
@@ -126,18 +126,18 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
       conn = getConnection();
       final SearchOperation so = new SearchOperation(conn);
       final SearchResult searchResult = so.execute(sr).getResult();
-      final List<SambaGroupItem> groups = searchResult.getEntries()
+      final List<DomainGroupItem> groups = searchResult.getEntries()
           .stream()
-          .map(mapper::mapLdapEntryToSambaGroupItem)
+          .map(mapper::mapLdapEntryToDomainGroupItem)
           .collect(Collectors.toList());
-      log.info("msg=[Getting samba groups] resultSize=[{}]", groups.size());
+      log.info("msg=[Getting domain groups] resultSize=[{}]", groups.size());
       return groups;
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Getting samba groups failed.",
+          "Getting domain groups failed.",
           e);
-      log.error("msg=[Getting samba groups failed.]", se);
+      log.error("msg=[Getting domain groups failed.]", se);
       throw se;
 
     } finally {
@@ -146,9 +146,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaGroup addGroup(@Valid final SambaGroup group) {
+  public DomainGroup addGroup(@Valid final DomainGroup group) {
 
-    log.info("msg=[Adding samba group] group=[{}]", group);
+    log.info("msg=[Adding domain group] group=[{}]", group);
     try {
       getGroupByName(group.getName());
       throw new GroupAlreadyExistsException(group.getName());
@@ -177,23 +177,23 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaGroup getGroupByName(@NotNull final String groupName) {
+  public DomainGroup getGroupByName(@NotNull final String groupName) {
 
-    log.info("msg=[Getting samba group by name] name=[{}]", groupName);
+    log.info("msg=[Getting domain group by name] name=[{}]", groupName);
     Connection conn = null;
     try {
       conn = getConnection();
-      final SambaGroup group = mapper
-          .mapLdapEntryToSambaGroup(findGroupByName(groupName, conn)
+      final DomainGroup group = mapper
+          .mapLdapEntryToDomainGroup(findGroupByName(groupName, conn)
               .orElseThrow(GroupNotFoundException.supplier(groupName)));
-      log.info("msg=[Getting samba group by name] name=[{}] group=[{}]", groupName, group);
+      log.info("msg=[Getting domain group by name] name=[{}] group=[{}]", groupName, group);
       return group;
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Getting samba group by name failed.",
+          "Getting domain group by name failed.",
           e);
-      log.error("msg=[Getting samba group by name failed.]", se);
+      log.error("msg=[Getting domain group by name failed.]", se);
       throw se;
 
     } finally {
@@ -202,11 +202,11 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaGroup updateGroupMembers(
+  public DomainGroup updateGroupMembers(
       @NotNull final String groupName,
       @Valid final Names members) {
 
-    log.info("msg=[Updating samba group members] group=[{}] members=[{}]", groupName, members);
+    log.info("msg=[Updating domain group members] group=[{}] members=[{}]", groupName, members);
     Connection conn = null;
     try {
       conn = getConnection();
@@ -272,13 +272,13 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
                 mods.toArray(new AttributeModification[0])));
       }
 
-      return mapper.mapLdapEntryToSambaGroup(ldapEntry);
+      return mapper.mapLdapEntryToDomainGroup(ldapEntry);
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Updating samba group members failed.",
+          "Updating domain group members failed.",
           e);
-      log.error("msg=[Updating samba group members failed.] group=[{}]", groupName, se);
+      log.error("msg=[Updating domain group members failed.] group=[{}]", groupName, se);
       throw se;
 
     } finally {
@@ -289,26 +289,26 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   @Override
   public void deleteGroup(@NotNull final String groupName) {
 
-    log.info("msg=[Deleting samba group.] group=[{}]", groupName);
+    log.info("msg=[Deleting domain group.] group=[{}]", groupName);
     sambaTool.deleteGroup(groupName);
   }
 
   @Override
   public boolean userExists(@NotNull final String userName) {
 
-    log.info("msg=[Checking whether samba user exists.] user=[{}]", userName);
+    log.info("msg=[Checking whether domain user exists.] user=[{}]", userName);
     Connection conn = null;
     try {
       conn = getConnection();
       final boolean result = findUserByName(userName, conn).isPresent();
-      log.info("msg=[Samba user [{}] exists? {}]", userName, result);
+      log.info("msg=[Domain user [{}] exists? {}]", userName, result);
       return result;
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Checking whether samba user exists failed.",
+          "Checking whether domain user exists failed.",
           e);
-      log.error("msg=[Checking whether samba user exists failed.]", se);
+      log.error("msg=[Checking whether domain user exists failed.]", se);
       throw se;
 
     } finally {
@@ -317,27 +317,27 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaUser addUser(@Valid final SambaUserAddRequest sambaUser) {
+  public DomainUser addUser(@Valid final DomainUserAddRequest domainUser) {
 
-    log.info("msg=[Adding samba user.] user=[{}]", sambaUser);
+    log.info("msg=[Adding domain user.] user=[{}]", domainUser);
     try {
-      getUser(sambaUser.getUserName());
-      log.debug("msg=[Samba user {} already exists. Updating it ...]", sambaUser.getUserName());
+      getUser(domainUser.getUserName());
+      log.debug("msg=[Domain user {} already exists. Updating it ...]", domainUser.getUserName());
       final Password password = new Password();
-      password.setValue(sambaUser.getPassword());
-      updateUserPassword(sambaUser.getUserName(), password);
-      return updateUser(sambaUser.getUserName(), sambaUser);
+      password.setValue(domainUser.getPassword());
+      updateUserPassword(domainUser.getUserName(), password);
+      return updateUser(domainUser.getUserName(), domainUser);
 
     } catch (final NotFoundException nfe) {
 
       sambaTool.createUser(
-          sambaUser.getUserName(),
-          sambaUser.getPassword(),
-          sambaUser.getDisplayName(),
-          sambaUser.getEmail(),
-          sambaUser.getMobile());
-      final SambaUser user = updateUser(sambaUser.getUserName(), sambaUser);
-      log.info("msg=[Samba user successfully added.] user=[{}]", user);
+          domainUser.getUserName(),
+          domainUser.getPassword(),
+          domainUser.getDisplayName(),
+          domainUser.getEmail(),
+          domainUser.getMobile());
+      final DomainUser user = updateUser(domainUser.getUserName(), domainUser);
+      log.info("msg=[Domain user successfully added.] user=[{}]", user);
       return user;
     }
   }
@@ -357,23 +357,23 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaUser getUser(@NotNull final String userName) {
+  public DomainUser getUser(@NotNull final String userName) {
 
-    log.info("msg=[Getting samba user by name.] name=[{}]", userName);
+    log.info("msg=[Getting domain user by name.] name=[{}]", userName);
     Connection conn = null;
     try {
       conn = getConnection();
-      final SambaUser user = mapper
-          .mapLdapEntryToSambaUser(findUserByName(userName, conn)
+      final DomainUser user = mapper
+          .mapLdapEntryToDomainUser(findUserByName(userName, conn)
               .orElseThrow(UserNotFoundException.supplier(userName)));
-      log.info("msg=[Getting samba user by name.] name=[{}] user=[{}]", userName, user);
+      log.info("msg=[Getting domain user by name.] name=[{}] user=[{}]", userName, user);
       return user;
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Getting samba user by name failed.",
+          "Getting domain user by name failed.",
           e);
-      log.error("msg=[Getting samba user by name failed.]", se);
+      log.error("msg=[Getting domain user by name failed.]", se);
       throw se;
 
     } finally {
@@ -382,9 +382,9 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaUser updateUser(@NotNull final String userName, @Valid final SambaUser sambaUser) {
+  public DomainUser updateUser(@NotNull final String userName, @Valid final DomainUser domainUser) {
 
-    log.info("msg=[Updating samba user.] name=[{}] user=[{}]", userName, sambaUser);
+    log.info("msg=[Updating domain user.] name=[{}] user=[{}]", userName, domainUser);
     Connection conn = null;
     try {
       conn = getConnection();
@@ -398,24 +398,24 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
       if ((userAccountControl & UF_DONT_EXPIRE_PASSWD) != UF_DONT_EXPIRE_PASSWD) {
         userAccountControl = userAccountControl + UF_DONT_EXPIRE_PASSWD;
       }
-      if (sambaUser.isEnabled() &&
+      if (domainUser.isEnabled() &&
           ((userAccountControl & UF_ACCOUNT_DISABLED) == UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl - UF_ACCOUNT_DISABLED;
-      } else if (!sambaUser.isEnabled() &&
+      } else if (!domainUser.isEnabled() &&
           ((userAccountControl & UF_ACCOUNT_DISABLED) != UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl + UF_ACCOUNT_DISABLED;
       }
 
       final List<AttributeModification> mods = new ArrayList<>();
-      updateAttribute(ldapEntry, "displayName", sambaUser.getDisplayName(), mods);
-      updateAttribute(ldapEntry, "gecos", sambaUser.getDisplayName(), mods);
-      updateAttribute(ldapEntry, "mail", sambaUser.getEmail(), mods);
-      updateAttribute(ldapEntry, "telephoneNumber", sambaUser.getMobile(), mods);
+      updateAttribute(ldapEntry, "displayName", domainUser.getDisplayName(), mods);
+      updateAttribute(ldapEntry, "gecos", domainUser.getDisplayName(), mods);
+      updateAttribute(ldapEntry, "mail", domainUser.getEmail(), mods);
+      updateAttribute(ldapEntry, "telephoneNumber", domainUser.getMobile(), mods);
       updateAttribute(
           ldapEntry, "userAccountControl", String.valueOf(userAccountControl), mods);
 
       if (!mods.isEmpty()) {
-        log.debug("msg=[Updating samba user [{}]: making {} modification(s).]",
+        log.debug("msg=[Updating domain user [{}]: making {} modification(s).]",
             userName, mods.size());
         new ModifyOperation(conn).execute(
             new ModifyRequest(
@@ -423,10 +423,10 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
                 mods.toArray(new AttributeModification[0])));
       }
 
-      updateUserGroups(ldapEntry, sambaUser.getGroups(), conn);
+      updateUserGroups(ldapEntry, domainUser.getGroups(), conn);
 
-      final SambaUser user = mapper.mapLdapEntryToSambaUser(ldapEntry);
-      log.info("msg=[Samba user successfully updated.] name=[{}] user=[{}]", userName, user);
+      final DomainUser user = mapper.mapLdapEntryToDomainUser(ldapEntry);
+      log.info("msg=[Domain user successfully updated.] name=[{}] user=[{}]", userName, user);
       return user;
 
     } catch (final LdapException e) {
@@ -506,24 +506,24 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
   }
 
   @Override
-  public SambaUser updateUserGroups(@NotNull final String userName, @Valid final Names groups) {
+  public DomainUser updateUserGroups(@NotNull final String userName, @Valid final Names groups) {
 
-    log.info("msg=[Updating samba user's groups.] name=[{}] groups=[{}]", userName, groups);
+    log.info("msg=[Updating domain user's groups.] name=[{}] groups=[{}]", userName, groups);
     Connection conn = null;
     try {
       conn = getConnection();
       final LdapEntry ldapEntry = findUserByName(userName, conn)
           .orElseThrow(UserNotFoundException.supplier(userName));
       updateUserGroups(ldapEntry, groups.getValues(), conn);
-      final SambaUser user = mapper.mapLdapEntryToSambaUser(ldapEntry);
-      log.info("Samba user's group successfully updated: {}", user);
+      final DomainUser user = mapper.mapLdapEntryToDomainUser(ldapEntry);
+      log.info("Domain user's group successfully updated: {}", user);
       return user;
 
     } catch (final LdapException e) {
       final ServiceException se = internalServerError(
-          "Updating samba user's group failed.",
+          "Updating domain user's group failed.",
           e);
-      log.error("msg=[Updating samba user's group failed.]", se);
+      log.error("msg=[Updating domain user's group failed.]", se);
       throw se;
 
     } finally {
@@ -536,14 +536,14 @@ public class SambaConnectorServiceImpl implements SambaConnectorService {
       @NotNull final String userName,
       @Valid final Password newPassword) {
 
-    log.info("msg=[Updating samba user's password.] name=[{}]", userName);
+    log.info("msg=[Updating domain user's password.] name=[{}]", userName);
     sambaTool.setNewPassword(userName, newPassword.getValue());
   }
 
   @Override
   public void deleteUser(@NotNull final String userName) {
 
-    log.info("msg=[Deleting samba user.] name=[{}]", userName);
+    log.info("msg=[Deleting domain user.] name=[{}]", userName);
     sambaTool.deleteUser(userName);
   }
 

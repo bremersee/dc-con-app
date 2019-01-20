@@ -24,34 +24,34 @@ import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
-import org.bremersee.dccon.model.SambaUserAddRequest;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserAddRequest;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * The samba connector service interface.
+ * The domain controller connector service interface.
  *
  * @author Christian Bremer
  */
 @Validated
-public interface SambaConnectorService {
+public interface DomainControllerConnectorService {
 
   /**
-   * Gets samba groups.
+   * Gets domain groups.
    *
    * @return the groups
    */
-  List<SambaGroupItem> getGroups();
+  List<DomainGroupItem> getGroups();
 
   /**
-   * Add samba group.
+   * Add domain group.
    *
    * @param group the group
-   * @return the samba group
+   * @return the domain group
    */
-  SambaGroup addGroup(@Valid SambaGroup group);
+  DomainGroup addGroup(@Valid DomainGroup group);
 
   /**
    * Gets group by name.
@@ -59,16 +59,16 @@ public interface SambaConnectorService {
    * @param groupName the group name
    * @return the group by name
    */
-  SambaGroup getGroupByName(@NotNull String groupName);
+  DomainGroup getGroupByName(@NotNull String groupName);
 
   /**
-   * Update group members of samba group.
+   * Update group members of domain group.
    *
    * @param groupName the group name
    * @param members   the members
-   * @return the samba group
+   * @return the domain group
    */
-  SambaGroup updateGroupMembers(@NotNull String groupName, @Valid Names members);
+  DomainGroup updateGroupMembers(@NotNull String groupName, @Valid Names members);
 
   /**
    * Delete group.
@@ -79,12 +79,12 @@ public interface SambaConnectorService {
 
 
   /**
-   * Add samba user.
+   * Add domain user.
    *
-   * @param sambaUser the samba user
-   * @return the samba user
+   * @param domainUser the domain user
+   * @return the domain user
    */
-  SambaUser addUser(@Valid SambaUserAddRequest sambaUser);
+  DomainUser addUser(@Valid DomainUserAddRequest domainUser);
 
   /**
    * Does user exist?
@@ -100,25 +100,25 @@ public interface SambaConnectorService {
    * @param userName the user name
    * @return the user
    */
-  SambaUser getUser(@NotNull String userName);
+  DomainUser getUser(@NotNull String userName);
 
   /**
-   * Update samba user.
+   * Update domain user.
    *
    * @param userName  the user name
-   * @param sambaUser the samba user
-   * @return the samba user
+   * @param domainUser the domain user
+   * @return the domain user
    */
-  SambaUser updateUser(@NotNull String userName, @Valid SambaUser sambaUser);
+  DomainUser updateUser(@NotNull String userName, @Valid DomainUser domainUser);
 
   /**
-   * Update groups of samba user.
+   * Update groups of domain user.
    *
    * @param userName the user name
    * @param groups   the groups
-   * @return the samba user
+   * @return the domain user
    */
-  SambaUser updateUserGroups(@NotNull String userName, @Valid Names groups);
+  DomainUser updateUserGroups(@NotNull String userName, @Valid Names groups);
 
   /**
    * Update user password.

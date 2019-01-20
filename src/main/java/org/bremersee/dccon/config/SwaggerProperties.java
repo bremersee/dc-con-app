@@ -34,9 +34,10 @@ public class SwaggerProperties {
 
   private String pathMapping = "/";
 
-  private String title = "Samba Connector";
+  private String title = "Domain Controller Connector";
 
-  private String description = "Configuration of users, groups and DNS of a Samba 4 Server.";
+  private String description = "Configuration of users, groups and DNS of a Samba 4 Domain "
+      + "Controller.";
 
   private String version = "1.0.0";
 

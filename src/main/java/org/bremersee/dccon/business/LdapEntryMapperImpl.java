@@ -23,11 +23,11 @@ import static org.bremersee.dccon.business.LdapEntryUtils.whenTimeToOffsetDateTi
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.config.SambaDomainProperties;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.Name;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
 
   private static final String WHEN_CHANGED = "whenChanged";
 
-  private final SambaDomainProperties properties;
+  private final DomainControllerProperties properties;
 
   /**
    * Instantiates a new ldap entry mapper.
@@ -54,13 +54,13 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
    * @param properties the properties
    */
   @Autowired
-  public LdapEntryMapperImpl(final SambaDomainProperties properties) {
+  public LdapEntryMapperImpl(final DomainControllerProperties properties) {
     this.properties = properties;
   }
 
   private void mapLdapEntryToGroupItem(
       @NotNull final LdapEntry ldapEntry,
-      @NotNull final SambaGroupItem group) {
+      @NotNull final DomainGroupItem group) {
 
     group.setDistinguishedName(ldapEntry.getDn());
     group.setCreated(whenTimeToOffsetDateTime(
@@ -71,15 +71,15 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
   }
 
   @Override
-  public SambaGroupItem mapLdapEntryToSambaGroupItem(@NotNull final LdapEntry ldapEntry) {
-    final SambaGroupItem group = new SambaGroupItem();
+  public DomainGroupItem mapLdapEntryToDomainGroupItem(@NotNull final LdapEntry ldapEntry) {
+    final DomainGroupItem group = new DomainGroupItem();
     mapLdapEntryToGroupItem(ldapEntry, group);
     return group;
   }
 
   @Override
-  public SambaGroup mapLdapEntryToSambaGroup(@NotNull final LdapEntry ldapEntry) {
-    final SambaGroup group = new SambaGroup();
+  public DomainGroup mapLdapEntryToDomainGroup(@NotNull final LdapEntry ldapEntry) {
+    final DomainGroup group = new DomainGroup();
     mapLdapEntryToGroupItem(ldapEntry, group);
     LdapAttribute membersAttr = ldapEntry.getAttribute(properties.getGroupMemberAttr());
     if (membersAttr != null && membersAttr.getStringValues() != null) {
@@ -94,8 +94,8 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
   }
 
   @Override
-  public SambaUser mapLdapEntryToSambaUser(@NotNull final LdapEntry ldapEntry) {
-    final SambaUser user = new SambaUser();
+  public DomainUser mapLdapEntryToDomainUser(@NotNull final LdapEntry ldapEntry) {
+    final DomainUser user = new DomainUser();
     user.setDistinguishedName(ldapEntry.getDn());
     user.setCreated(whenTimeToOffsetDateTime(
         getAttributeValue(ldapEntry, WHEN_CREATED, null)));

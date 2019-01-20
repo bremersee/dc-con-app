@@ -124,7 +124,7 @@ public class SecurityConfiguration {
           .cors().disable()
           .csrf().disable()
           .httpBasic()
-          .realmName("smb-con")
+          .realmName("dc-con")
           .and()
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

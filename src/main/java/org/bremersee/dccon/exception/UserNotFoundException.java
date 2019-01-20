@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Christian Bremer
  */
 @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "User not found.")
-@ErrorCode("SMB_CON:U404")
+@ErrorCode("DC_CON:U404")
 public class UserNotFoundException extends NotFoundException {
 
   /**

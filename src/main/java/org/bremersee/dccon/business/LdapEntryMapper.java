@@ -17,9 +17,9 @@
 package org.bremersee.dccon.business;
 
 import javax.validation.constraints.NotNull;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.LdapEntry;
 
 /**
@@ -30,27 +30,27 @@ import org.ldaptive.LdapEntry;
 public interface LdapEntryMapper {
 
   /**
-   * Map ldap entry to samba group item.
+   * Map ldap entry to domain group item.
    *
    * @param ldapEntry the ldap entry
-   * @return the samba group item
+   * @return the domain group item
    */
-  SambaGroupItem mapLdapEntryToSambaGroupItem(@NotNull LdapEntry ldapEntry);
+  DomainGroupItem mapLdapEntryToDomainGroupItem(@NotNull LdapEntry ldapEntry);
 
   /**
-   * Map ldap entry to samba group.
+   * Map ldap entry to domain group.
    *
    * @param ldapEntry the ldap entry
-   * @return the samba group
+   * @return the domain group
    */
-  SambaGroup mapLdapEntryToSambaGroup(@NotNull LdapEntry ldapEntry);
+  DomainGroup mapLdapEntryToDomainGroup(@NotNull LdapEntry ldapEntry);
 
   /**
-   * Map ldap entry to samba user.
+   * Map ldap entry to domain user.
    *
    * @param ldapEntry the ldap entry
-   * @return the samba user
+   * @return the domain user
    */
-  SambaUser mapLdapEntryToSambaUser(@NotNull LdapEntry ldapEntry);
+  DomainUser mapLdapEntryToDomainUser(@NotNull LdapEntry ldapEntry);
 
 }

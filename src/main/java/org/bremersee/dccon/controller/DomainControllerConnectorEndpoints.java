@@ -18,21 +18,22 @@ package org.bremersee.dccon.controller;
 
 import java.util.List;
 import javax.validation.Valid;
-import org.bremersee.dccon.config.SambaDomainProperties;
-import org.bremersee.dccon.business.SambaConnectorService;
+import org.bremersee.dccon.api.DomainControllerConnectorApi;
+import org.bremersee.dccon.business.DomainControllerConnectorService;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.BooleanWrapper;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordRequest;
 import org.bremersee.dccon.model.DnsRecordUpdateRequest;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneCreateRequest;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserAddRequest;
 import org.bremersee.dccon.model.Info;
 import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
-import org.bremersee.dccon.model.SambaUserAddRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,30 +43,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The samba connector controller.
+ * The domain controller connector endpoints.
  *
  * @author Christian Bremer
  */
 @RestController
 @SuppressWarnings("MVCPathVariableInspection")
-public class SambaConnectorController implements DomainCon {
+public class DomainControllerConnectorEndpoints implements DomainControllerConnectorApi {
 
-  private final SambaDomainProperties sambaDomainProperties;
+  private final DomainControllerProperties domainControllerProperties;
 
-  private final SambaConnectorService sambaConnectorService;
+  private final DomainControllerConnectorService domainControllerConnectorService;
 
   @Autowired
-  public SambaConnectorController(
-      final SambaDomainProperties sambaDomainProperties,
-      final SambaConnectorService sambaConnectorService) {
-    this.sambaDomainProperties = sambaDomainProperties;
-    this.sambaConnectorService = sambaConnectorService;
+  public DomainControllerConnectorEndpoints(
+      final DomainControllerProperties domainControllerProperties,
+      final DomainControllerConnectorService domainControllerConnectorService) {
+    this.domainControllerProperties = domainControllerProperties;
+    this.domainControllerConnectorService = domainControllerConnectorService;
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsZone>> getDnsZones() {
-    return ResponseEntity.ok(sambaConnectorService.getDnsZones());
+    return ResponseEntity.ok(domainControllerConnectorService.getDnsZones());
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -73,23 +74,23 @@ public class SambaConnectorController implements DomainCon {
   public ResponseEntity<List<DnsEntry>> getDnsRecords(
       @Valid @RequestParam(value = "zoneName") String zoneName) {
 
-    return ResponseEntity.ok(sambaConnectorService.getDnsRecords(zoneName));
+    return ResponseEntity.ok(domainControllerConnectorService.getDnsRecords(zoneName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaGroup> addGroup(
-      @Valid @RequestBody SambaGroup group) {
+  public ResponseEntity<DomainGroup> addGroup(
+      @Valid @RequestBody DomainGroup group) {
 
-    return ResponseEntity.ok(sambaConnectorService.addGroup(group));
+    return ResponseEntity.ok(domainControllerConnectorService.addGroup(group));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaUser> addUser(
-      @Valid @RequestBody SambaUserAddRequest sambaUser) {
+  public ResponseEntity<DomainUser> addUser(
+      @Valid @RequestBody DomainUserAddRequest domainUser) {
 
-    return ResponseEntity.ok(sambaConnectorService.addUser(sambaUser));
+    return ResponseEntity.ok(domainControllerConnectorService.addUser(domainUser));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -97,7 +98,7 @@ public class SambaConnectorController implements DomainCon {
   public ResponseEntity<Void> createDnsZone(
       @Valid @RequestBody DnsZoneCreateRequest request) {
 
-    sambaConnectorService.createDnsZone(request.getPszZoneName());
+    domainControllerConnectorService.createDnsZone(request.getPszZoneName());
     return ResponseEntity.ok().build();
   }
 
@@ -108,12 +109,12 @@ public class SambaConnectorController implements DomainCon {
       @Valid @RequestBody final DnsRecordRequest request) {
 
     if ("DELETE".equals(action)) {
-      sambaConnectorService
+      domainControllerConnectorService
           .deleteDnsRecord(request.getZoneName(), request.getName(), request.getRecordType(),
               request.getData());
 
     } else {
-      sambaConnectorService
+      domainControllerConnectorService
           .addDnsRecord(request.getZoneName(), request.getName(), request.getRecordType(),
               request.getData());
 
@@ -126,7 +127,7 @@ public class SambaConnectorController implements DomainCon {
   public ResponseEntity<Void> deleteDnsZone(
       @Valid @RequestParam(value = "zoneName") final String zoneName) {
 
-    sambaConnectorService.deleteDnsZone(zoneName);
+    domainControllerConnectorService.deleteDnsZone(zoneName);
     return null;
   }
 
@@ -135,7 +136,7 @@ public class SambaConnectorController implements DomainCon {
   public ResponseEntity<Void> deleteGroup(
       @PathVariable("groupName") String groupName) {
 
-    sambaConnectorService.deleteGroup(groupName);
+    domainControllerConnectorService.deleteGroup(groupName);
     return ResponseEntity.ok().build();
   }
 
@@ -144,28 +145,28 @@ public class SambaConnectorController implements DomainCon {
   public ResponseEntity<Void> deleteUser(
       @PathVariable("userName") String userName) {
 
-    sambaConnectorService.deleteUser(userName);
+    domainControllerConnectorService.deleteUser(userName);
     return ResponseEntity.ok().build();
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaGroup> getGroupByName(
+  public ResponseEntity<DomainGroup> getGroupByName(
       @PathVariable("groupName") String groupName) {
 
-    return ResponseEntity.ok(sambaConnectorService.getGroupByName(groupName));
+    return ResponseEntity.ok(domainControllerConnectorService.getGroupByName(groupName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<List<SambaGroupItem>> getGroups() {
-    return ResponseEntity.ok(sambaConnectorService.getGroups());
+  public ResponseEntity<List<DomainGroupItem>> getGroups() {
+    return ResponseEntity.ok(domainControllerConnectorService.getGroups());
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Info> getInfo() {
-    return ResponseEntity.ok(sambaDomainProperties.buildInfo());
+    return ResponseEntity.ok(domainControllerProperties.buildInfo());
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -174,23 +175,23 @@ public class SambaConnectorController implements DomainCon {
       @PathVariable("userName") String userName) {
 
     final BooleanWrapper wrapper = new BooleanWrapper();
-    wrapper.setValue(sambaConnectorService.userExists(userName));
+    wrapper.setValue(domainControllerConnectorService.userExists(userName));
     return ResponseEntity.ok(wrapper);
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaUser> getUser(
+  public ResponseEntity<DomainUser> getUser(
       @PathVariable("userName") String userName) {
 
-    return ResponseEntity.ok(sambaConnectorService.getUser(userName));
+    return ResponseEntity.ok(domainControllerConnectorService.getUser(userName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> updateDnsRecord(@Valid @RequestBody DnsRecordUpdateRequest request) {
 
-    sambaConnectorService.updateDnsRecord(
+    domainControllerConnectorService.updateDnsRecord(
         request.getZoneName(),
         request.getName(),
         request.getRecordType(),
@@ -201,29 +202,30 @@ public class SambaConnectorController implements DomainCon {
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaGroup> updateGroupMembers(
+  public ResponseEntity<DomainGroup> updateGroupMembers(
       @PathVariable("groupName") String groupName,
       @Valid @RequestBody Names members) {
 
-    return ResponseEntity.ok(sambaConnectorService.updateGroupMembers(groupName, members));
+    return ResponseEntity
+        .ok(domainControllerConnectorService.updateGroupMembers(groupName, members));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaUser> updateUser(
+  public ResponseEntity<DomainUser> updateUser(
       @PathVariable("userName") String userName,
-      @Valid @RequestBody SambaUser sambaUser) {
+      @Valid @RequestBody DomainUser domainUser) {
 
-    return ResponseEntity.ok(sambaConnectorService.updateUser(userName, sambaUser));
+    return ResponseEntity.ok(domainControllerConnectorService.updateUser(userName, domainUser));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<SambaUser> updateUserGroups(
+  public ResponseEntity<DomainUser> updateUserGroups(
       @PathVariable("userName") String userName,
       @Valid @RequestBody Names groups) {
 
-    return ResponseEntity.ok(sambaConnectorService.updateUserGroups(userName, groups));
+    return ResponseEntity.ok(domainControllerConnectorService.updateUserGroups(userName, groups));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -232,7 +234,7 @@ public class SambaConnectorController implements DomainCon {
       @PathVariable("userName") String userName,
       @Valid @RequestBody Password newPassword) {
 
-    sambaConnectorService.updateUserPassword(userName, newPassword);
+    domainControllerConnectorService.updateUserPassword(userName, newPassword);
     return ResponseEntity.ok().build();
   }
 

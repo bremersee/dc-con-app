@@ -38,15 +38,15 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.Name;
 import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
-import org.bremersee.dccon.model.SambaGroup;
-import org.bremersee.dccon.model.SambaGroupItem;
-import org.bremersee.dccon.model.SambaUser;
-import org.bremersee.dccon.model.SambaUserAddRequest;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupItem;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserAddRequest;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * This samba connector service stores the data in memory.
+ * This domain controller connector service stores the data in memory.
  *
  * @author Christian Bremer
  */
@@ -54,17 +54,17 @@ import org.springframework.stereotype.Component;
 @Profile("in-memory")
 @Component
 @Slf4j
-public class InMemorySambaConnectorService implements SambaConnectorService {
+public class InMemoryDomainControllerConnectorService implements DomainControllerConnectorService {
 
-  private Map<String, SambaGroup> sambaGroupMap = new ConcurrentHashMap<>();
+  private Map<String, DomainGroup> domainGroupMap = new ConcurrentHashMap<>();
 
-  private Map<String, SambaUser> sambaUserMap = new ConcurrentHashMap<>();
+  private Map<String, DomainUser> domainUserMap = new ConcurrentHashMap<>();
 
   private Map<DnsZone, List<DnsEntry>> dnsMap = new ConcurrentHashMap<>();
 
   @PostConstruct
   public void init() {
-    final SambaUserAddRequest admin = new SambaUserAddRequest();
+    final DomainUserAddRequest admin = new DomainUserAddRequest();
     admin.setCreated(OffsetDateTime.now());
     admin.setDisplayName("Super User");
     admin.setDistinguishedName("cn=admin,cn=users,dc=example,dc=org");
@@ -79,7 +79,7 @@ public class InMemorySambaConnectorService implements SambaConnectorService {
     admin.setUserName("admin");
     addUser(admin);
 
-    final SambaGroup adminGroup = new SambaGroup();
+    final DomainGroup adminGroup = new DomainGroup();
     adminGroup.setCreated(OffsetDateTime.now());
     adminGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
@@ -88,7 +88,7 @@ public class InMemorySambaConnectorService implements SambaConnectorService {
     adminGroup.setName("ADMIN");
     addGroup(adminGroup);
 
-    final SambaGroup userGroup = new SambaGroup();
+    final DomainGroup userGroup = new DomainGroup();
     userGroup.setCreated(OffsetDateTime.now());
     userGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
@@ -99,92 +99,92 @@ public class InMemorySambaConnectorService implements SambaConnectorService {
   }
 
   @Override
-  public List<SambaGroupItem> getGroups() {
-    log.info("msg=[Getting samba groups]");
-    return new ArrayList<>(sambaGroupMap.values());
+  public List<DomainGroupItem> getGroups() {
+    log.info("msg=[Getting domain groups]");
+    return new ArrayList<>(domainGroupMap.values());
   }
 
   @Override
-  public SambaGroup addGroup(@Valid SambaGroup group) {
+  public DomainGroup addGroup(@Valid DomainGroup group) {
 
-    log.info("msg=[Adding samba group] group=[{}]", group);
+    log.info("msg=[Adding domain group] group=[{}]", group);
     try {
       getGroupByName(group.getName());
       throw new GroupAlreadyExistsException(group.getName());
 
     } catch (final NotFoundException nfe) {
 
-      sambaGroupMap.put(group.getName(), group);
+      domainGroupMap.put(group.getName(), group);
       return group;
     }
   }
 
   @Override
-  public SambaGroup getGroupByName(@NotNull String groupName) {
-    log.info("msg=[Getting samba group by name] name=[{}]", groupName);
-    final SambaGroup sambaGroup = sambaGroupMap.get(groupName);
-    if (sambaGroup == null) {
+  public DomainGroup getGroupByName(@NotNull String groupName) {
+    log.info("msg=[Getting domain group by name] name=[{}]", groupName);
+    final DomainGroup domainGroup = domainGroupMap.get(groupName);
+    if (domainGroup == null) {
       throw GroupNotFoundException.supplier(groupName).get();
     }
-    return sambaGroup;
+    return domainGroup;
   }
 
   @Override
-  public SambaGroup updateGroupMembers(@NotNull String groupName, @Valid Names members) {
-    log.info("msg=[Updating samba group members] group=[{}] members=[{}]", groupName, members);
-    final SambaGroup sambaGroup = getGroupByName(groupName);
-    sambaGroup.getMembers().clear();
-    sambaGroup.getMembers().addAll(members.getValues());
-    return sambaGroup;
+  public DomainGroup updateGroupMembers(@NotNull String groupName, @Valid Names members) {
+    log.info("msg=[Updating domain group members] group=[{}] members=[{}]", groupName, members);
+    final DomainGroup domainGroup = getGroupByName(groupName);
+    domainGroup.getMembers().clear();
+    domainGroup.getMembers().addAll(members.getValues());
+    return domainGroup;
   }
 
   @Override
   public void deleteGroup(@NotNull String groupName) {
-    log.info("msg=[Deleting samba group.] group=[{}]", groupName);
-    sambaGroupMap.remove(groupName);
+    log.info("msg=[Deleting domain group.] group=[{}]", groupName);
+    domainGroupMap.remove(groupName);
   }
 
   @Override
-  public SambaUser addUser(@Valid SambaUserAddRequest sambaUser) {
+  public DomainUser addUser(@Valid DomainUserAddRequest domainUser) {
 
-    log.info("msg=[Adding samba user.] user=[{}]", sambaUser);
-    sambaUserMap.put(sambaUser.getUserName(), sambaUser);
-    log.info("msg=[Samba user successfully added.] user=[{}]", sambaUser);
-    return sambaUser;
+    log.info("msg=[Adding domain user.] user=[{}]", domainUser);
+    domainUserMap.put(domainUser.getUserName(), domainUser);
+    log.info("msg=[Domain user successfully added.] user=[{}]", domainUser);
+    return domainUser;
   }
 
   @Override
   public boolean userExists(@NotNull String userName) {
-    return sambaUserMap.containsKey(userName);
+    return domainUserMap.containsKey(userName);
   }
 
   @Override
-  public SambaUser getUser(@NotNull String userName) {
-    final SambaUser sambaUser = sambaUserMap.get(userName);
-    if (sambaUser == null) {
+  public DomainUser getUser(@NotNull String userName) {
+    final DomainUser domainUser = domainUserMap.get(userName);
+    if (domainUser == null) {
       throw UserNotFoundException.supplier(userName).get();
     }
-    return sambaUser;
+    return domainUser;
   }
 
   @Override
-  public SambaUser updateUser(@NotNull String userName, @Valid SambaUser sambaUser) {
-    if (!sambaUserMap.containsKey(userName)) {
+  public DomainUser updateUser(@NotNull String userName, @Valid DomainUser domainUser) {
+    if (!domainUserMap.containsKey(userName)) {
       throw UserNotFoundException.supplier(userName).get();
     }
-    sambaUserMap.put(userName, sambaUser);
-    return sambaUser;
+    domainUserMap.put(userName, domainUser);
+    return domainUser;
   }
 
   @Override
-  public SambaUser updateUserGroups(@NotNull String userName, @Valid Names groups) {
-    final SambaUser sambaUser = sambaUserMap.get(userName);
-    if (sambaUser == null) {
+  public DomainUser updateUserGroups(@NotNull String userName, @Valid Names groups) {
+    final DomainUser domainUser = domainUserMap.get(userName);
+    if (domainUser == null) {
       throw UserNotFoundException.supplier(userName).get();
     }
-    sambaUser.getGroups().clear();
-    sambaUser.getGroups().addAll(groups.getValues());
-    return sambaUser;
+    domainUser.getGroups().clear();
+    domainUser.getGroups().addAll(groups.getValues());
+    return domainUser;
   }
 
   @Override
@@ -194,7 +194,7 @@ public class InMemorySambaConnectorService implements SambaConnectorService {
 
   @Override
   public void deleteUser(@NotNull String userName) {
-    sambaUserMap.remove(userName);
+    domainUserMap.remove(userName);
   }
 
   @Override

@@ -27,7 +27,7 @@ import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.LdaptiveProperties;
-import org.bremersee.dccon.config.SambaDomainProperties;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
@@ -112,7 +112,7 @@ public class SambaToolCommandExecutor implements SambaTool {
   private static final String YES = "yes";
 
 
-  private final SambaDomainProperties properties;
+  private final DomainControllerProperties properties;
 
   private final LdaptiveProperties adProperties;
 
@@ -160,7 +160,7 @@ public class SambaToolCommandExecutor implements SambaTool {
    */
   @Autowired
   public SambaToolCommandExecutor(
-      final SambaDomainProperties properties,
+      final DomainControllerProperties properties,
       final LdaptiveProperties adProperties,
       final SambaToolResponseParser responseParser) {
     this.properties = properties;
