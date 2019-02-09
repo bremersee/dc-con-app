@@ -374,6 +374,7 @@ public class SambaToolCommandExecutor implements SambaTool {
     commands.add(USER_CMD_SETEXPIRY);
     commands.add(userName);
     commands.add(USER_NOEXPIRY_OPTION);
+    auth(commands);
     response = CommandExecutor.exec(
         commands, properties.getSambaToolExecDir());
     if (StringUtils.hasText(response.getError())) {

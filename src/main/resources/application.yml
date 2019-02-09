@@ -1,13 +1,13 @@
 bremersee:
   access:
     ip-addresses:
-      - "127.0.0.1"
+      - "127.0.0.1/32"
       - "::1"
   security:
     oauth2:
       password-flow:
         client-id: omnia
-        client-secret: 2f586840-68df-4226-b105-397a56b2b4f2
+        client-secret: changeit
         token-endpoint: https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token
   exception-mapping:
     api-paths:
@@ -44,13 +44,13 @@ bremersee:
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:false}
-    register-with-eureka: true
-    prefer-same-zone-eureka: true
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
-  instance:
-    health-check-url-path: /actuator/health
-    home-page-url-path: /actuator/info
+#    register-with-eureka: true
+#    prefer-same-zone-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
+#  instance:
+#    health-check-url-path: /actuator/health
+#    home-page-url-path: /actuator/info
 
 logging:
   level:
@@ -88,7 +88,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/certs
+          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
 
 ---
 
