@@ -129,7 +129,7 @@ bremersee:
       - name: "admin"
         password: "admin"
         authorities:
-          - "ROLE_USER"
+          - "ROLE_LOCAL_USER"
           - "ROLE_ADMIN"
       - name: "actuator"
         password: "actuator"
@@ -138,4 +138,21 @@ bremersee:
       - name: "user"
         password: "user"
         authorities:
-          - "ROLE_USER"
+          - "ROLE_LOCAL_USER"
+
+---
+
+spring:
+  profiles: ide
+
+bremersee:
+  access:
+    ip-addresses:
+      - "8.8.8.0"
+
+logging:
+  level:
+    ROOT: info
+    org.bremersee: debug
+    org.springframework: info
+    org.springframework.security: debug

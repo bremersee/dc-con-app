@@ -81,6 +81,7 @@ public class SecurityConfiguration {
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
+      log.info("Authorizing requests to /api/** with OAuth2.");
       http
           .antMatcher("/api/**")
           .authorizeRequests()
@@ -100,6 +101,7 @@ public class SecurityConfiguration {
   @Order(51)
   @Configuration
   @EnableConfigurationProperties(SecurityProperties.class)
+  @Slf4j
   static class ResourceServerBasicAuth extends WebSecurityConfigurerAdapter {
 
     private final SecurityProperties securityProperties;
@@ -115,6 +117,7 @@ public class SecurityConfiguration {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+      log.info("Authorizing requests to /api/** with basic auth.");
       http
           .antMatcher("/api/**")
           .authorizeRequests()
@@ -144,6 +147,7 @@ public class SecurityConfiguration {
   @Order(52)
   @Configuration
   @EnableConfigurationProperties(SecurityProperties.class)
+  @Slf4j
   static class Actuator extends WebSecurityConfigurerAdapter {
 
     private final SecurityProperties properties;
@@ -166,6 +170,7 @@ public class SecurityConfiguration {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+      log.info("Authorizing requests to /actuator/** with password flow auth.");
       http
           .authenticationProvider(passwordFlowAuthenticationManager)
           .requestMatcher(EndpointRequest.toAnyEndpoint())
@@ -193,6 +198,7 @@ public class SecurityConfiguration {
   @Order(52)
   @Configuration
   @EnableConfigurationProperties(SecurityProperties.class)
+  @Slf4j
   static class ActuatorBasicAuth extends WebSecurityConfigurerAdapter {
 
     private final SecurityProperties properties;
@@ -209,6 +215,7 @@ public class SecurityConfiguration {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+      log.info("Authorizing requests to /actuator/** with basic auth.");
       http
           .requestMatcher(EndpointRequest.toAnyEndpoint())
           .cors().disable()

@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.security.OAuth2Properties;
 import org.bremersee.security.authentication.KeycloakJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
@@ -34,6 +35,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
  */
 @Configuration
 @EnableConfigurationProperties({OAuth2Properties.class})
+@Slf4j
 public class SecuritySupportConfiguration {
 
   private OAuth2Properties oAuth2Properties;
@@ -56,6 +58,7 @@ public class SecuritySupportConfiguration {
   @Profile("!basic-auth")
   @Bean
   public KeycloakJwtConverter keycloakJwtConverter() {
+    log.info("Using keycloak jwt converter.");
     return new KeycloakJwtConverter();
   }
 
@@ -74,6 +77,7 @@ public class SecuritySupportConfiguration {
       KeycloakJwtConverter keycloakJwtConverter,
       RestTemplateBuilder restTemplateBuilder) {
 
+    log.info("Using password flow authentication manager.");
     final PasswordFlowAuthenticationManager manager
         = new PasswordFlowAuthenticationManager(oAuth2Properties, jwtDecoder, restTemplateBuilder);
     manager.setJwtAuthenticationConverter(keycloakJwtConverter);
