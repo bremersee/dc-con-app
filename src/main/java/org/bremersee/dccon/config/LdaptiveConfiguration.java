@@ -78,7 +78,7 @@ public class LdaptiveConfiguration {
     return defaultConnectionFactory();
   }
 
-  private DefaultConnectionFactory defaultConnectionFactory() { // Provider<?> provider
+  private DefaultConnectionFactory defaultConnectionFactory() {
     DefaultConnectionFactory factory = new DefaultConnectionFactory();
     factory.setConnectionConfig(connectionConfig());
     return factory;
