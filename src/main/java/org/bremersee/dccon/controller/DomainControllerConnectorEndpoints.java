@@ -128,7 +128,7 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
       @Valid @RequestParam(value = "zoneName") final String zoneName) {
 
     domainControllerConnectorService.deleteDnsZone(zoneName);
-    return null;
+    return ResponseEntity.ok().build();
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

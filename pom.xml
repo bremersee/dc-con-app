@@ -48,7 +48,7 @@
     <wagon-webdav-jackrabbit.version>3.0.0</wagon-webdav-jackrabbit.version>
     <wagon-ssh-external.version>3.0.0</wagon-ssh-external.version>
     <check-style-location>google_checks.xml</check-style-location>
-    <checkstyle.version>8.15</checkstyle.version>
+    <checkstyle.version>8.18</checkstyle.version>
   </properties>
 
   <developers>
@@ -128,14 +128,6 @@
       <url>https://nexus.bremersee.org/repository/maven-snapshots</url>
       <snapshots>
         <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
       </snapshots>
     </repository>
   </repositories>

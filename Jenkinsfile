@@ -14,6 +14,12 @@ pipeline {
       }
     }
     stage('Site') {
+      when {
+        anyOf {
+          branch 'develop'
+          branch 'master'
+        }
+      }
       steps {
         sh 'mvn site-deploy'
       }

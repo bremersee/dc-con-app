@@ -22,7 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class ApplicationTests {
 
   /**
-   * The Rest template.
+   * The rest template.
    */
   @Autowired
   TestRestTemplate restTemplate;
