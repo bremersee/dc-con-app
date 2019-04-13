@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.business;
 
-import static org.bremersee.exception.ServiceException.internalServerError;
 import static org.bremersee.dccon.business.LdapEntryUtils.UF_ACCOUNT_DISABLED;
 import static org.bremersee.dccon.business.LdapEntryUtils.UF_DONT_EXPIRE_PASSWD;
 import static org.bremersee.dccon.business.LdapEntryUtils.UF_NORMAL_ACCOUNT;
@@ -24,6 +23,7 @@ import static org.bremersee.dccon.business.LdapEntryUtils.createDn;
 import static org.bremersee.dccon.business.LdapEntryUtils.getAttributeValue;
 import static org.bremersee.dccon.business.LdapEntryUtils.getUserAccountControl;
 import static org.bremersee.dccon.business.LdapEntryUtils.updateAttribute;
+import static org.bremersee.exception.ServiceException.internalServerError;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,22 +36,21 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.exception.NotFoundException;
-import org.bremersee.exception.ServiceException;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
+import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.Name;
-import org.bremersee.dccon.model.Names;
-import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.DomainUserAddRequest;
+import org.bremersee.dccon.model.Name;
+import org.bremersee.dccon.model.Names;
+import org.bremersee.dccon.model.Password;
+import org.bremersee.exception.ServiceException;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.AttributeModificationType;
 import org.ldaptive.Connection;
@@ -223,7 +222,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
       final Set<String> newUserDns = members.getValues()
           .stream()
-          .map(name -> name.isDistinguishedName()
+          .map(name -> name.getDistinguishedName()
               ? name.getValue()
               : createDn(properties.getUserRdn(), name.getValue(), properties.getUserBaseDn()))
           .collect(Collectors.toSet());
@@ -317,7 +316,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainUser addUser(@Valid final DomainUserAddRequest domainUser) {
+  public DomainUser addUser(@Valid final DomainUser domainUser) {
 
     log.info("msg=[Adding domain user.] user=[{}]", domainUser);
     try {
@@ -398,10 +397,10 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       if ((userAccountControl & UF_DONT_EXPIRE_PASSWD) != UF_DONT_EXPIRE_PASSWD) {
         userAccountControl = userAccountControl + UF_DONT_EXPIRE_PASSWD;
       }
-      if (domainUser.isEnabled() &&
+      if (domainUser.getEnabled() &&
           ((userAccountControl & UF_ACCOUNT_DISABLED) == UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl - UF_ACCOUNT_DISABLED;
-      } else if (!domainUser.isEnabled() &&
+      } else if (!domainUser.getEnabled() &&
           ((userAccountControl & UF_ACCOUNT_DISABLED) != UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl + UF_ACCOUNT_DISABLED;
       }
@@ -457,7 +456,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
     final Set<String> newGroupDns = groups
         .stream()
-        .map(name -> name.isDistinguishedName()
+        .map(name -> name.getDistinguishedName()
             ? name.getValue()
             : createDn(properties.getGroupRdn(), name.getValue(), properties.getGroupBaseDn()))
         .collect(Collectors.toSet());

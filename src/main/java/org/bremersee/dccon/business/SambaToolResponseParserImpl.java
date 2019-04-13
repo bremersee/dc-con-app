@@ -105,7 +105,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
     }
   }
 
-  private List<DnsZone> parseDnsZones( // NOSONAR
+  private List<DnsZone> parseDnsZones(
       @NotNull final BufferedReader reader) throws IOException {
 
     final List<DnsZone> zoneList = new ArrayList<>();
@@ -132,7 +132,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
           if (parts.length > 0) {
             zone.setFlags(
                 Arrays.stream(parts)
-                    .map(new DnsZoneFlag()::name)
+                    .map(part -> DnsZoneFlag.builder().name(part).build())
                     .collect(Collectors.toList()));
           }
         }
@@ -159,7 +159,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
           if (parts.length > 0) {
             zone.setDwDpFlags(
                 Arrays.stream(parts)
-                    .map(new DnsDwDpZoneFlag()::name)
+                    .map(part -> DnsDwDpZoneFlag.builder().name(part).build())
                     .collect(Collectors.toList()));
           }
         }
@@ -200,7 +200,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
     }
   }
 
-  private List<DnsEntry> parseDnsRecords( // NOSONAR
+  private List<DnsEntry> parseDnsRecords(
       @NotNull final BufferedReader reader) throws IOException {
 
     log.debug("Parsing dns records ...");
@@ -219,7 +219,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
       if (line.startsWith(DNS_ENTRY_NAME) && nameSeparator > 0) {
         log.debug("Line with entry name.");
         line = line.substring(DNS_ENTRY_NAME.length(), nameSeparator);
-        dnsEntry = new DnsEntry().name(line);
+        dnsEntry = DnsEntry.builder().name(line).build();
         entryList.add(dnsEntry);
       } else if (dnsEntry != null && recordSeparator > 0 && recordSeparator < infoStart
           && infoStart < infoEnd) {
@@ -227,10 +227,12 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
         final String recordType = line.substring(0, recordSeparator).trim();
         final String recordValue = line.substring(recordSeparator + 1, infoStart).trim();
         if (StringUtils.hasText(recordType) && StringUtils.hasText(recordValue)) {
-          final DnsRecord dnsRecord = new DnsRecord()
+          final DnsRecord dnsRecord = DnsRecord
+              .builder()
               .recordType(recordType)
-              .recordValue(recordValue);
-          dnsEntry.addRecordsItem(dnsRecord);
+              .recordValue(recordValue)
+              .build();
+          dnsEntry.getRecords().add(dnsRecord);
           final String[] infoPairs = StringUtils.delimitedListToStringArray(
               line.substring(infoStart + 1, infoEnd),
               ", ");

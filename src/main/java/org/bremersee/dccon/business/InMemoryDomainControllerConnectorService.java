@@ -35,13 +35,12 @@ import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.Name;
-import org.bremersee.dccon.model.Names;
-import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.DomainUserAddRequest;
+import org.bremersee.dccon.model.Name;
+import org.bremersee.dccon.model.Names;
+import org.bremersee.dccon.model.Password;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -64,15 +63,15 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
 
   @PostConstruct
   public void init() {
-    final DomainUserAddRequest admin = new DomainUserAddRequest();
+    final DomainUser admin = new DomainUser();
     admin.setCreated(OffsetDateTime.now());
     admin.setDisplayName("Super User");
     admin.setDistinguishedName("cn=admin,cn=users,dc=example,dc=org");
     admin.setEmail("admin@example.org");
     admin.setEnabled(true);
     admin.setGroups(Arrays.asList(
-        new Name().value("ADMIN").distinguishedName(false),
-        new Name().value("USER").distinguishedName(false)));
+        new Name("ADMIN", false),
+        new Name("USER", false)));
     admin.setModified(admin.getCreated());
     admin.setPassword("changeit");
     admin.setPasswordLastSet(admin.getCreated());
@@ -83,7 +82,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     adminGroup.setCreated(OffsetDateTime.now());
     adminGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
-    adminGroup.setMembers(Arrays.asList(new Name().value("admin").distinguishedName(false)));
+    adminGroup.setMembers(Arrays.asList(new Name("admin", false)));
     adminGroup.setModified(adminGroup.getCreated());
     adminGroup.setName("ADMIN");
     addGroup(adminGroup);
@@ -92,7 +91,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     userGroup.setCreated(OffsetDateTime.now());
     userGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
-    userGroup.setMembers(Arrays.asList(new Name().value("admin").distinguishedName(false)));
+    userGroup.setMembers(Arrays.asList(new Name("admin", false)));
     userGroup.setModified(userGroup.getCreated());
     userGroup.setName("USER");
     addGroup(userGroup);
@@ -145,7 +144,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public DomainUser addUser(@Valid DomainUserAddRequest domainUser) {
+  public DomainUser addUser(@Valid DomainUser domainUser) {
 
     log.info("msg=[Adding domain user.] user=[{}]", domainUser);
     domainUserMap.put(domainUser.getUserName(), domainUser);
@@ -214,17 +213,17 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
 
   @Override
   public void createDnsZone(@NotNull String zoneName) {
-    dnsMap.put(new DnsZone().pszZoneName(zoneName), new ArrayList<>());
+    dnsMap.put(DnsZone.builder().pszZoneName(zoneName).build(), new ArrayList<>());
   }
 
   @Override
   public void deleteDnsZone(@NotNull String zoneName) {
-    dnsMap.remove(new DnsZone().pszZoneName(zoneName));
+    dnsMap.remove(DnsZone.builder().pszZoneName(zoneName).build());
   }
 
   @Override
   public List<DnsEntry> getDnsRecords(@NotNull String zoneName) {
-    return dnsMap.getOrDefault(new DnsZone().pszZoneName(zoneName), new ArrayList<>());
+    return dnsMap.getOrDefault(DnsZone.builder().pszZoneName(zoneName).build(), new ArrayList<>());
   }
 
   @Override
@@ -256,8 +255,8 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     final DnsRecord dnsRecord = new DnsRecord();
     dnsRecord.setRecordType(recordType != null ? recordType.name() : null);
     dnsRecord.setRecordValue(data);
-    dnsEntry.addRecordsItem(dnsRecord);
-    final DnsZone dnsZone = new DnsZone().pszZoneName(zoneName);
+    dnsEntry.getRecords().add(dnsRecord);
+    final DnsZone dnsZone = DnsZone.builder().pszZoneName(zoneName).build();
     dnsMap
         .computeIfAbsent(dnsZone, zone -> new ArrayList<>())
         .add(dnsEntry);
@@ -271,7 +270,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull String oldData,
       @NotNull String newData) {
 
-    final DnsZone dnsZone = new DnsZone().pszZoneName(zoneName);
+    final DnsZone dnsZone = DnsZone.builder().pszZoneName(zoneName).build();
     final List<DnsEntry> entries = dnsMap.getOrDefault(dnsZone, new ArrayList<>());
     for (DnsEntry entry : entries) {
       if (entry.getName().equalsIgnoreCase(name) && entry.getRecords() != null) {
@@ -292,7 +291,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull DnsRecordType recordType,
       @NotNull String data) {
 
-    final DnsZone dnsZone = new DnsZone().pszZoneName(zoneName);
+    final DnsZone dnsZone = DnsZone.builder().pszZoneName(zoneName).build();
     final List<DnsEntry> entries = dnsMap.getOrDefault(dnsZone, new ArrayList<>());
     for (DnsEntry entry : entries) {
       if (entry.getName().equalsIgnoreCase(name) && entry.getRecords() != null) {

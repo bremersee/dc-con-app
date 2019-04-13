@@ -22,12 +22,11 @@ import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.Names;
-import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.DomainUserAddRequest;
+import org.bremersee.dccon.model.Names;
+import org.bremersee.dccon.model.Password;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -84,7 +83,7 @@ public interface DomainControllerConnectorService {
    * @param domainUser the domain user
    * @return the domain user
    */
-  DomainUser addUser(@Valid DomainUserAddRequest domainUser);
+  DomainUser addUser(@Valid DomainUser domainUser);
 
   /**
    * Does user exist?
@@ -105,7 +104,7 @@ public interface DomainControllerConnectorService {
   /**
    * Update domain user.
    *
-   * @param userName  the user name
+   * @param userName   the user name
    * @param domainUser the domain user
    * @return the domain user
    */

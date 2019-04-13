@@ -30,7 +30,6 @@ import org.bremersee.dccon.model.DnsZoneCreateRequest;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.DomainUserAddRequest;
 import org.bremersee.dccon.model.Info;
 import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
@@ -88,7 +87,7 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> addUser(
-      @Valid @RequestBody DomainUserAddRequest domainUser) {
+      @Valid @RequestBody DomainUser domainUser) {
 
     return ResponseEntity.ok(domainControllerConnectorService.addUser(domainUser));
   }

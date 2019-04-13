@@ -114,8 +114,10 @@ public class DomainControllerProperties implements Serializable {
    * @return the info
    */
   public Info buildInfo() {
-    return new Info()
-        .nameServerHost(nameServerHost);
+    return Info
+        .builder()
+        .nameServerHost(nameServerHost)
+        .build();
   }
 
 }
