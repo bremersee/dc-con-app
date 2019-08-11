@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
+ * The swagger configuration.
+ *
  * @author Christian Bremer
  */
 @Configuration
@@ -40,6 +42,11 @@ public class SwaggerConfiguration {
 
   private SwaggerProperties swaggerProperties;
 
+  /**
+   * Instantiates a new swagger configuration.
+   *
+   * @param swaggerProperties the swagger properties
+   */
   @Autowired
   public SwaggerConfiguration(SwaggerProperties swaggerProperties) {
     this.swaggerProperties = swaggerProperties;
@@ -47,7 +54,7 @@ public class SwaggerConfiguration {
 
   /**
    * Returns the swagger docket. The swagger definition will be available under {@code
-   * http://localhost:8090/v2/api-docs}.
+   * http://localhost:8090/v2/api-docs}*.
    *
    * @return the swagger docket
    */
