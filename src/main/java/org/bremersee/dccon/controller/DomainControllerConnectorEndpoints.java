@@ -21,7 +21,6 @@ import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainControllerConnectorApi;
 import org.bremersee.dccon.business.DomainControllerConnectorService;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.BooleanWrapper;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordRequest;
 import org.bremersee.dccon.model.DnsRecordUpdateRequest;
@@ -31,7 +30,6 @@ import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Info;
-import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -170,12 +168,10 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<BooleanWrapper> userExists(
+  public ResponseEntity<Boolean> userExists(
       @PathVariable("userName") String userName) {
 
-    final BooleanWrapper wrapper = new BooleanWrapper();
-    wrapper.setValue(domainControllerConnectorService.userExists(userName));
-    return ResponseEntity.ok(wrapper);
+    return ResponseEntity.ok(domainControllerConnectorService.userExists(userName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -203,7 +199,7 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @Override
   public ResponseEntity<DomainGroup> updateGroupMembers(
       @PathVariable("groupName") String groupName,
-      @Valid @RequestBody Names members) {
+      @Valid @RequestBody List<String> members) {
 
     return ResponseEntity
         .ok(domainControllerConnectorService.updateGroupMembers(groupName, members));
@@ -213,16 +209,18 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @Override
   public ResponseEntity<DomainUser> updateUser(
       @PathVariable("userName") String userName,
+      @RequestParam(name = "updateGroups", defaultValue = "false") Boolean updateGroups,
       @Valid @RequestBody DomainUser domainUser) {
 
-    return ResponseEntity.ok(domainControllerConnectorService.updateUser(userName, domainUser));
+    return ResponseEntity.ok(
+        domainControllerConnectorService.updateUser(userName, domainUser, updateGroups));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> updateUserGroups(
       @PathVariable("userName") String userName,
-      @Valid @RequestBody Names groups) {
+      @Valid @RequestBody List<String> groups) {
 
     return ResponseEntity.ok(domainControllerConnectorService.updateUserGroups(userName, groups));
   }

@@ -28,7 +28,7 @@ public class ApplicationTests {
   TestRestTemplate restTemplate;
 
   /**
-   * Controller.
+   * Integration tests.
    */
   @Test
   public void integrationTests() {

@@ -38,10 +38,9 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.Name;
-import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
 import org.springframework.context.annotation.Profile;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -70,8 +69,8 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     admin.setEmail("admin@example.org");
     admin.setEnabled(true);
     admin.setGroups(Arrays.asList(
-        new Name("ADMIN", false),
-        new Name("USER", false)));
+        "ADMIN",
+        "USER"));
     admin.setModified(admin.getCreated());
     admin.setPassword("changeit");
     admin.setPasswordLastSet(admin.getCreated());
@@ -82,7 +81,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     adminGroup.setCreated(OffsetDateTime.now());
     adminGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
-    adminGroup.setMembers(Arrays.asList(new Name("admin", false)));
+    adminGroup.setMembers(Arrays.asList("admin"));
     adminGroup.setModified(adminGroup.getCreated());
     adminGroup.setName("ADMIN");
     addGroup(adminGroup);
@@ -91,7 +90,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
     userGroup.setCreated(OffsetDateTime.now());
     userGroup.setDistinguishedName("cn=admin,cn=groups,dc=example,dc=org");
     //noinspection ArraysAsListWithZeroOrOneArgument
-    userGroup.setMembers(Arrays.asList(new Name("admin", false)));
+    userGroup.setMembers(Arrays.asList("admin"));
     userGroup.setModified(userGroup.getCreated());
     userGroup.setName("USER");
     addGroup(userGroup);
@@ -129,11 +128,11 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public DomainGroup updateGroupMembers(@NotNull String groupName, @Valid Names members) {
+  public DomainGroup updateGroupMembers(@NotNull String groupName, @Valid List<String> members) {
     log.info("msg=[Updating domain group members] group=[{}] members=[{}]", groupName, members);
     final DomainGroup domainGroup = getGroupByName(groupName);
     domainGroup.getMembers().clear();
-    domainGroup.getMembers().addAll(members.getValues());
+    domainGroup.getMembers().addAll(members);
     return domainGroup;
   }
 
@@ -167,7 +166,10 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public DomainUser updateUser(@NotNull String userName, @Valid DomainUser domainUser) {
+  public DomainUser updateUser(
+      @NotNull String userName,
+      @Valid DomainUser domainUser,
+      @Nullable Boolean updateGroups) {
     if (!domainUserMap.containsKey(userName)) {
       throw UserNotFoundException.supplier(userName).get();
     }
@@ -176,13 +178,16 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public DomainUser updateUserGroups(@NotNull String userName, @Valid Names groups) {
+  public DomainUser updateUserGroups(
+      @NotNull String userName,
+      @Valid List<String> groups) {
+
     final DomainUser domainUser = domainUserMap.get(userName);
     if (domainUser == null) {
       throw UserNotFoundException.supplier(userName).get();
     }
     domainUser.getGroups().clear();
-    domainUser.getGroups().addAll(groups.getValues());
+    domainUser.getGroups().addAll(groups);
     return domainUser;
   }
 

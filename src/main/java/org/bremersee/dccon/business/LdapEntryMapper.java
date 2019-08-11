@@ -43,7 +43,8 @@ public interface LdapEntryMapper {
    * @param ldapEntry the ldap entry
    * @return the domain group
    */
-  DomainGroup mapLdapEntryToDomainGroup(@NotNull LdapEntry ldapEntry);
+  DomainGroup mapLdapEntryToDomainGroup(
+      @NotNull LdapEntry ldapEntry);
 
   /**
    * Map ldap entry to domain user.
@@ -51,6 +52,7 @@ public interface LdapEntryMapper {
    * @param ldapEntry the ldap entry
    * @return the domain user
    */
-  DomainUser mapLdapEntryToDomainUser(@NotNull LdapEntry ldapEntry);
+  DomainUser mapLdapEntryToDomainUser(
+      @NotNull LdapEntry ldapEntry);
 
 }

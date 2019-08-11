@@ -25,8 +25,8 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -67,7 +67,9 @@ public interface DomainControllerConnectorService {
    * @param members   the members
    * @return the domain group
    */
-  DomainGroup updateGroupMembers(@NotNull String groupName, @Valid Names members);
+  DomainGroup updateGroupMembers(
+      @NotNull String groupName,
+      @Valid List<String> members);
 
   /**
    * Delete group.
@@ -104,11 +106,15 @@ public interface DomainControllerConnectorService {
   /**
    * Update domain user.
    *
-   * @param userName   the user name
-   * @param domainUser the domain user
+   * @param userName     the user name
+   * @param domainUser   the domain user
+   * @param updateGroups the update groups (default is false)
    * @return the domain user
    */
-  DomainUser updateUser(@NotNull String userName, @Valid DomainUser domainUser);
+  DomainUser updateUser(
+      @NotNull String userName,
+      @Valid DomainUser domainUser,
+      @Nullable Boolean updateGroups);
 
   /**
    * Update groups of domain user.
@@ -117,7 +123,9 @@ public interface DomainControllerConnectorService {
    * @param groups   the groups
    * @return the domain user
    */
-  DomainUser updateUserGroups(@NotNull String userName, @Valid Names groups);
+  DomainUser updateUserGroups(
+      @NotNull String userName,
+      @Valid List<String> groups);
 
   /**
    * Update user password.

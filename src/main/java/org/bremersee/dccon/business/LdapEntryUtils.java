@@ -33,7 +33,7 @@ import org.ldaptive.LdapEntry;
 import org.springframework.util.StringUtils;
 
 /**
- * The type ldap entry utilities.
+ * The ldap entry utilities.
  *
  * @author Christian Bremer
  */
@@ -41,19 +41,19 @@ import org.springframework.util.StringUtils;
 abstract class LdapEntryUtils {
 
   /**
-   * The Uf account disabled.
+   * The bit map value of a disabled account.
    */
   static final int UF_ACCOUNT_DISABLED = 1 << 1;
 
   /**
-   * The Uf normal account.
+   * The bit map value of a normal account.
    */
   static final int UF_NORMAL_ACCOUNT = 1 << 9;
 
   /**
-   * The Uf dont expire passwd.
+   * The bit map value a password that doesn't expire.
    */
-  static final int UF_DONT_EXPIRE_PASSWD = 1 << 16;
+  static final int UF_DONT_EXPIRE_PASSWORD = 1 << 16;
 
   private static final String WHEN_DATE_PATTERN = "yyyyMMddHHmmss";
 
@@ -164,6 +164,27 @@ abstract class LdapEntryUtils {
     return rdn + "=" + rdnValue + "," + baseDn;
   }
 
+  /**
+   * Gets rdn.
+   *
+   * @param dn the dn
+   * @return the rdn
+   */
+  static String getRdn(final String dn) {
+    if (dn == null) {
+      return null;
+    }
+    int start = dn.indexOf('=');
+    if (start < 0) {
+      return dn;
+    }
+    int end = dn.indexOf(',', start);
+    if (end < 0) {
+      return dn.substring(start + 1).trim();
+    }
+    return dn.substring(start + 1, end).trim();
+  }
+
   private static Long activeDirectoryTimeToMillis(final String value) {
     if (!StringUtils.hasText(value) || "0".equals(value)) {
       return null;
@@ -230,10 +251,10 @@ abstract class LdapEntryUtils {
       return Integer.parseInt(getAttributeValue(
           ldapEntry,
           "userAccountControl",
-          String.valueOf(UF_NORMAL_ACCOUNT + UF_DONT_EXPIRE_PASSWD)));
+          String.valueOf(UF_NORMAL_ACCOUNT + UF_DONT_EXPIRE_PASSWORD)));
 
     } catch (final Exception ignored) {
-      return UF_NORMAL_ACCOUNT + UF_DONT_EXPIRE_PASSWD;
+      return UF_NORMAL_ACCOUNT + UF_DONT_EXPIRE_PASSWORD;
     }
   }
 

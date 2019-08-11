@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.Name;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
@@ -78,23 +77,25 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
   }
 
   @Override
-  public DomainGroup mapLdapEntryToDomainGroup(@NotNull final LdapEntry ldapEntry) {
+  public DomainGroup mapLdapEntryToDomainGroup(
+      @NotNull final LdapEntry ldapEntry) {
+
     final DomainGroup group = new DomainGroup();
     mapLdapEntryToGroupItem(ldapEntry, group);
     LdapAttribute membersAttr = ldapEntry.getAttribute(properties.getGroupMemberAttr());
     if (membersAttr != null && membersAttr.getStringValues() != null) {
-      group.setMembers(membersAttr.getStringValues().stream().map(member -> {
-        final Name name = new Name();
-        name.setValue(member);
-        name.setDistinguishedName(properties.isMemberDn());
-        return name;
-      }).collect(Collectors.toList()));
+      group.setMembers(membersAttr.getStringValues()
+          .stream()
+          .map(LdapEntryUtils::getRdn)
+          .collect(Collectors.toList()));
     }
     return group;
   }
 
   @Override
-  public DomainUser mapLdapEntryToDomainUser(@NotNull final LdapEntry ldapEntry) {
+  public DomainUser mapLdapEntryToDomainUser(
+      @NotNull final LdapEntry ldapEntry) {
+
     final DomainUser user = new DomainUser();
     user.setDistinguishedName(ldapEntry.getDn());
     user.setCreated(whenTimeToOffsetDateTime(
@@ -102,23 +103,24 @@ public class LdapEntryMapperImpl implements LdapEntryMapper {
     user.setModified(whenTimeToOffsetDateTime(
         getAttributeValue(ldapEntry, WHEN_CHANGED, null)));
     user.setUserName(getAttributeValue(ldapEntry, "sAMAccountName", null));
+    user.setFirstName(getAttributeValue(ldapEntry, "givenName", null));
+    user.setLastName(getAttributeValue(ldapEntry, "sn", null));
     user.setDisplayName(
         getAttributeValue(ldapEntry, "displayName",
             getAttributeValue(ldapEntry, "gecos", null)));
     user.setEmail(getAttributeValue(ldapEntry, "mail", null));
-    user.setMobile(getAttributeValue(ldapEntry, "telephoneNumber", null));
+    user.setTelephoneNumber(getAttributeValue(ldapEntry, "telephoneNumber", null));
+    user.setMobile(getAttributeValue(ldapEntry, "mobile", null));
     LdapAttribute groupsAttr = ldapEntry.getAttribute(properties.getUserGroupAttr());
     if (groupsAttr != null && groupsAttr.getStringValues() != null) {
-      user.setGroups(groupsAttr.getStringValues().stream().map(group -> {
-        final Name name = new Name();
-        name.setValue(group);
-        name.setDistinguishedName(properties.isUserGroupDn());
-        return name;
-      }).collect(Collectors.toList()));
+      user.setGroups(groupsAttr.getStringValues()
+          .stream()
+          .map(LdapEntryUtils::getRdn)
+          .collect(Collectors.toList()));
     }
     final int userAccountControl = LdapEntryUtils.getUserAccountControl(ldapEntry);
     user.setEnabled(((userAccountControl & UF_ACCOUNT_DISABLED) != UF_ACCOUNT_DISABLED));
-    final String pwdLastSet = getAttributeValue(ldapEntry, "last", null);
+    final String pwdLastSet = getAttributeValue(ldapEntry, "pwdLastSet", null);
     user.setPasswordLastSet(LdapEntryUtils.activeDirectoryTimeToOffsetDateTime(pwdLastSet));
     return user;
   }

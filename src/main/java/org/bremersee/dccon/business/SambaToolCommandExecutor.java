@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.config.LdaptiveProperties;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.config.LdaptiveProperties;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
@@ -53,6 +53,14 @@ public class SambaToolCommandExecutor implements SambaTool {
 
   private static final String USER_CMD_CREATE = "create";
 
+  private static final String USE_USERNAME_AS_CN = "--use-username-as-cn";
+
+  private static final String USER_OPTION_RANDOM_PASSWORD = "--random-password";
+
+  private static final String USER_OPTION_LAST_NAME = "--surname='{}'";
+
+  private static final String USER_OPTION_FIRST_NAME = "--given-name='{}'";
+
   private static final String USER_OPTION_GECOS = "--gecos='{}'";
 
   private static final String USER_OPTION_UNIX_UID = "--uid='{}'";
@@ -63,7 +71,7 @@ public class SambaToolCommandExecutor implements SambaTool {
 
   private static final String USER_OPTION_MAIL_ADDRESS = "--mail-address='{}'";
 
-  private static final String USER_OPTION_MOBILE = "--telephone-number='{}'";
+  private static final String USER_OPTION_TELEPHONE_NUMBER = "--telephone-number='{}'";
 
 
   private static final String USER_CMD_SETEXPIRY = "setexpiry";
@@ -332,9 +340,23 @@ public class SambaToolCommandExecutor implements SambaTool {
   public void createUser(
       @NotNull final String userName,
       @NotNull final String password,
+      final String firstName,
+      final String lastName,
       final String displayName,
       final String email,
-      final String mobile) {
+      final String telephoneNumber) {
+
+    final StringBuilder gecosBuilder = new StringBuilder();
+    if (StringUtils.hasText(firstName)) {
+      gecosBuilder.append(firstName);
+      if (StringUtils.hasText(lastName)) {
+        gecosBuilder.append(' ');
+      }
+    }
+    if (StringUtils.hasText(lastName)) {
+      gecosBuilder.append(lastName);
+    }
+    final String gecos = StringUtils.hasText(displayName) ? displayName : gecosBuilder.toString();
 
     final String unixHomeDir = properties.getUnixHomeDirTemplate().replace("{}", userName);
     kinit();
@@ -344,18 +366,29 @@ public class SambaToolCommandExecutor implements SambaTool {
     commands.add(SUB_CMD_USER_MANAGEMENT);
     commands.add(USER_CMD_CREATE);
     commands.add(userName);
-    commands.add(password);
+    if (StringUtils.hasText(password)) {
+      commands.add(password);
+    } else {
+      commands.add(USER_OPTION_RANDOM_PASSWORD);
+    }
+    commands.add(USE_USERNAME_AS_CN);
     commands.add(USER_OPTION_UNIX_UID.replace("{}", userName));
     commands.add(USER_OPTION_UNIX_HOME.replace("{}", unixHomeDir));
     commands.add(USER_OPTION_UNIX_SHELL.replace("{}", properties.getLoginShell()));
-    if (StringUtils.hasText(displayName)) {
-      commands.add(USER_OPTION_GECOS.replace("{}", displayName));
+    if (StringUtils.hasText(gecos)) {
+      commands.add(USER_OPTION_GECOS.replace("{}", gecos));
+    }
+    if (StringUtils.hasText(firstName)) {
+      commands.add(USER_OPTION_FIRST_NAME.replace("{}", firstName));
+    }
+    if (StringUtils.hasText(lastName)) {
+      commands.add(USER_OPTION_LAST_NAME.replace("{}", lastName));
     }
     if (StringUtils.hasText(email)) {
       commands.add(USER_OPTION_MAIL_ADDRESS.replace("{}", email));
     }
-    if (StringUtils.hasText(mobile)) {
-      commands.add(USER_OPTION_MOBILE.replace("{}", mobile));
+    if (StringUtils.hasText(telephoneNumber)) {
+      commands.add(USER_OPTION_TELEPHONE_NUMBER.replace("{}", telephoneNumber));
     }
     auth(commands);
 

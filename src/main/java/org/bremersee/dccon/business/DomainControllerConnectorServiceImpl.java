@@ -17,7 +17,7 @@
 package org.bremersee.dccon.business;
 
 import static org.bremersee.dccon.business.LdapEntryUtils.UF_ACCOUNT_DISABLED;
-import static org.bremersee.dccon.business.LdapEntryUtils.UF_DONT_EXPIRE_PASSWD;
+import static org.bremersee.dccon.business.LdapEntryUtils.UF_DONT_EXPIRE_PASSWORD;
 import static org.bremersee.dccon.business.LdapEntryUtils.UF_NORMAL_ACCOUNT;
 import static org.bremersee.dccon.business.LdapEntryUtils.createDn;
 import static org.bremersee.dccon.business.LdapEntryUtils.getAttributeValue;
@@ -47,8 +47,6 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.Name;
-import org.bremersee.dccon.model.Names;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.AttributeModification;
@@ -66,8 +64,10 @@ import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * The sDomain connector service implementation.
@@ -145,7 +145,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainGroup addGroup(@Valid final DomainGroup group) {
+  public DomainGroup addGroup(
+      @Valid final DomainGroup group) {
 
     log.info("msg=[Adding domain group] group=[{}]", group);
     try {
@@ -155,9 +156,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     } catch (final NotFoundException nfe) {
 
       sambaTool.addGroup(group.getName());
-      final Names names = new Names();
-      names.setValues(group.getMembers());
-      return updateGroupMembers(group.getName(), names);
+      return updateGroupMembers(group.getName(), group.getMembers());
     }
   }
 
@@ -176,7 +175,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainGroup getGroupByName(@NotNull final String groupName) {
+  public DomainGroup getGroupByName(
+      @NotNull final String groupName) {
 
     log.info("msg=[Getting domain group by name] name=[{}]", groupName);
     Connection conn = null;
@@ -203,7 +203,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   @Override
   public DomainGroup updateGroupMembers(
       @NotNull final String groupName,
-      @Valid final Names members) {
+      @Valid final List<String> members) {
 
     log.info("msg=[Updating domain group members] group=[{}] members=[{}]", groupName, members);
     Connection conn = null;
@@ -220,12 +220,12 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       log.debug("msg=[Updating members of group] group=[{}] oldMembers=[{}]",
           groupName, oldUserDns);
 
-      final Set<String> newUserDns = members.getValues()
-          .stream()
-          .map(name -> name.getDistinguishedName()
-              ? name.getValue()
-              : createDn(properties.getUserRdn(), name.getValue(), properties.getUserBaseDn()))
-          .collect(Collectors.toSet());
+      final Set<String> newUserDns = members == null || members.isEmpty()
+          ? new HashSet<>()
+          : members
+              .stream()
+              .map(member -> createDn(properties.getUserRdn(), member, properties.getUserBaseDn()))
+              .collect(Collectors.toSet());
       log.debug("msg=[Updating members of group] group=[{}] newMembers=[{}]",
           groupName, newUserDns);
 
@@ -316,7 +316,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainUser addUser(@Valid final DomainUser domainUser) {
+  public DomainUser addUser(
+      @Valid final DomainUser domainUser) {
 
     log.info("msg=[Adding domain user.] user=[{}]", domainUser);
     try {
@@ -325,17 +326,19 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       final Password password = new Password();
       password.setValue(domainUser.getPassword());
       updateUserPassword(domainUser.getUserName(), password);
-      return updateUser(domainUser.getUserName(), domainUser);
+      return updateUser(domainUser.getUserName(), domainUser, true);
 
     } catch (final NotFoundException nfe) {
 
       sambaTool.createUser(
           domainUser.getUserName(),
           domainUser.getPassword(),
+          domainUser.getFirstName(),
+          domainUser.getLastName(),
           domainUser.getDisplayName(),
           domainUser.getEmail(),
-          domainUser.getMobile());
-      final DomainUser user = updateUser(domainUser.getUserName(), domainUser);
+          domainUser.getTelephoneNumber());
+      final DomainUser user = updateUser(domainUser.getUserName(), domainUser, true);
       log.info("msg=[Domain user successfully added.] user=[{}]", user);
       return user;
     }
@@ -381,7 +384,10 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainUser updateUser(@NotNull final String userName, @Valid final DomainUser domainUser) {
+  public DomainUser updateUser(
+      @NotNull final String userName,
+      @Valid final DomainUser domainUser,
+      @Nullable final Boolean updateGroups) {
 
     log.info("msg=[Updating domain user.] name=[{}] user=[{}]", userName, domainUser);
     Connection conn = null;
@@ -394,8 +400,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       if ((userAccountControl & UF_NORMAL_ACCOUNT) != UF_NORMAL_ACCOUNT) {
         userAccountControl = userAccountControl + UF_NORMAL_ACCOUNT;
       }
-      if ((userAccountControl & UF_DONT_EXPIRE_PASSWD) != UF_DONT_EXPIRE_PASSWD) {
-        userAccountControl = userAccountControl + UF_DONT_EXPIRE_PASSWD;
+      if ((userAccountControl & UF_DONT_EXPIRE_PASSWORD) != UF_DONT_EXPIRE_PASSWORD) {
+        userAccountControl = userAccountControl + UF_DONT_EXPIRE_PASSWORD;
       }
       if (domainUser.getEnabled() &&
           ((userAccountControl & UF_ACCOUNT_DISABLED) == UF_ACCOUNT_DISABLED)) {
@@ -405,11 +411,27 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
         userAccountControl = userAccountControl + UF_ACCOUNT_DISABLED;
       }
 
+      final StringBuilder gecosBuilder = new StringBuilder();
+      if (StringUtils.hasText(domainUser.getFirstName())) {
+        gecosBuilder.append(domainUser.getFirstName());
+        if (StringUtils.hasText(domainUser.getLastName())) {
+          gecosBuilder.append(' ');
+        }
+      }
+      if (StringUtils.hasText(domainUser.getLastName())) {
+        gecosBuilder.append(domainUser.getLastName());
+      }
+      final String gecos = StringUtils.hasText(domainUser.getDisplayName())
+          ? domainUser.getDisplayName() : gecosBuilder.toString();
       final List<AttributeModification> mods = new ArrayList<>();
-      updateAttribute(ldapEntry, "displayName", domainUser.getDisplayName(), mods);
-      updateAttribute(ldapEntry, "gecos", domainUser.getDisplayName(), mods);
+      updateAttribute(ldapEntry, "displayName", gecos, mods);
+      updateAttribute(ldapEntry, "sn", domainUser.getLastName(), mods);
+      updateAttribute(ldapEntry, "givenName", domainUser.getFirstName(), mods);
+      updateAttribute(ldapEntry, "gecos", gecos, mods);
       updateAttribute(ldapEntry, "mail", domainUser.getEmail(), mods);
-      updateAttribute(ldapEntry, "telephoneNumber", domainUser.getMobile(), mods);
+      updateAttribute(ldapEntry, "telephoneNumber", domainUser.getTelephoneNumber(),
+          mods);
+      updateAttribute(ldapEntry, "mobile", domainUser.getMobile(), mods);
       updateAttribute(
           ldapEntry, "userAccountControl", String.valueOf(userAccountControl), mods);
 
@@ -422,7 +444,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
                 mods.toArray(new AttributeModification[0])));
       }
 
-      updateUserGroups(ldapEntry, domainUser.getGroups(), conn);
+      if (Boolean.TRUE.equals(updateGroups)) {
+        updateUserGroups(ldapEntry, domainUser.getGroups(), conn);
+      }
 
       final DomainUser user = mapper.mapLdapEntryToDomainUser(ldapEntry);
       log.info("msg=[Domain user successfully updated.] name=[{}] user=[{}]", userName, user);
@@ -442,7 +466,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
   private void updateUserGroups(
       @NotNull final LdapEntry ldapEntry,
-      @NotNull final List<Name> groups,
+      @NotNull final List<String> groups,
       @NotNull final Connection conn) throws LdapException {
 
     final String userName = getAttributeValue(
@@ -456,9 +480,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
     final Set<String> newGroupDns = groups
         .stream()
-        .map(name -> name.getDistinguishedName()
-            ? name.getValue()
-            : createDn(properties.getGroupRdn(), name.getValue(), properties.getGroupBaseDn()))
+        .map(name -> createDn(properties.getGroupRdn(), name, properties.getGroupBaseDn()))
         .collect(Collectors.toSet());
     log.debug("msg=[Updating groups of user.] name=[{}] newGroups=[{}]", userName, newGroupDns);
 
@@ -505,7 +527,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public DomainUser updateUserGroups(@NotNull final String userName, @Valid final Names groups) {
+  public DomainUser updateUserGroups(
+      @NotNull final String userName,
+      @Valid final List<String> groups) {
 
     log.info("msg=[Updating domain user's groups.] name=[{}] groups=[{}]", userName, groups);
     Connection conn = null;
@@ -513,7 +537,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       conn = getConnection();
       final LdapEntry ldapEntry = findUserByName(userName, conn)
           .orElseThrow(UserNotFoundException.supplier(userName));
-      updateUserGroups(ldapEntry, groups.getValues(), conn);
+      updateUserGroups(ldapEntry, groups, conn);
       final DomainUser user = mapper.mapLdapEntryToDomainUser(ldapEntry);
       log.info("Domain user's group successfully updated: {}", user);
       return user;

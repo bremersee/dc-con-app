@@ -32,18 +32,22 @@ public interface SambaTool {
   /**
    * Create user.
    *
-   * @param userName    the user name
-   * @param password    the password
-   * @param displayName the display name
-   * @param email       the email
-   * @param mobile      the mobile
+   * @param userName        the user name
+   * @param password        the password
+   * @param firstName       the first name
+   * @param lastName        the last name
+   * @param displayName     the display name
+   * @param email           the email
+   * @param telephoneNumber the telephone number
    */
   void createUser(
       @NotNull String userName,
-      @NotNull String password,
+      String password,
+      String firstName,
+      String lastName,
       String displayName,
       String email,
-      String mobile);
+      String telephoneNumber);
 
   /**
    * Delete user.

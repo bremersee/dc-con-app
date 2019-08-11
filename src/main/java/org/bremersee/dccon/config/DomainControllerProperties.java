@@ -49,8 +49,6 @@ public class DomainControllerProperties implements Serializable {
 
   private String groupMemberAttr = "member";
 
-  private boolean memberDn = true;
-
   private String groupFindAllFilter = "(objectClass=group)";
 
   private SearchScope groupFindAllSearchScope = SearchScope.ONELEVEL;
@@ -64,8 +62,6 @@ public class DomainControllerProperties implements Serializable {
   private String userRdn = "cn";
 
   private String userGroupAttr = "memberOf";
-
-  private boolean userGroupDn = true;
 
   private String userFindOneFilter = "(&(objectClass=user)(sAMAccountName={0}))";
 
