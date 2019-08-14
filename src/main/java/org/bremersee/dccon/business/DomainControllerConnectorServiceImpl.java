@@ -863,8 +863,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
           dnsReverseZoneName.length() - properties.getReverseZoneSuffix().length());
       final String[] ipParts = ipPart.split(Pattern.quote("."));
       final StringBuilder ipBuilder = new StringBuilder();
-      for (int i = ipPart.length() - 1; i >= 0; i--) {
-        ipBuilder.append(ipParts[i]).append('.');
+      for (int i = ipParts.length - 1; i >= 0; i--) {
+        ipBuilder.append(ipParts[i]).append('.'); // TODO array out of bounds
       }
       return ip.startsWith(ipBuilder.toString());
     }
@@ -910,7 +910,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
         dnsReverseZoneName.length() - properties.getReverseZoneSuffix().length());
     final String[] ipParts = ipPart.split(Pattern.quote("."));
     final StringBuilder ipBuilder = new StringBuilder();
-    for (int i = ipPart.length() - 1; i >= 0; i--) {
+    for (int i = ipParts.length - 1; i >= 0; i--) {
       ipBuilder.append(ipParts[i]).append('.');
     }
     ipBuilder.append(dnsReverseEntryName);
@@ -1000,7 +1000,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
   }
 
-  private class DnsEntryComparator implements Comparator<DnsEntry> {
+  private static class DnsEntryComparator implements Comparator<DnsEntry> {
 
     @Override
     public int compare(DnsEntry o1, DnsEntry o2) {

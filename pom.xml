@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -28,6 +28,13 @@
     <commons-io.version>2.5</commons-io.version>
     <ldaptive.version>1.2.4</ldaptive.version>
     <springfox.version>2.9.2</springfox.version>
+
+    <!--suppress UnresolvedMavenProperty -->
+    <debBaseName>
+      dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all
+    </debBaseName>
+    <debName>${debBaseName}.deb</debName>
+    <debChangesName>${debBaseName}.changes</debChangesName>
   </properties>
 
   <scm>
@@ -214,6 +221,13 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <plugin>
           <artifactId>jdeb</artifactId>
           <groupId>org.vafer</groupId>
           <version>1.5</version>
@@ -271,18 +285,12 @@
                 </goals>
                 <configuration>
                   <verbose>true</verbose>
-                  <!--suppress MavenModelInspection -->
-                  <deb>
-                    ${project.basedir}/target/dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.deb
-                  </deb>
-                  <!--suppress MavenModelInspection -->
-                  <changesOut>
-                    ${project.basedir}/target/dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.changes
-                  </changesOut>
+                  <deb>${project.build.directory}/${debName}</deb>
+                  <changesOut>${project.build.directory}/${debChangesName}</changesOut>
                   <controlDir>${basedir}/src/assembly/debian9/control</controlDir>
                   <dataSet>
                     <data>
-                      <src>${project.basedir}/target/dc-con-debian9.tar.gz</src>
+                      <src>${project.build.directory}/dc-con-debian9.tar.gz</src>
                       <type>archive</type>
                       <mapper>
                         <type>perm</type>
@@ -290,6 +298,28 @@
                       </mapper>
                     </data>
                   </dataSet>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!--+
+              | wagon-http only supports http method put
+              | uploading to nexus apt works only with a workaround in haproxy
+              +-->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>upload-to-ubuntu-bionic</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-apt</serverId>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <url>https://nexus.bremersee.org/repository/ubuntu-bionic</url>
                 </configuration>
               </execution>
             </executions>

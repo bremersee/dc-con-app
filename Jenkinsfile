@@ -13,6 +13,19 @@ pipeline {
         sh 'mvn test'
       }
     }
+    stage('Deploy') {
+      when {
+        anyOf {
+          branch 'develop'
+          branch 'master'
+        }
+      }
+      steps {
+        sh '''
+          mvn -DskipTests=true -Dhttp.protocol.expect-continue=true deploy
+        '''
+      }
+    }
     stage('Site') {
       when {
         anyOf {
