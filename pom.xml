@@ -327,5 +327,73 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>update-dc</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-on-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo apt-get update</command>
+                    <command>sudo apt-get install dc-con</command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>false</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>update-dc2</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-on-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo apt-get update</command>
+                    <command>sudo apt-get install dc-con</command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>false</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

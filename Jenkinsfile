@@ -21,9 +21,7 @@ pipeline {
         }
       }
       steps {
-        sh '''
-          mvn -DskipTests=true -Dhttp.protocol.expect-continue=true deploy
-        '''
+        sh 'mvn -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,update-dc,update-dc2 deploy'
       }
     }
     stage('Site') {
