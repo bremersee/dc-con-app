@@ -384,7 +384,7 @@
                   <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
                   <commands>
                     <command>sudo apt-get update</command>
-                    <command>sudo apt-get install dc-con</command>
+                    <command>sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install dc-con</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
