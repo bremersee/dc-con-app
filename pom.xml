@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>1.2.1-SNAPSHOT</version>
+  <version>1.2.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -383,8 +383,8 @@
                   <serverId>bremersee-dc</serverId>
                   <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
                   <commands>
-                    <command>sudo apt-get update</command>
-                    <command>sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install dc-con</command>
+                    <command>sudo /usr/bin/apt-get update</command>
+                    <command>sudo /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install dc-con</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
