@@ -457,5 +457,52 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>copy-to-and-install-on-dc2</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-to-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <toFile>dc-con.deb</toFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>dpkg-on-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
+                    <command>rm /home/bremersee/dc-con.deb</command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>true</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

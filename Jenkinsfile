@@ -18,7 +18,7 @@ pipeline {
         branch 'develop'
       }
       steps {
-        sh 'mvn -DskipTests=true -Pdebian9,copy-to-and-install-on-dc deploy'
+        sh 'mvn -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
       }
     }
     stage('Deploy release') {
