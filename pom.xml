@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -302,6 +302,17 @@
               </execution>
             </executions>
           </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>deploy-to-repo-ubuntu-bionic</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
           <!--+
               | wagon-http only supports http method put
               | uploading to nexus apt works only with a workaround in haproxy
@@ -329,7 +340,7 @@
     </profile>
 
     <profile>
-      <id>update-dc</id>
+      <id>apt-get-on-dc</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -350,7 +361,9 @@
                   <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq --reinstall install dc-con</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
+                      -yq install dc-con
+                    </command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
@@ -363,7 +376,7 @@
     </profile>
 
     <profile>
-      <id>update-dc2</id>
+      <id>apt-get-on-dc2</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -384,7 +397,55 @@
                   <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq --reinstall install dc-con</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
+                      -yq install dc-con
+                    </command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>false</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>copy-to-and-install-on-dc</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-to-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <toFile>dc-con.deb</toFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>dpkg-on-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/dpkg -i /home/giacomo/dc-con.deb</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>

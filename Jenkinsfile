@@ -13,15 +13,20 @@ pipeline {
         sh 'mvn test'
       }
     }
-    stage('Deploy') {
+    stage('Deploy snapshot') {
       when {
-        anyOf {
-          branch 'develop'
-          branch 'master'
-        }
+        branch 'develop'
       }
       steps {
-        sh 'mvn -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,update-dc,update-dc2 deploy'
+        sh 'mvn -DskipTests=true -Pdebian9,copy-to-and-install-on-dc deploy'
+      }
+    }
+    stage('Deploy release') {
+      when {
+        branch 'master'
+      }
+      steps {
+        sh 'mvn -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
     }
     stage('Site') {
