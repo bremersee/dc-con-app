@@ -445,10 +445,11 @@
                   <serverId>bremersee-dc</serverId>
                   <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
                   <commands>
-                    <command>sudo -n /usr/bin/dpkg -i /home/giacomo/dc-con.deb</command>
+                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
+                    <command>rm /home/bremersee/dc-con.deb</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
-                  <failOnError>false</failOnError>
+                  <failOnError>true</failOnError>
                 </configuration>
               </execution>
             </executions>
