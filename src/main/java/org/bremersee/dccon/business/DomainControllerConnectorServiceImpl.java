@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DomainGroup;
@@ -694,12 +696,35 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   @Override
   public List<DnsEntry> getDnsRecords(@NotNull final String zoneName) {
     log.info("msg=[Getting name server records.] zone=[{}]", zoneName);
+    final Map<String, DhcpLease> leaseMap = getDhcpLeases(Boolean.FALSE, "ip").stream()
+        .collect(Collectors.toMap(DhcpLease::getIp, dhcpLease -> dhcpLease));
     return sambaTool
         .getDnsRecords(zoneName)
         .stream()
         .filter(this::isNonExcludedDnsEntry)
+        .map(dnsEntry -> addDhcpLeases(leaseMap, dnsEntry, zoneName))
         .sorted(dnsEntryComparator)
         .collect(Collectors.toList());
+  }
+
+  private DnsEntry addDhcpLeases(
+      final Map<String, DhcpLease> dhcpLeaseMap,
+      final DnsEntry dnsEntry,
+      final String zoneName) {
+    final List<DnsRecord> dnsRecords = dnsEntry.getRecords();
+    if (dnsRecords == null) {
+      return dnsEntry;
+    }
+    for (DnsRecord dnsRecord : dnsRecords) {
+      final String ip;
+      if (isDnsReverseZone(zoneName)) {
+        ip = getIpV4(dnsEntry.getName(), zoneName);
+      } else {
+        ip = dnsRecord.getRecordValue();
+      }
+      dnsRecord.setDhcpLease(dhcpLeaseMap.get(ip));
+    }
+    return dnsEntry;
   }
 
   @Override
