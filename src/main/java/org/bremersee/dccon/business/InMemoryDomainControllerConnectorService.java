@@ -19,6 +19,7 @@ package org.bremersee.dccon.business;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
+import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsRecordType;
@@ -199,6 +201,11 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   @Override
   public void deleteUser(@NotNull String userName) {
     domainUserMap.remove(userName);
+  }
+
+  @Override
+  public List<DhcpLease> getDhcpLeases(Boolean all, String sort) {
+    return Collections.emptyList();
   }
 
   @Override

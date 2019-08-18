@@ -105,8 +105,7 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
     }
   }
 
-  private List<DnsZone> parseDnsZones(
-      @NotNull final BufferedReader reader) throws IOException {
+  private List<DnsZone> parseDnsZones(final BufferedReader reader) throws IOException {
 
     final List<DnsZone> zoneList = new ArrayList<>();
     DnsZone zone = null;

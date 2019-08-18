@@ -36,11 +36,13 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
+import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
@@ -62,7 +64,6 @@ import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchOperation;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchResult;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -70,7 +71,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * The sDomain connector service implementation.
+ * The domain connector service implementation.
  *
  * @author Christian Bremer
  */
@@ -92,6 +93,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
   private final SambaTool sambaTool;
 
+  private final DhcpLeaseList dhcpLeaseList;
+
   /**
    * Instantiates a new Domain connector service.
    *
@@ -99,18 +102,20 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
    * @param mapper            the mapper
    * @param connectionFactory the connection factory
    * @param sambaTool         the samba tool
+   * @param dhcpLeaseList     the dhcp lease list
    */
-  @Autowired
   public DomainControllerConnectorServiceImpl(
       final DomainControllerProperties properties,
       final LdapEntryMapper mapper,
       final ConnectionFactory connectionFactory,
-      final SambaTool sambaTool) {
+      final SambaTool sambaTool,
+      final DhcpLeaseList dhcpLeaseList) {
 
     this.properties = properties;
     this.mapper = mapper;
     this.connectionFactory = connectionFactory;
     this.sambaTool = sambaTool;
+    this.dhcpLeaseList = dhcpLeaseList;
   }
 
   @Override
@@ -595,6 +600,15 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
+  public List<DhcpLease> getDhcpLeases(final Boolean all, final String sort) {
+
+    final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;
+    final List<DhcpLease> leases = dhcpLeaseList.getDhcpLeases(all);
+    leases.sort(ComparatorBuilder.builder().fromWellKnownText(sortOrder).build());
+    return leases;
+  }
+
+  @Override
   public List<DnsZone> getDnsZones() {
     log.info("msg=[Getting name server zones.]");
     return sambaTool.getDnsZones()
@@ -946,6 +960,24 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
   private class DnsZoneComparator implements Comparator<DnsZone> {
 
+    private final boolean asc;
+
+    /**
+     * Instantiates a new Dns zone comparator.
+     */
+    DnsZoneComparator() {
+      this(Boolean.TRUE);
+    }
+
+    /**
+     * Instantiates a new Dns zone comparator.
+     *
+     * @param asc the asc
+     */
+    DnsZoneComparator(Boolean asc) {
+      this.asc = !Boolean.FALSE.equals(asc);
+    }
+
     @Override
     public int compare(DnsZone o1, DnsZone o2) {
       final String s1 = o1 != null && o1.getPszZoneName() != null ? o1.getPszZoneName() : "";
@@ -959,19 +991,19 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
           c = compare(sa1, sa2);
         }
         log.debug("msg=[Both zones are dns reverse zones.] result=[{}]", c);
-        return c;
+        return asc ? c : -1 * c;
       } else if (!isDnsReverseZone(s1) && isDnsReverseZone(s2)) {
         log.debug("msg=[First is non reverse zone, second is reverse zone.] "
             + "first=[{}] second=[{}] result=[-1]", s1, s2);
-        return -1;
+        return asc ? -1 : 1;
       } else if (isDnsReverseZone(s1) && !isDnsReverseZone(s2)) {
         log.debug("msg=[First is reverse zone, second is non reverse zone.] "
             + "first=[{}] second=[{}] result=[1]", s1, s2);
-        return 1;
+        return asc ? 1 : -1;
       }
       final int result = s1.compareToIgnoreCase(s2);
       log.debug("msg=[Both zones are non dns reverse zones.] result=[{}]", result);
-      return result;
+      return asc ? result : -1 * result;
     }
 
     private int compare(String[] sa1, String[] sa2) {
@@ -1002,15 +1034,35 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
 
   private static class DnsEntryComparator implements Comparator<DnsEntry> {
 
+    private final boolean asc;
+
+    /**
+     * Instantiates a dns entry comparator.
+     */
+    DnsEntryComparator() {
+      this(Boolean.TRUE);
+    }
+
+    /**
+     * Instantiates a dns entry comparator.
+     *
+     * @param asc use ascending sort order or not
+     */
+    DnsEntryComparator(Boolean asc) {
+      this.asc = !Boolean.FALSE.equals(asc);
+    }
+
     @Override
     public int compare(DnsEntry o1, DnsEntry o2) {
       final String s1 = o1 != null && o1.getName() != null ? o1.getName() : "";
       final String s2 = o2 != null && o2.getName() != null ? o2.getName() : "";
+      int result;
       try {
-        return Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
-      } catch (final Throwable t) {
-        return s1.compareToIgnoreCase(s2);
+        result = Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
+      } catch (final Exception ignored) {
+        result = s1.compareToIgnoreCase(s2);
       }
+      return asc ? result : -1 * result;
     }
   }
 

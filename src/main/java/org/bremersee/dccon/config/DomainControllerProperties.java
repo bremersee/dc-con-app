@@ -86,6 +86,11 @@ public class DomainControllerProperties implements Serializable {
   private String unixHomeDirTemplate = "/home/{}";
 
 
+  private String dhcpLeaseListBinary = "/usr/sbin/dhcp-lease-list";
+
+  private String dhcpLeaseListExecDir = "/tmp";
+
+
   private String nameServerHost = "ns.example.org";
 
   private String reverseZoneSuffix = ".in-addr.arpa";

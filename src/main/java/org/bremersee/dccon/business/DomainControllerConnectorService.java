@@ -19,6 +19,7 @@ package org.bremersee.dccon.business;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
@@ -142,6 +143,15 @@ public interface DomainControllerConnectorService {
    */
   void deleteUser(@NotNull String userName);
 
+
+  /**
+   * Gets dhcp leases.
+   *
+   * @param all  if {@code true}, expired leases will also be returned, otherwise only active ones
+   * @param sort the sort order (default is {@link DhcpLease#SORT_ORDER_BEGIN_HOSTNAME})
+   * @return the dhcp leases
+   */
+  List<DhcpLease> getDhcpLeases(@Nullable Boolean all, @Nullable String sort);
 
   /**
    * Gets all dns zones.

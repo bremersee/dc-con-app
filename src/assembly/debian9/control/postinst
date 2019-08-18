@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SUDO_FILE=/etc/sudoers
-SUDO_ENTRY="dc-con ALL = NOPASSWD: /usr/bin/samba-tool, /usr/bin/kinit"
+SUDO_ENTRY="dc-con ALL = NOPASSWD: /usr/bin/samba-tool, /usr/bin/kinit, /usr/sbin/dhcp-lease-list"
 
 /usr/bin/getent passwd dc-con
 if [ ! $? -eq 0 ]; then
