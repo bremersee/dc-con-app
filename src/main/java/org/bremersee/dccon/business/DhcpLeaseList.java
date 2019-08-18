@@ -21,7 +21,7 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.springframework.lang.Nullable;
 
 /**
- * The dDhcp lease list.
+ * The dhcp lease list.
  *
  * @author Christian Bremer
  */

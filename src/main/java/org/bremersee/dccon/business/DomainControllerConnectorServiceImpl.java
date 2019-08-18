@@ -878,7 +878,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       final String[] ipParts = ipPart.split(Pattern.quote("."));
       final StringBuilder ipBuilder = new StringBuilder();
       for (int i = ipParts.length - 1; i >= 0; i--) {
-        ipBuilder.append(ipParts[i]).append('.'); // TODO array out of bounds
+        ipBuilder.append(ipParts[i]).append('.');
       }
       return ip.startsWith(ipBuilder.toString());
     }

@@ -23,7 +23,7 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.springframework.stereotype.Component;
 
 /**
- * The dDhcp lease list implementation.
+ * The dhcp lease list implementation.
  *
  * @author Christian Bremer
  */
