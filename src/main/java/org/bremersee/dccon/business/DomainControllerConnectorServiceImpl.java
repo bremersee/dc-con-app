@@ -1076,7 +1076,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
   }
 
-  private static class IpAddressComparator implements Comparator<String> {
+  private static class IpAddressComparator implements Comparator<Object> {
 
     private final boolean asc;
 
@@ -1102,16 +1102,16 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
 
     @Override
-    public int compare(String o1, String o2) {
+    public int compare(Object o1, Object o2) {
       return new ValueComparator(null, asc, true, nullIsFirst)
           .compare(createIpString(o1), createIpString(o2));
     }
 
-    private String createIpString(String ip) {
-      if (!StringUtils.hasText(ip)) {
+    private Object createIpString(Object ip) {
+      if (ip == null || !StringUtils.hasText(ip.toString())) {
         return null;
       }
-      final String[] parts = ip.split(Pattern.quote("."));
+      final String[] parts = ip.toString().split(Pattern.quote("."));
       final StringBuilder ipBuilder = new StringBuilder();
       for (int i = 0; i < parts.length; i++) {
         StringBuilder part = new StringBuilder(parts[i]);
