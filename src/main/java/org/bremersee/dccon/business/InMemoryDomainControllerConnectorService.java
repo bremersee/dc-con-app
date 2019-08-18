@@ -32,6 +32,7 @@ import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
+import org.bremersee.dccon.model.AddDhcpLeaseParameter;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
@@ -234,7 +235,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public List<DnsEntry> getDnsRecords(@NotNull String zoneName) {
+  public List<DnsEntry> getDnsRecords(String zoneName, AddDhcpLeaseParameter addDhcpLease) {
     return dnsMap.getOrDefault(DnsZone.builder().pszZoneName(zoneName).build(), new ArrayList<>());
   }
 
@@ -244,7 +245,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull String name,
       @NotNull DnsRecordType recordType,
       @NotNull String data) {
-    return getDnsRecords(zoneName)
+    return getDnsRecords(zoneName, AddDhcpLeaseParameter.NONE)
         .parallelStream()
         .anyMatch(entry -> entry
             .getName().equals(name)
