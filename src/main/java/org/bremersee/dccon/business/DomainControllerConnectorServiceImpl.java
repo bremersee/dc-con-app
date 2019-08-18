@@ -37,7 +37,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.ComparatorBuilder;
-import org.bremersee.comparator.ValueComparator;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
@@ -606,14 +605,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;
     final List<DhcpLease> leases = dhcpLeaseList.getDhcpLeases(all);
     leases.sort(ComparatorBuilder.builder()
-        .fromWellKnownText(sortOrder, comparatorField -> {
-          if ("ip".equalsIgnoreCase(comparatorField.getField())) {
-            return new IpAddressComparator(
-                comparatorField.isAsc(),
-                comparatorField.isNullIsFirst());
-          }
-          return new ValueComparator(comparatorField);
-        })
+        .fromWellKnownText(sortOrder)
         .build());
     return leases;
   }
@@ -1073,57 +1065,6 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
         result = s1.compareToIgnoreCase(s2);
       }
       return asc ? result : -1 * result;
-    }
-  }
-
-  private static class IpAddressComparator implements Comparator<Object> {
-
-    private final boolean asc;
-
-    private final boolean nullIsFirst;
-
-    /**
-     * Instantiates a new ip address comparator.
-     */
-    @SuppressWarnings("unused")
-    IpAddressComparator() {
-      this(Boolean.TRUE, Boolean.FALSE);
-    }
-
-    /**
-     * Instantiates a new ip address comparator.
-     *
-     * @param asc         the asc
-     * @param nullIsFirst the null is first
-     */
-    IpAddressComparator(Boolean asc, Boolean nullIsFirst) {
-      this.asc = !Boolean.FALSE.equals(asc);
-      this.nullIsFirst = Boolean.TRUE.equals(nullIsFirst);
-    }
-
-    @Override
-    public int compare(Object o1, Object o2) {
-      return new ValueComparator(null, asc, true, nullIsFirst)
-          .compare(createIpString(o1), createIpString(o2));
-    }
-
-    private Object createIpString(Object ip) {
-      if (ip == null || !StringUtils.hasText(ip.toString())) {
-        return null;
-      }
-      final String[] parts = ip.toString().split(Pattern.quote("."));
-      final StringBuilder ipBuilder = new StringBuilder();
-      for (int i = 0; i < parts.length; i++) {
-        StringBuilder part = new StringBuilder(parts[i]);
-        while (part.length() < 3) {
-          part.insert(0, "0");
-        }
-        ipBuilder.append(part);
-        if (i < parts.length - 1) {
-          ipBuilder.append('.');
-        }
-      }
-      return ipBuilder.toString();
     }
   }
 
