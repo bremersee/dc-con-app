@@ -28,6 +28,7 @@ import static org.bremersee.exception.ServiceException.internalServerError;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -701,21 +702,29 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       final AddDhcpLeaseParameter addDhcpLease) {
     log.info("msg=[Getting name server records.] zone=[{}] addDhcpLease=[{}]",
         zoneName, addDhcpLease);
-    final Map<String, DhcpLease> leaseMap = AddDhcpLeaseParameter.NONE == addDhcpLease
-        ? Collections.emptyMap()
-        : getDhcpLeases(AddDhcpLeaseParameter.ALL == addDhcpLease, "ip").stream()
-            .collect(Collectors.toMap(DhcpLease::getIp, dhcpLease -> dhcpLease));
+    final Map<String, List<DhcpLease>> leasesMap;
+    if (AddDhcpLeaseParameter.NONE == addDhcpLease) {
+      leasesMap = Collections.emptyMap();
+    } else {
+      leasesMap = new HashMap<>();
+      final List<DhcpLease> leases = getDhcpLeases(
+          AddDhcpLeaseParameter.ALL == addDhcpLease,
+          "ip|begin,desc");
+      for (DhcpLease lease : leases) {
+        leasesMap.computeIfAbsent(lease.getIp(), key -> new ArrayList<>()).add(lease);
+      }
+    }
     return sambaTool
         .getDnsRecords(zoneName)
         .stream()
         .filter(this::isNonExcludedDnsEntry)
-        .map(dnsEntry -> addDhcpLeases(leaseMap, dnsEntry, zoneName))
+        .map(dnsEntry -> addDhcpLeases(leasesMap, dnsEntry, zoneName))
         .sorted(dnsEntryComparator)
         .collect(Collectors.toList());
   }
 
   private DnsEntry addDhcpLeases(
-      final Map<String, DhcpLease> dhcpLeaseMap,
+      final Map<String, List<DhcpLease>> leasesMap,
       final DnsEntry dnsEntry,
       final String zoneName) {
     final List<DnsRecord> dnsRecords = dnsEntry.getRecords();
@@ -729,7 +738,10 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       } else {
         ip = dnsRecord.getRecordValue();
       }
-      dnsRecord.setDhcpLease(dhcpLeaseMap.get(ip));
+      final List<DhcpLease> leases = leasesMap.get(ip);
+      if (leases != null && !leases.isEmpty()) {
+        dnsRecord.setDhcpLease(leases.get(0));
+      }
     }
     return dnsEntry;
   }
