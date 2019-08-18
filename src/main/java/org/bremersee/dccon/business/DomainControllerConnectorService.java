@@ -19,6 +19,7 @@ package org.bremersee.dccon.business;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.AddDhcpLeaseParameter;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordType;
@@ -191,10 +192,13 @@ public interface DomainControllerConnectorService {
   /**
    * Gets dns records.
    *
-   * @param zoneName the zone name
+   * @param zoneName     the zone name
+   * @param addDhcpLease the add dhcp lease
    * @return the dns records
    */
-  List<DnsEntry> getDnsRecords(@NotNull String zoneName);
+  List<DnsEntry> getDnsRecords(
+      @NotNull String zoneName,
+      @NotNull AddDhcpLeaseParameter addDhcpLease);
 
   /**
    * Checks whether a dns record exists or not.

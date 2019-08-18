@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainControllerConnectorApi;
 import org.bremersee.dccon.business.DomainControllerConnectorService;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AddDhcpLeaseParameter;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecordRequest;
@@ -70,9 +71,11 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsEntry>> getDnsRecords(
-      @Valid @RequestParam(value = "zoneName") String zoneName) {
+      @RequestParam(value = "zoneName") String zoneName,
+      @RequestParam(value = "addDhcpLease", defaultValue = "ACTIVE") String addDhcpLease) {
 
-    return ResponseEntity.ok(domainControllerConnectorService.getDnsRecords(zoneName));
+    return ResponseEntity.ok(domainControllerConnectorService
+        .getDnsRecords(zoneName, AddDhcpLeaseParameter.fromValue(addDhcpLease, AddDhcpLeaseParameter.ACTIVE)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")

@@ -26,6 +26,7 @@ import static org.bremersee.dccon.business.LdapEntryUtils.updateAttribute;
 import static org.bremersee.exception.ServiceException.internalServerError;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,7 @@ import org.bremersee.dccon.exception.GroupAlreadyExistsException;
 import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
+import org.bremersee.dccon.model.AddDhcpLeaseParameter;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
@@ -694,10 +696,15 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public List<DnsEntry> getDnsRecords(@NotNull final String zoneName) {
-    log.info("msg=[Getting name server records.] zone=[{}]", zoneName);
-    final Map<String, DhcpLease> leaseMap = getDhcpLeases(Boolean.FALSE, "ip").stream()
-        .collect(Collectors.toMap(DhcpLease::getIp, dhcpLease -> dhcpLease));
+  public List<DnsEntry> getDnsRecords(
+      final String zoneName,
+      final AddDhcpLeaseParameter addDhcpLease) {
+    log.info("msg=[Getting name server records.] zone=[{}] addDhcpLease=[{}]",
+        zoneName, addDhcpLease);
+    final Map<String, DhcpLease> leaseMap = AddDhcpLeaseParameter.NONE == addDhcpLease
+        ? Collections.emptyMap()
+        : getDhcpLeases(AddDhcpLeaseParameter.ALL == addDhcpLease, "ip").stream()
+            .collect(Collectors.toMap(DhcpLease::getIp, dhcpLease -> dhcpLease));
     return sambaTool
         .getDnsRecords(zoneName)
         .stream()
