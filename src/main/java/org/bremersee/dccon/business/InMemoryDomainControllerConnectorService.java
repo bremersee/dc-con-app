@@ -261,7 +261,8 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull String zoneName,
       @NotNull String name,
       @NotNull DnsRecordType recordType,
-      @NotNull String data) {
+      @NotNull String data,
+      @Nullable Boolean alsoAddReverseRecord) {
 
     final DnsEntry dnsEntry = new DnsEntry();
     dnsEntry.setName(name);
@@ -302,7 +303,8 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull String zoneName,
       @NotNull String name,
       @NotNull DnsRecordType recordType,
-      @NotNull String data) {
+      @NotNull String data,
+      @Nullable Boolean alsoAddReverseRecord) {
 
     final DnsZone dnsZone = DnsZone.builder().pszZoneName(zoneName).build();
     final List<DnsEntry> entries = dnsMap.getOrDefault(dnsZone, new ArrayList<>());

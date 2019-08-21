@@ -218,16 +218,18 @@ public interface DomainControllerConnectorService {
   /**
    * Adds a dns record.
    *
-   * @param zoneName   the zone name
-   * @param name       the name
-   * @param recordType the record type
-   * @param data       the data
+   * @param zoneName             the zone name
+   * @param name                 the name
+   * @param recordType           the record type
+   * @param data                 the data
+   * @param alsoAddReverseRecord also add reverse record flag (default is {@code true}
    */
   void addDnsRecord(
       @NotNull String zoneName,
       @NotNull String name,
       @NotNull DnsRecordType recordType,
-      @NotNull String data);
+      @NotNull String data,
+      @Nullable Boolean alsoAddReverseRecord);
 
   /**
    * Update dns record.
@@ -252,11 +254,13 @@ public interface DomainControllerConnectorService {
    * @param name       the name
    * @param recordType the record type
    * @param data       the data
+   * @param alsoDeleteReverseRecord also delete reverse record flag (default is {@code true}
    */
   void deleteDnsRecord(
       @NotNull String zoneName,
       @NotNull String name,
       @NotNull DnsRecordType recordType,
-      @NotNull String data);
+      @NotNull String data,
+      @Nullable Boolean alsoDeleteReverseRecord);
 
 }

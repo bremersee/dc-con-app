@@ -781,38 +781,41 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       @NotNull final String zoneName,
       @NotNull final String name,
       @NotNull final DnsRecordType recordType,
-      @NotNull final String data) {
+      @NotNull final String data,
+      @Nullable final Boolean alsoAddReverseRecord) {
 
-    if (isDnsReverseZone(zoneName)) {
-      doAddDnsRecord(zoneName, name, recordType, data);
-      if (DnsRecordType.PTR.equals(recordType)) {
-        // zone name is something like 1.168.192.in-addr.arpa
-        // name is the end of the ip address,
-        // e. g.
-        //       113   in  1.168.192.in-addr.arpa
-        // or
-        //       113.1 in  168.192.in-addr.arpa
-        // data is the full domain name, e. g. forelle.eixe.bremersee.org
-        findDnsZone(data)
-            .ifPresent(dnsZone -> doAddDnsRecord(
-                dnsZone.getPszZoneName(), // something like eixe.bremersee.org
-                getDnsEntryName(data, dnsZone.getPszZoneName()),
-                DnsRecordType.A,
-                getIpV4(name, zoneName)));
-      }
-    } else {
-      doAddDnsRecord(zoneName, name, recordType, data);
-      if (DnsRecordType.A.equals(recordType)) {
-        // zone name equals the domain, e. g. eixe.bremersee.org
-        // name is the host name, e. g. forelle
-        // data is the ip address, e. g. 192.168.1.113
-        findDnsReverseZone(data)
-            .ifPresent(dnsZone -> doAddDnsRecord(
-                dnsZone.getPszZoneName(),
-                getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
-                DnsRecordType.PTR,
-                name + "." + zoneName));
-      }
+    log.info("msg=[Adding name server record] "
+            + "zoneName=[{}] name=[{}] recordType=[{}] data=[{}] alsoReverse=[{}]",
+        zoneName, name, recordType, data, alsoAddReverseRecord);
+    doAddDnsRecord(zoneName, name, recordType, data);
+    if (Boolean.FALSE.equals(alsoAddReverseRecord)) {
+      return;
+    }
+    final boolean isReverseZone = isDnsReverseZone(zoneName);
+    if (isReverseZone && DnsRecordType.PTR.equals(recordType)) {
+      // zone name is something like 1.168.192.in-addr.arpa
+      // name is the end of the ip address,
+      // e. g.
+      //       113   in  1.168.192.in-addr.arpa
+      // or
+      //       113.1 in  168.192.in-addr.arpa
+      // data is the full domain name, e. g. forelle.eixe.bremersee.org
+      findDnsZone(data)
+          .ifPresent(dnsZone -> doAddDnsRecord(
+              dnsZone.getPszZoneName(), // something like eixe.bremersee.org
+              getDnsEntryName(data, dnsZone.getPszZoneName()),
+              DnsRecordType.A,
+              getIpV4(name, zoneName)));
+    } else if (!isReverseZone && DnsRecordType.A.equals(recordType)) {
+      // zone name equals the domain, e. g. eixe.bremersee.org
+      // name is the host name, e. g. forelle
+      // data is the ip address, e. g. 192.168.1.113
+      findDnsReverseZone(data)
+          .ifPresent(dnsZone -> doAddDnsRecord(
+              dnsZone.getPszZoneName(),
+              getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
+              DnsRecordType.PTR,
+              name + "." + zoneName));
     }
   }
 
@@ -821,11 +824,39 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       @NotNull final String zoneName,
       @NotNull final String name,
       @NotNull final DnsRecordType recordType,
-      @NotNull final String data) {
+      @NotNull final String data,
+      @Nullable final Boolean alsoDeleteReverseRecord) {
 
-    log.info("msg=[Deleting name server record] zoneName=[{}] name=[{}] recordType=[{}] data=[{}]",
-        zoneName, name, recordType, data);
+    log.info("msg=[Deleting name server record] "
+            + "zoneName=[{}] name=[{}] recordType=[{}] data=[{}] alsoReverse=[{}]",
+        zoneName, name, recordType, data, alsoDeleteReverseRecord);
     sambaTool.deleteDnsRecord(zoneName, name, recordType, data);
+    final boolean isReverseZone = isDnsReverseZone(zoneName);
+    if (isReverseZone && DnsRecordType.PTR.equals(recordType)) {
+      // zone name is something like 1.168.192.in-addr.arpa
+      // name is the end of the ip address,
+      // e. g.
+      //       113   in  1.168.192.in-addr.arpa
+      // or
+      //       113.1 in  168.192.in-addr.arpa
+      // data is the full domain name, e. g. forelle.eixe.bremersee.org
+      findDnsZone(data)
+          .ifPresent(dnsZone -> sambaTool.deleteDnsRecord(
+              dnsZone.getPszZoneName(), // something like eixe.bremersee.org
+              getDnsEntryName(data, dnsZone.getPszZoneName()),
+              DnsRecordType.A,
+              getIpV4(name, zoneName)));
+    } else if (!isReverseZone && DnsRecordType.A.equals(recordType)) {
+      // zone name equals the domain, e. g. eixe.bremersee.org
+      // name is the host name, e. g. forelle
+      // data is the ip address, e. g. 192.168.1.113
+      findDnsReverseZone(data)
+          .ifPresent(dnsZone -> sambaTool.deleteDnsRecord(
+              dnsZone.getPszZoneName(),
+              getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
+              DnsRecordType.PTR,
+              name + "." + zoneName));
+    }
   }
 
   @Override

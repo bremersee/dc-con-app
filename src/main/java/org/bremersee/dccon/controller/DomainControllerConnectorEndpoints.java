@@ -75,7 +75,8 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
       @RequestParam(value = "addDhcpLease", defaultValue = "ACTIVE") String addDhcpLease) {
 
     return ResponseEntity.ok(domainControllerConnectorService
-        .getDnsRecords(zoneName, AddDhcpLeaseParameter.fromValue(addDhcpLease, AddDhcpLeaseParameter.ACTIVE)));
+        .getDnsRecords(zoneName,
+            AddDhcpLeaseParameter.fromValue(addDhcpLease, AddDhcpLeaseParameter.ACTIVE)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -115,18 +116,26 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<Void> createOrDeleteDnsRecord(
-      @Valid @RequestParam(value = "action") final String action,
+      @RequestParam(value = "action", defaultValue = "CREATE") String action,
+      @RequestParam(value = "reverse", defaultValue = "true") Boolean reverse,
       @Valid @RequestBody final DnsRecordRequest request) {
 
-    if ("DELETE".equals(action)) {
+    if ("DELETE".equalsIgnoreCase(action)) {
       domainControllerConnectorService
-          .deleteDnsRecord(request.getZoneName(), request.getName(), request.getRecordType(),
-              request.getData());
+          .deleteDnsRecord(
+              request.getZoneName(),
+              request.getName(),
+              request.getRecordType(),
+              request.getData(),
+              reverse);
 
     } else {
-      domainControllerConnectorService
-          .addDnsRecord(request.getZoneName(), request.getName(), request.getRecordType(),
-              request.getData());
+      domainControllerConnectorService.addDnsRecord(
+          request.getZoneName(),
+          request.getName(),
+          request.getRecordType(),
+          request.getData(),
+          reverse);
 
     }
     return ResponseEntity.ok().build();
