@@ -1215,7 +1215,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     private int compare(String s1, String s2) {
       try {
         return compare(Integer.parseInt(s1), Integer.parseInt(s2));
-      } catch (final Throwable t) {
+      } catch (final Exception e) {
         return (s1 != null ? s1 : "").compareToIgnoreCase(s2 != null ? s2 : "");
       }
     }
@@ -1251,7 +1251,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       final String s2 = o2 != null && o2.getName() != null ? o2.getName() : "";
       int result;
       try {
-        result = Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
+        result = s1.compareToIgnoreCase(s2);; //Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
       } catch (final Exception ignored) {
         result = s1.compareToIgnoreCase(s2);
       }
