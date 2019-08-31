@@ -18,15 +18,22 @@ package org.bremersee.dccon.config;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.bremersee.dccon.model.Info;
+import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.SearchScope;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * The samba domain properties.
@@ -39,6 +46,7 @@ import org.springframework.stereotype.Component;
 @Setter
 @ToString
 @EqualsAndHashCode
+@Slf4j
 public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 606284794541721895L;
@@ -99,6 +107,13 @@ public class DomainControllerProperties implements Serializable {
 
   private List<String> excludedEntryRegexList = new ArrayList<>();
 
+
+  private Map<String, List<String>> dnsZoneMapping = new LinkedHashMap<>();
+
+
+  /**
+   * Instantiates a new Domain controller properties.
+   */
   public DomainControllerProperties() {
     excludedZoneRegexList.add("^_msdcs\\..*$");
 
@@ -110,15 +125,43 @@ public class DomainControllerProperties implements Serializable {
   }
 
   /**
-   * Build info info.
-   *
-   * @return the info
+   * Init.
    */
-  public Info buildInfo() {
-    return Info
-        .builder()
-        .nameServerHost(nameServerHost)
-        .build();
+  @PostConstruct
+  public void init() {
+    if (dnsZoneMapping != null) {
+      for (String key : dnsZoneMapping.keySet()) {
+        while (dnsZoneMapping.get(key) != null && dnsZoneMapping.get(key).remove(key)) {
+          log.info(
+              "msg=[Value of dns zone mapping cannot equals key. Value was removed.] value=[{}]",
+              key);
+        }
+      }
+    }
+    log.info("msg=[Domain controller properties loaded.] properties=[{}]", this);
+  }
+
+  /**
+   * Find correlated dns zones.
+   *
+   * @param zoneName the zone name
+   * @return the correlated dns zones
+   */
+  public Set<String> findCorrelatedDnsZones(String zoneName) {
+    if (!StringUtils.hasText(zoneName)) {
+      return Collections.emptySet();
+    }
+    List<String> correlatedZones = dnsZoneMapping.get(zoneName);
+    if (correlatedZones != null && !correlatedZones.isEmpty()) {
+      return new LinkedHashSet<>(correlatedZones);
+    }
+    final Set<String> results = new LinkedHashSet<>();
+    for (Map.Entry<String, List<String>> entry : dnsZoneMapping.entrySet()) {
+      if (entry.getValue() != null && entry.getValue().contains(zoneName)) {
+        results.add(entry.getKey());
+      }
+    }
+    return results;
   }
 
 }

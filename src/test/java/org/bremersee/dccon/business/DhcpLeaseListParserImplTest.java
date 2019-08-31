@@ -54,7 +54,7 @@ public class DhcpLeaseListParserImplTest {
     lease = leases.get(1);
     Assert.assertEquals("ac:xx:xx:xx:xx:yy", lease.getMac());
     Assert.assertEquals("192.168.1.188", lease.getIp());
-    Assert.assertEquals("-NA-", lease.getHostname());
+    Assert.assertEquals("dhcp-192-168-1-188", lease.getHostname());
     Assert.assertEquals(
         "2019-08-18 11:25:48",
         lease.getBegin().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

@@ -20,7 +20,6 @@ import java.util.List;
 import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainControllerConnectorApi;
 import org.bremersee.dccon.business.DomainControllerConnectorService;
-import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AddDhcpLeaseParameter;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
@@ -31,7 +30,6 @@ import org.bremersee.dccon.model.DnsZoneCreateRequest;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupItem;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.Info;
 import org.bremersee.dccon.model.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -50,15 +48,11 @@ import org.springframework.web.bind.annotation.RestController;
 @SuppressWarnings("MVCPathVariableInspection")
 public class DomainControllerConnectorEndpoints implements DomainControllerConnectorApi {
 
-  private final DomainControllerProperties domainControllerProperties;
-
   private final DomainControllerConnectorService domainControllerConnectorService;
 
   @Autowired
   public DomainControllerConnectorEndpoints(
-      final DomainControllerProperties domainControllerProperties,
       final DomainControllerConnectorService domainControllerConnectorService) {
-    this.domainControllerProperties = domainControllerProperties;
     this.domainControllerConnectorService = domainControllerConnectorService;
   }
 
@@ -72,11 +66,14 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @Override
   public ResponseEntity<List<DnsEntry>> getDnsRecords(
       @RequestParam(value = "zoneName") String zoneName,
-      @RequestParam(value = "addDhcpLease", defaultValue = "ACTIVE") String addDhcpLease) {
+      @RequestParam(value = "correlations", defaultValue = "true") Boolean correlations,
+      @RequestParam(value = "leases", defaultValue = "ACTIVE") String leases) {
 
     return ResponseEntity.ok(domainControllerConnectorService
-        .getDnsRecords(zoneName,
-            AddDhcpLeaseParameter.fromValue(addDhcpLease, AddDhcpLeaseParameter.ACTIVE)));
+        .getDnsRecords(
+            zoneName,
+            !Boolean.FALSE.equals(correlations),
+            AddDhcpLeaseParameter.fromValue(leases, AddDhcpLeaseParameter.ACTIVE)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -180,12 +177,6 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @Override
   public ResponseEntity<List<DomainGroupItem>> getGroups() {
     return ResponseEntity.ok(domainControllerConnectorService.getGroups());
-  }
-
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-  @Override
-  public ResponseEntity<Info> getInfo() {
-    return ResponseEntity.ok(domainControllerProperties.buildInfo());
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

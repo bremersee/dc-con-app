@@ -235,7 +235,10 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public List<DnsEntry> getDnsRecords(String zoneName, AddDhcpLeaseParameter addDhcpLease) {
+  public List<DnsEntry> getDnsRecords(
+      String zoneName,
+      Boolean correlations,
+      AddDhcpLeaseParameter leases) {
     return dnsMap.getOrDefault(DnsZone.builder().pszZoneName(zoneName).build(), new ArrayList<>());
   }
 
@@ -245,7 +248,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       @NotNull String name,
       @NotNull DnsRecordType recordType,
       @NotNull String data) {
-    return getDnsRecords(zoneName, AddDhcpLeaseParameter.NONE)
+    return getDnsRecords(zoneName, false, AddDhcpLeaseParameter.NONE)
         .parallelStream()
         .anyMatch(entry -> entry
             .getName().equals(name)

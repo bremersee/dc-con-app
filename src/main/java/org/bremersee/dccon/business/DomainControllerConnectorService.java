@@ -193,12 +193,14 @@ public interface DomainControllerConnectorService {
    * Gets dns records.
    *
    * @param zoneName     the zone name
-   * @param addDhcpLease the add dhcp lease
+   * @param correlations specifies whether correlated records should be added to the response
+   * @param leases       the enum for adding dhcp leases (NONE|ACTIVE|ALL)
    * @return the dns records
    */
   List<DnsEntry> getDnsRecords(
       @NotNull String zoneName,
-      @NotNull AddDhcpLeaseParameter addDhcpLease);
+      @NotNull Boolean correlations,
+      @NotNull AddDhcpLeaseParameter leases);
 
   /**
    * Checks whether a dns record exists or not.
@@ -250,10 +252,10 @@ public interface DomainControllerConnectorService {
   /**
    * Delete dns record.
    *
-   * @param zoneName   the zone name
-   * @param name       the name
-   * @param recordType the record type
-   * @param data       the data
+   * @param zoneName                the zone name
+   * @param name                    the name
+   * @param recordType              the record type
+   * @param data                    the data
    * @param alsoDeleteReverseRecord also delete reverse record flag (default is {@code true}
    */
   void deleteDnsRecord(

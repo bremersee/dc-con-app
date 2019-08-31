@@ -47,6 +47,8 @@ public class DhcpLeaseListParserImpl implements DhcpLeaseListParser {
 
   private static final String HOSTNAME = " HOSTNAME ";
 
+  private static final String HOSTNAME_UNKNOWN = "-NA-";
+
   private static final String BEGIN = " BEGIN ";
 
   private static final String END = " END ";
@@ -80,7 +82,10 @@ public class DhcpLeaseListParserImpl implements DhcpLeaseListParser {
       line = line.trim();
       final String mac = findDhcpLeasePart(line, MAC, IP);
       final String ip = findDhcpLeasePart(line, IP, HOSTNAME);
-      final String hostname = findDhcpLeasePart(line, HOSTNAME, BEGIN);
+      String hostname = findDhcpLeasePart(line, HOSTNAME, BEGIN);
+      if (HOSTNAME_UNKNOWN.equals(hostname) && ip != null) {
+        hostname = "dhcp-" + ip.replace(".", "-");
+      }
       final String begin = findDhcpLeasePart(line, BEGIN, END);
       final String end = findDhcpLeasePart(line, END, MANUFACTURER);
       final String manufacturer = findDhcpLeasePart(line, MANUFACTURER, null);

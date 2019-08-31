@@ -46,6 +46,7 @@ import org.bremersee.dccon.exception.GroupNotFoundException;
 import org.bremersee.dccon.exception.NotFoundException;
 import org.bremersee.dccon.exception.UserNotFoundException;
 import org.bremersee.dccon.model.AddDhcpLeaseParameter;
+import org.bremersee.dccon.model.CorrelatedDnsRecord;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
@@ -615,6 +616,142 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     return leases;
   }
 
+  private Map<String, List<DhcpLease>> getDhcpLeasesMap(
+      final AddDhcpLeaseParameter leases) {
+    final Map<String, List<DhcpLease>> leasesMap;
+    if (AddDhcpLeaseParameter.NONE == leases) {
+      leasesMap = Collections.emptyMap();
+    } else {
+      leasesMap = new HashMap<>();
+      final List<DhcpLease> leasesList = getDhcpLeases(
+          AddDhcpLeaseParameter.ALL == leases,
+          "ip|begin,desc");
+      for (DhcpLease lease : leasesList) {
+        leasesMap.computeIfAbsent(lease.getIp(), key -> new ArrayList<>()).add(lease);
+      }
+    }
+    return leasesMap;
+  }
+
+  private DnsEntry addDhcpLeases(
+      final Map<String, List<DhcpLease>> leasesMap,
+      final DnsEntry dnsEntry,
+      final String zoneName) {
+    final List<DnsRecord> dnsRecords = dnsEntry.getRecords();
+    if (dnsRecords == null) {
+      return dnsEntry;
+    }
+    final HashSet<String> addedIps = new HashSet<>();
+    for (DnsRecord dnsRecord : dnsRecords) {
+      final String ip;
+      final String hostname;
+      if (isDnsReverseZone(zoneName)) {
+        ip = getIpV4(dnsEntry.getName(), zoneName);
+        int index = dnsRecord.getRecordValue().indexOf('.');
+        if (index < 0) {
+          index = dnsRecord.getRecordValue().length();
+        }
+        hostname = dnsRecord.getRecordValue().substring(0, index);
+      } else {
+        ip = dnsRecord.getRecordValue();
+        hostname = dnsEntry.getName();
+      }
+      final List<DhcpLease> leases = leasesMap.get(ip);
+      if (leases != null
+          && !leases.isEmpty()
+          && !addedIps.contains(ip)
+          && leases.get(0).getHostname() != null
+          && leases.get(0).getHostname().equals(hostname)) {
+        dnsRecord.setDhcpLease(leases.get(0));
+        addedIps.add(ip);
+      }
+    }
+    return dnsEntry;
+  }
+
+  private List<CorrelatedDnsRecord> getDnsRecordsOfCorrelatedZones(final String zoneName) {
+    final List<CorrelatedDnsRecord> correlatedDnsRecords = new ArrayList<>();
+    final boolean isReverseZone = isDnsReverseZone(zoneName);
+    final String correlatedRecordType = isReverseZone
+        ? DnsRecordType.A.name()
+        : DnsRecordType.PTR.name();
+    final Set<String> correlatedZoneNames = properties.findCorrelatedDnsZones(zoneName);
+    for (final String correlatedZoneName : correlatedZoneNames) {
+      final List<DnsEntry> entries = getDnsRecords(
+          correlatedZoneName,
+          false,
+          AddDhcpLeaseParameter.NONE);
+      for (final DnsEntry entry : entries) {
+        final List<CorrelatedDnsRecord> list = entry.getRecords().stream()
+            .filter(record -> correlatedRecordType.equalsIgnoreCase(record.getRecordType()))
+            .map(record -> CorrelatedDnsRecord.builder()
+                .entryName(entry.getName())
+                .flags(record.getFlags())
+                .recordType(record.getRecordType())
+                .serial(record.getSerial())
+                .ttl(record.getTtl())
+                .zoneName(correlatedZoneName)
+                .build())
+            .collect(Collectors.toList());
+        correlatedDnsRecords.addAll(list);
+      }
+    }
+    return correlatedDnsRecords;
+  }
+
+  private DnsEntry addCorrelatedDnsRecords(
+      final String zoneName,
+      final DnsEntry dnsEntry,
+      final List<CorrelatedDnsRecord> correlatedDnsRecords) {
+
+    for (final DnsRecord record : dnsEntry.getRecords()) {
+      record.setCorrelatedDnsRecord(correlatedDnsRecords
+          .stream()
+          .filter(correlatedRecord -> isCorrelatedDnsRecord(
+              zoneName, dnsEntry.getName(), record, correlatedRecord))
+          .findAny()
+          .orElse(null));
+    }
+    return dnsEntry;
+  }
+
+  private boolean isCorrelatedDnsRecord(
+      final String zoneName,
+      final String entryName,
+      final DnsRecord record,
+      final CorrelatedDnsRecord correlatedRecord) {
+
+    if (log.isDebugEnabled()) {
+      log.debug("msg=[Is correlated dns record?] zoneName=[{}] entryName=[{}] record=[{}]"
+          + " correlatedRecord=[{}]", zoneName, entryName, record, correlatedRecord);
+    }
+    final boolean result;
+    if (DnsRecordType.A.toString().equalsIgnoreCase(record.getRecordType())) {
+      log.debug("msg=[Equals? {} == {}]", DnsRecordType.PTR, correlatedRecord.getRecordType());
+      final String fqhn = getFullQualifiedHostName(entryName, zoneName);
+      log.debug("msg=[Equals? {} == {}]", fqhn, correlatedRecord.getRecordValue());
+      final String ip = getIpV4(correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
+      log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), ip);
+      result = DnsRecordType.PTR.toString().equalsIgnoreCase(correlatedRecord.getRecordType())
+          && fqhn.equalsIgnoreCase(correlatedRecord.getRecordValue())
+          && record.getRecordValue().equalsIgnoreCase(ip);
+    } else if (DnsRecordType.PTR.toString().equalsIgnoreCase(record.getRecordType())) {
+      log.debug("msg=[Equals? {} == {}]", DnsRecordType.A, correlatedRecord.getRecordType());
+      final String ip = getIpV4(entryName, zoneName);
+      log.debug("msg=[Equals? {} == {}]", ip, correlatedRecord.getRecordValue());
+      final String fqhn = getFullQualifiedHostName(
+          correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
+      log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), fqhn);
+      result = DnsRecordType.A.toString().equalsIgnoreCase(correlatedRecord.getRecordType())
+          && ip.equalsIgnoreCase(correlatedRecord.getRecordValue())
+          && record.getRecordValue().equalsIgnoreCase(fqhn);
+    } else {
+      result = false;
+    }
+    log.debug("msg=[Is correlated dns record?] result=[{}]", result);
+    return result;
+  }
+
   @Override
   public List<DnsZone> getDnsZones() {
     log.info("msg=[Getting name server zones.]");
@@ -699,51 +836,26 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   @Override
   public List<DnsEntry> getDnsRecords(
       final String zoneName,
-      final AddDhcpLeaseParameter addDhcpLease) {
-    log.info("msg=[Getting name server records.] zone=[{}] addDhcpLease=[{}]",
-        zoneName, addDhcpLease);
-    final Map<String, List<DhcpLease>> leasesMap;
-    if (AddDhcpLeaseParameter.NONE == addDhcpLease) {
-      leasesMap = Collections.emptyMap();
+      final Boolean correlations,
+      final AddDhcpLeaseParameter leases) {
+    log.info("msg=[Getting name server records.] zone=[{}] correlations=[{}] leases=[{}]",
+        zoneName, correlations, leases);
+
+    final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(leases);
+    final List<CorrelatedDnsRecord> correlatedDnsRecords;
+    if (Boolean.FALSE.equals(correlations)) {
+      correlatedDnsRecords = Collections.emptyList();
     } else {
-      leasesMap = new HashMap<>();
-      final List<DhcpLease> leases = getDhcpLeases(
-          AddDhcpLeaseParameter.ALL == addDhcpLease,
-          "ip|begin,desc");
-      for (DhcpLease lease : leases) {
-        leasesMap.computeIfAbsent(lease.getIp(), key -> new ArrayList<>()).add(lease);
-      }
+      correlatedDnsRecords = getDnsRecordsOfCorrelatedZones(zoneName);
     }
     return sambaTool
         .getDnsRecords(zoneName)
         .stream()
         .filter(this::isNonExcludedDnsEntry)
+        .map(dnsEntry -> addCorrelatedDnsRecords(zoneName, dnsEntry, correlatedDnsRecords))
         .map(dnsEntry -> addDhcpLeases(leasesMap, dnsEntry, zoneName))
         .sorted(dnsEntryComparator)
         .collect(Collectors.toList());
-  }
-
-  private DnsEntry addDhcpLeases(
-      final Map<String, List<DhcpLease>> leasesMap,
-      final DnsEntry dnsEntry,
-      final String zoneName) {
-    final List<DnsRecord> dnsRecords = dnsEntry.getRecords();
-    if (dnsRecords == null) {
-      return dnsEntry;
-    }
-    for (DnsRecord dnsRecord : dnsRecords) {
-      final String ip;
-      if (isDnsReverseZone(zoneName)) {
-        ip = getIpV4(dnsEntry.getName(), zoneName);
-      } else {
-        ip = dnsRecord.getRecordValue();
-      }
-      final List<DhcpLease> leases = leasesMap.get(ip);
-      if (leases != null && !leases.isEmpty()) {
-        dnsRecord.setDhcpLease(leases.get(0));
-      }
-    }
-    return dnsEntry;
   }
 
   @Override
@@ -815,7 +927,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
               dnsZone.getPszZoneName(),
               getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
               DnsRecordType.PTR,
-              name + "." + zoneName));
+              getFullQualifiedHostName(name, zoneName)));
     }
   }
 
@@ -855,7 +967,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
               dnsZone.getPszZoneName(),
               getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
               DnsRecordType.PTR,
-              name + "." + zoneName));
+              getFullQualifiedHostName(name, zoneName)));
     }
   }
 
@@ -981,6 +1093,10 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     return fullQualifiedHostName.substring(
         0,
         fullQualifiedHostName.length() - (dnsZoneName.length() + 1));
+  }
+
+  private String getFullQualifiedHostName(final String hostName, final String dnsZoneName) {
+    return hostName + "." + dnsZoneName;
   }
 
   /**

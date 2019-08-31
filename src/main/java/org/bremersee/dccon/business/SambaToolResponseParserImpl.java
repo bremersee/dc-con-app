@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsDwDpZoneFlag;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.DnsRecordType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneFlag;
 import org.springframework.stereotype.Component;
@@ -215,12 +216,17 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
       final int infoEnd = line.lastIndexOf(')');
       log.debug("Indexes: nameSeparator={} recordSeparator={} infoStart={} infoEnd={}",
           nameSeparator, recordSeparator, infoStart, infoEnd);
-      if (line.startsWith(DNS_ENTRY_NAME) && nameSeparator > 0) {
+      if (line.startsWith(DNS_ENTRY_NAME)) {
         log.debug("Line with entry name.");
-        line = line.substring(DNS_ENTRY_NAME.length(), nameSeparator);
+        line = line.substring(
+            DNS_ENTRY_NAME.length(),
+            nameSeparator > 0 ? nameSeparator : line.length()).trim();
         dnsEntry = DnsEntry.builder().name(line).build();
         entryList.add(dnsEntry);
-      } else if (dnsEntry != null && recordSeparator > 0 && recordSeparator < infoStart
+      } else if (dnsEntry != null
+          && isLineDnsRecord(line)
+          && recordSeparator > 0
+          && recordSeparator < infoStart
           && infoStart < infoEnd) {
         log.debug("Line with record.");
         final String recordType = line.substring(0, recordSeparator).trim();
@@ -250,11 +256,28 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
 
           }
         }
+      } else if (dnsEntry != null && StringUtils.hasText(dnsEntry.getName())) {
+        int index = line.indexOf(',');
+        line = line.substring(0, index > -1 ? index : line.length()).trim();
+        dnsEntry.setName(dnsEntry.getName() + line);
       } else {
         log.debug("No dns record relevant line.");
       }
     }
     return entryList;
+  }
+
+  private boolean isLineDnsRecord(final String line) {
+    if (line == null) {
+      return false;
+    }
+    String upperLine = line.trim().toUpperCase();
+    for (DnsRecordType recordType : DnsRecordType.values()) {
+      if (upperLine.startsWith(recordType.toString() + ":")) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }
