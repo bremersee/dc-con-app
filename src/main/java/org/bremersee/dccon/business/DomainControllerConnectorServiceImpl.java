@@ -1151,6 +1151,25 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     return ip.substring(ipPrefix.length());
   }
 
+  private static boolean isInteger(String value) {
+    try {
+      Integer.parseInt(value);
+      return true;
+    } catch (Exception ignored) {
+      return false;
+    }
+  }
+
+  private static String format(String value, @SuppressWarnings("SameParameterValue") int length) {
+    final String format = "%0" + length + "d";
+    if (value == null) {
+      return "";
+    } else if (isInteger(value)) {
+      return String.format(format, Integer.parseInt(value));
+    }
+    return value;
+  }
+
   private class DnsZoneComparator implements Comparator<DnsZone> {
 
     private final boolean asc;
@@ -1213,15 +1232,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
 
     private int compare(String s1, String s2) {
-      try {
-        return compare(Integer.parseInt(s1), Integer.parseInt(s2));
-      } catch (final Exception e) {
-        return (s1 != null ? s1 : "").compareToIgnoreCase(s2 != null ? s2 : "");
-      }
-    }
-
-    private int compare(int i1, int i2) {
-      return Integer.compare(i1, i2);
+      return format(s1, 3).compareToIgnoreCase(format(s2, 3));
     }
   }
 
@@ -1249,12 +1260,20 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     public int compare(DnsEntry o1, DnsEntry o2) {
       final String s1 = o1 != null && o1.getName() != null ? o1.getName() : "";
       final String s2 = o2 != null && o2.getName() != null ? o2.getName() : "";
-      int result;
-      try {
-        result = s1.compareToIgnoreCase(s2);; //Integer.compare(Integer.parseInt(s1), Integer.parseInt(s2));
-      } catch (final Exception ignored) {
-        result = s1.compareToIgnoreCase(s2);
+
+      final String[] sa1 = s1.split(Pattern.quote("."));
+      final String[] sa2 = s2.split(Pattern.quote("."));
+      if (sa1.length == sa2.length) {
+        for (int i = 0; i < sa1.length; i++) {
+          int result = format(sa1[i], 3).compareTo(format(sa2[i], 3));
+          if (result != 0) {
+            return asc ? result : -1 * result;
+          }
+        }
+        return 0;
       }
+
+      int result = format(s1, 3).compareToIgnoreCase(format(s2, 3));
       return asc ? result : -1 * result;
     }
   }
