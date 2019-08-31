@@ -688,6 +688,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
                 .entryName(entry.getName())
                 .flags(record.getFlags())
                 .recordType(record.getRecordType())
+                .recordValue(record.getRecordValue())
                 .serial(record.getSerial())
                 .ttl(record.getTtl())
                 .zoneName(correlatedZoneName)
