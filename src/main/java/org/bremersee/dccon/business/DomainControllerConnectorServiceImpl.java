@@ -395,6 +395,37 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
+  public List<DomainUser> getUsers() {
+
+    log.info("msg=[Getting domain users]");
+    final SearchFilter sf = new SearchFilter(properties.getUserFindAllFilter());
+    final SearchRequest sr = new SearchRequest(properties.getUserBaseDn(), sf);
+    sr.setSearchScope(properties.getUserFindAllSearchScope());
+    Connection conn = null;
+    try {
+      conn = getConnection();
+      final SearchOperation so = new SearchOperation(conn);
+      final SearchResult searchResult = so.execute(sr).getResult();
+      final List<DomainUser> users = searchResult.getEntries()
+          .stream()
+          .map(mapper::mapLdapEntryToDomainUser)
+          .collect(Collectors.toList());
+      log.info("msg=[Getting domain users] resultSize=[{}]", users.size());
+      return users;
+
+    } catch (final LdapException e) {
+      final ServiceException se = internalServerError(
+          "Getting domain users failed.",
+          e);
+      log.error("msg=[Getting domain users failed.]", se);
+      throw se;
+
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  @Override
   public DomainUser updateUser(
       @NotNull final String userName,
       @Valid final DomainUser domainUser,

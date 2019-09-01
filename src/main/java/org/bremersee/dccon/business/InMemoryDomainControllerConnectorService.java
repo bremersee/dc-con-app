@@ -172,6 +172,11 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
+  public List<DomainUser> getUsers() {
+    return new ArrayList<>(domainUserMap.values());
+  }
+
+  @Override
   public DomainUser updateUser(
       @NotNull String userName,
       @Valid DomainUser domainUser,

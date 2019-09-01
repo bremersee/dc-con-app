@@ -106,6 +106,13 @@ public interface DomainControllerConnectorService {
   DomainUser getUser(@NotNull String userName);
 
   /**
+   * Gets domain users.
+   *
+   * @return the users
+   */
+  List<DomainUser> getUsers();
+
+  /**
    * Update domain user.
    *
    * @param userName     the user name

@@ -191,6 +191,12 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
+  public ResponseEntity<List<DomainUser>> getUsers() {
+    return ResponseEntity.ok(domainControllerConnectorService.getUsers());
+  }
+
+  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @Override
   public ResponseEntity<DomainUser> getUser(
       @PathVariable("userName") String userName) {
 
