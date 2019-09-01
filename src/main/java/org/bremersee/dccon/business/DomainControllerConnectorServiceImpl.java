@@ -414,11 +414,11 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       if ((userAccountControl & UF_DONT_EXPIRE_PASSWORD) != UF_DONT_EXPIRE_PASSWORD) {
         userAccountControl = userAccountControl + UF_DONT_EXPIRE_PASSWORD;
       }
-      if (domainUser.getEnabled() &&
-          ((userAccountControl & UF_ACCOUNT_DISABLED) == UF_ACCOUNT_DISABLED)) {
+      if (domainUser.getEnabled()
+          && ((userAccountControl & UF_ACCOUNT_DISABLED) == UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl - UF_ACCOUNT_DISABLED;
-      } else if (!domainUser.getEnabled() &&
-          ((userAccountControl & UF_ACCOUNT_DISABLED) != UF_ACCOUNT_DISABLED)) {
+      } else if (!domainUser.getEnabled()
+          && ((userAccountControl & UF_ACCOUNT_DISABLED) != UF_ACCOUNT_DISABLED)) {
         userAccountControl = userAccountControl + UF_ACCOUNT_DISABLED;
       }
 
@@ -1080,8 +1080,8 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
    * Returns the host name without domain (= the name of a dns record in a dns zone). The given host
    * name must end with the given dns zone name.
    *
-   * @param fullQualifiedHostName the full qualified host name, e. g. {@code forelle.eixe.bremersee.org}
-   * @param dnsZoneName           the name of the dns zone, e. g. {@code eixe.bremersee.org}
+   * @param fullQualifiedHostName the full qualified host name, e. g. forelle.eixe.bremersee.org
+   * @param dnsZoneName           the name of the dns zone, e. g. eixe.bremersee.org
    * @return the host name without domain
    */
   private String getDnsEntryName(final String fullQualifiedHostName, final String dnsZoneName) {

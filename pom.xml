@@ -22,9 +22,9 @@
   <properties>
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>1.2.0-SNAPSHOT</dc-con-api-spring.version>
+    <dc-con-api-spring.version>1.2.0</dc-con-api-spring.version>
     <common-base.version>1.2.2</common-base.version>
-    <comparator.version>2.0.4-SNAPSHOT</comparator.version>
+    <comparator.version>2.0.4</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
     <ldaptive.version>1.2.4</ldaptive.version>

@@ -38,16 +38,16 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 @Slf4j
 public class SecuritySupportConfiguration {
 
-  private OAuth2Properties oAuth2Properties;
+  private OAuth2Properties oauthProperties;
 
   /**
    * Instantiates a new security support configuration.
    *
-   * @param oAuth2Properties the o auth 2 properties
+   * @param oauthProperties the o auth 2 properties
    */
   @Autowired
-  public SecuritySupportConfiguration(OAuth2Properties oAuth2Properties) {
-    this.oAuth2Properties = oAuth2Properties;
+  public SecuritySupportConfiguration(OAuth2Properties oauthProperties) {
+    this.oauthProperties = oauthProperties;
   }
 
   /**
@@ -79,7 +79,7 @@ public class SecuritySupportConfiguration {
 
     log.info("Using password flow authentication manager.");
     final PasswordFlowAuthenticationManager manager
-        = new PasswordFlowAuthenticationManager(oAuth2Properties, jwtDecoder, restTemplateBuilder);
+        = new PasswordFlowAuthenticationManager(oauthProperties, jwtDecoder, restTemplateBuilder);
     manager.setJwtAuthenticationConverter(keycloakJwtConverter);
     return manager;
   }

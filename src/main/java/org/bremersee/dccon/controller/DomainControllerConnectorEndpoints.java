@@ -80,7 +80,9 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
   @Override
   public ResponseEntity<List<DhcpLease>> getDhcpLeases(
       @RequestParam(value = "all", defaultValue = "false") Boolean all,
-      @RequestParam(value = "sort", defaultValue = DhcpLease.SORT_ORDER_BEGIN_HOSTNAME) String sort) {
+      @RequestParam(
+          value = "sort",
+          defaultValue = DhcpLease.SORT_ORDER_BEGIN_HOSTNAME) String sort) {
 
     return ResponseEntity.ok(domainControllerConnectorService.getDhcpLeases(all, sort));
   }

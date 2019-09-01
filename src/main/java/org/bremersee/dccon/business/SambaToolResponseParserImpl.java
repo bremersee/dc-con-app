@@ -58,28 +58,28 @@ public class SambaToolResponseParserImpl implements SambaToolResponseParser {
 
   private static final String DNS_ENTRY_NAME = "Name=";
 
-//  3 zone(s) found
-//
-//  pszZoneName                 : 1.168.192.in-addr.arpa
-//  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
-//  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
-//  Version                     : 50
-//  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_DOMAIN_DEFAULT DNS_DP_ENLISTED
-//  pszDpFqdn                   : DomainDnsZones.eixe.bremersee.org
-//
-//  pszZoneName                 : eixe.bremersee.org
-//  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
-//  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
-//  Version                     : 50
-//  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_DOMAIN_DEFAULT DNS_DP_ENLISTED
-//  pszDpFqdn                   : DomainDnsZones.eixe.bremersee.org
-//
-//  pszZoneName                 : _msdcs.eixe.bremersee.org
-//  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
-//  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
-//  Version                     : 50
-//  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_FOREST_DEFAULT DNS_DP_ENLISTED
-//  pszDpFqdn                   : ForestDnsZones.eixe.bremersee.org
+  //  3 zone(s) found
+  //
+  //  pszZoneName                 : 1.168.192.in-addr.arpa
+  //  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
+  //  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
+  //  Version                     : 50
+  //  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_DOMAIN_DEFAULT DNS_DP_ENLISTED
+  //  pszDpFqdn                   : DomainDnsZones.eixe.bremersee.org
+  //
+  //  pszZoneName                 : eixe.bremersee.org
+  //  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
+  //  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
+  //  Version                     : 50
+  //  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_DOMAIN_DEFAULT DNS_DP_ENLISTED
+  //  pszDpFqdn                   : DomainDnsZones.eixe.bremersee.org
+  //
+  //  pszZoneName                 : _msdcs.eixe.bremersee.org
+  //  Flags                       : DNS_RPC_ZONE_DSINTEGRATED DNS_RPC_ZONE_UPDATE_SECURE
+  //  ZoneType                    : DNS_ZONE_TYPE_PRIMARY
+  //  Version                     : 50
+  //  dwDpFlags                   : DNS_DP_AUTOCREATED DNS_DP_FOREST_DEFAULT DNS_DP_ENLISTED
+  //  pszDpFqdn                   : ForestDnsZones.eixe.bremersee.org
 
   @Override
   public List<DnsZone> parseDnsZones(@NotNull final CommandExecutorResponse response) {

@@ -63,6 +63,9 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
 
   private Map<DnsZone, List<DnsEntry>> dnsMap = new ConcurrentHashMap<>();
 
+  /**
+   * Initialize memory data.
+   */
   @PostConstruct
   public void init() {
     final DomainUser admin = new DomainUser();

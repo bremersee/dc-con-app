@@ -90,10 +90,10 @@ public interface DomainControllerConnectorService {
   DomainUser addUser(@Valid DomainUser domainUser);
 
   /**
-   * Does user exist?
+   * Checks whether user exists or not.
    *
    * @param userName the user name
-   * @return the boolean
+   * @return {@code true} if the user exists, otherwise {@code false}
    */
   boolean userExists(@NotNull String userName);
 
