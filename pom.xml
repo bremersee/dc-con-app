@@ -367,9 +367,7 @@
                   <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
-                      -yq install dc-con
-                    </command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install dc-con</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
@@ -403,9 +401,7 @@
                   <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
-                      -yq install dc-con
-                    </command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install dc-con</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
