@@ -743,24 +743,13 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
     final boolean result;
     if (DnsRecordType.A.toString().equalsIgnoreCase(record.getRecordType())) {
-      log.debug("msg=[Equals? {} == {}]", DnsRecordType.PTR, correlatedRecord.getRecordType());
       final String fqhn = getFullQualifiedDomainName(entryName, zoneName);
       log.debug("msg=[Equals? {} == {}]", fqhn, correlatedRecord.getRecordValue());
-      final String ip = getIpV4(correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
-      log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), ip);
-      result = DnsRecordType.PTR.toString().equalsIgnoreCase(correlatedRecord.getRecordType())
-          && fqhn.equalsIgnoreCase(correlatedRecord.getRecordValue())
-          && record.getRecordValue().equalsIgnoreCase(ip);
+      result = fqhn.equalsIgnoreCase(correlatedRecord.getRecordValue());
     } else if (DnsRecordType.PTR.toString().equalsIgnoreCase(record.getRecordType())) {
-      log.debug("msg=[Equals? {} == {}]", DnsRecordType.A, correlatedRecord.getRecordType());
       final String ip = getIpV4(entryName, zoneName);
       log.debug("msg=[Equals? {} == {}]", ip, correlatedRecord.getRecordValue());
-      final String fqhn = getFullQualifiedDomainName(
-          correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
-      log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), fqhn);
-      result = DnsRecordType.A.toString().equalsIgnoreCase(correlatedRecord.getRecordType())
-          && ip.equalsIgnoreCase(correlatedRecord.getRecordValue())
-          && record.getRecordValue().equalsIgnoreCase(fqhn);
+      result = ip.equalsIgnoreCase(correlatedRecord.getRecordValue());
     } else {
       result = false;
     }
