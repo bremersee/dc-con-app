@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>1.2.4-SNAPSHOT</version>
+  <version>1.2.4</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
