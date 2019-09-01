@@ -669,8 +669,12 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     return dnsEntry;
   }
 
-  private List<CorrelatedDnsRecord> getDnsRecordsOfCorrelatedZones(final String zoneName) {
-    final List<CorrelatedDnsRecord> correlatedDnsRecords = new ArrayList<>();
+  private Map<String, List<CorrelatedDnsRecord>> getDnsRecordsOfCorrelatedZones(
+      final String zoneName, Boolean correlations) {
+    if (Boolean.FALSE.equals(correlations)) {
+      return Collections.emptyMap();
+    }
+    final Map<String, List<CorrelatedDnsRecord>> map = new HashMap<>();
     final boolean isReverseZone = isDnsReverseZone(zoneName);
     final String correlatedRecordType = isReverseZone
         ? DnsRecordType.A.name()
@@ -682,9 +686,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
           false,
           AddDhcpLeaseParameter.NONE);
       for (final DnsEntry entry : entries) {
-        final List<CorrelatedDnsRecord> list = entry.getRecords().stream()
-            .filter(record -> correlatedRecordType.equalsIgnoreCase(record.getRecordType()))
-            .map(record -> CorrelatedDnsRecord.builder()
+        for (final DnsRecord record : entry.getRecords()) {
+          if (correlatedRecordType.equalsIgnoreCase(record.getRecordType())) {
+            final CorrelatedDnsRecord correlatedRecord = CorrelatedDnsRecord.builder()
                 .entryName(entry.getName())
                 .flags(record.getFlags())
                 .recordType(record.getRecordType())
@@ -692,26 +696,37 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
                 .serial(record.getSerial())
                 .ttl(record.getTtl())
                 .zoneName(correlatedZoneName)
-                .build())
-            .collect(Collectors.toList());
-        correlatedDnsRecords.addAll(list);
+                .build();
+            final String key;
+            if (isDnsReverseZone(correlatedZoneName)) {
+              key = getIpV4(correlatedRecord.getEntryName(), correlatedZoneName);
+            } else {
+              key = getFullQualifiedDomainName(correlatedRecord.getEntryName(), correlatedZoneName);
+            }
+            map.computeIfAbsent(key, k -> new ArrayList<>()).add(correlatedRecord);
+          }
+        }
       }
     }
-    return correlatedDnsRecords;
+    return map;
   }
 
   private DnsEntry addCorrelatedDnsRecords(
       final String zoneName,
       final DnsEntry dnsEntry,
-      final List<CorrelatedDnsRecord> correlatedDnsRecords) {
+      final Map<String, List<CorrelatedDnsRecord>> correlatedDnsRecords) {
 
     for (final DnsRecord record : dnsEntry.getRecords()) {
-      record.setCorrelatedDnsRecord(correlatedDnsRecords
+      final Optional<CorrelatedDnsRecord> correlatedRecord = correlatedDnsRecords
+          .getOrDefault(record.getRecordValue(), Collections.emptyList())
           .stream()
-          .filter(correlatedRecord -> isCorrelatedDnsRecord(
-              zoneName, dnsEntry.getName(), record, correlatedRecord))
-          .findAny()
-          .orElse(null));
+          .filter(cr -> isCorrelatedDnsRecord(
+              zoneName, dnsEntry.getName(), record, cr))
+          .findAny();
+      if (correlatedRecord.isPresent()) {
+        record.setCorrelatedDnsRecord(correlatedRecord.get());
+        break;
+      }
     }
     return dnsEntry;
   }
@@ -729,7 +744,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     final boolean result;
     if (DnsRecordType.A.toString().equalsIgnoreCase(record.getRecordType())) {
       log.debug("msg=[Equals? {} == {}]", DnsRecordType.PTR, correlatedRecord.getRecordType());
-      final String fqhn = getFullQualifiedHostName(entryName, zoneName);
+      final String fqhn = getFullQualifiedDomainName(entryName, zoneName);
       log.debug("msg=[Equals? {} == {}]", fqhn, correlatedRecord.getRecordValue());
       final String ip = getIpV4(correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
       log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), ip);
@@ -740,7 +755,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       log.debug("msg=[Equals? {} == {}]", DnsRecordType.A, correlatedRecord.getRecordType());
       final String ip = getIpV4(entryName, zoneName);
       log.debug("msg=[Equals? {} == {}]", ip, correlatedRecord.getRecordValue());
-      final String fqhn = getFullQualifiedHostName(
+      final String fqhn = getFullQualifiedDomainName(
           correlatedRecord.getEntryName(), correlatedRecord.getZoneName());
       log.debug("msg=[Equals? {} == {}]", record.getRecordValue(), fqhn);
       result = DnsRecordType.A.toString().equalsIgnoreCase(correlatedRecord.getRecordType())
@@ -843,12 +858,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
         zoneName, correlations, leases);
 
     final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(leases);
-    final List<CorrelatedDnsRecord> correlatedDnsRecords;
-    if (Boolean.FALSE.equals(correlations)) {
-      correlatedDnsRecords = Collections.emptyList();
-    } else {
-      correlatedDnsRecords = getDnsRecordsOfCorrelatedZones(zoneName);
-    }
+    final Map<String, List<CorrelatedDnsRecord>> correlatedDnsRecords
+        = getDnsRecordsOfCorrelatedZones(zoneName, correlations);
+
     return sambaTool
         .getDnsRecords(zoneName)
         .stream()
@@ -928,7 +940,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
               dnsZone.getPszZoneName(),
               getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
               DnsRecordType.PTR,
-              getFullQualifiedHostName(name, zoneName)));
+              getFullQualifiedDomainName(name, zoneName)));
     }
   }
 
@@ -968,7 +980,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
               dnsZone.getPszZoneName(),
               getDnsReverseEntryName(data, dnsZone.getPszZoneName()),
               DnsRecordType.PTR,
-              getFullQualifiedHostName(name, zoneName)));
+              getFullQualifiedDomainName(name, zoneName)));
     }
   }
 
@@ -1096,7 +1108,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
         fullQualifiedHostName.length() - (dnsZoneName.length() + 1));
   }
 
-  private String getFullQualifiedHostName(final String hostName, final String dnsZoneName) {
+  private String getFullQualifiedDomainName(final String hostName, final String dnsZoneName) {
     return hostName + "." + dnsZoneName;
   }
 
