@@ -1,169 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.bremersee</groupId>
-  <artifactId>smb-con-app</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
-
-  <name>smb-con-app</name>
-  <description>Samba Connector Application</description>
-
   <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.0.4.RELEASE</version>
+    <groupId>org.bremersee</groupId>
+    <artifactId>common-service-parent</artifactId>
+    <version>1.0.3</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
+  <artifactId>dc-con-app</artifactId>
+  <version>1.2.4</version>
+  <packaging>jar</packaging>
+
+  <name>dc-con-app</name>
+  <description>Domain Controller Connector Application</description>
+  <url>https://github.com/bremersee/dc-con-app</url>
+
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>1.8</java.version>
-    <spring-cloud.version>Finchley.SR1</spring-cloud.version>
+    <start-class>org.bremersee.dccon.Application</start-class>
 
-    <start-class>org.bremersee.smbcon.Application</start-class>
+    <dc-con-api-spring.version>1.2.0</dc-con-api-spring.version>
+    <common-base.version>1.2.2</common-base.version>
+    <comparator.version>2.0.4</comparator.version>
 
-    <buildnumber-maven-plugin.version>1.4</buildnumber-maven-plugin.version>
-    <checkstyle.version>8.7</checkstyle.version>
     <commons-io.version>2.5</commons-io.version>
-    <dependency.locations.enabled>false</dependency.locations.enabled>
-    <findbugs.version>3.0.1</findbugs.version>
-    <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-    <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
-    <!--<maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>-->
-    <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
-    <maven-pmd-plugin.version>3.8</maven-pmd-plugin.version>
-    <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
-    <maven-surefire-report-plugin.version>2.20.1</maven-surefire-report-plugin.version>
-    <jacoco-maven-plugin.version>0.8.0</jacoco-maven-plugin.version>
-    <jacoco.files>/target/coverage-reports/jacoco-unit.exec</jacoco.files>
-    <jdeb-plugin.version>1.5</jdeb-plugin.version>
-    <jdepend-maven-plugin.version>2.0</jdepend-maven-plugin.version>
-    <ldaptive.version>1.2.3</ldaptive.version>
-    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-    <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-    <sonar.jacoco.reportPath>
-      ${project.basedir}/target/coverage-reports/jacoco-unit.exec
-    </sonar.jacoco.reportPath>
-    <sonar.language>java</sonar.language>
-    <sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
+    <ldaptive.version>1.2.4</ldaptive.version>
     <springfox.version>2.9.2</springfox.version>
-    <swagger-annotations.version>1.5.18</swagger-annotations.version>
-    <swagger-base-package>org.bremersee.smbcon</swagger-base-package>
-    <swagger-codegen-maven-plugin.version>2.3.1</swagger-codegen-maven-plugin.version>
-    <wagon-webdav-jackrabbit.version>3.0.0</wagon-webdav-jackrabbit.version>
-    <wagon-ssh-external.version>3.0.0</wagon-ssh-external.version>
+
+    <!--suppress UnresolvedMavenProperty -->
+    <debBaseName>
+      dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all
+    </debBaseName>
+    <debName>${debBaseName}.deb</debName>
+    <debChangesName>${debBaseName}.changes</debChangesName>
   </properties>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com:bremersee/smb-con-app.git</connection>
+    <connection>scm:git:ssh://git@github.com:bremersee/dc-con-app.git</connection>
     <developerConnection>
-      scm:git:ssh://git@github.com:bremersee/smb-con-app.git
+      scm:git:ssh://git@github.com:bremersee/dc-con-app.git
     </developerConnection>
-    <url>https://github.com/bremersee/smb-con-app</url>
+    <url>https://github.com/bremersee/dc-con-app</url>
   </scm>
+
+  <issueManagement>
+    <url>https://github.com/bremersee/dc-con-app/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
 
   <distributionManagement>
     <repository>
       <id>bremersee-releases</id>
-      <url>https://nexus.bremersee.org/repository/maven-releases/</url>
+      <url>https://nexus.bremersee.org/repository/maven-releases</url>
     </repository>
     <snapshotRepository>
       <id>bremersee-snapshots</id>
-      <url>https://nexus.bremersee.org/repository/maven-snapshots/</url>
-      <uniqueVersion>false</uniqueVersion>
+      <url>https://nexus.bremersee.org/repository/maven-snapshots</url>
     </snapshotRepository>
     <site>
       <id>bremersee-sites</id>
-      <url>dav:https://nexus.bremersee.org/repository/maven-sites/smb-con-app</url>
+      <url>
+        dav:https://nexus.bremersee.org/repository/maven-sites/dc-con-app/${project.version}
+      </url>
     </site>
   </distributionManagement>
-
-  <developers>
-    <developer>
-      <id>cbr</id>
-      <name>Christian Bremer</name>
-      <organization>bremersee.org</organization>
-      <organizationUrl>https://bremersee.org</organizationUrl>
-      <email>bremersee@googlemail.com</email>
-      <timezone>+1</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-  </developers>
-
-  <organization>
-    <name>bremersee.org</name>
-    <url>https://bremersee.org</url>
-  </organization>
-
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
-    </license>
-  </licenses>
-
-  <repositories>
-    <repository>
-      <id>spring-snapshots</id>
-      <name>Spring Snapshots</name>
-      <url>https://repo.spring.io/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>spring-snapshots</id>
-      <name>Spring Snapshots</name>
-      <url>https://repo.spring.io/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-dependencies</artifactId>
-        <version>${spring-cloud.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>smb-con-api</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <artifactId>dc-con-api-spring</artifactId>
+      <version>${dc-con-api-spring.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>comparator</artifactId>
+      <version>${comparator.version}</version>
     </dependency>
 
     <dependency>
@@ -203,26 +122,57 @@
       <version>${springfox.version}</version>
     </dependency>
 
+    <!--
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter</artifactId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
     </dependency>
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-config</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-security</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-oauth2</artifactId>
+      <groupId>org.springframework.retry</groupId>
+      <artifactId>spring-retry</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
@@ -238,32 +188,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.micrometer</groupId>
-      <artifactId>micrometer-registry-prometheus</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-aop</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.retry</groupId>
-      <artifactId>spring-retry</artifactId>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
     </dependency>
 
     <dependency>
@@ -295,250 +221,28 @@
     </dependency>
   </dependencies>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <configuration>
-          <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
-          <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <show>protected</show>
-          <quiet>true</quiet>
-          <failOnError>false</failOnError>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <configuration>
-          <format>xml</format>
-          <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-          <minimumTokens>100</minimumTokens>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>jdepend-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-    </plugins>
-  </reporting>
-
   <build>
-    <finalName>smb-con</finalName>
-
-    <extensions>
-      <!-- Enabling the use of SSH -->
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-ssh-external</artifactId>
-        <version>${wagon-ssh-external.version}</version>
-      </extension>
-      <!-- Enabling the use of WebDAV -->
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-webdav-jackrabbit</artifactId>
-        <version>${wagon-webdav-jackrabbit.version}</version>
-      </extension>
-    </extensions>
+    <finalName>dc-con</finalName>
 
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
+          <artifactId>maven-deploy-plugin</artifactId>
           <configuration>
-            <archive>
-              <addMavenDescriptor>true</addMavenDescriptor>
-              <index>true</index>
-              <manifest>
-                <mainClass>${start-class}</mainClass>
-                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-              </manifest>
-              <manifestEntries>
-                <Product-Name>${project.artifactId}</Product-Name>
-                <Product-Version>${project.version}</Product-Version>
-                <Product-Vendor>${project.organization.name}</Product-Vendor>
-                <!--suppress MavenModelInspection -->
-                <Implementation-Build>${buildNumber}</Implementation-Build>
-              </manifestEntries>
-            </archive>
+            <skip>true</skip>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>${maven-project-info-reports-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>${maven-surefire-report-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jxr-plugin</artifactId>
-          <version>${maven-jxr-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-pmd-plugin</artifactId>
-          <version>${maven-pmd-plugin.version}</version>
-          <configuration>
-            <format>xml</format>
-            <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-            <minimumTokens>100</minimumTokens>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>${maven-checkstyle-plugin.version}</version>
-          <dependencies>
-            <dependency>
-              <groupId>com.puppycrawl.tools</groupId>
-              <artifactId>checkstyle</artifactId>
-              <version>${checkstyle.version}</version>
-            </dependency>
-          </dependencies>
-          <configuration>
-            <configLocation>google_checks.xml</configLocation>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>jdepend-maven-plugin</artifactId>
-          <version>${jdepend-maven-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>${jacoco-maven-plugin.version}</version>
-          <configuration>
-            <destFile>${basedir}${jacoco.files}</destFile>
-            <dataFile>${basedir}${jacoco.files}</dataFile>
-          </configuration>
-          <executions>
-            <execution>
-              <id>jacoco-initialize</id>
-              <goals>
-                <goal>prepare-agent</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>jacoco-site</id>
-              <phase>package</phase>
-              <goals>
-                <goal>report</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <artifactId>jdeb</artifactId>
           <groupId>org.vafer</groupId>
-          <version>${jdeb-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>buildnumber-maven-plugin</artifactId>
-          <version>${buildnumber-maven-plugin.version}</version>
-          <executions>
-            <execution>
-              <phase>validate</phase>
-              <goals>
-                <goal>create</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <doCheck>false</doCheck>
-            <doUpdate>false</doUpdate>
-            <shortRevisionLength>7</shortRevisionLength>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>io.swagger</groupId>
-          <artifactId>swagger-codegen-maven-plugin</artifactId>
-          <version>${swagger-codegen-maven-plugin.version}</version>
+          <version>1.5</version>
         </plugin>
       </plugins>
     </pluginManagement>
-
-    <plugins>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
   </build>
 
   <profiles>
-    <!-- see: https://www.triology.de/blog/versionsnamen-mit-maven-erzeugen-des-versionsnamens -->
-    <!--
-    <profile>
-      <id>versionNameBuildNumber</id>
-      <activation>
-        <property>
-          <name>env.BUILD_NUMBER</name>
-        </property>
-      </activation>
-      <properties>
-        <versionName>
-          ${project.version}-${env.BUILD_NUMBER}-${scmBranch}-${buildNumber}
-        </versionName>
-      </properties>
-    </profile>
-    <profile>
-      <id>versionNameForRelease</id>
-      <activation>
-        <property>
-          <name>performRelease</name>
-        </property>
-      </activation>
-      <properties>
-        <versionName>${project.version}</versionName>
-      </properties>
-    </profile>
-    -->
     <profile>
       <id>debian9</id>
       <activation>
@@ -548,7 +252,7 @@
         <assembly-config>debian9.xml</assembly-config>
       </properties>
       <build>
-        <finalName>smb-con</finalName>
+        <finalName>dc-con</finalName>
         <plugins>
           <plugin>
             <groupId>org.springframework.boot</groupId>
@@ -587,18 +291,12 @@
                 </goals>
                 <configuration>
                   <verbose>true</verbose>
-                  <!--suppress MavenModelInspection -->
-                  <deb>
-                    ${project.basedir}/target/smb-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.deb
-                  </deb>
-                  <!--suppress MavenModelInspection -->
-                  <changesOut>
-                    ${project.basedir}/target/smb-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all.changes
-                  </changesOut>
+                  <deb>${project.build.directory}/${debName}</deb>
+                  <changesOut>${project.build.directory}/${debChangesName}</changesOut>
                   <controlDir>${basedir}/src/assembly/debian9/control</controlDir>
                   <dataSet>
                     <data>
-                      <src>${project.basedir}/target/smb-con-debian9.tar.gz</src>
+                      <src>${project.build.directory}/dc-con-debian9.tar.gz</src>
                       <type>archive</type>
                       <mapper>
                         <type>perm</type>
@@ -606,6 +304,205 @@
                       </mapper>
                     </data>
                   </dataSet>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>deploy-to-repo-ubuntu-bionic</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <!--+
+              | wagon-http only supports http method put
+              | uploading to nexus apt works only with a workaround in haproxy
+              +-->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>upload-to-ubuntu-bionic</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-apt</serverId>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <url>https://nexus.bremersee.org/repository/ubuntu-bionic</url>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>apt-get-on-dc</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-on-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/apt-get update</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
+                      -yq install dc-con
+                    </command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>false</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>apt-get-on-dc2</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-on-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/apt-get update</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
+                      -yq install dc-con
+                    </command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>false</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>copy-to-and-install-on-dc</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-to-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <toFile>dc-con.deb</toFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>dpkg-on-dc</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
+                    <command>rm /home/bremersee/dc-con.deb</command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>true</failOnError>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>copy-to-and-install-on-dc2</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-to-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <fromFile>${project.build.directory}/${debName}</fromFile>
+                  <toFile>dc-con.deb</toFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>dpkg-on-dc2</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sshexec</goal>
+                </goals>
+                <configuration>
+                  <serverId>bremersee-dc</serverId>
+                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
+                  <commands>
+                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
+                    <command>rm /home/bremersee/dc-con.deb</command>
+                  </commands>
+                  <displayCommandOutputs>true</displayCommandOutputs>
+                  <failOnError>true</failOnError>
                 </configuration>
               </execution>
             </executions>

@@ -9,21 +9,21 @@
     <baseDirectory>/</baseDirectory>
     <files>
         <file>
-            <source>src/assembly/debian9/smb-con.conf</source>
-            <outputDirectory>var/lib/smb-con</outputDirectory>
+            <source>src/assembly/debian9/dc-con.conf</source>
+            <outputDirectory>var/lib/dc-con</outputDirectory>
             <filtered>false</filtered>
             <fileMode>600</fileMode>
         </file>
         <file>
-            <source>src/assembly/debian9/smb-con.service</source>
+            <source>src/assembly/debian9/dc-con.service</source>
             <outputDirectory>lib/systemd/system</outputDirectory>
             <filtered>false</filtered>
             <fileMode>644</fileMode>
         </file>
         <file>
-            <source>target/smb-con.jar</source>
-            <outputDirectory>var/lib/smb-con</outputDirectory>
-            <destName>smb-con.jar</destName>
+            <source>target/dc-con.jar</source>
+            <outputDirectory>var/lib/dc-con</outputDirectory>
+            <destName>dc-con.jar</destName>
             <filtered>false</filtered>
             <fileMode>755</fileMode>
         </file>

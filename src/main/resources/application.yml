@@ -1,11 +1,17 @@
 bremersee:
   access:
     ip-addresses:
-    - "127.0.0.1"
-    - "::1"
-    users:
-    - name: actuator
-      password: secret4ACTUATOR
+      - "127.0.0.1/32"
+      - "::1"
+  security:
+    oauth2:
+      password-flow:
+        client-id: omnia
+        client-secret: changeit
+        token-endpoint: https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token
+  exception-mapping:
+    api-paths:
+      - /api/**
   ldaptive:
     ldap-url: ${LDAP_URL:ldaps://example.org:636}
     use-ssl: ${LDAP_SSL:true}
@@ -29,22 +35,22 @@ bremersee:
         size-limit: 1
         search-scope: ONELEVEL
         return-attributes:
-        - cn
-  samba-domain:
+          - cn
+  domain-controller:
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}
 
 eureka:
   client:
-    enabled: false
-    register-with-eureka: true
-    prefer-same-zone-eureka: true
-    service-url:
-      defaultZone: http://192.168.1.16:8761/eureka/
-  instance:
-    health-check-url-path: /actuator/health
-    home-page-url-path: /actuator/info
+    enabled: ${EUREKA_CLIENT_ENABLED:false}
+#    register-with-eureka: true
+#    prefer-same-zone-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
+#  instance:
+#    health-check-url-path: /actuator/health
+#    home-page-url-path: /actuator/info
 
 logging:
   level:
@@ -62,28 +68,6 @@ management:
 server:
   port: ${SERVER_PORT:8090}
 
-security:
-  oauth2:
-    client:
-      client-id: internal-client
-      client-secret: secret4INTERNAL
-    resource:
-      jwt:
-        # TODO configs will be merged: so no default key here! 'key-value' has higher priority!
-        #key-uri: ${OAUTH2_PUBLIC_KEY_URI:http://localhost:8080/oauth/token_key}
-        key-value: |
-          -----BEGIN PUBLIC KEY-----
-          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAthqh5Zo/B0D3ug7WILth
-          KnluhbivMlVFM4eRnSPh+yvbSqJpJwGqnpxD8VzWod8UF+L9aqRUNc2KgAY957LL
-          oRwac2DVQaaFVZViqdyrOO9MuYcE3pGQ5eY3hPso0uohuVYKffWDDAqP1EKiKe9D
-          DTWR6xGYxhPH42hxCfinvP6HfSawwq/wrFlu7SH9as+ew1jJmeNnj5oeNlE9IQ+t
-          9hYlXPcW+XALGDbVLrwxHXq95V0ZTrI+R1KWFH08jwO2oik4jI3sHK877aa+YEdX
-          Jee3wSCBin0NBUooGJDRQgYQ+eZB4LtSUd53jHXSKj9ng9AY+ep/AVzAXjd0wU7e
-          SwIDAQAB
-          -----END PUBLIC KEY-----
-      token-info-uri: ${OAUTH2_TOKEN_INFO_URI:http://localhost:8080/oauth/check_token}
-      prefer-token-info: true
-
 spring:
   jackson:
     date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
@@ -94,11 +78,17 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
     time-zone: GMT
   sleuth:
+    enabled: ${SLEUTH_ENABLED:false}
     sampler:
-      probability: 1.0
+      probability: ${SLEUTH_PROBABILITY:1.0}
   zipkin:
-    enabled: false
-    base-url: http://localhost:9411/
+    enabled: ${ZIPKIN_ENABLED:false}
+    base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
 
 ---
 
@@ -106,7 +96,7 @@ spring:
   profiles: debian9
 
 logging:
-  path: /var/log/smb-con
+  path: /var/log/dc-con
   file:
     max-history: 25
 
@@ -114,5 +104,55 @@ server:
   tomcat:
     accesslog:
       enabled: true
-      directory: /var/log/smb-con
+      directory: /var/log/dc-con
 
+---
+
+spring:
+  profiles: in-memory
+
+---
+
+spring:
+  profiles: basic-auth
+
+---
+
+spring:
+  profiles: test
+
+bremersee:
+  access:
+    ip-addresses:
+      - "8.8.8.0"
+    basic-auth-users:
+      - name: "admin"
+        password: "admin"
+        authorities:
+          - "ROLE_LOCAL_USER"
+          - "ROLE_ADMIN"
+      - name: "actuator"
+        password: "actuator"
+        authorities:
+          - "ROLE_ACTUATOR"
+      - name: "user"
+        password: "user"
+        authorities:
+          - "ROLE_LOCAL_USER"
+
+---
+
+spring:
+  profiles: ide
+
+bremersee:
+  access:
+    ip-addresses:
+      - "8.8.8.0"
+
+logging:
+  level:
+    ROOT: info
+    org.bremersee: debug
+    org.springframework: info
+    org.springframework.security: debug

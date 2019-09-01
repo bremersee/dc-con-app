@@ -1,6 +1,6 @@
 spring:
   application:
-    name: smb-con
+    name: dc-con
   cloud:
     config:
       enabled: ${CONFIG_CLIENT_ENABLED:false}

@@ -1,4 +1,4 @@
-Package: smb-con
+Package: dc-con
 Version: [[version]]
 Section: net
 Priority: optional
