@@ -177,8 +177,10 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<List<DomainGroupItem>> getGroups() {
-    return ResponseEntity.ok(domainControllerConnectorService.getGroups());
+  public ResponseEntity<List<DomainGroupItem>> getGroups(
+      @RequestParam(value = "sort",
+          defaultValue = DomainGroupItem.DEFAULT_SORT_ORDER) String sort) {
+    return ResponseEntity.ok(domainControllerConnectorService.getGroups(sort));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -187,6 +189,13 @@ public class DomainControllerConnectorEndpoints implements DomainControllerConne
       @PathVariable("userName") String userName) {
 
     return ResponseEntity.ok(domainControllerConnectorService.userExists(userName));
+  }
+
+  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @Override
+  public ResponseEntity<List<DomainUser>> getUsers(
+      @RequestParam(value = "sort", defaultValue = DomainUser.DEFAULT_SORT_ORDER) String sort) {
+    return ResponseEntity.ok(domainControllerConnectorService.getUsers(sort));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

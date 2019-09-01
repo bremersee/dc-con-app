@@ -125,9 +125,10 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
   }
 
   @Override
-  public List<DomainGroupItem> getGroups() {
+  public List<DomainGroupItem> getGroups(final String sort) {
 
-    log.info("msg=[Getting domain groups]");
+    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainGroupItem.DEFAULT_SORT_ORDER;
+    log.info("msg=[Getting domain groups] sort=[{}]", sortOrder);
     final SearchFilter sf = new SearchFilter(properties.getGroupFindAllFilter());
     final SearchRequest sr = new SearchRequest(properties.getGroupBaseDn(), sf);
     sr.setSearchScope(properties.getGroupFindAllSearchScope());
@@ -139,6 +140,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
       final List<DomainGroupItem> groups = searchResult.getEntries()
           .stream()
           .map(mapper::mapLdapEntryToDomainGroupItem)
+          .sorted(ComparatorBuilder.builder()
+              .fromWellKnownText(sortOrder)
+              .build())
           .collect(Collectors.toList());
       log.info("msg=[Getting domain groups] resultSize=[{}]", groups.size());
       return groups;
@@ -387,6 +391,41 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
           "Getting domain user by name failed.",
           e);
       log.error("msg=[Getting domain user by name failed.]", se);
+      throw se;
+
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  @Override
+  public List<DomainUser> getUsers(final String sort) {
+
+    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;
+    log.info("msg=[Getting domain users] sort=[{}]", sortOrder);
+    final SearchFilter sf = new SearchFilter(properties.getUserFindAllFilter());
+    final SearchRequest sr = new SearchRequest(properties.getUserBaseDn(), sf);
+    sr.setSearchScope(properties.getUserFindAllSearchScope());
+    Connection conn = null;
+    try {
+      conn = getConnection();
+      final SearchOperation so = new SearchOperation(conn);
+      final SearchResult searchResult = so.execute(sr).getResult();
+      final List<DomainUser> users = searchResult.getEntries()
+          .stream()
+          .map(mapper::mapLdapEntryToDomainUser)
+          .sorted(ComparatorBuilder.builder()
+              .fromWellKnownText(sortOrder)
+              .build())
+          .collect(Collectors.toList());
+      log.info("msg=[Getting domain users] resultSize=[{}]", users.size());
+      return users;
+
+    } catch (final LdapException e) {
+      final ServiceException se = internalServerError(
+          "Getting domain users failed.",
+          e);
+      log.error("msg=[Getting domain users failed.]", se);
       throw se;
 
     } finally {

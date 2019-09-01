@@ -42,9 +42,10 @@ public interface DomainControllerConnectorService {
   /**
    * Gets domain groups.
    *
+   * @param sort the sort order
    * @return the groups
    */
-  List<DomainGroupItem> getGroups();
+  List<DomainGroupItem> getGroups(@Nullable String sort);
 
   /**
    * Add domain group.
@@ -104,6 +105,14 @@ public interface DomainControllerConnectorService {
    * @return the user
    */
   DomainUser getUser(@NotNull String userName);
+
+  /**
+   * Gets domain users.
+   *
+   * @param sort the sort order
+   * @return the users
+   */
+  List<DomainUser> getUsers(@Nullable String sort);
 
   /**
    * Update domain user.

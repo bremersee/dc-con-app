@@ -103,7 +103,7 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
   }
 
   @Override
-  public List<DomainGroupItem> getGroups() {
+  public List<DomainGroupItem> getGroups(String sort) {
     log.info("msg=[Getting domain groups]");
     return new ArrayList<>(domainGroupMap.values());
   }
@@ -169,6 +169,11 @@ public class InMemoryDomainControllerConnectorService implements DomainControlle
       throw UserNotFoundException.supplier(userName).get();
     }
     return domainUser;
+  }
+
+  @Override
+  public List<DomainUser> getUsers(String sort) {
+    return new ArrayList<>(domainUserMap.values());
   }
 
   @Override
