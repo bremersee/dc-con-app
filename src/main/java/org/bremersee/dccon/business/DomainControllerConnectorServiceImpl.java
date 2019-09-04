@@ -700,7 +700,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
           && !leases.isEmpty()
           && !addedIps.contains(ip)
           && leases.get(0).getHostname() != null
-          && leases.get(0).getHostname().equals(hostname)) {
+          && leases.get(0).getHostname().equalsIgnoreCase(hostname)) {
         dnsRecord.setDhcpLease(leases.get(0));
         addedIps.add(ip);
       }
@@ -782,9 +782,9 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     }
     final boolean result;
     if (DnsRecordType.A.toString().equalsIgnoreCase(record.getRecordType())) {
-      final String fqhn = getFullQualifiedDomainName(entryName, zoneName);
-      log.debug("msg=[Equals? {} == {}]", fqhn, correlatedRecord.getRecordValue());
-      result = fqhn.equalsIgnoreCase(correlatedRecord.getRecordValue());
+      final String fqdn = getFullQualifiedDomainName(entryName, zoneName);
+      log.debug("msg=[Equals? {} == {}]", fqdn, correlatedRecord.getRecordValue());
+      result = fqdn.equalsIgnoreCase(correlatedRecord.getRecordValue());
     } else if (DnsRecordType.PTR.toString().equalsIgnoreCase(record.getRecordType())) {
       final String ip = getIpV4(entryName, zoneName);
       log.debug("msg=[Equals? {} == {}]", ip, correlatedRecord.getRecordValue());
@@ -855,7 +855,7 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     String domain = domainName;
     do {
       for (DnsZone zone : zones) {
-        if (domain.equals(zone.getPszZoneName())) {
+        if (domain.equalsIgnoreCase(zone.getPszZoneName())) {
           return Optional.of(zone);
         }
       }
@@ -908,12 +908,12 @@ public class DomainControllerConnectorServiceImpl implements DomainControllerCon
     return sambaTool.getDnsRecords(zoneName)
         .parallelStream()
         .anyMatch(entry -> entry
-            .getName().equals(name)
+            .getName().equalsIgnoreCase(name)
             && entry.getRecords()
             .parallelStream()
             .anyMatch(record -> recordType.name()
-                .equals(record.getRecordType())
-                && data.equals(record.getRecordValue())));
+                .equalsIgnoreCase(record.getRecordType())
+                && data.equalsIgnoreCase(record.getRecordValue())));
   }
 
   private void doAddDnsRecord(
