@@ -20,11 +20,15 @@ import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordValueTranscoder;
 import org.ldaptive.AttributeModification;
+import org.ldaptive.AttributeModificationType;
+import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -76,11 +80,20 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
       final LdapEntry destination) {
 
     // Because I cannot transcode the record value into the raw record value,
-    // this call won't change the record.
-    // Changes have to be done in the repository implementation.
+    // this call keeps existing records and deletes non existing records.
+    // Adding new records has to be done via the command line interface
+    // (see save method in DnsNodeRepositoryImpl).
     final List<AttributeModification> modifications = new ArrayList<>();
-    LdaptiveEntryMapper.setAttributes(destination,
-        "dnsRecord", source.getRecords(), true, DNS_RECORD_VALUE_TRANSCODER, modifications);
+    final DnsNode destinationNode = map(destination);
+    if (destinationNode != null) {
+      for (final DnsRecord record : destinationNode.getRecords()) {
+        if (!source.getRecords().contains(record)) {
+          final LdapAttribute attr = new LdapAttribute("dnsRecord", record.getRecordRawValue());
+          destination.removeAttribute(attr);
+          modifications.add(new AttributeModification(AttributeModificationType.REMOVE, attr));
+        }
+      }
+    }
     return modifications.toArray(new AttributeModification[0]);
   }
 
@@ -92,5 +105,6 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     dnsNode.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
     dnsNode.setRecords(LdaptiveEntryMapper
         .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER));
+    dnsNode.setRecords(new TreeSet<>(dnsNode.getRecords()));
   }
 }

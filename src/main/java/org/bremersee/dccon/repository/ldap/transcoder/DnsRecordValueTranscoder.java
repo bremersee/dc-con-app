@@ -63,7 +63,7 @@ public class DnsRecordValueTranscoder extends AbstractBinaryValueTranscoder<DnsR
       int rank = dis.readUnsignedByte();                                    // 1 byte
       int flags = Short.reverseBytes((short) dis.readUnsignedShort());      // 2 bytes
       int serial = Integer.reverseBytes(dis.readInt());                     // 4 bytes
-      int ttlSeconds = Integer.reverseBytes(dis.readInt());                 // 4 bytes
+      int ttlSeconds = dis.readInt();                                       // 4 bytes
       int reserved = Integer.reverseBytes(dis.readInt());                   // 4 bytes
       int timeStamp = Integer.reverseBytes(dis.readInt());                  // 4 bytes
       byte[] data = value.length > 24

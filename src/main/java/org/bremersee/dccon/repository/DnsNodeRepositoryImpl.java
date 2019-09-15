@@ -17,10 +17,8 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +87,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
         getProperties().buildDnsNodeBaseDn(zoneName),
         new SearchFilter(getProperties().getDnsNodeFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());
+    searchRequest.setBinaryAttributes("dnsRecord");
     return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName));
   }
 
@@ -108,6 +106,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
         getProperties().buildDnsNodeBaseDn(zoneName),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());
+    searchRequest.setBinaryAttributes("dnsRecord");
     return getLdapTemplate().findOne(searchRequest, getDnsNodeLdapMapper(zoneName));
   }
 
@@ -143,76 +142,48 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
 
   @Override
   public Optional<DnsNode> save(@NotNull final String zoneName, @NotNull final DnsNode dnsNode) {
+
+    // Collect deleted records and save existing dns node
+    final Set<DnsRecord> deletedRecords = new LinkedHashSet<>();
     DnsNode newDnsNode = findOne(zoneName, dnsNode.getName())
         .map(existingDnsNode -> {
-          final Set<String> rawValues = existingDnsNode.getRecords().stream()
-              .map(r -> Base64.getEncoder().encodeToString(r.getRecordRawValue()))
-              .collect(Collectors.toSet());
-          for (final DnsRecord record : dnsNode.getRecords()) {
-            if (record.hasRecordRawValue()
-                && (!existingDnsNode.getRecords().contains(record)
-                || !rawValues.contains(
-                Base64.getEncoder().encodeToString(record.getRecordRawValue())))) {
-              record.setRecordRawValue(null);
+          for (final DnsRecord existingDnsRecord : existingDnsNode.getRecords()) {
+            if (!dnsNode.getRecords().contains(existingDnsRecord)) {
+              deletedRecords.add(existingDnsRecord);
             }
           }
-          existingDnsNode.setDistinguishedName(
-              getDnsNodeLdapMapper(zoneName).mapDn(existingDnsNode));
-          return existingDnsNode;
+          return getLdapTemplate().save(dnsNode, getDnsNodeLdapMapper(zoneName));
         })
-        .orElseGet(() -> {
-          for (final DnsRecord record : dnsNode.getRecords()) {
-            record.setRecordRawValue(null);
-          }
-          return DnsNode.builder()
-              .name(dnsNode.getName())
-              .build();
-        });
-
-    // Collect deleted records
-    final Set<DnsRecord> deleteRecords = new LinkedHashSet<>();
-    final Iterator<DnsRecord> recordIterator = newDnsNode.getRecords().iterator();
-    while (recordIterator.hasNext()) {
-      final DnsRecord record = recordIterator.next();
-      if (!dnsNode.getRecords().contains(record)) {
-        deleteRecords.add(record);
-        recordIterator.remove();
-      }
-    }
+        .orElse(DnsNode.builder()
+            .name(dnsNode.getName())
+            .build());
 
     // Collect new records
     final Set<DnsRecord> newRecords = new LinkedHashSet<>();
-    for (DnsRecord record : dnsNode.getRecords()) {
-      if (!record.hasRecordRawValue()
-          && StringUtils.hasText(record.getRecordValue())
-          && DnsRecordType.valueOf(record.getRecordType()) != DnsRecordType.UNKNOWN) {
+    for (final DnsRecord record : dnsNode.getRecords()) {
+      if (!newDnsNode.getRecords().contains(record)) {
         newRecords.add(record);
       }
     }
 
-    // The dns node has no records, it will be deleted
-    if (newDnsNode.getRecords().isEmpty() && deleteRecords.isEmpty() && newRecords.isEmpty()) {
+    if (newDnsNode.getRecords().isEmpty() && newRecords.isEmpty()) {
+      // The dns node has no records, it will be deleted
       if (StringUtils.hasText(newDnsNode.getDistinguishedName())) {
         getLdapTemplate().delete(dnsNode, getDnsNodeLdapMapper(zoneName));
       }
-      return Optional.empty();
+      newDnsNode = null;
+    } else {
+      // Add new record via cli
+      add(zoneName, dnsNode.getName(), newRecords);
+      // Load dns node from ldap
+      newDnsNode = findOne(zoneName, dnsNode.getName())
+          .orElseThrow(() -> ServiceException.internalServerError("Saving dns node failed."));
     }
-
-    // The dns node is not new
-    if (StringUtils.hasText(newDnsNode.getDistinguishedName())) {
-      getLdapTemplate().save(newDnsNode, getDnsNodeLdapMapper(zoneName));
-    }
-
-    // Add new record via cli
-    add(zoneName, dnsNode.getName(), newRecords);
-
-    // Load dns node from ldap
-    newDnsNode = findOne(zoneName, dnsNode.getName())
-        .orElseThrow(() -> ServiceException.internalServerError("Saving dns node failed."));
 
     // Do A record to PTR record synchronization
-    handlePtrRecords(zoneName, newDnsNode.getName(), newRecords, deleteRecords);
-    return Optional.of(newDnsNode);
+    handlePtrRecords(zoneName, dnsNode.getName(), newRecords, deletedRecords);
+
+    return Optional.ofNullable(newDnsNode);
   }
 
   private void add(
@@ -257,6 +228,15 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     if (dnsZoneRepository.isDnsReverseZone(zoneName)) {
       return;
     }
+    for (final DnsRecord record : deletedRecords) {
+      findReverseDnsNode(zoneName, record).ifPresent(pair -> {
+        pair.getNode().getRecords().remove(DnsRecord.builder()
+            .recordType(DnsRecordType.PTR.name())
+            .recordValue(nodeName + "." + zoneName)
+            .build());
+        save(pair.getZoneName(), pair.getNode());
+      });
+    }
     for (final DnsRecord record : newRecords) {
       findReverseDnsNode(zoneName, record).ifPresent(pair -> {
         final DnsRecord newRecord = DnsRecord.builder()
@@ -267,15 +247,6 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
           pair.getNode().getRecords().add(newRecord);
           save(pair.getZoneName(), pair.getNode());
         }
-      });
-    }
-    for (final DnsRecord record : deletedRecords) {
-      findReverseDnsNode(zoneName, record).ifPresent(pair -> {
-        pair.getNode().getRecords().remove(DnsRecord.builder()
-            .recordType(DnsRecordType.PTR.name())
-            .recordValue(nodeName + "." + zoneName)
-            .build());
-        save(pair.getZoneName(), pair.getNode());
       });
     }
   }
