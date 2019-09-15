@@ -18,13 +18,8 @@ package org.bremersee.dccon.config;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,10 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.SearchScope;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
- * The samba domain properties.
+ * The domain controller properties.
  *
  * @author Christian Bremer
  */
@@ -49,7 +43,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class DomainControllerProperties implements Serializable {
 
-  private static final long serialVersionUID = 606284794541721895L;
+  private static final long serialVersionUID = 2L;
 
   private String groupBaseDn;
 
@@ -65,9 +59,10 @@ public class DomainControllerProperties implements Serializable {
 
   private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;
 
+
   private String userBaseDn;
 
-  private String userRdn = "cn";
+  private String userRdn = "dc";
 
   private String userGroupAttr = "memberOf";
 
@@ -78,6 +73,33 @@ public class DomainControllerProperties implements Serializable {
   private String userFindOneFilter = "(&(objectClass=user)(sAMAccountName={0}))";
 
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
+
+
+  private String dnsZoneBaseDn;
+
+  private String dnsZoneRdn = "dc";
+
+  private String dnsZoneFindAllFilter = "(objectClass=dnsZone)";
+
+  private SearchScope dnsZoneFindAllSearchScope = SearchScope.SUBTREE;
+
+  private String dnsZoneFindOneFilter = "(&(objectClass=dnsZone)(name={0}))";
+
+  private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;
+
+
+  private String dnsNodeBaseDn;
+
+  private String dnsNodeRdn = "dc";
+
+  private String dnsNodeFindAllFilter = "(objectClass=dnsNode)";
+
+  private SearchScope dnsNodeFindAllSearchScope = SearchScope.SUBTREE;
+
+  private String dnsNodeFindOneFilter = "(&(objectClass=dnsNode)(name={0}))";
+
+  private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;
+
 
   private String kinitBinary = "/usr/bin/kinit";
 
@@ -105,14 +127,13 @@ public class DomainControllerProperties implements Serializable {
 
   private String nameServerHost = "ns.example.org";
 
-  private String reverseZoneSuffix = ".in-addr.arpa";
+  private String reverseZoneSuffixIp4 = ".in-addr.arpa";
+
+  private String reverseZoneSuffixIp6 = ".ip6.arpa";
 
   private List<String> excludedZoneRegexList = new ArrayList<>();
 
-  private List<String> excludedEntryRegexList = new ArrayList<>();
-
-
-  private Map<String, List<String>> dnsZoneMapping = new LinkedHashMap<>();
+  private List<String> excludedNodeRegexList = new ArrayList<>();
 
 
   /**
@@ -121,51 +142,19 @@ public class DomainControllerProperties implements Serializable {
   public DomainControllerProperties() {
     excludedZoneRegexList.add("^_msdcs\\..*$");
 
-    excludedEntryRegexList.add("^$");
-    excludedEntryRegexList.add("_msdcs");
-    excludedEntryRegexList.add("_sites");
-    excludedEntryRegexList.add("_tcp");
-    excludedEntryRegexList.add("_udp");
+    excludedNodeRegexList.add("^$");
+    excludedNodeRegexList.add("_msdcs");
+    excludedNodeRegexList.add("_sites");
+    excludedNodeRegexList.add("_tcp");
+    excludedNodeRegexList.add("_udp");
   }
 
-  /**
-   * Init.
-   */
-  @PostConstruct
-  public void init() {
-    if (dnsZoneMapping != null) {
-      for (String key : dnsZoneMapping.keySet()) {
-        while (dnsZoneMapping.get(key) != null && dnsZoneMapping.get(key).remove(key)) {
-          log.info(
-              "msg=[Value of dns zone mapping cannot equals key. Value was removed.] value=[{}]",
-              key);
-        }
-      }
-    }
-    log.info("msg=[Domain controller properties loaded.] properties=[{}]", this);
+  public List<String> getReverseZoneSuffixList() {
+    return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);
   }
 
-  /**
-   * Find correlated dns zones.
-   *
-   * @param zoneName the zone name
-   * @return the correlated dns zones
-   */
-  public Set<String> findCorrelatedDnsZones(String zoneName) {
-    if (!StringUtils.hasText(zoneName)) {
-      return Collections.emptySet();
-    }
-    List<String> correlatedZones = dnsZoneMapping.get(zoneName);
-    if (correlatedZones != null && !correlatedZones.isEmpty()) {
-      return new LinkedHashSet<>(correlatedZones);
-    }
-    final Set<String> results = new LinkedHashSet<>();
-    for (Map.Entry<String, List<String>> entry : dnsZoneMapping.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().contains(zoneName)) {
-        results.add(entry.getKey());
-      }
-    }
-    return results;
+  public String buildDnsNodeBaseDn(String zoneName) {
+    return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }
 
 }

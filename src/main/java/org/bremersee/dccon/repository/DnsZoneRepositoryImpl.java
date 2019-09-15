@@ -1,0 +1,144 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import static org.bremersee.dccon.repository.cli.CommandExecutorResponse.toExceptionMessage;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveTemplate;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
+import org.bremersee.exception.ServiceException;
+import org.ldaptive.SearchFilter;
+import org.ldaptive.SearchRequest;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * The dns zone repository.
+ *
+ * @author Christian Bremer
+ */
+@Profile("ldap")
+@Component("dnsZoneRepository")
+@Slf4j
+public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
+
+  private DnsZoneLdapMapper dnsZoneLdapMapper;
+
+  /**
+   * Instantiates a new dns zone repository.
+   *
+   * @param properties   the properties
+   * @param ldapTemplate the ldap template
+   */
+  public DnsZoneRepositoryImpl(
+      DomainControllerProperties properties,
+      LdaptiveTemplate ldapTemplate) {
+    super(properties, ldapTemplate);
+    this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
+  }
+
+  @Override
+  public boolean isDnsReverseZone(final String dnsZoneName) {
+    return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
+        .anyMatch(suffix -> dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+  }
+
+  @Override
+  public Stream<DnsZone> findAll() {
+    final SearchRequest searchRequest = new SearchRequest(
+        getProperties().getDnsZoneBaseDn(),
+        new SearchFilter(getProperties().getDnsZoneFindAllFilter()));
+    searchRequest.setSearchScope(getProperties().getDnsZoneFindAllSearchScope());
+    return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper);
+  }
+
+  @Override
+  public boolean exists(@NotNull String zoneName) {
+    return getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
+  }
+
+  @Override
+  public Optional<DnsZone> findOne(@NotNull String zoneName) {
+    final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsZoneFindOneFilter());
+    searchFilter.setParameter(0, zoneName);
+    final SearchRequest searchRequest = new SearchRequest(
+        getProperties().getDnsZoneBaseDn(),
+        searchFilter);
+    searchRequest.setSearchScope(getProperties().getDnsZoneFindOneSearchScope());
+    return getLdapTemplate().findOne(searchRequest, dnsZoneLdapMapper);
+  }
+
+  @Override
+  public DnsZone save(@NotNull final String zoneName) {
+    return findOne(zoneName)
+        .orElseGet(() -> execDnsZoneCmd(
+            "zonecreate",
+            zoneName, response -> findOne(zoneName)
+                .orElseThrow(() -> ServiceException.internalServerError(
+                    "msg=[Saving dns zone failed.] "
+                        + CommandExecutorResponse.toExceptionMessage(response)))));
+  }
+
+  @Override
+  public boolean delete(@NotNull String zoneName) {
+    if (exists(zoneName)) {
+      execDnsZoneCmd(
+          "zonedelete",
+          zoneName,
+          (CommandExecutorResponseValidator) response -> {
+            if (exists(zoneName)) {
+              throw ServiceException.internalServerError(
+                  "msg=[Deleting dns zone failed.] " + toExceptionMessage(response));
+            }
+          });
+      return true;
+    }
+    return false;
+  }
+
+  private <T> T execDnsZoneCmd(
+      final String dnsCommand,
+      final String zoneName,
+      final CommandExecutorResponseParser<T> parser) {
+
+    kinit();
+    final List<String> commands = new ArrayList<>();
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("dns");
+    commands.add(dnsCommand);
+    commands.add(getProperties().getNameServerHost());
+    commands.add(zoneName);
+    auth(commands);
+    return CommandExecutor.exec(
+        commands, null, getProperties().getSambaToolExecDir(), parser);
+  }
+
+
+}

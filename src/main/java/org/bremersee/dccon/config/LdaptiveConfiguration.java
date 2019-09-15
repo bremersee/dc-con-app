@@ -18,6 +18,8 @@ package org.bremersee.dccon.config;
 
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveProperties;
+import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.ldaptive.BindConnectionInitializer;
 import org.ldaptive.ConnectionConfig;
 import org.ldaptive.ConnectionFactory;
@@ -46,7 +48,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-@Profile("!in-memory")
+@Profile("ldap")
 @Configuration
 @EnableConfigurationProperties(LdaptiveProperties.class)
 @Slf4j
@@ -76,6 +78,11 @@ public class LdaptiveConfiguration {
       return pooledConnectionFactory();
     }
     return defaultConnectionFactory();
+  }
+
+  @Bean
+  public LdaptiveTemplate ldaptiveTemplate(ConnectionFactory connectionFactory) {
+    return new LdaptiveTemplate(connectionFactory);
   }
 
   private DefaultConnectionFactory defaultConnectionFactory() {

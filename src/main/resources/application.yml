@@ -12,34 +12,12 @@ bremersee:
   exception-mapping:
     api-paths:
       - /api/**
-  ldaptive:
-    ldap-url: ${LDAP_URL:ldaps://example.org:636}
-    use-ssl: ${LDAP_SSL:true}
-    use-start-tls: ${LDAP_START_TLS:false}
-    bind-dn: ${LDAP_BIND_DN:areader@example.org}
-    bind-credential: ${LDAP_BIND_PASSWORD:changeit}
-    pooled: true
-    min-pool-size: 3
-    max-pool-size: 10
-    validate-on-check-in: false
-    validate-on-check-out: false
-    validate-periodically: true
-    validate-period: 300
-    idle-time: 600
-    block-wait-time: 10000
-    search-validator:
-      search-request:
-        base-dn: ${LDAP_BASE_DN:dc=example,dc=org}
-        search-filter:
-          filter: ${LDAP_VALIDATION_FILTER:(cn=Administrator)}
-        size-limit: 1
-        search-scope: ONELEVEL
-        return-attributes:
-          - cn
   domain-controller:
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}
+    dns-zone-base-dn: ${LDAP_ZONE_DN:CN=MicrosoftDNS,DC=DomainDnsZones,DC=example,DC=org}
+    dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
 
 eureka:
   client:
@@ -93,6 +71,42 @@ spring:
 ---
 
 spring:
+  profiles: ldap
+
+bremersee:
+  ldaptive:
+    ldap-url: ${LDAP_URL:ldaps://example.org:636}
+    use-ssl: ${LDAP_SSL:true}
+    use-start-tls: ${LDAP_START_TLS:false}
+    bind-dn: ${LDAP_BIND_DN:areader@example.org}
+    bind-credential: ${LDAP_BIND_PASSWORD:changeit}
+    pooled: true
+    min-pool-size: 3
+    max-pool-size: 10
+    validate-on-check-in: false
+    validate-on-check-out: false
+    validate-periodically: true
+    validate-period: 300
+    idle-time: 600
+    block-wait-time: 10000
+    search-validator:
+      search-request:
+        base-dn: ${LDAP_BASE_DN:dc=example,dc=org}
+        search-filter:
+          filter: ${LDAP_VALIDATION_FILTER:(cn=Administrator)}
+        size-limit: 1
+        search-scope: ONELEVEL
+        return-attributes:
+          - cn
+
+---
+
+spring:
+  profiles: cli
+
+---
+
+spring:
   profiles: debian9
 
 logging:
@@ -105,11 +119,6 @@ server:
     accesslog:
       enabled: true
       directory: /var/log/dc-con
-
----
-
-spring:
-  profiles: in-memory
 
 ---
 

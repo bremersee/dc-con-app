@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Application {
 
   /**
-   * The entry point of application.
+   * The entry point of the application.
    *
    * @param args the input arguments
    */

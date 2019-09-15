@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>1.3.1</version>
+  <version>1.4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -22,8 +22,8 @@
   <properties>
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>1.3.0</dc-con-api-spring.version>
-    <common-base.version>1.2.2</common-base.version>
+    <dc-con-api-spring.version>1.4.0-SNAPSHOT</dc-con-api-spring.version>
+    <common-base.version>1.3.0-SNAPSHOT</common-base.version>
     <comparator.version>2.0.4</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
@@ -85,6 +85,13 @@
       <version>${comparator.version}</version>
     </dependency>
 
+    <!-- dnsjava or minidns -->
+    <dependency>
+      <groupId>org.minidns</groupId>
+      <artifactId>minidns-core</artifactId>
+      <version>0.3.3</version>
+    </dependency>
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -106,11 +113,13 @@
       <artifactId>ldaptive-beans</artifactId>
       <version>${ldaptive.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.ldaptive</groupId>
       <artifactId>ldaptive-unboundid</artifactId>
       <version>${ldaptive.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>io.swagger</groupId>
       <artifactId>swagger-annotations</artifactId>
