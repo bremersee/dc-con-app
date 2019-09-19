@@ -33,9 +33,9 @@ import org.ldaptive.LdapEntry;
  */
 abstract class AbstractLdapMapper {
 
-  private static final String WHEN_CREATED = "whenCreated";
+  static final String WHEN_CREATED = "whenCreated";
 
-  private static final String WHEN_CHANGED = "whenChanged";
+  static final String WHEN_CHANGED = "whenChanged";
 
   private static final WhenTimeValueTranscoder WHEN_TIME_VALUE_TRANSCODER = new WhenTimeValueTranscoder();
 
