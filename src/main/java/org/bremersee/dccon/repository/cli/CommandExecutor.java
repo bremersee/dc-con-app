@@ -44,6 +44,7 @@ public abstract class CommandExecutor {
    * @param dir      the dir
    * @return the command executor response
    */
+  @SuppressWarnings("UnusedReturnValue")
   public static CommandExecutorResponse exec(
       final List<String> commands,
       final String dir) {

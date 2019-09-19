@@ -62,6 +62,9 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
 
   @Override
   public DomainGroup map(final LdapEntry ldapEntry) {
+    if (ldapEntry == null) {
+      return null;
+    }
     final DomainGroup destination = new DomainGroup();
     map(ldapEntry, destination);
     return destination;
@@ -71,6 +74,9 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
   public void map(
       final LdapEntry ldapEntry,
       final DomainGroup domainGroup) {
+    if (ldapEntry == null) {
+      return;
+    }
     mapCommonAttributes(ldapEntry, domainGroup);
     domainGroup.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
     domainGroup.setMembers(LdaptiveEntryMapper.getAttributeValuesAsList(

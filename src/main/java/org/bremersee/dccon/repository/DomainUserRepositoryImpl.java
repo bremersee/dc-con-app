@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
@@ -32,7 +33,6 @@ import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -47,7 +47,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class DomainUserRepositoryImpl extends AbstractRepository implements DomainUserRepository {
 
-  private DomainUserLdapMapper domainUserLdapMapper;
+  private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
 
   /**
    * Instantiates a new domain user repository.
@@ -67,9 +67,9 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    *
    * @param domainUserLdapMapper the domain user ldap mapper
    */
-  @Autowired(required = false)
+  @SuppressWarnings("unused")
   public void setDomainUserLdapMapper(
-      DomainUserLdapMapper domainUserLdapMapper) {
+      LdaptiveEntryMapper<DomainUser> domainUserLdapMapper) {
     if (domainUserLdapMapper != null) {
       this.domainUserLdapMapper = domainUserLdapMapper;
     }
@@ -81,6 +81,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         new SearchFilter(getProperties().getUserFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());
+    searchRequest.setBinaryAttributes("jpegPhoto");
     return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
   }
 
@@ -92,6 +93,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
+    searchRequest.setBinaryAttributes("jpegPhoto");
     return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
   }
 

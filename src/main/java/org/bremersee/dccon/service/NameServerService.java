@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -71,10 +72,11 @@ public interface NameServerService {
   /**
    * Gets dns nodes.
    *
-   * @param zoneName the zone name
+   * @param zoneName      the zone name
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns nodes
    */
-  List<DnsNode> getDnsNodes(@NotNull String zoneName);
+  List<DnsNode> getDnsNodes(@NotNull String zoneName, @Nullable UnknownFilter unknownFilter);
 
   /**
    * Save dns node.
@@ -83,16 +85,22 @@ public interface NameServerService {
    * @param dnsNode  the dns node
    * @return the dns node
    */
-  Optional<DnsNode> save(@NotNull String zoneName, @NotNull @Valid DnsNode dnsNode);
+  Optional<DnsNode> save(
+      @NotNull String zoneName,
+      @NotNull @Valid DnsNode dnsNode);
 
   /**
    * Get dns node.
    *
-   * @param zoneName the zone name
-   * @param nodeName the node name
+   * @param zoneName      the zone name
+   * @param nodeName      the node name
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns node
    */
-  Optional<DnsNode> getDnsNode(@NotNull String zoneName, @NotNull String nodeName);
+  Optional<DnsNode> getDnsNode(
+      @NotNull String zoneName,
+      @NotNull String nodeName,
+      @Nullable UnknownFilter unknownFilter);
 
   /**
    * Delete dns node.

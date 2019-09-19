@@ -43,6 +43,10 @@ public interface DnsZoneRepository {
     return findAll().filter(dnsZone -> isDnsReverseZone(dnsZone.getName()));
   }
 
+  default Stream<DnsZone> findNonDnsReverseZones() {
+    return findAll().filter(dnsZone -> !isDnsReverseZone(dnsZone.getName()));
+  }
+
   /**
    * Check whether dns zone exists or not.
    *

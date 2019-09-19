@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
@@ -48,7 +49,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
 
-  private DnsZoneLdapMapper dnsZoneLdapMapper;
+  private LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper;
 
   /**
    * Instantiates a new dns zone repository.
@@ -61,6 +62,18 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
       LdaptiveTemplate ldapTemplate) {
     super(properties, ldapTemplate);
     this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
+  }
+
+  /**
+   * Sets dns zone ldap mapper.
+   *
+   * @param dnsZoneLdapMapper the dns zone ldap mapper
+   */
+  @SuppressWarnings("unused")
+  public void setDnsZoneLdapMapper(LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
+    if (dnsZoneLdapMapper != null) {
+      this.dnsZoneLdapMapper = dnsZoneLdapMapper;
+    }
   }
 
   @Override

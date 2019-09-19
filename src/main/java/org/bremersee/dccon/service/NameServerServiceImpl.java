@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.ComparatorBuilder;
@@ -33,6 +32,7 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
 import org.bremersee.dccon.repository.DnsRecordType;
@@ -122,8 +122,8 @@ public class NameServerServiceImpl implements NameServerService {
 
     return dnsNode.getRecords().stream()
         .filter(dnsRecord -> dnsRecord.getRecordValue() != null
-            && (DnsRecordType.A.name().equalsIgnoreCase(dnsRecord.getRecordType())
-            || DnsRecordType.AAAA.name().equalsIgnoreCase(dnsRecord.getRecordType())))
+            && (DnsRecordType.A.is(dnsRecord.getRecordType())
+            || DnsRecordType.AAAA.is(dnsRecord.getRecordType())))
         .min(ComparatorBuilder.builder()
             .fromWellKnownText(DnsRecord.SORT_ORDER_TIME_STAMP_DESC)
             .build())
@@ -170,12 +170,12 @@ public class NameServerServiceImpl implements NameServerService {
 
 
   @Override
-  public List<DnsNode> getDnsNodes(String zoneName) {
+  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
     }
     final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(zoneName);
-    return dnsNodeRepository.findAll(zoneName)
+    return dnsNodeRepository.findAll(zoneName, unknownFilter)
         .filter(this::isNonExcludedDnsNode)
         .map(dnsEntry -> addDhcpLeases(leasesMap, dnsEntry))
         .sorted(dnsNodeComparator)
@@ -183,7 +183,7 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public Optional<DnsNode> save(@NotNull String zoneName, @NotNull @Valid DnsNode dnsNode) {
+  public Optional<DnsNode> save(String zoneName, DnsNode dnsNode) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
     }
@@ -191,11 +191,14 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public Optional<DnsNode> getDnsNode(@NotNull String zoneName, @NotNull String nodeName) {
+  public Optional<DnsNode> getDnsNode(
+      String zoneName,
+      String nodeName,
+      UnknownFilter unknownFilter) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
     }
-    return dnsNodeRepository.findOne(zoneName, nodeName);
+    return dnsNodeRepository.findOne(zoneName, nodeName, unknownFilter);
   }
 
   @Override

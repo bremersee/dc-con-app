@@ -14,7 +14,29 @@
  * limitations under the License.
  */
 
+package org.bremersee.dccon.service;
+
+import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.DomainUser;
+import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
+
 /**
+ * The avatar service interface.
+ *
  * @author Christian Bremer
  */
-package org.bremersee.dccon.repository;
+@Validated
+public interface AvatarService {
+
+  /**
+   * Find avatar.
+   *
+   * @param domainUser    the domain user
+   * @param returnDefault the return default flag
+   * @return the avatar bytes or {@code null} if there is no avatar
+   */
+  @Nullable
+  byte[] findAvatar(@NotNull DomainUser domainUser, Boolean returnDefault);
+
+}

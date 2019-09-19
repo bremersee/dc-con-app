@@ -42,6 +42,17 @@ public interface DomainUserService {
   List<DomainUser> getUsers(@Nullable String sort);
 
   /**
+   * Gets user avatar.
+   *
+   * @param userName      the user name
+   * @param returnDefault the return default flag
+   * @return the user avatar
+   */
+  Optional<byte[]> getUserAvatar(
+      @NotNull String userName,
+      Boolean returnDefault);
+
+  /**
    * Add domain user.
    *
    * @param domainUser the domain user

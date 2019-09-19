@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
@@ -32,7 +33,6 @@ import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainGroupRepositoryImpl extends AbstractRepository implements DomainGroupRepository {
 
-  private DomainGroupLdapMapper domainGroupLdapMapper;
+  private LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
 
   /**
    * Instantiates a new domain group repository.
@@ -65,9 +65,9 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    *
    * @param domainGroupLdapMapper the domain group ldap mapper
    */
-  @Autowired(required = false)
+  @SuppressWarnings("unused")
   public void setDomainGroupLdapMapper(
-      DomainGroupLdapMapper domainGroupLdapMapper) {
+      LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper) {
     if (domainGroupLdapMapper != null) {
       this.domainGroupLdapMapper = domainGroupLdapMapper;
     }

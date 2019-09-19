@@ -53,6 +53,9 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
 
   @Override
   public DnsZone map(final LdapEntry ldapEntry) {
+    if (ldapEntry == null) {
+      return null;
+    }
     final DnsZone destination = new DnsZone();
     map(ldapEntry, destination);
     return destination;
@@ -69,6 +72,9 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   public void map(
       final LdapEntry ldapEntry,
       final DnsZone dnsZone) {
+    if (ldapEntry == null) {
+      return;
+    }
     mapCommonAttributes(ldapEntry, dnsZone);
     dnsZone.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
   }

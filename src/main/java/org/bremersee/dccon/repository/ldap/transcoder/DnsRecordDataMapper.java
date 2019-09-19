@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.exception.ServiceException;
+import org.ldaptive.io.Hex;
 import org.springframework.util.StringUtils;
 
 /**
@@ -51,35 +52,24 @@ public abstract class DnsRecordDataMapper {
    */
   public static DnsRecord parseA(final byte[] data, final Supplier<DnsRecord> dnsRecordSupplier) {
     final DnsRecord dnsRecord = dnsRecordSupplier.get();
-    try {
-      final InetAddress inetAddress = InetAddress.getByAddress(data);
-      dnsRecord.setRecordValue(inetAddress.getHostAddress());
-      dnsRecord.setCorrelatedRecordValue(inetAddress.getHostName());
-
-    } catch (UnknownHostException e) {
-      if (data.length >= 4) {
-        log.warn("msg=[Resolving IP address failed. Trying to parse it.]", e);
-        try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {
-          String ip = String.valueOf(dis.readUnsignedByte())
-              + '.'
-              + dis.readUnsignedByte()
-              + '.'
-              + dis.readUnsignedByte()
-              + '.'
-              + dis.readUnsignedByte();
-          dnsRecord.setRecordValue(ip);
-        } catch (IOException ioe) {
-          final ServiceException se = ServiceException.internalServerError(
-              "Parsing data of A record failed.", ioe);
-          log.error("msg=[Parsing data of A record failed.]", se);
-          throw se;
-        }
-      } else {
+    if (data.length >= 4) {
+      try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {
+        String ip = String.valueOf(dis.readUnsignedByte())
+            + '.'
+            + dis.readUnsignedByte()
+            + '.'
+            + dis.readUnsignedByte()
+            + '.'
+            + dis.readUnsignedByte();
+        dnsRecord.setRecordValue(ip);
+      } catch (IOException ioe) {
         final ServiceException se = ServiceException.internalServerError(
-            "Parsing data of A record failed.", e);
+            "Parsing data of A record failed.", ioe);
         log.error("msg=[Parsing data of A record failed.]", se);
         throw se;
       }
+    } else {
+      dnsRecord.setRecordValue(new String(Hex.encode(data)));
     }
     log.debug("msg=[A record parsed.] recordValue=[{}] correlatedRecordValue=[{}]",
         dnsRecord.getRecordValue(), dnsRecord.getCorrelatedRecordValue());

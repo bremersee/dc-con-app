@@ -21,14 +21,14 @@ import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordValueTranscoder;
 import org.ldaptive.AttributeModification;
-import org.ldaptive.AttributeModificationType;
-import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -44,19 +44,24 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   private static final DnsRecordValueTranscoder DNS_RECORD_VALUE_TRANSCODER
       = new DnsRecordValueTranscoder();
 
-  private String zoneName;
+  private final String zoneName;
+
+  private final UnknownFilter unknownFilter;
 
   /**
    * Instantiates a new dns node ldap mapper.
    *
-   * @param properties the properties
-   * @param zoneName   the zone name
+   * @param properties    the properties
+   * @param zoneName      the zone name
+   * @param unknownFilter the unknown filter
    */
   public DnsNodeLdapMapper(
       DomainControllerProperties properties,
-      String zoneName) {
+      String zoneName,
+      UnknownFilter unknownFilter) {
     super(properties);
     this.zoneName = zoneName;
+    this.unknownFilter = unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;
   }
 
   @Override
@@ -69,8 +74,14 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
 
   @Override
   public DnsNode map(final LdapEntry ldapEntry) {
+    if (ldapEntry == null) {
+      return null;
+    }
     final DnsNode destination = new DnsNode();
     map(ldapEntry, destination);
+    if (destination.getRecords().isEmpty() && unknownFilter != UnknownFilter.ALL) {
+      return null;
+    }
     return destination;
   }
 
@@ -84,16 +95,17 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     // Adding new records has to be done via the command line interface
     // (see save method in DnsNodeRepositoryImpl).
     final List<AttributeModification> modifications = new ArrayList<>();
+    final List<DnsRecord> delete = new ArrayList<>();
     final DnsNode destinationNode = map(destination);
     if (destinationNode != null) {
       for (final DnsRecord record : destinationNode.getRecords()) {
         if (!source.getRecords().contains(record)) {
-          final LdapAttribute attr = new LdapAttribute("dnsRecord", record.getRecordRawValue());
-          destination.removeAttribute(attr);
-          modifications.add(new AttributeModification(AttributeModificationType.REMOVE, attr));
+          delete.add(record);
         }
       }
     }
+    LdaptiveEntryMapper.removeAttributes(
+        destination, "dnsRecord", delete, DNS_RECORD_VALUE_TRANSCODER, modifications);
     return modifications.toArray(new AttributeModification[0]);
   }
 
@@ -101,10 +113,16 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   public void map(
       final LdapEntry ldapEntry,
       final DnsNode dnsNode) {
+    if (ldapEntry == null) {
+      return;
+    }
     mapCommonAttributes(ldapEntry, dnsNode);
     dnsNode.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
     dnsNode.setRecords(LdaptiveEntryMapper
-        .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER));
+        .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER)
+        .stream()
+        .filter(unknownFilter::matches)
+        .collect(Collectors.toSet()));
     dnsNode.setRecords(new TreeSet<>(dnsNode.getRecords()));
   }
 }

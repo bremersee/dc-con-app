@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -36,32 +37,63 @@ import org.springframework.validation.annotation.Validated;
 public interface DnsNodeRepository {
 
   /**
+   * get unknown filter or default one.
+   *
+   * @param unknownFilter the unknown filter
+   * @return the unknown filter
+   */
+  @NotNull
+  default UnknownFilter unknownFilter(@Nullable UnknownFilter unknownFilter) {
+    return unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;
+  }
+
+  /**
    * Find all.
    *
-   * @param zoneName the zone name
+   * @param zoneName      the zone name
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns nodes
    */
-  Stream<DnsNode> findAll(@NotNull String zoneName);
+  Stream<DnsNode> findAll(
+      @NotNull String zoneName,
+      @Nullable UnknownFilter unknownFilter);
 
   /**
    * Check whether dns node exists or not.
    *
-   * @param zoneName the zone name
-   * @param nodeName the node name
+   * @param zoneName      the zone name
+   * @param nodeName      the node name
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return {@code true} if the dns node exists, otherwise {@code false}
    */
-  boolean exists(@NotNull String zoneName, @NotNull String nodeName);
+  boolean exists(
+      @NotNull String zoneName,
+      @NotNull String nodeName,
+      @Nullable UnknownFilter unknownFilter);
 
   /**
    * Find dns node by zone name and node name.
    *
-   * @param zoneName the zone name
-   * @param nodeName the node name
+   * @param zoneName      the zone name
+   * @param nodeName      the node name
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns node
    */
-  Optional<DnsNode> findOne(@NotNull String zoneName, @NotNull String nodeName);
+  Optional<DnsNode> findOne(
+      @NotNull String zoneName,
+      @NotNull String nodeName,
+      @Nullable UnknownFilter unknownFilter);
 
-  Optional<DnsPair> findReverseDnsNode(@NotNull String zoneName, @NotNull DnsRecord record);
+  /**
+   * Find correlated dns node optional.
+   *
+   * @param zoneName the zone name
+   * @param record   the record
+   * @return the optional
+   */
+  Optional<DnsPair> findCorrelatedDnsNode(
+      @NotNull String zoneName,
+      @NotNull DnsRecord record);
 
   /**
    * Save dns node.
@@ -80,11 +112,18 @@ public interface DnsNodeRepository {
    * @return {@code true} if the dns node was removed; {@code false} if dns node didn't exist
    */
   default boolean delete(@NotNull String zoneName, @NotNull String nodeName) {
-    return findOne(zoneName, nodeName)
+    return findOne(zoneName, nodeName, UnknownFilter.ALL)
         .map(node -> delete(zoneName, node))
         .orElse(false);
   }
 
+  /**
+   * Delete boolean.
+   *
+   * @param zoneName the zone name
+   * @param node     the node
+   * @return the boolean
+   */
   boolean delete(@NotNull String zoneName, @NotNull DnsNode node);
 
   /**
@@ -93,7 +132,7 @@ public interface DnsNodeRepository {
    * @param zoneName the zone name
    */
   default void deleteAll(@NotNull String zoneName) {
-    findAll(zoneName).forEach(dnsNode -> delete(zoneName, dnsNode));
+    findAll(zoneName, UnknownFilter.ALL).forEach(dnsNode -> delete(zoneName, dnsNode));
   }
 
   /**
@@ -105,7 +144,8 @@ public interface DnsNodeRepository {
   default void deleteAll(@NotNull String zoneName, @Nullable Collection<String> nodeNames) {
     if (nodeNames != null && !nodeNames.isEmpty()) {
       for (String nodeName : new LinkedHashSet<>(nodeNames)) {
-        findOne(zoneName, nodeName).ifPresent(dnsNode -> delete(zoneName, dnsNode));
+        findOne(zoneName, nodeName, UnknownFilter.ALL)
+            .ifPresent(dnsNode -> delete(zoneName, dnsNode));
       }
     }
   }

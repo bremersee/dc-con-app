@@ -30,9 +30,9 @@ import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTra
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
+import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.IntegerValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
-import org.springframework.util.StringUtils;
 
 /**
  * The domain user ldap mapper.
@@ -43,6 +43,9 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
     LdaptiveEntryMapper<DomainUser> {
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
+
+  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
+      = new ByteArrayValueTranscoder();
 
   private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
 
@@ -74,6 +77,9 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
 
   @Override
   public DomainUser map(final LdapEntry ldapEntry) {
+    if (ldapEntry == null) {
+      return null;
+    }
     final DomainUser destination = new DomainUser();
     map(ldapEntry, destination);
     return destination;
@@ -83,6 +89,9 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
   public void map(
       final LdapEntry ldapEntry,
       final DomainUser domainUser) {
+    if (ldapEntry == null) {
+      return;
+    }
     mapCommonAttributes(ldapEntry, domainUser);
     domainUser.setUserName(getAttributeValue(ldapEntry,
         "sAMAccountName", STRING_VALUE_TRANSCODER, null));
@@ -115,6 +124,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "logonCount", INT_VALUE_TRANSCODER, null));
     domainUser.setPasswordLastSet(getAttributeValue(ldapEntry,
         "pwdLastSet", AD_TIME_VALUE_TRANSCODER, null));
+    domainUser.setAvatar(getAttributeValue(ldapEntry,
+        "jpegPhoto", BYTE_ARRAY_VALUE_TRANSCODER, null));
 
     Integer userAccountControlValue = getAttributeValue(ldapEntry,
         "userAccountControl", USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
@@ -126,21 +137,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
   public AttributeModification[] mapAndComputeModifications(
       final DomainUser source,
       final LdapEntry destination) {
-
-    final StringBuilder gecosBuilder = new StringBuilder();
-    if (StringUtils.hasText(source.getFirstName())) {
-      gecosBuilder.append(source.getFirstName());
-      if (StringUtils.hasText(source.getLastName())) {
-        gecosBuilder.append(' ');
-      }
-    }
-    if (StringUtils.hasText(source.getLastName())) {
-      gecosBuilder.append(source.getLastName());
-    }
-    final String gecos = StringUtils.hasText(source.getDisplayName())
-        ? source.getDisplayName()
-        : gecosBuilder.length() > 0 ? gecosBuilder.toString() : null;
-    source.setDisplayName(gecos);
 
     final List<AttributeModification> modifications = new ArrayList<>();
     setAttribute(destination,
@@ -179,6 +175,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
     setAttribute(destination,
         "loginShell", source.getLoginShell(), false, STRING_VALUE_TRANSCODER,
         modifications);
+    setAttribute(destination,
+        "jpegPhoto", source.getAvatar(), true, BYTE_ARRAY_VALUE_TRANSCODER, modifications);
 
     setAttributes(destination,
         getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,

@@ -62,7 +62,7 @@ public class DomainControllerProperties implements Serializable {
 
   private String userBaseDn;
 
-  private String userRdn = "dc";
+  private String userRdn = "cn";
 
   private String userGroupAttr = "memberOf";
 
@@ -117,6 +117,8 @@ public class DomainControllerProperties implements Serializable {
 
   private String loginShell = "/bin/bash";
 
+  private String homeDirectoryTemplate = "\\\\data\\users\\{}";
+
   private String unixHomeDirTemplate = "/home/{}";
 
 
@@ -136,6 +138,23 @@ public class DomainControllerProperties implements Serializable {
   private List<String> excludedNodeRegexList = new ArrayList<>();
 
 
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{}?d=404";
+
+  /**
+   * Possible values.
+   * <ul>
+   * <li>mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
+   * <li>identicon: a geometric pattern based on an email hash
+   * <li>monsterid: a generated 'monster' with different colors, faces, etc
+   * <li>wavatar: generated faces with differing features and backgrounds
+   * <li>retro: awesome generated, 8-bit arcade-style pixelated faces
+   * <li>robohash: a generated robot with different colors, faces, etc
+   * <li>blank: a transparent PNG image (border added to HTML below for demonstration purposes)
+   * </ul>
+   */
+  private String gravatarUrlForDefault = "https://www.gravatar.com/avatar/{}?d=retro";
+
+
   /**
    * Instantiates a new Domain controller properties.
    */
@@ -147,12 +166,30 @@ public class DomainControllerProperties implements Serializable {
     excludedNodeRegexList.add("_sites");
     excludedNodeRegexList.add("_tcp");
     excludedNodeRegexList.add("_udp");
+
+    excludedNodeRegexList.add("@");
+    excludedNodeRegexList.add("_gc\\..*$");
+    excludedNodeRegexList.add("_kerberos\\..*$");
+    excludedNodeRegexList.add("_kpasswd\\..*$");
+    excludedNodeRegexList.add("_ldap\\..*$");
+    excludedNodeRegexList.add("ForestDnsZones");
   }
 
+  /**
+   * Gets reverse zone suffix list.
+   *
+   * @return the reverse zone suffix list
+   */
   public List<String> getReverseZoneSuffixList() {
     return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);
   }
 
+  /**
+   * Build dns node base dn string.
+   *
+   * @param zoneName the zone name
+   * @return the string
+   */
   public String buildDnsNodeBaseDn(String zoneName) {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }

@@ -19,11 +19,11 @@ package org.bremersee.dccon.repository;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -50,32 +50,32 @@ public class DnsNodeRepositoryMock implements DnsNodeRepository {
   }
 
   @Override
-  public Stream<DnsNode> findAll(@NotNull String zoneName) {
+  public Stream<DnsNode> findAll(String zoneName, UnknownFilter unknownFilter) {
     return Stream.empty();
   }
 
   @Override
-  public boolean exists(@NotNull String zoneName, @NotNull String nodeName) {
+  public boolean exists(String zoneName, String nodeName, UnknownFilter unknownFilter) {
     return false;
   }
 
   @Override
-  public Optional<DnsNode> findOne(@NotNull String zoneName, @NotNull String nodeName) {
+  public Optional<DnsNode> findOne(String zoneName, String nodeName, UnknownFilter unknownFilter) {
     return Optional.empty();
   }
 
   @Override
-  public Optional<DnsPair> findReverseDnsNode(@NotNull String zoneName, @NotNull DnsRecord record) {
+  public Optional<DnsPair> findCorrelatedDnsNode(String zoneName, DnsRecord record) {
     return Optional.empty();
   }
 
   @Override
-  public Optional<DnsNode> save(@NotNull String zoneName, @NotNull DnsNode dnsNode) {
+  public Optional<DnsNode> save(String zoneName, DnsNode dnsNode) {
     return Optional.empty();
   }
 
   @Override
-  public boolean delete(@NotNull String zoneName, @NotNull DnsNode node) {
+  public boolean delete(String zoneName, DnsNode node) {
     return false;
   }
 }

@@ -22,6 +22,8 @@ import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.service.DomainUserService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,6 +65,20 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<DomainUser> getUser(final String userName) {
     return ResponseEntity.of(domainUserService.getUser(userName));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<byte[]> getUserAvatar(
+      final String userName,
+      final Boolean returnDefault) {
+
+    return domainUserService.getUserAvatar(userName, returnDefault)
+        .map(avatar -> ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + userName + ".jpeg\"")
+            .body(avatar))
+        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

@@ -31,17 +31,17 @@ public class UserAccountControlValueTranscoder extends AbstractStringValueTransc
   /**
    * The bit map value of a disabled account.
    */
-  private static final int ACCOUNTDISABLE = 1 << 1;
+  static final int ACCOUNTDISABLE = 1 << 1;
 
   /**
    * The bit map value of a normal account.
    */
-  private static final int NORMAL_ACCOUNT = 1 << 9;
+  static final int NORMAL_ACCOUNT = 1 << 9;
 
   /**
    * The bit map value a password that doesn't expire.
    */
-  private static final int DONT_EXPIRE_PASSWORD = 1 << 16;
+  static final int DONT_EXPIRE_PASSWORD = 1 << 16;
 
   /**
    * Gets user account control value.

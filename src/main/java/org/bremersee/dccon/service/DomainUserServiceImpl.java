@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,9 +24,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
+import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.service.validator.DomainUserValidator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -40,14 +45,49 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   private final DomainUserRepository domainUserRepository;
 
+  private DomainUserValidator domainUserValidator;
+
+  private List<AvatarService> avatarServices;
+
   /**
    * Instantiates a new domain user service.
    *
-   * @param domainUserRepository the domain user repository
+   * @param properties            the properties
+   * @param domainUserRepository  the domain user repository
+   * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
-      final DomainUserRepository domainUserRepository) {
+      final DomainControllerProperties properties,
+      final DomainUserRepository domainUserRepository,
+      final DomainGroupRepository domainGroupRepository) {
     this.domainUserRepository = domainUserRepository;
+    this.domainUserValidator = DomainUserValidator.defaultValidator(
+        properties, domainGroupRepository, domainUserRepository);
+    this.avatarServices = Collections.emptyList();
+  }
+
+  /**
+   * Sets domain user validator.
+   *
+   * @param domainUserValidator the domain user validator
+   */
+  @Autowired(required = false)
+  public void setDomainUserValidator(DomainUserValidator domainUserValidator) {
+    if (domainUserValidator != null) {
+      this.domainUserValidator = domainUserValidator;
+    }
+  }
+
+  /**
+   * Sets avatar services.
+   *
+   * @param avatarServices the avatar services
+   */
+  @Autowired(required = false)
+  public void setAvatarServices(List<AvatarService> avatarServices) {
+    if (avatarServices != null) {
+      this.avatarServices = avatarServices;
+    }
   }
 
   @Override
@@ -62,13 +102,38 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   @Override
   public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
-    // TODO validate home etc.
+    domainUserValidator.doAddValidation(domainUser);
+    findUserAvatar(domainUser, false);
     return domainUserRepository.save(domainUser);
   }
 
   @Override
   public Optional<DomainUser> getUser(@NotNull String userName) {
     return domainUserRepository.findOne(userName);
+  }
+
+  @Override
+  public Optional<byte[]> getUserAvatar(
+      final String userName,
+      final Boolean returnDefault) {
+    return domainUserRepository.findOne(userName)
+        .map(domainUser -> findUserAvatar(domainUser, Boolean.TRUE.equals(returnDefault)));
+  }
+
+  private byte[] findUserAvatar(
+      final DomainUser domainUser,
+      final boolean returnDefault) {
+
+    if (domainUser.getAvatar() == null) {
+      for (AvatarService avatarService : avatarServices) {
+        byte[] avatar = avatarService.findAvatar(domainUser, returnDefault);
+        if (avatar != null) {
+          domainUser.setAvatar(avatar);
+          break;
+        }
+      }
+    }
+    return domainUser.getAvatar();
   }
 
   @Override
@@ -82,8 +147,8 @@ public class DomainUserServiceImpl implements DomainUserService {
           if (!Boolean.TRUE.equals(updateGroups)) {
             domainUser.setGroups(oldDomainUser.getGroups());
           }
-          domainUser.setUserName(userName);
-          // TODO validate home etc.
+          domainUserValidator.doUpdateValidation(userName, domainUser);
+          findUserAvatar(domainUser, false);
           return domainUserRepository.save(domainUser);
         });
   }

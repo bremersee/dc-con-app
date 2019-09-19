@@ -22,6 +22,7 @@ import org.bremersee.dccon.api.NameServerManagementApi;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.service.NameServerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,13 +80,16 @@ public class NameServerManagementController implements NameServerManagementApi {
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsNode>> getDnsNodes(
-      final String zoneName) {
-    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName));
+      final String zoneName,
+      final UnknownFilter unknownFilter) {
+    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
-  public ResponseEntity<DnsNode> saveDnsNode(String zoneName, @Valid DnsNode dnsNode) {
+  public ResponseEntity<DnsNode> saveDnsNode(
+      String zoneName,
+      @Valid DnsNode dnsNode) {
     return nameServerService.save(zoneName, dnsNode)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.status(HttpStatus.NO_CONTENT).build());
@@ -93,8 +97,11 @@ public class NameServerManagementController implements NameServerManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<DnsNode> getDnsNode(String zoneName, String nodeName) {
-    return ResponseEntity.of(nameServerService.getDnsNode(zoneName, nodeName));
+  public ResponseEntity<DnsNode> getDnsNode(
+      String zoneName,
+      String nodeName,
+      UnknownFilter unknownFilter) {
+    return ResponseEntity.of(nameServerService.getDnsNode(zoneName, nodeName, unknownFilter));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

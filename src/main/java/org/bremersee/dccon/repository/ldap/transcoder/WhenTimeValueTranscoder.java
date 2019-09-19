@@ -19,6 +19,7 @@ package org.bremersee.dccon.repository.ldap.transcoder;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.io.AbstractStringValueTranscoder;
@@ -58,7 +59,7 @@ public class WhenTimeValueTranscoder extends AbstractStringValueTranscoder<Offse
 
   @Override
   public String encodeStringValue(OffsetDateTime value) {
-    return value != null ? WHEN_DATE_FORMAT.format(value) : null;
+    return value != null ? WHEN_DATE_FORMAT.format(Date.from(value.toInstant())) : null;
   }
 
   @Override
