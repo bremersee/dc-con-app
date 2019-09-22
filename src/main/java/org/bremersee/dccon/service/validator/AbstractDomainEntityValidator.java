@@ -74,7 +74,10 @@ public abstract class AbstractDomainEntityValidator {
    */
   protected void validateNameNotExists(String name, Class<?> domainClass) {
     if (nameExists(name)) {
-      throw ServiceException.alreadyExists(domainClass.getSimpleName(), name);
+      throw ServiceException.alreadyExistsWithErrorCode(
+          domainClass.getSimpleName(),
+          name,
+          "org.bremersee:dc-con-app:7bca7443-19f3-4d44-9607-118b10882b92");
     }
   }
 

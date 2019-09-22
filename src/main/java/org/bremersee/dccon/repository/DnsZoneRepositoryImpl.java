@@ -132,7 +132,9 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   @Override
   public DnsZone save(@NotNull final String zoneName) {
     if (isExcludedDnsZone(zoneName)) {
-      throw ServiceException.badRequest("Zone name is not allowed.");
+      throw ServiceException.badRequest(
+          "Zone name is not allowed.",
+          "org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9");
     }
     return findOne(zoneName)
         .orElseGet(() -> execDnsZoneCmd(
@@ -140,7 +142,8 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
             zoneName, response -> findOne(zoneName)
                 .orElseThrow(() -> ServiceException.internalServerError(
                     "msg=[Saving dns zone failed.] "
-                        + CommandExecutorResponse.toExceptionMessage(response)))));
+                        + CommandExecutorResponse.toExceptionMessage(response),
+                    "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0"))));
   }
 
   @Override
@@ -152,7 +155,8 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
           (CommandExecutorResponseValidator) response -> {
             if (exists(zoneName)) {
               throw ServiceException.internalServerError(
-                  "msg=[Deleting dns zone failed.] " + toExceptionMessage(response));
+                  "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
+                  "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
             }
           });
       return true;

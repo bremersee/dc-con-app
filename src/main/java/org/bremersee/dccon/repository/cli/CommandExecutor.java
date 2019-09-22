@@ -115,6 +115,7 @@ public abstract class CommandExecutor {
       throw new ServiceException(
           HttpStatus.INTERNAL_SERVER_ERROR.value(),
           "Running commands " + commands + " failed.",
+          "org.bremersee:dc-con-app:6fa0f473-6204-4f75-9130-a1049910d8fd",
           e);
     }
   }

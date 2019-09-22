@@ -180,7 +180,10 @@ public class NameServerServiceImpl implements NameServerService {
   @Override
   public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter) {
     if (!dnsZoneRepository.exists(zoneName)) {
-      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
+      throw ServiceException.notFoundWithErrorCode(
+          DnsZone.class.getSimpleName(),
+          zoneName,
+          "org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c");
     }
     final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(zoneName);
     return dnsNodeRepository.findAll(zoneName, unknownFilter)
@@ -203,7 +206,10 @@ public class NameServerServiceImpl implements NameServerService {
       String nodeName,
       UnknownFilter unknownFilter) {
     if (!dnsZoneRepository.exists(zoneName)) {
-      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
+      throw ServiceException.notFoundWithErrorCode(
+          DnsZone.class.getSimpleName(),
+          zoneName,
+          "org.bremersee:dc-con-app:97333c5a-b7e7-46a4-9034-055675d4a604");
     }
     return dnsNodeRepository.findOne(zoneName, nodeName, unknownFilter);
   }
@@ -211,7 +217,10 @@ public class NameServerServiceImpl implements NameServerService {
   @Override
   public Boolean deleteDnsNode(@NotNull String zoneName, @NotNull String nodeName) {
     if (!dnsZoneRepository.exists(zoneName)) {
-      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
+      throw ServiceException.notFoundWithErrorCode(
+          DnsZone.class.getSimpleName(),
+          zoneName,
+          "org.bremersee:dc-con-app:02b09711-952e-4c05-bcef-2d1ac949b330");
     }
     return dnsNodeRepository.delete(zoneName, nodeName);
   }
@@ -219,7 +228,10 @@ public class NameServerServiceImpl implements NameServerService {
   @Override
   public void deleteAllDnsNodes(@NotNull String zoneName) {
     if (!dnsZoneRepository.exists(zoneName)) {
-      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
+      throw ServiceException.notFoundWithErrorCode(
+          DnsZone.class.getSimpleName(),
+          zoneName,
+          "org.bremersee:dc-con-app:4a24a3db-7d81-4542-ac1d-68e898fed494");
     }
     dnsNodeRepository.deleteAll(zoneName);
   }
@@ -227,7 +239,10 @@ public class NameServerServiceImpl implements NameServerService {
   @Override
   public void deleteAllDnsNodes(@NotNull String zoneName, List<String> nodeNames) {
     if (!dnsZoneRepository.exists(zoneName)) {
-      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
+      throw ServiceException.notFoundWithErrorCode(
+          DnsZone.class.getSimpleName(),
+          zoneName,
+          "org.bremersee:dc-con-app:937cdb01-5c89-46be-aae4-747e360b903e");
     }
     dnsNodeRepository.deleteAll(zoneName, nodeNames);
   }

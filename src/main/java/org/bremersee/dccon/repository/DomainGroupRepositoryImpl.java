@@ -117,8 +117,9 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
           (CommandExecutorResponseValidator) response -> {
             if (!exists(domainGroup.getName())) {
               throw ServiceException.internalServerError("msg=[Saving group failed.] groupName=["
-                  + domainGroup.getName() + "] "
-                  + CommandExecutorResponse.toExceptionMessage(response));
+                      + domainGroup.getName() + "] "
+                      + CommandExecutorResponse.toExceptionMessage(response),
+                  "org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a");
             }
           });
     }
@@ -145,7 +146,8 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
             if (exists(groupName)) {
               throw ServiceException.internalServerError(
                   "msg=[Deleting group failed.] groupName=[" + groupName + "] "
-                      + CommandExecutorResponse.toExceptionMessage(response));
+                      + CommandExecutorResponse.toExceptionMessage(response),
+                  "org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52");
             }
           });
       return true;

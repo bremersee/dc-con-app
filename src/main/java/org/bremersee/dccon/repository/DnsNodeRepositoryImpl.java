@@ -296,7 +296,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final DnsNode dnsNode) {
 
     if (isExcludedDnsNode(dnsNode)) {
-      throw ServiceException.badRequest("Node name is not allowed.");
+      throw ServiceException.badRequest(
+          "Node name is not allowed.",
+          "org.bremersee:dc-con-app:8dd7165e-89af-4423-900a-5fc0a71fe7bf");
     }
     // Collect deleted records and save existing dns node
     final Set<DnsRecord> deletedRecords = new LinkedHashSet<>();
@@ -340,7 +342,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       add(zoneName, dnsNode.getName(), newRecords);
       // Load dns node from ldap
       newDnsNode = findOne(zoneName, dnsNode.getName(), UnknownFilter.ALL, false)
-          .orElseThrow(() -> ServiceException.internalServerError("Saving dns node failed."));
+          .orElseThrow(() -> ServiceException.internalServerError(
+              "Saving dns node failed.",
+              "org.bremersee:dc-con-app:7eabb994-f6db-49dc-870b-b4e2dd330a4c"));
     }
 
     // Do A record to PTR record synchronization
@@ -385,7 +389,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   @Override
   public boolean delete(final String zoneName, final DnsNode node) {
     if (isExcludedDnsNode(node)) {
-      throw ServiceException.badRequest("Node name is not allowed.");
+      throw ServiceException.badRequest(
+          "Node name is not allowed.",
+          "org.bremersee:dc-con-app:3e377240-eafd-45ea-9ee6-048ab3ca8cec");
     }
     getLdapTemplate().delete(node, getDnsNodeLdapMapper(zoneName, UnknownFilter.ALL));
     handlePtrRecords(zoneName, node.getName(), Collections.emptySet(), node.getRecords());

@@ -136,7 +136,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
             if (!exists(domainUser.getUserName())) {
               throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
                   + domainUser.getUserName() + "] "
-                  + CommandExecutorResponse.toExceptionMessage(response));
+                  + CommandExecutorResponse.toExceptionMessage(response),
+                  "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
             }
           });
     }
@@ -168,7 +169,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
           } else if (StringUtils.hasText(err)) {
             throw ServiceException.internalServerError(
                 "msg=[Setting new password failed.] userName=[" + userName + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response));
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:abc34c93-920e-4600-b5b4-3ce215a9fdeb");
           }
         });
   }

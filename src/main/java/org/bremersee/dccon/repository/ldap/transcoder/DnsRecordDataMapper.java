@@ -64,7 +64,9 @@ public abstract class DnsRecordDataMapper {
         dnsRecord.setRecordValue(ip);
       } catch (IOException ioe) {
         final ServiceException se = ServiceException.internalServerError(
-            "Parsing data of A record failed.", ioe);
+            "Parsing data of A record failed.",
+            "org.bremersee:dc-con-app:7279a7e9-69a8-4d30-b1c2-14c10a3a705f",
+            ioe);
         log.error("msg=[Parsing data of A record failed.]", se);
         throw se;
       }
