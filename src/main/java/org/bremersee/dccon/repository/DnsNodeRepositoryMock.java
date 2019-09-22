@@ -16,9 +16,13 @@
 
 package org.bremersee.dccon.repository;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsPair;
@@ -47,6 +51,16 @@ public class DnsNodeRepositoryMock implements DnsNodeRepository {
         + "!! MOCK is running:  DnsNodeRepository                                              !!\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     );
+  }
+
+  @Override
+  public List<DnsNode> findByIps(@NotNull Set<String> ips, UnknownFilter unknownFilter) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public Optional<DnsNode> findByHostName(@NotNull String hostName, UnknownFilter unknownFilter) {
+    return Optional.empty();
   }
 
   @Override
