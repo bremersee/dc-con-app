@@ -76,7 +76,12 @@
     </dependency>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base</artifactId>
+      <artifactId>common-base-servlet</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-ldaptive</artifactId>
       <version>${common-base.version}</version>
     </dependency>
     <dependency>
@@ -160,6 +165,10 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.jayway.jsonpath</groupId>
+      <artifactId>json-path</artifactId>
     </dependency>
 
     <dependency>
