@@ -19,7 +19,6 @@ package org.bremersee.dccon.repository;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +105,23 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     }
   }
 
+  private boolean isNonExcludedDnsNode(final DnsNode dnsNode) {
+    return dnsNode != null && !isExcludedDnsNode(dnsNode);
+  }
+
+  private boolean isNonExcludedDnsNode(final String dnsNodeName) {
+    return dnsNodeName != null && !isExcludedDnsNode(dnsNodeName);
+  }
+
+  private boolean isExcludedDnsNode(final DnsNode dnsNode) {
+    return dnsNode != null && isExcludedDnsNode(dnsNode.getName());
+  }
+
+  private boolean isExcludedDnsNode(final String dnsNodeName) {
+    return dnsNodeName != null && getProperties().getExcludedNodeRegexList().stream()
+        .anyMatch(regex -> Pattern.compile(regex).matcher(dnsNodeName).matches());
+  }
+
   @Override
   public List<DnsNode> findByIps(final Set<String> ips, final UnknownFilter unknownFilter) {
     final List<DnsNode> nodes = new ArrayList<>();
@@ -153,6 +169,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());
     searchRequest.setBinaryAttributes("dnsRecord");
     return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))
+        .filter(this::isNonExcludedDnsNode)
         .map(dnsNode -> insertCorrelationValues(zoneName, dnsNode));
   }
 
@@ -161,8 +178,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final String zoneName,
       final String nodeName,
       final UnknownFilter unknownFilter) {
-    return dnsZoneRepository.exists(zoneName) && getLdapTemplate().exists(
-        DnsNode.builder().name(nodeName).build(),
+    return isNonExcludedDnsNode(nodeName)
+        && dnsZoneRepository.exists(zoneName)
+        && getLdapTemplate().exists(DnsNode.builder().name(nodeName).build(),
         getDnsNodeLdapMapper(zoneName, unknownFilter));
   }
 
@@ -188,6 +206,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());
     searchRequest.setBinaryAttributes("dnsRecord");
     return getLdapTemplate().findOne(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))
+        .filter(this::isNonExcludedDnsNode)
         .map(dnsNode -> withCorrelationValues
             ? insertCorrelationValues(zoneName, dnsNode)
             : dnsNode);
@@ -276,6 +295,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final String zoneName,
       final DnsNode dnsNode) {
 
+    if (isExcludedDnsNode(dnsNode)) {
+      throw ServiceException.badRequest("Node name is not allowed.");
+    }
     // Collect deleted records and save existing dns node
     final Set<DnsRecord> deletedRecords = new LinkedHashSet<>();
     DnsNode newDnsNode = findOne(zoneName, dnsNode.getName(), UnknownFilter.ALL, false)
@@ -362,6 +384,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
 
   @Override
   public boolean delete(final String zoneName, final DnsNode node) {
+    if (isExcludedDnsNode(node)) {
+      throw ServiceException.badRequest("Node name is not allowed.");
+    }
     getLdapTemplate().delete(node, getDnsNodeLdapMapper(zoneName, UnknownFilter.ALL));
     handlePtrRecords(zoneName, node.getName(), Collections.emptySet(), node.getRecords());
     return true;

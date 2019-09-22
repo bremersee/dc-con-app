@@ -88,8 +88,12 @@ public class NameServerServiceImpl implements NameServerService {
 
   @Override
   public List<DnsNode> query(final String query, final UnknownFilter unknownFilter) {
+    log.info("msg=[Query dns nodes.] query=[{}] unknownFilter=[{}]", query, unknownFilter);
+    if (!StringUtils.hasText(query)) {
+      return Collections.emptyList();
+    }
     final Set<String> ips = new HashSet<>();
-    if (Pattern.compile(properties.getMacRegex()).matcher(query).matches()) {
+    if (Pattern.compile(properties.getMacRegex()).matcher(query.toUpperCase()).matches()) {
       ips.addAll(dhcpRepository.findIpByMac(query));
     } else if (Pattern.compile(properties.getIp4Regex()).matcher(query).matches()) {
       ips.add(query);
@@ -155,23 +159,9 @@ public class NameServerServiceImpl implements NameServerService {
         .orElse(dnsNode);
   }
 
-  private boolean isNonExcludedDnsZone(final DnsZone zone) {
-    return zone != null && !isExcludedDnsZone(zone);
-  }
-
-  private boolean isExcludedDnsZone(final DnsZone zone) {
-    return zone != null && isExcludedDnsZone(zone.getName());
-  }
-
-  private boolean isExcludedDnsZone(final String zoneName) {
-    return zoneName != null && properties.getExcludedZoneRegexList().stream()
-        .anyMatch(regex -> Pattern.compile(regex).matcher(zoneName).matches());
-  }
-
   @Override
   public List<DnsZone> getDnsZones() {
     return dnsZoneRepository.findAll()
-        .filter(this::isNonExcludedDnsZone)
         .sorted(dnsZoneComparator)
         .collect(Collectors.toList());
   }
@@ -194,7 +184,6 @@ public class NameServerServiceImpl implements NameServerService {
     }
     final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(zoneName);
     return dnsNodeRepository.findAll(zoneName, unknownFilter)
-        .filter(this::isNonExcludedDnsNode)
         .map(dnsEntry -> addDhcpLeases(leasesMap, dnsEntry))
         .sorted(dnsNodeComparator)
         .collect(Collectors.toList());
@@ -241,19 +230,6 @@ public class NameServerServiceImpl implements NameServerService {
       throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);
     }
     dnsNodeRepository.deleteAll(zoneName, nodeNames);
-  }
-
-  private boolean isNonExcludedDnsNode(final DnsNode dnsNode) {
-    return dnsNode != null && !isExcludedDnsNode(dnsNode);
-  }
-
-  private boolean isExcludedDnsNode(final DnsNode dnsNode) {
-    return dnsNode != null && isExcludedDnsNode(dnsNode.getName());
-  }
-
-  private boolean isExcludedDnsNode(final String nodeName) {
-    return nodeName != null && properties.getExcludedNodeRegexList().stream()
-        .anyMatch(regex -> Pattern.compile(regex).matcher(nodeName).matches());
   }
 
 }

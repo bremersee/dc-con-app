@@ -21,6 +21,7 @@ import static org.bremersee.dccon.repository.cli.CommandExecutorResponse.toExcep
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,23 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
     }
   }
 
+  private boolean isNonExcludedDnsZone(final DnsZone zone) {
+    return zone != null && !isExcludedDnsZone(zone);
+  }
+
+  private boolean isNonExcludedDnsZone(final String zoneName) {
+    return zoneName != null && !isExcludedDnsZone(zoneName);
+  }
+
+  private boolean isExcludedDnsZone(final DnsZone zone) {
+    return zone != null && isExcludedDnsZone(zone.getName());
+  }
+
+  private boolean isExcludedDnsZone(final String zoneName) {
+    return zoneName != null && getProperties().getExcludedZoneRegexList().stream()
+        .anyMatch(regex -> Pattern.compile(regex).matcher(zoneName).matches());
+  }
+
   @Override
   public boolean isDnsReverseZone(final String dnsZoneName) {
     return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
@@ -88,12 +106,14 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
         getProperties().getDnsZoneBaseDn(),
         new SearchFilter(getProperties().getDnsZoneFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getDnsZoneFindAllSearchScope());
-    return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper);
+    return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper)
+        .filter(this::isNonExcludedDnsZone);
   }
 
   @Override
   public boolean exists(@NotNull String zoneName) {
-    return getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
+    return isNonExcludedDnsZone(zoneName)
+        && getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
   }
 
   @Override
@@ -104,11 +124,16 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
         getProperties().getDnsZoneBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getDnsZoneFindOneSearchScope());
-    return getLdapTemplate().findOne(searchRequest, dnsZoneLdapMapper);
+    return getLdapTemplate()
+        .findOne(searchRequest, dnsZoneLdapMapper)
+        .filter(this::isNonExcludedDnsZone);
   }
 
   @Override
   public DnsZone save(@NotNull final String zoneName) {
+    if (isExcludedDnsZone(zoneName)) {
+      throw ServiceException.badRequest("Zone name is not allowed.");
+    }
     return findOne(zoneName)
         .orElseGet(() -> execDnsZoneCmd(
             "zonecreate",

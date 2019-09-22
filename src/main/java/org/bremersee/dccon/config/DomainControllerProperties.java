@@ -167,6 +167,7 @@ public class DomainControllerProperties implements Serializable {
    */
   public DomainControllerProperties() {
     excludedZoneRegexList.add("^_msdcs\\..*$");
+    excludedZoneRegexList.add("RootDNSServers");
 
     excludedNodeRegexList.add("^$");
     excludedNodeRegexList.add("_msdcs");
