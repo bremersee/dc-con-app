@@ -51,6 +51,14 @@ public class NameServerManagementController implements NameServerManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
+  public ResponseEntity<List<DnsNode>> query(
+      final String query,
+      final UnknownFilter unknownFilter) {
+    return ResponseEntity.ok(nameServerService.query(query, unknownFilter));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
   public ResponseEntity<List<DhcpLease>> getDhcpLeases(
       final Boolean all,
       final String sort) {

@@ -19,6 +19,7 @@ package org.bremersee.dccon.repository;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +104,44 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     if (dnsNodeLdapMapperProvider != null) {
       this.dnsNodeLdapMapperProvider = dnsNodeLdapMapperProvider;
     }
+  }
+
+  @Override
+  public List<DnsNode> findByIps(final Set<String> ips, final UnknownFilter unknownFilter) {
+    final List<DnsNode> nodes = new ArrayList<>();
+    for (DnsZone zone : dnsZoneRepository.findNonDnsReverseZones().collect(Collectors.toList())) {
+      for (DnsNode node : findAll(zone.getName(), unknownFilter).collect(Collectors.toList())) {
+        for (DnsRecord record : node.getRecords()) {
+          if (DnsRecordType.A.is(record.getRecordType())
+              && ips.contains(record.getRecordValue())) {
+            nodes.add(node);
+          }
+        }
+      }
+    }
+    return nodes;
+  }
+
+  public Optional<DnsNode> findByHostName(
+      final String hostName,
+      final UnknownFilter unknownFilter) {
+
+    final List<String> zoneNames = dnsZoneRepository.findNonDnsReverseZones()
+        .map(DnsZone::getName)
+        .sorted((o1, o2) -> {
+          int n1 = StringUtils.countOccurrencesOf(o1, ".");
+          int n2 = StringUtils.countOccurrencesOf(o2, ".");
+          return n2 - n1;
+        })
+        .collect(Collectors.toList());
+    for (String zoneName : zoneNames) {
+      final String suffix = "." + zoneName;
+      if (hostName.endsWith(suffix)) {
+        final String name = hostName.substring(0, hostName.length() - suffix.length());
+        return findOne(zoneName, name, unknownFilter);
+      }
+    }
+    return findOne(getProperties().getDefaultZone(), hostName, unknownFilter);
   }
 
   @Override

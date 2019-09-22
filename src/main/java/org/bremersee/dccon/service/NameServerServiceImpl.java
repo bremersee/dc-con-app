@@ -19,9 +19,11 @@ package org.bremersee.dccon.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -82,6 +84,22 @@ public class NameServerServiceImpl implements NameServerService {
 
     this.dnsNodeComparator = new DnsNodeComparator();
     this.dnsZoneComparator = new DnsZoneComparator(this.dnsZoneRepository);
+  }
+
+  @Override
+  public List<DnsNode> query(final String query, final UnknownFilter unknownFilter) {
+    final Set<String> ips = new HashSet<>();
+    if (Pattern.compile(properties.getMacRegex()).matcher(query).matches()) {
+      ips.addAll(dhcpRepository.findIpByMac(query));
+    } else if (Pattern.compile(properties.getIp4Regex()).matcher(query).matches()) {
+      ips.add(query);
+    }
+    if (!ips.isEmpty()) {
+      return dnsNodeRepository.findByIps(ips, unknownFilter);
+    }
+    return dnsNodeRepository.findByHostName(query, unknownFilter)
+        .map(Collections::singletonList)
+        .orElse(Collections.emptyList());
   }
 
   @Override

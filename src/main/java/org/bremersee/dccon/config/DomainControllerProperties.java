@@ -88,6 +88,8 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;
 
 
+  private String defaultZone = "example.org";
+
   private String dnsNodeBaseDn;
 
   private String dnsNodeRdn = "dc";
@@ -136,6 +138,11 @@ public class DomainControllerProperties implements Serializable {
   private List<String> excludedZoneRegexList = new ArrayList<>();
 
   private List<String> excludedNodeRegexList = new ArrayList<>();
+
+
+  private String ip4Regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$";
+
+  private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
 
 
   private String gravatarUrl = "https://www.gravatar.com/avatar/{}?d=404";

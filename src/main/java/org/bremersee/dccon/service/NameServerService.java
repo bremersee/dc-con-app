@@ -36,6 +36,15 @@ import org.springframework.validation.annotation.Validated;
 public interface NameServerService {
 
   /**
+   * Query dns nodes.
+   *
+   * @param query         the query, can be a host name, an IP or a MAC address
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @return found dns nodes
+   */
+  List<DnsNode> query(@NotNull String query, @Nullable UnknownFilter unknownFilter);
+
+  /**
    * Get dhcp leases.
    *
    * @param all  if {@code true}, expired leases will also be returned, otherwise only active ones

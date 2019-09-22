@@ -18,7 +18,9 @@ package org.bremersee.dccon.repository;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DnsNode;
@@ -46,6 +48,24 @@ public interface DnsNodeRepository {
   default UnknownFilter unknownFilter(@Nullable UnknownFilter unknownFilter) {
     return unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;
   }
+
+  /**
+   * Find dns nodes by ips.
+   *
+   * @param ips           the ips
+   * @param unknownFilter the unknown filter
+   * @return the dns nodes
+   */
+  List<DnsNode> findByIps(@NotNull Set<String> ips, UnknownFilter unknownFilter);
+
+  /**
+   * Find dns node by host name.
+   *
+   * @param hostName      the host name, can be a simple host name or a full qualified domain name
+   * @param unknownFilter the unknown filter
+   * @return the dns node
+   */
+  Optional<DnsNode> findByHostName(@NotNull String hostName, UnknownFilter unknownFilter);
 
   /**
    * Find all.
