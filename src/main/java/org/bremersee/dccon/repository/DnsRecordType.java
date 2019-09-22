@@ -481,54 +481,6 @@ public enum DnsRecordType {
   }
 
   /**
-   * Map data from active directory to dns record.
-   *
-   * @param data              the data
-   * @param dnsRecordSupplier the dns record supplier
-   * @return the dns record
-   */
-  public DnsRecord mapData(final byte[] data, final Supplier<DnsRecord> dnsRecordSupplier) {
-    final DnsRecord dnsRecord = dnsRecordSupplier.get();
-    if (dataMapper == null) {
-      if (data == null || data.length == 0) {
-        dnsRecord.setRecordValue("");
-      } else {
-        dnsRecord.setRecordValue(new String(Hex.encode(data)));
-      }
-      return dnsRecord;
-    }
-    return dataMapper.apply(data, () -> dnsRecord);
-  }
-
-  /**
-   * Determine whether this dns record equals the given one.
-   *
-   * @param recordType the record type
-   * @return the boolean
-   */
-  public boolean is(final String recordType) {
-    return this == fromValue(recordType);
-  }
-
-  /**
-   * Determine whether this dns record is correlated the dns record two.
-   *
-   * @param dnsRecordType the dns record type
-   * @return the boolean
-   */
-  public boolean isCorrelatedWith(DnsRecordType dnsRecordType) {
-    switch (this) {
-      case A:
-      case AAAA:
-        return PTR == dnsRecordType;
-      case PTR:
-        return A == dnsRecordType || AAAA == dnsRecordType;
-      default:
-        return false;
-    }
-  }
-
-  /**
    * Determine whether dns record one is correlated the dns record two.
    *
    * @param dnsRecord1 the dns record 1
@@ -573,6 +525,54 @@ public enum DnsRecordType {
       return UNKNOWN;
     }
     return STRING_TYPE_MAP.getOrDefault(value.toUpperCase(), UNKNOWN);
+  }
+
+  /**
+   * Determine whether this dns record equals the given one.
+   *
+   * @param recordType the record type
+   * @return the boolean
+   */
+  public boolean is(final String recordType) {
+    return this == fromValue(recordType);
+  }
+
+  /**
+   * Determine whether this dns record is correlated the dns record two.
+   *
+   * @param dnsRecordType the dns record type
+   * @return the boolean
+   */
+  public boolean isCorrelatedWith(DnsRecordType dnsRecordType) {
+    switch (this) {
+      case A:
+      case AAAA:
+        return PTR == dnsRecordType;
+      case PTR:
+        return A == dnsRecordType || AAAA == dnsRecordType;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Map data from active directory to dns record.
+   *
+   * @param data              the data
+   * @param dnsRecordSupplier the dns record supplier
+   * @return the dns record
+   */
+  public DnsRecord mapData(final byte[] data, final Supplier<DnsRecord> dnsRecordSupplier) {
+    final DnsRecord dnsRecord = dnsRecordSupplier.get();
+    if (dataMapper == null) {
+      if (data == null || data.length == 0) {
+        dnsRecord.setRecordValue("");
+      } else {
+        dnsRecord.setRecordValue(new String(Hex.encode(data)));
+      }
+      return dnsRecord;
+    }
+    return dataMapper.apply(data, () -> dnsRecord);
   }
 
 }

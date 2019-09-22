@@ -86,6 +86,23 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
   @Override
+  public void map(
+      final LdapEntry ldapEntry,
+      final DnsNode dnsNode) {
+    if (ldapEntry == null) {
+      return;
+    }
+    mapCommonAttributes(ldapEntry, dnsNode);
+    dnsNode.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
+    dnsNode.setRecords(LdaptiveEntryMapper
+        .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER)
+        .stream()
+        .filter(unknownFilter::matches)
+        .collect(Collectors.toSet()));
+    dnsNode.setRecords(new TreeSet<>(dnsNode.getRecords()));
+  }
+
+  @Override
   public AttributeModification[] mapAndComputeModifications(
       final DnsNode source,
       final LdapEntry destination) {
@@ -109,20 +126,4 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     return modifications.toArray(new AttributeModification[0]);
   }
 
-  @Override
-  public void map(
-      final LdapEntry ldapEntry,
-      final DnsNode dnsNode) {
-    if (ldapEntry == null) {
-      return;
-    }
-    mapCommonAttributes(ldapEntry, dnsNode);
-    dnsNode.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
-    dnsNode.setRecords(LdaptiveEntryMapper
-        .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER)
-        .stream()
-        .filter(unknownFilter::matches)
-        .collect(Collectors.toSet()));
-    dnsNode.setRecords(new TreeSet<>(dnsNode.getRecords()));
-  }
 }

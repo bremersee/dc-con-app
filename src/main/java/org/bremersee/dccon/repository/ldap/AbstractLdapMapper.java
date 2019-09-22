@@ -37,7 +37,8 @@ abstract class AbstractLdapMapper {
 
   static final String WHEN_CHANGED = "whenChanged";
 
-  private static final WhenTimeValueTranscoder WHEN_TIME_VALUE_TRANSCODER = new WhenTimeValueTranscoder();
+  private static final WhenTimeValueTranscoder WHEN_TIME_VALUE_TRANSCODER
+      = new WhenTimeValueTranscoder();
 
   @Getter(AccessLevel.PROTECTED)
   private DomainControllerProperties properties;

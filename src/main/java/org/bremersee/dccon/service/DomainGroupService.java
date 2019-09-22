@@ -63,7 +63,9 @@ public interface DomainGroupService {
    * @param domainGroup the domain group
    * @return the domain group
    */
-  Optional<DomainGroup> updateGroup(@NotNull String groupName, @NotNull @Valid DomainGroup domainGroup);
+  Optional<DomainGroup> updateGroup(
+      @NotNull String groupName,
+      @NotNull @Valid DomainGroup domainGroup);
 
   /**
    * Check whether group exists or not.

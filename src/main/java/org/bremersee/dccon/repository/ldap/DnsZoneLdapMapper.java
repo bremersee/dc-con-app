@@ -62,13 +62,6 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
   @Override
-  public AttributeModification[] mapAndComputeModifications(
-      final DnsZone source,
-      final LdapEntry destination) {
-    return new AttributeModification[0];
-  }
-
-  @Override
   public void map(
       final LdapEntry ldapEntry,
       final DnsZone dnsZone) {
@@ -78,4 +71,12 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     mapCommonAttributes(ldapEntry, dnsZone);
     dnsZone.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
   }
+
+  @Override
+  public AttributeModification[] mapAndComputeModifications(
+      final DnsZone source,
+      final LdapEntry destination) {
+    return new AttributeModification[0];
+  }
+
 }
