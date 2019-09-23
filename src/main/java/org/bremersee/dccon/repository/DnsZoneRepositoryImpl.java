@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
 
+  private final List<Pattern> excludedZoneNamePatterns;
+
   private LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper;
 
   /**
@@ -63,6 +66,8 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
       LdaptiveTemplate ldapTemplate) {
     super(properties, ldapTemplate);
     this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
+    this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()
+        .map(Pattern::compile).collect(Collectors.toList());
   }
 
   /**
@@ -90,8 +95,8 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   private boolean isExcludedDnsZone(final String zoneName) {
-    return zoneName != null && getProperties().getExcludedZoneRegexList().stream()
-        .anyMatch(regex -> Pattern.compile(regex).matcher(zoneName).matches());
+    return zoneName != null && excludedZoneNamePatterns.stream()
+        .anyMatch(pattern -> pattern.matcher(zoneName).matches());
   }
 
   @Override

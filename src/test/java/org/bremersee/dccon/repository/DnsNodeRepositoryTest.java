@@ -1,7 +1,13 @@
 package org.bremersee.dccon.repository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Optional;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -19,10 +25,10 @@ public class DnsNodeRepositoryTest {
     DomainControllerProperties properties = new DomainControllerProperties();
     DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null);
 
-    Assert.assertTrue(repository.ip4MatchesDnsZone(
+    assertTrue(repository.ip4MatchesDnsZone(
         "192.168.1.124",
         "1.168.192" + properties.getReverseZoneSuffixIp4()));
-    Assert.assertFalse(repository.ip4MatchesDnsZone(
+    assertFalse(repository.ip4MatchesDnsZone(
         "192.168.11.124",
         "1.168.192" + properties.getReverseZoneSuffixIp4()));
   }
@@ -35,11 +41,13 @@ public class DnsNodeRepositoryTest {
     DomainControllerProperties properties = new DomainControllerProperties();
     DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null);
 
-    Assert.assertEquals(
+    Optional<String> nodeName = repository.getDnsNodeNameByIp4(
+        "192.168.1.124",
+        "1.168.192" + properties.getReverseZoneSuffixIp4());
+    assertTrue(nodeName.isPresent());
+    assertEquals(
         "124",
-        repository.getDnsNodeNameByIp4(
-            "192.168.1.124",
-            "1.168.192" + properties.getReverseZoneSuffixIp4()));
+        nodeName.get());
   }
 
   /**
@@ -50,11 +58,13 @@ public class DnsNodeRepositoryTest {
     DomainControllerProperties properties = new DomainControllerProperties();
     DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null);
 
-    Assert.assertEquals(
+    Optional<String> nodeName = repository.getDnsNodeNameByFqdn(
+        "pluto.eixe.bremersee.org",
+        "eixe.bremersee.org");
+    assertTrue(nodeName.isPresent());
+    assertEquals(
         "pluto",
-        repository.getDnsNodeNameByFqdn(
-            "pluto.eixe.bremersee.org",
-            "eixe.bremersee.org"));
+        nodeName.get());
   }
 
   /**
@@ -68,25 +78,22 @@ public class DnsNodeRepositoryTest {
     String[] parts = repository.splitIp4(
         "192.168.1.123",
         "1.168.192" + properties.getReverseZoneSuffixIp4());
-    Assert.assertNotNull(parts);
-    Assert.assertEquals(2, parts.length);
-    Assert.assertEquals("192.168.1", parts[0]);
-    Assert.assertEquals("123", parts[1]);
+    assertNotNull(parts);
+    assertEquals(2, parts.length);
+    assertEquals("192.168.1", parts[0]);
+    assertEquals("123", parts[1]);
 
     parts = repository.splitIp4(
         "192.168.1.123",
         "168.192" + properties.getReverseZoneSuffixIp4());
-    Assert.assertNotNull(parts);
-    Assert.assertEquals(2, parts.length);
-    Assert.assertEquals("192.168", parts[0]);
-    Assert.assertEquals("1.123", parts[1]);
+    assertNotNull(parts);
+    assertEquals(2, parts.length);
+    assertEquals("192.168", parts[0]);
+    assertEquals("1.123", parts[1]);
 
     parts = repository.splitIp4(
         "192.168.11.123",
         "1.168.192" + properties.getReverseZoneSuffixIp4());
-    Assert.assertNotNull(parts);
-    Assert.assertEquals(2, parts.length);
-    Assert.assertEquals("", parts[0]);
-    Assert.assertEquals("", parts[1]);
+    assertNull(parts);
   }
 }

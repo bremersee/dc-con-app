@@ -62,6 +62,10 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
 
   private final Map<String, LdaptiveEntryMapper<DnsNode>> dnsNodeLdapMapperMap;
 
+  private final List<Pattern> excludedNodeNamePatterns;
+
+  private final Pattern patternIp4;
+
   private DnsNodeLdapMapperProvider dnsNodeLdapMapperProvider;
 
   /**
@@ -80,6 +84,9 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     this.dnsNodeLdapMapperMap = new ConcurrentHashMap<>();
     this.dnsNodeLdapMapperProvider = (zoneName, unknownFilter) -> new DnsNodeLdapMapper(
         getProperties(), zoneName, unknownFilter);
+    this.excludedNodeNamePatterns = properties.getExcludedNodeRegexList().stream()
+        .map(Pattern::compile).collect(Collectors.toList());
+    this.patternIp4 = Pattern.compile(properties.getIp4Regex());
   }
 
   private LdaptiveEntryMapper<DnsNode> getDnsNodeLdapMapper(
@@ -118,8 +125,8 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   }
 
   private boolean isExcludedDnsNode(final String dnsNodeName) {
-    return dnsNodeName != null && getProperties().getExcludedNodeRegexList().stream()
-        .anyMatch(regex -> Pattern.compile(regex).matcher(dnsNodeName).matches());
+    return dnsNodeName != null && excludedNodeNamePatterns.stream()
+        .anyMatch(pattern -> pattern.matcher(dnsNodeName).matches());
   }
 
   @Override
@@ -138,6 +145,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     return nodes;
   }
 
+  @Override
   public Optional<DnsNode> findByHostName(
       final String hostName,
       final UnknownFilter unknownFilter) {
@@ -244,50 +252,50 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     if (DnsRecordType.A.is(record.getRecordType())) {
       final String ip4 = record.getRecordValue();
       return findDnsZoneByIp4(ip4)
-          .map(reverseZone -> buildDnsPairByIp4(ip4, reverseZone));
+          .flatMap(reverseZone -> buildDnsPairByIp4(ip4, reverseZone));
     } else if (DnsRecordType.PTR.is(record.getRecordType())) {
       final String fqdn = record.getRecordValue();
       return findDnsZoneByFqdn(fqdn)
-          .map(zone -> buildDnsPairByFqdn(fqdn, zone));
+          .flatMap(zone -> buildDnsPairByFqdn(fqdn, zone));
     }
     return Optional.empty();
   }
 
-  private DnsPair buildDnsPairByIp4(
+  private Optional<DnsPair> buildDnsPairByIp4(
       final String ip4,
       final DnsZone reverseZone) {
 
-    final String nodeName = getDnsNodeNameByIp4(ip4, reverseZone.getName());
-    return findOne(reverseZone.getName(), nodeName, UnknownFilter.NO_UNKNOWN, false)
-        .map(dnsNode -> DnsPair.builder()
-            .zoneName(reverseZone.getName())
-            .node(dnsNode)
-            .nodeExists(true)
-            .build())
-        .orElse(DnsPair.builder()
-            .zoneName(reverseZone.getName())
-            .node(DnsNode.builder()
-                .name(nodeName)
+    return getDnsNodeNameByIp4(ip4, reverseZone.getName())
+        .map(nodeName -> findOne(reverseZone.getName(), nodeName, UnknownFilter.NO_UNKNOWN, false)
+            .map(dnsNode -> DnsPair.builder()
+                .zoneName(reverseZone.getName())
+                .node(dnsNode)
+                .nodeExists(true)
                 .build())
-            .nodeExists(false)
-            .build());
+            .orElse(DnsPair.builder()
+                .zoneName(reverseZone.getName())
+                .node(DnsNode.builder()
+                    .name(nodeName)
+                    .build())
+                .nodeExists(false)
+                .build()));
   }
 
-  private DnsPair buildDnsPairByFqdn(final String fqdn, final DnsZone dnsZone) {
-    final String nodeName = getDnsNodeNameByFqdn(fqdn, dnsZone.getName());
-    return findOne(dnsZone.getName(), nodeName, UnknownFilter.NO_UNKNOWN, false)
-        .map(dnsNode -> DnsPair.builder()
-            .zoneName(dnsZone.getName())
-            .node(dnsNode)
-            .nodeExists(true)
-            .build())
-        .orElse(DnsPair.builder()
-            .zoneName(dnsZone.getName())
-            .node(DnsNode.builder()
-                .name(nodeName)
+  private Optional<DnsPair> buildDnsPairByFqdn(final String fqdn, final DnsZone dnsZone) {
+    return getDnsNodeNameByFqdn(fqdn, dnsZone.getName())
+        .map(nodeName -> findOne(dnsZone.getName(), nodeName, UnknownFilter.NO_UNKNOWN, false)
+            .map(dnsNode -> DnsPair.builder()
+                .zoneName(dnsZone.getName())
+                .node(dnsNode)
+                .nodeExists(true)
                 .build())
-            .nodeExists(false)
-            .build());
+            .orElse(DnsPair.builder()
+                .zoneName(dnsZone.getName())
+                .node(DnsNode.builder()
+                    .name(nodeName)
+                    .build())
+                .nodeExists(false)
+                .build()));
   }
 
   @Override
@@ -477,11 +485,12 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    * @return {@code true} if the ip matches the dns reverse zone, otherwise {@code false}
    */
   boolean ip4MatchesDnsZone(final String ip, final String zoneName) {
-    if (ip == null || zoneName == null || ip.split(Pattern.quote(".")).length != 4) {
+    if (ip == null || zoneName == null || !patternIp4.matcher(ip).matches()) {
       return false;
     }
-    final String[] ipParts = splitIp4(ip, zoneName);
-    return ip.equals(ipParts[0] + "." + ipParts[1]);
+    return Optional.ofNullable(splitIp4(ip, zoneName))
+        .map(ipParts -> ip.equals(ipParts[0] + "." + ipParts[1]))
+        .orElse(false);
   }
 
   /**
@@ -491,8 +500,8 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
    * @return the dns reverse node name (e. g. {@code 123}
    */
-  String getDnsNodeNameByIp4(final String ip, final String zoneName) {
-    return splitIp4(ip, zoneName)[1];
+  Optional<String> getDnsNodeNameByIp4(final String ip, final String zoneName) {
+    return Optional.ofNullable(splitIp4(ip, zoneName)).map(parts -> parts[1]);
   }
 
   /**
@@ -502,14 +511,14 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    * @param zoneName the dns zone name (e. g. {@code eixe.bremersee.org})
    * @return the dns node name (e. g. {@code pluto})
    */
-  String getDnsNodeNameByFqdn(String fqdn, String zoneName) {
+  Optional<String> getDnsNodeNameByFqdn(String fqdn, String zoneName) {
     if (fqdn == null || zoneName == null) {
-      return "";
+      return Optional.empty();
     }
     if (fqdn.toLowerCase().endsWith("." + zoneName.toLowerCase())) {
-      return fqdn.substring(0, fqdn.length() - ("." + zoneName).length());
+      return Optional.of(fqdn.substring(0, fqdn.length() - ("." + zoneName).length()));
     }
-    return fqdn;
+    return Optional.empty();
   }
 
   /**
@@ -518,11 +527,13 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    *
    * @param ip       the IPv4 (e. g. {@code 192.168.1.123}
    * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
-   * @return the Ipv4 parts
+   * @return the Ipv4 parts or {@code null} if the ip doesn't belong to the dns reverse zone
    */
   String[] splitIp4(final String ip, final String zoneName) {
-    if (ip == null || zoneName == null || ip.split(Pattern.quote(".")).length != 4) {
-      return new String[]{"", ""};
+    if (ip == null || zoneName == null
+        || zoneName.length() <= getProperties().getReverseZoneSuffixIp4().length()
+        || !patternIp4.matcher(ip).matches()) {
+      return null;
     }
     final String ipPart = zoneName.substring(
         0,
@@ -543,7 +554,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     // ipPrefix is something like 192.168
     // ipPostfix is something like 1.123 // TODO is this correct or do it have to be 123.1 ?
     if (!ip.equals(ipPrefix + "." + ipPostfix)) {
-      return new String[]{"", ""};
+      return null;
     }
     return new String[]{ipPrefix, ipPostfix};
   }

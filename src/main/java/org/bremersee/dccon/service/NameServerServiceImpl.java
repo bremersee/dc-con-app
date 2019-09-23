@@ -64,6 +64,10 @@ public class NameServerServiceImpl implements NameServerService {
 
   private final DnsZoneComparator dnsZoneComparator;
 
+  private final Pattern patternIp4;
+
+  private final Pattern patternMac;
+
   /**
    * Instantiates a new name server service.
    *
@@ -84,6 +88,9 @@ public class NameServerServiceImpl implements NameServerService {
 
     this.dnsNodeComparator = new DnsNodeComparator();
     this.dnsZoneComparator = new DnsZoneComparator(this.dnsZoneRepository);
+
+    this.patternIp4 = Pattern.compile(properties.getIp4Regex());
+    this.patternMac = Pattern.compile(properties.getMacRegex());
   }
 
   @Override
@@ -93,9 +100,9 @@ public class NameServerServiceImpl implements NameServerService {
       return Collections.emptyList();
     }
     final Set<String> ips = new HashSet<>();
-    if (Pattern.compile(properties.getMacRegex()).matcher(query.toUpperCase()).matches()) {
+    if (patternMac.matcher(query.toUpperCase()).matches()) {
       ips.addAll(dhcpRepository.findIpByMac(query));
-    } else if (Pattern.compile(properties.getIp4Regex()).matcher(query).matches()) {
+    } else if (patternMac.matcher(query).matches()) {
       ips.add(query);
     }
     if (!ips.isEmpty()) {
