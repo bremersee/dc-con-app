@@ -78,7 +78,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
             .status(HttpStatus.OK)
             .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + userName + ".jpeg\"")
             .body(avatar))
-        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

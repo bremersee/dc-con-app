@@ -110,7 +110,7 @@ public class NameServerServiceImpl implements NameServerService {
     }
     return dnsNodeRepository.findByHostName(query, unknownFilter)
         .map(Collections::singletonList)
-        .orElse(Collections.emptyList());
+        .orElseGet(Collections::emptyList);
   }
 
   @Override

@@ -272,7 +272,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
                 .node(dnsNode)
                 .nodeExists(true)
                 .build())
-            .orElse(DnsPair.builder()
+            .orElseGet(() -> DnsPair.builder()
                 .zoneName(reverseZone.getName())
                 .node(DnsNode.builder()
                     .name(nodeName)
@@ -289,7 +289,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
                 .node(dnsNode)
                 .nodeExists(true)
                 .build())
-            .orElse(DnsPair.builder()
+            .orElseGet(() -> DnsPair.builder()
                 .zoneName(dnsZone.getName())
                 .node(DnsNode.builder()
                     .name(nodeName)
@@ -327,7 +327,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
           }
           return getLdapTemplate().save(dnsNode, getDnsNodeLdapMapper(zoneName, UnknownFilter.ALL));
         })
-        .orElse(DnsNode.builder()
+        .orElseGet(() -> DnsNode.builder()
             .name(dnsNode.getName())
             .build());
 

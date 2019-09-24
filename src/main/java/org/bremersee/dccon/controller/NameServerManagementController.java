@@ -100,7 +100,7 @@ public class NameServerManagementController implements NameServerManagementApi {
       @Valid DnsNode dnsNode) {
     return nameServerService.save(zoneName, dnsNode)
         .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.status(HttpStatus.NO_CONTENT).build());
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).build());
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
