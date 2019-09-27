@@ -24,6 +24,7 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -59,11 +60,13 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     this.parser = parser;
   }
 
+  @Cacheable(cacheNames = "dhcp-leases")
   @Override
   public List<DhcpLease> findAll() {
     return find(true);
   }
 
+  @Cacheable(cacheNames = "active-dhcp-leases")
   @Override
   public List<DhcpLease> findActive() {
     return find(false);

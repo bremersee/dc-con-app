@@ -67,6 +67,9 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
+  cache:
+    jcache:
+      config: classpath:ehcache.xml
 
 ---
 
