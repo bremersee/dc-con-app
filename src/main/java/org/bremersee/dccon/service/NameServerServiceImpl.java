@@ -18,10 +18,8 @@ package org.bremersee.dccon.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -32,12 +30,10 @@ import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
-import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
-import org.bremersee.dccon.repository.DnsRecordType;
 import org.bremersee.dccon.repository.DnsZoneRepository;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Component;
@@ -52,8 +48,6 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class NameServerServiceImpl implements NameServerService {
 
-  private final DomainControllerProperties properties;
-
   private final DhcpRepository dhcpRepository;
 
   private final DnsZoneRepository dnsZoneRepository;
@@ -64,9 +58,9 @@ public class NameServerServiceImpl implements NameServerService {
 
   private final DnsZoneComparator dnsZoneComparator;
 
-  private final Pattern patternIp4;
-
   private final Pattern patternMac;
+
+  private final Pattern patternIp4;
 
   /**
    * Instantiates a new name server service.
@@ -81,7 +75,6 @@ public class NameServerServiceImpl implements NameServerService {
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository,
       final DnsNodeRepository dnsNodeRepository) {
-    this.properties = properties;
     this.dhcpRepository = dhcpRepository;
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsNodeRepository = dnsNodeRepository;
@@ -89,8 +82,8 @@ public class NameServerServiceImpl implements NameServerService {
     this.dnsNodeComparator = new DnsNodeComparator();
     this.dnsZoneComparator = new DnsZoneComparator(this.dnsZoneRepository);
 
-    this.patternIp4 = Pattern.compile(properties.getIp4Regex());
     this.patternMac = Pattern.compile(properties.getMacRegex());
+    this.patternIp4 = Pattern.compile(properties.getIp4Regex());
   }
 
   @Override
@@ -101,8 +94,8 @@ public class NameServerServiceImpl implements NameServerService {
     }
     final Set<String> ips = new HashSet<>();
     if (patternMac.matcher(query.toUpperCase()).matches()) {
-      ips.addAll(dhcpRepository.findIpByMac(query));
-    } else if (patternMac.matcher(query).matches()) {
+      findIpByMac(query).ifPresent(ips::add);
+    } else if (patternIp4.matcher(query).matches()) {
       ips.add(query);
     }
     if (!ips.isEmpty()) {
@@ -113,57 +106,27 @@ public class NameServerServiceImpl implements NameServerService {
         .orElseGet(Collections::emptyList);
   }
 
+  private Optional<String> findIpByMac(String mac) {
+    final String normalizedMac = mac.replace("-", ":").trim();
+    return dhcpRepository.findActiveByIp().values().stream()
+        .filter(dhcpLease -> normalizedMac.equalsIgnoreCase(dhcpLease.getMac()))
+        .map(DhcpLease::getIp)
+        .findFirst();
+  }
+
   @Override
   public List<DhcpLease> getDhcpLeases(final Boolean all, final String sort) {
     final List<DhcpLease> leases;
     if (Boolean.TRUE.equals(all)) {
       leases = dhcpRepository.findAll();
     } else {
-      leases = dhcpRepository.findActive();
+      leases = new ArrayList<>(dhcpRepository.findActiveByIp().values());
     }
     final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;
     leases.sort(ComparatorBuilder.builder()
         .fromWellKnownText(sortOrder)
         .build());
     return leases;
-  }
-
-  private Map<String, List<DhcpLease>> getDhcpLeasesMap(
-      final String zoneName) {
-    final Map<String, List<DhcpLease>> leasesMap;
-    if (dnsZoneRepository.isDnsReverseZone(zoneName)) {
-      leasesMap = Collections.emptyMap();
-    } else {
-      leasesMap = new HashMap<>();
-      final List<DhcpLease> leasesList = getDhcpLeases(
-          false,
-          DhcpLease.SORT_ORDER_IP_BEGIN_HOSTNAME);
-      for (DhcpLease lease : leasesList) {
-        leasesMap.computeIfAbsent(lease.getIp(), key -> new ArrayList<>()).add(lease);
-      }
-    }
-    return leasesMap;
-  }
-
-  private DnsNode addDhcpLeases(
-      final Map<String, List<DhcpLease>> leasesMap,
-      final DnsNode dnsNode) {
-
-    return dnsNode.getRecords().stream()
-        .filter(dnsRecord -> dnsRecord.getRecordValue() != null
-            && (DnsRecordType.A.is(dnsRecord.getRecordType())
-            || DnsRecordType.AAAA.is(dnsRecord.getRecordType())))
-        .min(ComparatorBuilder.builder()
-            .fromWellKnownText(DnsRecord.SORT_ORDER_TIME_STAMP_DESC)
-            .build())
-        .map(dnsRecord -> {
-          leasesMap
-              .getOrDefault(dnsRecord.getRecordValue(), Collections.emptyList()).stream()
-              .findFirst()
-              .ifPresent(dnsRecord::setDhcpLease);
-          return dnsNode;
-        })
-        .orElse(dnsNode);
   }
 
   @Override
@@ -192,9 +155,7 @@ public class NameServerServiceImpl implements NameServerService {
           zoneName,
           "org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c");
     }
-    final Map<String, List<DhcpLease>> leasesMap = getDhcpLeasesMap(zoneName);
     return dnsNodeRepository.findAll(zoneName, unknownFilter)
-        .map(dnsEntry -> addDhcpLeases(leasesMap, dnsEntry))
         .sorted(dnsNodeComparator)
         .collect(Collectors.toList());
   }

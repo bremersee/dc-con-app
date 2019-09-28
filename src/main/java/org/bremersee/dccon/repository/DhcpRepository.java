@@ -16,12 +16,9 @@
 
 package org.bremersee.dccon.repository;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 import org.bremersee.dccon.model.DhcpLease;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -40,28 +37,17 @@ public interface DhcpRepository {
   List<DhcpLease> findAll();
 
   /**
-   * Find active dhcp leases.
+   * Find active by ip.
    *
-   * @return the active dhcp leases
+   * @return the dhcp lease map with ip as key
    */
-  List<DhcpLease> findActive();
+  Map<String, DhcpLease> findActiveByIp();
 
   /**
-   * Find IP by mac address.
+   * Find active by host name.
    *
-   * @param mac the mac address
-   * @return the IP addresses
+   * @return the dhcp lease map with host name as key
    */
-  default Set<String> findIpByMac(String mac) {
-    if (!StringUtils.hasText(mac)) {
-      return Collections.emptySet();
-    }
-    final String normalizedMac = mac.replace("-", ":").trim();
-    return findAll().stream()
-        .filter(dhcpLease -> normalizedMac.equalsIgnoreCase(dhcpLease.getMac()))
-        .map(DhcpLease::getIp)
-        .filter(StringUtils::hasText)
-        .collect(Collectors.toSet());
-  }
+  Map<String, DhcpLease> findActiveByHostName();
 
 }

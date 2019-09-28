@@ -18,6 +18,7 @@ package org.bremersee.dccon.repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
@@ -47,12 +48,17 @@ public class DhcpRepositoryMock implements DhcpRepository {
   }
 
   @Override
-  public List<DhcpLease> findAll() {
-    return Collections.emptyList();
+  public Map<String, DhcpLease> findActiveByIp() {
+    return Collections.emptyMap();
   }
 
   @Override
-  public List<DhcpLease> findActive() {
+  public Map<String, DhcpLease> findActiveByHostName() {
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public List<DhcpLease> findAll() {
     return Collections.emptyList();
   }
 

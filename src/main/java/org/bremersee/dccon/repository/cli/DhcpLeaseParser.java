@@ -169,7 +169,7 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
         final String manufacturer = findDhcpLeasePart(line, MANUFACTURER, null);
         if (mac != null && ip != null && hostname != null && begin != null && end != null) {
           final DhcpLease lease = new DhcpLease(
-              mac,
+              mac.replace("-", ":").trim().toLowerCase(),
               ip,
               hostname,
               parseDhcpLeaseTime(begin),

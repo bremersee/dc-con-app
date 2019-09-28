@@ -17,8 +17,11 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -60,24 +63,42 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     this.parser = parser;
   }
 
-  @Cacheable(cacheNames = "dhcp-leases")
   @Override
   public List<DhcpLease> findAll() {
     return find(true);
   }
 
-  @Cacheable(cacheNames = "active-dhcp-leases")
-  @Override
-  public List<DhcpLease> findActive() {
-    return find(false);
+  @Cacheable(cacheNames = "dhcp-leases-by-ip")
+  public Map<String, DhcpLease> findActiveByIp() {
+    return findActiveMap(true);
   }
 
-  private List<DhcpLease> find(final Boolean all) {
+  @Cacheable(cacheNames = "dhcp-leases-by-name")
+  public Map<String, DhcpLease> findActiveByHostName() {
+    return findActiveMap(false);
+  }
+
+  private Map<String, DhcpLease> findActiveMap(boolean ip) {
+    final List<DhcpLease> leases = find(false);
+    leases.sort(ComparatorBuilder.builder()
+        .fromWellKnownText("begin,desc")
+        .build());
+    final Map<String, DhcpLease> leaseMap = new HashMap<>();
+    for (final DhcpLease lease : leases) {
+      final String key = ip
+          ? lease.getIp()
+          : lease.getHostname().toUpperCase();
+      leaseMap.putIfAbsent(key, lease);
+    }
+    return leaseMap;
+  }
+
+  private List<DhcpLease> find(final boolean all) {
     final List<String> commands = new ArrayList<>();
     sudo(commands);
     commands.add(getProperties().getDhcpLeaseListBinary());
     commands.add("--parsable");
-    if (Boolean.TRUE.equals(all)) {
+    if (all) {
       commands.add("--all");
     }
     return CommandExecutor.exec(
