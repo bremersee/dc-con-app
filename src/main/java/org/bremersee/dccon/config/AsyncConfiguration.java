@@ -24,7 +24,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * The async configuration.
+ * The async and scheduling configuration.
  *
  * @author Christian Bremer
  */

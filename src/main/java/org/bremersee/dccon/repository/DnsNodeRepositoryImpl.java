@@ -101,7 +101,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
 
   @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
   public void keepDhcpLeaseCachesUpToDate() {
-    log.debug("msg=[Keeping dhcp lease cache up to date.]");
+    log.trace("msg=[Keeping dhcp lease cache up to date.]");
     dhcpRepository.findActiveByIp();
     dhcpRepository.findActiveByHostName();
   }

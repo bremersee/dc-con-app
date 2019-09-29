@@ -30,7 +30,7 @@ public class CacheEventLogger implements CacheEventListener<Object, Object> {
 
   @Override
   public void onEvent(CacheEvent<?, ?> cacheEvent) {
-    log.info("msg=[A new cache event has occurred.] type=[{}] key=[{}] oldValue=[{}], "
+    log.trace("msg=[A new cache event has occurred.] type=[{}] key=[{}] oldValue=[{}], "
             + "newValue=[{}]", cacheEvent.getType(), cacheEvent.getKey(), cacheEvent.getOldValue(),
         cacheEvent.getNewValue());
   }
