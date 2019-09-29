@@ -21,6 +21,8 @@ import org.ehcache.event.CacheEvent;
 import org.ehcache.event.CacheEventListener;
 
 /**
+ * The cache event logger.
+ *
  * @author Christian Bremer
  */
 @Slf4j

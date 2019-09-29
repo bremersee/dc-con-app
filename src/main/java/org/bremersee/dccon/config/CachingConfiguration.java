@@ -16,35 +16,38 @@
 
 package org.bremersee.dccon.config;
 
-import java.io.Serializable;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import javax.cache.configuration.FactoryBuilder;
-import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
-import javax.cache.configuration.MutableConfiguration;
-import javax.cache.event.CacheEntryCreatedListener;
-import javax.cache.event.CacheEntryEvent;
-import javax.cache.event.CacheEntryEventFilter;
-import javax.cache.event.CacheEntryExpiredListener;
-import javax.cache.event.CacheEntryListener;
-import javax.cache.event.CacheEntryListenerException;
-import javax.cache.event.CacheEntryRemovedListener;
-import javax.cache.event.CacheEntryUpdatedListener;
-import javax.cache.expiry.CreatedExpiryPolicy;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.model.DhcpLease;
-import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * The caching configuration.
+ *
  * @author Christian Bremer
  */
 @Configuration
 @EnableCaching
 @Slf4j
 public class CachingConfiguration {
+
+  /*
+  import java.io.Serializable;
+  import java.util.Map;
+  import java.util.concurrent.TimeUnit;
+  import javax.cache.configuration.FactoryBuilder;
+  import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
+  import javax.cache.configuration.MutableConfiguration;
+  import javax.cache.event.CacheEntryCreatedListener;
+  import javax.cache.event.CacheEntryEvent;
+  import javax.cache.event.CacheEntryEventFilter;
+  import javax.cache.event.CacheEntryExpiredListener;
+  import javax.cache.event.CacheEntryListener;
+  import javax.cache.event.CacheEntryListenerException;
+  import javax.cache.event.CacheEntryRemovedListener;
+  import javax.cache.event.CacheEntryUpdatedListener;
+  import javax.cache.expiry.CreatedExpiryPolicy;
+  import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
+  import org.springframework.context.annotation.Bean;
 
   @Bean
   public JCacheManagerCustomizer cacheManagerCustomizer() {
@@ -109,27 +112,32 @@ public class CachingConfiguration {
     @Override
     public void onCreated(Iterable<CacheEntryEvent<?, ? extends Map<String, DhcpLease>>> iterable)
         throws CacheEntryListenerException {
-      log.info("msg=[Dhcp lease cache created.] values=[{}[", iterable);
+      iterable.iterator().forEachRemaining(cacheEntryEvent -> log
+          .info("msg=[Dhcp lease cache created.] values=[{}[", cacheEntryEvent.getValue()));
     }
 
     @Override
     public void onUpdated(Iterable<CacheEntryEvent<?, ? extends Map<String, DhcpLease>>> iterable)
         throws CacheEntryListenerException {
-      log.info("msg=[Dhcp lease cache updated.] values=[{}[", iterable);
+      iterable.iterator().forEachRemaining(cacheEntryEvent -> log
+          .info("msg=[Dhcp lease cache updated.] values=[{}[", cacheEntryEvent.getValue()));
     }
 
     @Override
     public void onRemoved(Iterable<CacheEntryEvent<?, ? extends Map<String, DhcpLease>>> iterable)
         throws CacheEntryListenerException {
-      log.info("msg=[Dhcp lease cache removed.] values=[{}[", iterable);
+      iterable.iterator().forEachRemaining(cacheEntryEvent -> log
+          .info("msg=[Dhcp lease cache removed.] values=[{}[", cacheEntryEvent.getValue()));
     }
 
     @Override
     public void onExpired(Iterable<CacheEntryEvent<?, ? extends Map<String, DhcpLease>>> iterable)
         throws CacheEntryListenerException {
-      log.info("msg=[Dhcp lease cache expired.] values=[{}[", iterable);
+      iterable.iterator().forEachRemaining(cacheEntryEvent -> log
+          .info("msg=[Dhcp lease cache expired.] values=[{}[", cacheEntryEvent.getValue()));
     }
 
   }
+  */
 
 }

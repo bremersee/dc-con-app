@@ -23,7 +23,7 @@ public class DnsNodeRepositoryTest {
   @Test
   public void ip4MatchesDnsZone() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null, null);
+    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null);
 
     assertTrue(repository.ip4MatchesDnsZone(
         "192.168.1.124",
@@ -39,7 +39,7 @@ public class DnsNodeRepositoryTest {
   @Test
   public void getDnsNodeNameByIp4() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null, null);
+    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null);
 
     Optional<String> nodeName = repository.getDnsNodeNameByIp4(
         "192.168.1.124",
@@ -56,7 +56,7 @@ public class DnsNodeRepositoryTest {
   @Test
   public void getDnsNodeNameByFqdn() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null, null);
+    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null);
 
     Optional<String> nodeName = repository.getDnsNodeNameByFqdn(
         "pluto.eixe.bremersee.org",
@@ -73,7 +73,7 @@ public class DnsNodeRepositoryTest {
   @Test
   public void splitIp4() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null, null);
+    DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(properties, null, null, null);
 
     String[] parts = repository.splitIp4(
         "192.168.1.123",

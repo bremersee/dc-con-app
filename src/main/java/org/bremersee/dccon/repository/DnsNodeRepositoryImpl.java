@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +49,7 @@ import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.springframework.context.annotation.Profile;
 import org.springframework.lang.Nullable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -62,8 +62,6 @@ import org.springframework.util.StringUtils;
 @Component("dnsNodeRepository")
 @Slf4j
 public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNodeRepository {
-
-  private final Executor asyncExecutor;
 
   private final DhcpRepository dhcpRepository;
 
@@ -82,18 +80,15 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    *
    * @param properties        the properties
    * @param ldapTemplate      the ldap template
-   * @param asyncExecutor     the async executor
    * @param dhcpRepository    the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    */
   public DnsNodeRepositoryImpl(
       final DomainControllerProperties properties,
       final LdaptiveTemplate ldapTemplate,
-      final Executor asyncExecutor,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository) {
     super(properties, ldapTemplate);
-    this.asyncExecutor = asyncExecutor;
     this.dhcpRepository = dhcpRepository;
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsNodeLdapMapperMap = new ConcurrentHashMap<>();
@@ -104,15 +99,11 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     this.patternIp4 = Pattern.compile(properties.getIp4Regex());
   }
 
-  private void createDhcpLeaseCache(final String zoneName) {
-    asyncExecutor.execute(() -> {
-      final boolean isReverseZone = dnsZoneRepository.isDnsReverseZone(zoneName);
-      if (isReverseZone) {
-        dhcpRepository.findActiveByHostName();
-      } else {
-        dhcpRepository.findActiveByIp();
-      }
-    });
+  @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
+  public void keepDhcpLeaseCachesUpToDate() {
+    log.debug("msg=[Keeping dhcp lease cache up to date.]");
+    dhcpRepository.findActiveByIp();
+    dhcpRepository.findActiveByHostName();
   }
 
   private LdaptiveEntryMapper<DnsNode> getDnsNodeLdapMapper(
@@ -197,7 +188,6 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   @Override
   public Stream<DnsNode> findAll(final String zoneName, final UnknownFilter unknownFilter) {
 
-    createDhcpLeaseCache(zoneName);
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().buildDnsNodeBaseDn(zoneName),
         new SearchFilter(getProperties().getDnsNodeFindAllFilter()));
@@ -235,7 +225,6 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final boolean withCorrelationValues,
       final boolean withDhcpLeases) {
 
-    createDhcpLeaseCache(zoneName);
     final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsNodeFindOneFilter());
     searchFilter.setParameter(0, nodeName);
     final SearchRequest searchRequest = new SearchRequest(
