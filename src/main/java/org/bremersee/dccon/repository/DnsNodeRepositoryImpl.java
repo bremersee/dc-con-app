@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,6 +63,8 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNodeRepository {
 
+  private final Executor asyncExecutor;
+
   private final DhcpRepository dhcpRepository;
 
   private final DnsZoneRepository dnsZoneRepository;
@@ -79,15 +82,18 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    *
    * @param properties        the properties
    * @param ldapTemplate      the ldap template
+   * @param asyncExecutor     the async executor
    * @param dhcpRepository    the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    */
   public DnsNodeRepositoryImpl(
       final DomainControllerProperties properties,
       final LdaptiveTemplate ldapTemplate,
+      final Executor asyncExecutor,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository) {
     super(properties, ldapTemplate);
+    this.asyncExecutor = asyncExecutor;
     this.dhcpRepository = dhcpRepository;
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsNodeLdapMapperMap = new ConcurrentHashMap<>();
@@ -96,6 +102,17 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     this.excludedNodeNamePatterns = properties.getExcludedNodeRegexList().stream()
         .map(Pattern::compile).collect(Collectors.toList());
     this.patternIp4 = Pattern.compile(properties.getIp4Regex());
+  }
+
+  private void createDhcpLeaseCache(final String zoneName) {
+    asyncExecutor.execute(() -> {
+      final boolean isReverseZone = dnsZoneRepository.isDnsReverseZone(zoneName);
+      if (isReverseZone) {
+        dhcpRepository.findActiveByHostName();
+      } else {
+        dhcpRepository.findActiveByIp();
+      }
+    });
   }
 
   private LdaptiveEntryMapper<DnsNode> getDnsNodeLdapMapper(
@@ -180,6 +197,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   @Override
   public Stream<DnsNode> findAll(final String zoneName, final UnknownFilter unknownFilter) {
 
+    createDhcpLeaseCache(zoneName);
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().buildDnsNodeBaseDn(zoneName),
         new SearchFilter(getProperties().getDnsNodeFindAllFilter()));
@@ -217,6 +235,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final boolean withCorrelationValues,
       final boolean withDhcpLeases) {
 
+    createDhcpLeaseCache(zoneName);
     final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsNodeFindOneFilter());
     searchFilter.setParameter(0, nodeName);
     final SearchRequest searchRequest = new SearchRequest(
