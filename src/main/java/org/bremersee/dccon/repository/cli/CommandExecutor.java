@@ -94,8 +94,8 @@ public abstract class CommandExecutor {
         pb.environment().putAll(env);
       }
 
-      if (log.isDebugEnabled()) {
-        log.debug("msg=[Running external program.] commands=[{}]", commands);
+      if (log.isTraceEnabled()) {
+        log.trace("msg=[Running external program.] commands=[{}]", commands);
       }
       final Process p = pb.start();
       final StringWriter out = new StringWriter();
@@ -105,9 +105,9 @@ public abstract class CommandExecutor {
       p.waitFor();
       final String output = out.toString();
       final String error = err.toString();
-      if (log.isDebugEnabled()) {
-        log.debug("msg=[Program output]\n{}", output);
-        log.debug("msg=[Program error output]\n{}", error);
+      if (log.isTraceEnabled()) {
+        log.trace("msg=[Program output]\n{}", output);
+        log.trace("msg=[Program error output]\n{}", error);
       }
       return responseParser.parse(new CommandExecutorResponse(output, error));
 

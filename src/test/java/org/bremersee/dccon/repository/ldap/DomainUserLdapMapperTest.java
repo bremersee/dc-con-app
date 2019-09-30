@@ -175,14 +175,11 @@ public class DomainUserLdapMapperTest {
     source.setGroups(new ArrayList<>());
 
     AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-
+    assertEquals(2, modifications.length);
     assertEquals(
         66050,
         (long) getAttributeValue(destination, "userAccountControl", ivt, null));
-
     groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
     Assert.assertTrue(groupDns.isEmpty());
-
-    assertEquals(2, modifications.length);
   }
 }

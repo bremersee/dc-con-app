@@ -99,8 +99,10 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     this.patternIp4 = Pattern.compile(properties.getIp4Regex());
   }
 
-  // TODO disable logging
-  //@Scheduled(fixedDelay = 30000L, initialDelay = 2000)
+  /**
+   * Keep dhcp lease caches up to date.
+   */
+  @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
   public void keepDhcpLeaseCachesUpToDate() {
     log.trace("msg=[Keeping dhcp lease cache up to date.]");
     dhcpRepository.findActiveByIp();

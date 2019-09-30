@@ -141,9 +141,6 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
             response.getStderr());
         return Collections.emptyList();
       }
-      if (log.isDebugEnabled()) {
-        log.debug("Parsing dhcp lease list:\n{}", output);
-      }
       try (final BufferedReader reader = new BufferedReader(new StringReader(output))) {
         return parseDhcpLeaseList(reader);
 
