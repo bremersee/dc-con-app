@@ -29,15 +29,20 @@ pipeline {
         sh 'mvn -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
     }
-    stage('Site') {
+    stage('Snapshot Site') {
       when {
-        anyOf {
-          branch 'develop'
-          branch 'master'
-        }
+        branch 'develop'
       }
       steps {
         sh 'mvn site-deploy'
+      }
+    }
+    stage('Release Site') {
+      when {
+        branch 'master'
+      }
+      steps {
+        sh 'mvn -P gh-pages-site site site:stage scm-publish:publish-scm'
       }
     }
   }
