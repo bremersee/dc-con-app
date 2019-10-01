@@ -53,6 +53,11 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
   }
 
   @Override
+  public String[] getObjectClasses() {
+    return new String[0];
+  }
+
+  @Override
   public String mapDn(final DomainGroup domainGroup) {
     return createDn(
         getProperties().getGroupRdn(),

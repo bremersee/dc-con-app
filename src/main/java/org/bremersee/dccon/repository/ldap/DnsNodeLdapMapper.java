@@ -65,6 +65,11 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
   @Override
+  public String[] getObjectClasses() {
+    return new String[0];
+  }
+
+  @Override
   public String mapDn(final DnsNode dnsNode) {
     return createDn(
         getProperties().getDnsNodeRdn(),

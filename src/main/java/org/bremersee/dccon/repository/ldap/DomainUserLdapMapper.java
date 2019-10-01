@@ -68,6 +68,11 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
   }
 
   @Override
+  public String[] getObjectClasses() {
+    return new String[0];
+  }
+
+  @Override
   public String mapDn(final DomainUser domainUser) {
     return createDn(
         getProperties().getUserRdn(),

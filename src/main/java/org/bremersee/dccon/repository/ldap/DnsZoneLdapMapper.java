@@ -44,6 +44,11 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
   @Override
+  public String[] getObjectClasses() {
+    return new String[0];
+  }
+
+  @Override
   public String mapDn(final DnsZone dnsZone) {
     return createDn(
         getProperties().getDnsZoneRdn(),
