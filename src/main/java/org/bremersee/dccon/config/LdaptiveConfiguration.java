@@ -17,7 +17,11 @@
 package org.bremersee.dccon.config;
 
 import java.time.Duration;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveProperties;
+import org.bremersee.data.ldaptive.LdaptiveTemplate;
+import org.bremersee.exception.ServiceException;
 import org.ldaptive.BindConnectionInitializer;
 import org.ldaptive.ConnectionConfig;
 import org.ldaptive.ConnectionFactory;
@@ -46,7 +50,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-@Profile("!in-memory")
+@Profile("ldap")
 @Configuration
 @EnableConfigurationProperties(LdaptiveProperties.class)
 @Slf4j
@@ -65,6 +69,24 @@ public class LdaptiveConfiguration {
   }
 
   /**
+   * Validate search validator of pooled connections.
+   */
+  @PostConstruct
+  public void validatePoolValidation() {
+    if (properties.isPooled()) {
+      LdaptiveTemplate template = new LdaptiveTemplate(connectionFactory());
+      boolean exists = template.findOne(searchValidator().getSearchRequest()).isPresent();
+      if (!exists) {
+        ServiceException se = ServiceException.internalServerError(
+            "Invalid search validator. There is no result executing search validator.",
+            "org.bremersee:dc-con-app:8112eb4c-5c14-41ba-9cdd-d4769f8765d0");
+        log.error("Validation of pool validation failed.", se);
+        throw se;
+      }
+    }
+  }
+
+  /**
    * Connection factory connection factory.
    *
    * @return the connection factory
@@ -76,6 +98,17 @@ public class LdaptiveConfiguration {
       return pooledConnectionFactory();
     }
     return defaultConnectionFactory();
+  }
+
+  /**
+   * Ldaptive template ldaptive template.
+   *
+   * @param connectionFactory the connection factory
+   * @return the ldaptive template
+   */
+  @Bean
+  public LdaptiveTemplate ldaptiveTemplate(ConnectionFactory connectionFactory) {
+    return new LdaptiveTemplate(connectionFactory);
   }
 
   private DefaultConnectionFactory defaultConnectionFactory() {

@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.9</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>1.3.1</version>
+  <version>2.0.0</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -20,14 +20,16 @@
   <url>https://github.com/bremersee/dc-con-app</url>
 
   <properties>
+    <github.repo>dc-con-app</github.repo>
+    <gh-pages-staging-dir>${project.build.directory}/staging</gh-pages-staging-dir>
+
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>1.3.0</dc-con-api-spring.version>
-    <common-base.version>1.2.2</common-base.version>
-    <comparator.version>2.0.4</comparator.version>
+    <dc-con-api-spring.version>2.0.0</dc-con-api-spring.version>
+    <common-base.version>1.3.1</common-base.version>
+    <comparator.version>2.0.6</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
-    <ldaptive.version>1.2.4</ldaptive.version>
     <springfox.version>2.9.2</springfox.version>
 
     <!--suppress UnresolvedMavenProperty -->
@@ -76,7 +78,12 @@
     </dependency>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base</artifactId>
+      <artifactId>common-base-servlet</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-ldaptive</artifactId>
       <version>${common-base.version}</version>
     </dependency>
     <dependency>
@@ -93,7 +100,6 @@
     <dependency>
       <groupId>org.ldaptive</groupId>
       <artifactId>ldaptive</artifactId>
-      <version>${ldaptive.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -104,12 +110,6 @@
     <dependency>
       <groupId>org.ldaptive</groupId>
       <artifactId>ldaptive-beans</artifactId>
-      <version>${ldaptive.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.ldaptive</groupId>
-      <artifactId>ldaptive-unboundid</artifactId>
-      <version>${ldaptive.version}</version>
     </dependency>
     <dependency>
       <groupId>io.swagger</groupId>
@@ -122,12 +122,6 @@
       <version>${springfox.version}</version>
     </dependency>
 
-    <!--
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -135,6 +129,18 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.cache</groupId>
+      <artifactId>cache-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
@@ -151,6 +157,10 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.jayway.jsonpath</groupId>
+      <artifactId>json-path</artifactId>
     </dependency>
 
     <dependency>

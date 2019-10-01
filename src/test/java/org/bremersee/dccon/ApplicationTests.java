@@ -1,5 +1,6 @@
 package org.bremersee.dccon;
 
+import org.bremersee.dccon.model.DomainGroup;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -18,7 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"in-memory", "basic-auth", "test"})
+@ActiveProfiles({"test", "basic-auth"})
 public class ApplicationTests {
 
   /**
@@ -54,6 +56,15 @@ public class ApplicationTests {
     httpStatus = restTemplate
         .exchange("/api/users/admin", HttpMethod.GET, httpEntity, String.class)
         .getStatusCode();
+    Assert.assertEquals(HttpStatus.NOT_FOUND, httpStatus);
+
+    httpHeaders = new HttpHeaders();
+    httpHeaders.setBasicAuth("admin", "admin");
+    httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+    httpEntity = new HttpEntity<>(DomainGroup.builder().name("test").build(), httpHeaders);
+    httpStatus = restTemplate
+        .exchange("/api/groups", HttpMethod.POST, httpEntity, String.class)
+        .getStatusCode();
     Assert.assertEquals(HttpStatus.OK, httpStatus);
 
     httpHeaders = new HttpHeaders();
@@ -61,6 +72,15 @@ public class ApplicationTests {
     httpEntity = new HttpEntity<>(null, httpHeaders);
     httpStatus = restTemplate
         .exchange("/api/groups", HttpMethod.GET, httpEntity, String.class)
+        .getStatusCode();
+    Assert.assertEquals(HttpStatus.OK, httpStatus);
+
+    httpHeaders = new HttpHeaders();
+    httpHeaders.setBasicAuth("user", "user");
+    httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+    httpEntity = new HttpEntity<>(DomainGroup.builder().name("test").build(), httpHeaders);
+    httpStatus = restTemplate
+        .exchange("/api/groups", HttpMethod.POST, httpEntity, String.class)
         .getStatusCode();
     Assert.assertEquals(HttpStatus.FORBIDDEN, httpStatus);
 

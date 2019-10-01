@@ -41,7 +41,7 @@ public class SwaggerProperties {
   private String description = "Configuration of users, groups and DNS of a Samba 4 Domain "
       + "Controller.";
 
-  private String version = "1.0.0";
+  private String version = "2.0.0";
 
   private String termsOfServiceUrl = "urn:tos";
 

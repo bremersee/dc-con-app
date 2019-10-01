@@ -18,13 +18,8 @@ package org.bremersee.dccon.config;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,10 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.SearchScope;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
- * The samba domain properties.
+ * The domain controller properties.
  *
  * @author Christian Bremer
  */
@@ -49,7 +43,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class DomainControllerProperties implements Serializable {
 
-  private static final long serialVersionUID = 606284794541721895L;
+  private static final long serialVersionUID = 2L;
 
   private String groupBaseDn;
 
@@ -65,6 +59,7 @@ public class DomainControllerProperties implements Serializable {
 
   private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;
 
+
   private String userBaseDn;
 
   private String userRdn = "cn";
@@ -78,6 +73,35 @@ public class DomainControllerProperties implements Serializable {
   private String userFindOneFilter = "(&(objectClass=user)(sAMAccountName={0}))";
 
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
+
+
+  private String dnsZoneBaseDn;
+
+  private String dnsZoneRdn = "dc";
+
+  private String dnsZoneFindAllFilter = "(objectClass=dnsZone)";
+
+  private SearchScope dnsZoneFindAllSearchScope = SearchScope.SUBTREE;
+
+  private String dnsZoneFindOneFilter = "(&(objectClass=dnsZone)(name={0}))";
+
+  private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;
+
+
+  private String defaultZone = "example.org";
+
+  private String dnsNodeBaseDn;
+
+  private String dnsNodeRdn = "dc";
+
+  private String dnsNodeFindAllFilter = "(objectClass=dnsNode)";
+
+  private SearchScope dnsNodeFindAllSearchScope = SearchScope.SUBTREE;
+
+  private String dnsNodeFindOneFilter = "(&(objectClass=dnsNode)(name={0}))";
+
+  private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;
+
 
   private String kinitBinary = "/usr/bin/kinit";
 
@@ -95,6 +119,8 @@ public class DomainControllerProperties implements Serializable {
 
   private String loginShell = "/bin/bash";
 
+  private String homeDirectoryTemplate = "\\\\data\\users\\{}";
+
   private String unixHomeDirTemplate = "/home/{}";
 
 
@@ -105,14 +131,35 @@ public class DomainControllerProperties implements Serializable {
 
   private String nameServerHost = "ns.example.org";
 
-  private String reverseZoneSuffix = ".in-addr.arpa";
+  private String reverseZoneSuffixIp4 = ".in-addr.arpa";
+
+  private String reverseZoneSuffixIp6 = ".ip6.arpa";
 
   private List<String> excludedZoneRegexList = new ArrayList<>();
 
-  private List<String> excludedEntryRegexList = new ArrayList<>();
+  private List<String> excludedNodeRegexList = new ArrayList<>();
 
 
-  private Map<String, List<String>> dnsZoneMapping = new LinkedHashMap<>();
+  private String ip4Regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$";
+
+  private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
+
+
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{}?d=404";
+
+  /**
+   * Possible values.
+   * <ul>
+   * <li>mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
+   * <li>identicon: a geometric pattern based on an email hash
+   * <li>monsterid: a generated 'monster' with different colors, faces, etc
+   * <li>wavatar: generated faces with differing features and backgrounds
+   * <li>retro: awesome generated, 8-bit arcade-style pixelated faces
+   * <li>robohash: a generated robot with different colors, faces, etc
+   * <li>blank: a transparent PNG image (border added to HTML below for demonstration purposes)
+   * </ul>
+   */
+  private String gravatarUrlForDefault = "https://www.gravatar.com/avatar/{}?d=retro";
 
 
   /**
@@ -120,52 +167,39 @@ public class DomainControllerProperties implements Serializable {
    */
   public DomainControllerProperties() {
     excludedZoneRegexList.add("^_msdcs\\..*$");
+    excludedZoneRegexList.add("RootDNSServers");
 
-    excludedEntryRegexList.add("^$");
-    excludedEntryRegexList.add("_msdcs");
-    excludedEntryRegexList.add("_sites");
-    excludedEntryRegexList.add("_tcp");
-    excludedEntryRegexList.add("_udp");
+    excludedNodeRegexList.add("^$");
+    excludedNodeRegexList.add("_msdcs");
+    excludedNodeRegexList.add("_sites");
+    excludedNodeRegexList.add("_tcp");
+    excludedNodeRegexList.add("_udp");
+
+    excludedNodeRegexList.add("@");
+    excludedNodeRegexList.add("_gc\\..*$");
+    excludedNodeRegexList.add("_kerberos\\..*$");
+    excludedNodeRegexList.add("_kpasswd\\..*$");
+    excludedNodeRegexList.add("_ldap\\..*$");
+    excludedNodeRegexList.add("ForestDnsZones");
   }
 
   /**
-   * Init.
+   * Gets reverse zone suffix list.
+   *
+   * @return the reverse zone suffix list
    */
-  @PostConstruct
-  public void init() {
-    if (dnsZoneMapping != null) {
-      for (String key : dnsZoneMapping.keySet()) {
-        while (dnsZoneMapping.get(key) != null && dnsZoneMapping.get(key).remove(key)) {
-          log.info(
-              "msg=[Value of dns zone mapping cannot equals key. Value was removed.] value=[{}]",
-              key);
-        }
-      }
-    }
-    log.info("msg=[Domain controller properties loaded.] properties=[{}]", this);
+  public List<String> getReverseZoneSuffixList() {
+    return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);
   }
 
   /**
-   * Find correlated dns zones.
+   * Build dns node base dn string.
    *
    * @param zoneName the zone name
-   * @return the correlated dns zones
+   * @return the string
    */
-  public Set<String> findCorrelatedDnsZones(String zoneName) {
-    if (!StringUtils.hasText(zoneName)) {
-      return Collections.emptySet();
-    }
-    List<String> correlatedZones = dnsZoneMapping.get(zoneName);
-    if (correlatedZones != null && !correlatedZones.isEmpty()) {
-      return new LinkedHashSet<>(correlatedZones);
-    }
-    final Set<String> results = new LinkedHashSet<>();
-    for (Map.Entry<String, List<String>> entry : dnsZoneMapping.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().contains(zoneName)) {
-        results.add(entry.getKey());
-      }
-    }
-    return results;
+  public String buildDnsNodeBaseDn(String zoneName) {
+    return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }
 
 }
