@@ -15,7 +15,7 @@ dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,UserGroupValueTranscod
 dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,UserAccountControlValueTranscoder,10,86,3,17,2,20,3,14,0,7
 dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,ActiveDirectoryTimeValueTranscoder,8,70,0,6,3,17,0,8,0,5
 dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,GroupMemberValueTranscoder,2,27,1,1,1,9,1,5,0,5
-dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,DnsRecordDataMapper,41,169,4,10,12,36,4,7,0,4
+dc-con-app,org.bremersee.dccon.repository.ldap.transcoder,DnsRecordDataMapper,33,177,4,10,10,38,4,7,0,4
 dc-con-app,org.bremersee.dccon.controller,DomainUserManagementController,79,12,0,0,13,4,9,2,9,2
 dc-con-app,org.bremersee.dccon.controller,NameServerManagementController,76,6,0,0,13,3,11,1,11,1
 dc-con-app,org.bremersee.dccon.controller,DomainGroupManagementController,25,18,0,0,4,5,4,3,4,3

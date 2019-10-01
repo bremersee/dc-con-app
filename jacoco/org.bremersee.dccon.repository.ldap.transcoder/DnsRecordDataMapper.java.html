@@ -123,13 +123,13 @@ public abstract class DnsRecordDataMapper {
 <span class="fc" id="L123">            value, expectedLength, actualLength);</span>
 
         try {
-<span class="nc" id="L126">          final InetAddress inetAddress = InetAddress.getByName(value);</span>
-<span class="nc" id="L127">          dnsRecord.setRecordValue(inetAddress.getHostName());</span>
-<span class="nc" id="L128">          dnsRecord.setCorrelatedRecordValue(inetAddress.getHostAddress());</span>
+<span class="fc" id="L126">          final InetAddress inetAddress = InetAddress.getByName(value);</span>
+<span class="fc" id="L127">          dnsRecord.setRecordValue(inetAddress.getHostName());</span>
+<span class="fc" id="L128">          dnsRecord.setCorrelatedRecordValue(inetAddress.getHostAddress());</span>
 
-<span class="fc" id="L130">        } catch (UnknownHostException e) {</span>
-<span class="fc" id="L131">          dnsRecord.setRecordValue(value);</span>
-<span class="nc" id="L132">        }</span>
+<span class="nc" id="L130">        } catch (UnknownHostException e) {</span>
+<span class="nc" id="L131">          dnsRecord.setRecordValue(value);</span>
+<span class="fc" id="L132">        }</span>
 
 <span class="nc" id="L134">      } catch (IOException e) {</span>
 <span class="nc" id="L135">        log.error(&quot;Parsing PTR record value failed.&quot;, e);</span>
