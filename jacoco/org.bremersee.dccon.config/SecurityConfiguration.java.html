@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.config</a> &gt; <span class="el_source">SecurityConfiguration.java</span></div><h1>SecurityConfiguration.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.config;
+
+import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.security.authentication.KeycloakJwtConverter;
+import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+/**
+ * The security configuration.
+ *
+ * @author Christian Bremer
+ */
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+<span class="fc" id="L50">public class SecurityConfiguration {</span>
+
+  /**
+   * The resource server security configuration.
+   */
+  @Profile(&quot;!basic-auth&quot;)
+  @Order(51)
+  @Configuration
+<span class="nc" id="L58">  @Slf4j</span>
+  static class ResourceServer extends WebSecurityConfigurerAdapter {
+
+    private KeycloakJwtConverter keycloakJwtConverter;
+
+    /**
+     * Instantiates a new resource server security configuration.
+     *
+     * @param keycloakJwtConverter the keycloak jwt converter
+     */
+    @Autowired
+    public ResourceServer(
+<span class="nc" id="L70">        KeycloakJwtConverter keycloakJwtConverter) {</span>
+<span class="nc" id="L71">      this.keycloakJwtConverter = keycloakJwtConverter;</span>
+<span class="nc" id="L72">    }</span>
+
+    /**
+     * Init.
+     */
+    @PostConstruct
+    public void init() {
+<span class="nc" id="L79">      log.info(&quot;msg=[Using keycloak authentication.]&quot;);</span>
+<span class="nc" id="L80">    }</span>
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+<span class="nc" id="L84">      log.info(&quot;Authorizing requests to /api/** with OAuth2.&quot;);</span>
+<span class="nc" id="L85">      http</span>
+<span class="nc" id="L86">          .antMatcher(&quot;/api/**&quot;)</span>
+<span class="nc" id="L87">          .authorizeRequests()</span>
+<span class="nc" id="L88">          .antMatchers(HttpMethod.OPTIONS).permitAll()</span>
+<span class="nc" id="L89">          .anyRequest().authenticated()</span>
+<span class="nc" id="L90">          .and()</span>
+<span class="nc" id="L91">          .oauth2ResourceServer()</span>
+<span class="nc" id="L92">          .jwt()</span>
+<span class="nc" id="L93">          .jwtAuthenticationConverter(keycloakJwtConverter);</span>
+<span class="nc" id="L94">    }</span>
+  }
+
+  /**
+   * The type resource server with basic auth.
+   */
+  @Profile(&quot;basic-auth&quot;)
+  @Order(51)
+  @Configuration
+  @EnableConfigurationProperties(SecurityProperties.class)
+<span class="fc" id="L104">  @Slf4j</span>
+  static class ResourceServerBasicAuth extends WebSecurityConfigurerAdapter {
+
+    private final SecurityProperties securityProperties;
+
+    /**
+     * Instantiates a new resource server for basic auth.
+     *
+     * @param securityProperties the security properties
+     */
+<span class="fc" id="L114">    public ResourceServerBasicAuth(SecurityProperties securityProperties) {</span>
+<span class="fc" id="L115">      this.securityProperties = securityProperties;</span>
+<span class="fc" id="L116">    }</span>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+<span class="fc" id="L120">      log.info(&quot;Authorizing requests to /api/** with basic auth.&quot;);</span>
+<span class="fc" id="L121">      http</span>
+<span class="fc" id="L122">          .antMatcher(&quot;/api/**&quot;)</span>
+<span class="fc" id="L123">          .authorizeRequests()</span>
+<span class="fc" id="L124">          .antMatchers(HttpMethod.OPTIONS).permitAll()</span>
+<span class="fc" id="L125">          .anyRequest().authenticated()</span>
+<span class="fc" id="L126">          .and()</span>
+<span class="fc" id="L127">          .cors().disable()</span>
+<span class="fc" id="L128">          .csrf().disable()</span>
+<span class="fc" id="L129">          .httpBasic()</span>
+<span class="fc" id="L130">          .realmName(&quot;dc-con&quot;)</span>
+<span class="fc" id="L131">          .and()</span>
+<span class="fc" id="L132">          .sessionManagement()</span>
+<span class="fc" id="L133">          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);</span>
+<span class="fc" id="L134">    }</span>
+
+    @Bean
+    @Override
+    public UserDetailsService userDetailsService() {
+<span class="fc" id="L139">      return new InMemoryUserDetailsManager(securityProperties.buildBasicAuthUserDetails());</span>
+    }
+  }
+
+  /**
+   * The actuator security configuration.
+   */
+  @Profile(&quot;!basic-auth&quot;)
+  @Order(52)
+  @Configuration
+  @EnableConfigurationProperties(SecurityProperties.class)
+<span class="nc" id="L150">  @Slf4j</span>
+  static class Actuator extends WebSecurityConfigurerAdapter {
+
+    private final SecurityProperties properties;
+
+    private final PasswordFlowAuthenticationManager passwordFlowAuthenticationManager;
+
+    /**
+     * Instantiates a new actuator security configuration.
+     *
+     * @param properties                        the properties
+     * @param passwordFlowAuthenticationManager the password flow authentication manager
+     */
+    @Autowired
+    public Actuator(
+        final SecurityProperties properties,
+<span class="nc" id="L166">        final PasswordFlowAuthenticationManager passwordFlowAuthenticationManager) {</span>
+<span class="nc" id="L167">      this.properties = properties;</span>
+<span class="nc" id="L168">      this.passwordFlowAuthenticationManager = passwordFlowAuthenticationManager;</span>
+<span class="nc" id="L169">    }</span>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+<span class="nc" id="L173">      log.info(&quot;Authorizing requests to /actuator/** with password flow auth.&quot;);</span>
+<span class="nc" id="L174">      http</span>
+<span class="nc" id="L175">          .authenticationProvider(passwordFlowAuthenticationManager)</span>
+<span class="nc" id="L176">          .requestMatcher(EndpointRequest.toAnyEndpoint())</span>
+<span class="nc" id="L177">          .cors().disable()</span>
+<span class="nc" id="L178">          .csrf().disable()</span>
+<span class="nc" id="L179">          .httpBasic()</span>
+<span class="nc" id="L180">          .realmName(&quot;actuator&quot;)</span>
+<span class="nc" id="L181">          .and()</span>
+<span class="nc" id="L182">          .requestMatcher(EndpointRequest.toAnyEndpoint())</span>
+<span class="nc" id="L183">          .authorizeRequests()</span>
+<span class="nc" id="L184">          .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()</span>
+<span class="nc" id="L185">          .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()</span>
+<span class="nc" id="L186">          .anyRequest()</span>
+<span class="nc" id="L187">          .access(properties.buildAccess())</span>
+<span class="nc" id="L188">          .and()</span>
+<span class="nc" id="L189">          .sessionManagement()</span>
+<span class="nc" id="L190">          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);</span>
+<span class="nc" id="L191">    }</span>
+  }
+
+  /**
+   * The actuator security configuration for basic auth.
+   */
+  @Profile(&quot;basic-auth&quot;)
+  @Order(52)
+  @Configuration
+  @EnableConfigurationProperties(SecurityProperties.class)
+<span class="fc" id="L201">  @Slf4j</span>
+  static class ActuatorBasicAuth extends WebSecurityConfigurerAdapter {
+
+    private final SecurityProperties properties;
+
+    /**
+     * Instantiates a new actuator security configuration for basic auth.
+     *
+     * @param properties the properties
+     */
+    @Autowired
+<span class="fc" id="L212">    public ActuatorBasicAuth(final SecurityProperties properties) {</span>
+<span class="fc" id="L213">      this.properties = properties;</span>
+<span class="fc" id="L214">    }</span>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+<span class="fc" id="L218">      log.info(&quot;Authorizing requests to /actuator/** with basic auth.&quot;);</span>
+<span class="fc" id="L219">      http</span>
+<span class="fc" id="L220">          .requestMatcher(EndpointRequest.toAnyEndpoint())</span>
+<span class="fc" id="L221">          .cors().disable()</span>
+<span class="fc" id="L222">          .csrf().disable()</span>
+<span class="fc" id="L223">          .httpBasic()</span>
+<span class="fc" id="L224">          .realmName(&quot;actuator&quot;)</span>
+<span class="fc" id="L225">          .and()</span>
+<span class="fc" id="L226">          .requestMatcher(EndpointRequest.toAnyEndpoint())</span>
+<span class="fc" id="L227">          .authorizeRequests()</span>
+<span class="fc" id="L228">          .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()</span>
+<span class="fc" id="L229">          .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()</span>
+<span class="fc" id="L230">          .anyRequest()</span>
+<span class="fc" id="L231">          .access(properties.buildAccess())</span>
+<span class="fc" id="L232">          .and()</span>
+<span class="fc" id="L233">          .sessionManagement()</span>
+<span class="fc" id="L234">          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);</span>
+<span class="fc" id="L235">    }</span>
+  }
+
+  /**
+   * The swagger security configuration.
+   */
+  @Order(53)
+  @Configuration
+<span class="fc" id="L243">  static class Swagger extends WebSecurityConfigurerAdapter {</span>
+
+    @Override
+    public void configure(WebSecurity web) {
+<span class="fc" id="L247">      web.ignoring().antMatchers(</span>
+          &quot;/v2/api-docs&quot;,
+          &quot;/v2/api-docs/**&quot;);
+<span class="fc" id="L250">    }</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

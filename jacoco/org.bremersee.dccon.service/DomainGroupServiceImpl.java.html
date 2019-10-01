@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainGroupServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service</a> &gt; <span class="el_source">DomainGroupServiceImpl.java</span></div><h1>DomainGroupServiceImpl.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.repository.DomainGroupRepository;
+import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.service.validator.DomainGroupValidator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+/**
+ * The domain group service.
+ *
+ * @author Christian Bremer
+ */
+@Component(&quot;domainGroupService&quot;)
+<span class="fc" id="L41">@Slf4j</span>
+public class DomainGroupServiceImpl implements DomainGroupService {
+
+  private final DomainGroupRepository domainGroupRepository;
+
+  private DomainGroupValidator domainGroupValidator;
+
+  /**
+   * Instantiates a new domain group service.
+   *
+   * @param properties            the properties
+   * @param domainUserRepository  the domain user repository
+   * @param domainGroupRepository the domain group repository
+   */
+  public DomainGroupServiceImpl(
+      final DomainControllerProperties properties,
+      final DomainUserRepository domainUserRepository,
+<span class="fc" id="L58">      final DomainGroupRepository domainGroupRepository) {</span>
+<span class="fc" id="L59">    this.domainGroupRepository = domainGroupRepository;</span>
+<span class="fc" id="L60">    this.domainGroupValidator = DomainGroupValidator.defaultValidator(</span>
+        properties, domainGroupRepository, domainUserRepository);
+<span class="fc" id="L62">  }</span>
+
+  /**
+   * Sets domain group validator.
+   *
+   * @param domainGroupValidator the domain group validator
+   */
+  @Autowired(required = false)
+  public void setDomainGroupValidator(
+      DomainGroupValidator domainGroupValidator) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">    if (domainGroupValidator != null) {</span>
+<span class="nc" id="L73">      this.domainGroupValidator = domainGroupValidator;</span>
+    }
+<span class="nc" id="L75">  }</span>
+
+  @Override
+  public List&lt;DomainGroup&gt; getGroups(String sort) {
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainGroup.DEFAULT_SORT_ORDER;</span>
+<span class="fc" id="L80">    return domainGroupRepository.findAll()</span>
+<span class="fc" id="L81">        .sorted(ComparatorBuilder.builder()</span>
+<span class="fc" id="L82">            .fromWellKnownText(sortOrder)</span>
+<span class="fc" id="L83">            .build())</span>
+<span class="fc" id="L84">        .collect(Collectors.toList());</span>
+  }
+
+  @Override
+  public DomainGroup addGroup(@NotNull @Valid DomainGroup domainGroup) {
+<span class="fc" id="L89">    domainGroupValidator.doAddValidation(domainGroup);</span>
+<span class="fc" id="L90">    return domainGroupRepository.save(domainGroup);</span>
+  }
+
+  @Override
+  public Optional&lt;DomainGroup&gt; getGroupByName(@NotNull String groupName) {
+<span class="nc" id="L95">    return domainGroupRepository.findOne(groupName);</span>
+  }
+
+  @Override
+  public Optional&lt;DomainGroup&gt; updateGroup(@NotNull String groupName,
+      @NotNull @Valid DomainGroup domainGroup) {
+<span class="nc" id="L101">    return domainGroupRepository.findOne(groupName)</span>
+<span class="nc" id="L102">        .map(oldDomainGroup -&gt; {</span>
+<span class="nc" id="L103">          domainGroupValidator.doUpdateValidation(groupName, domainGroup);</span>
+<span class="nc" id="L104">          return domainGroupRepository.save(domainGroup);</span>
+        });
+  }
+
+  @Override
+  public Boolean groupExists(@NotNull String groupName) {
+<span class="nc" id="L110">    return domainGroupRepository.exists(groupName);</span>
+  }
+
+  @Override
+  public Boolean deleteGroup(@NotNull String groupName) {
+<span class="nc" id="L115">    return domainGroupRepository.delete(groupName);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsZoneComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service</a> &gt; <span class="el_source">DnsZoneComparator.java</span></div><h1>DnsZoneComparator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service;
+
+import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.repository.DnsZoneRepository;
+
+/**
+ * The dns zone comparator.
+ *
+ * @author Christian Bremer
+ */
+<span class="fc" id="L29">@Slf4j</span>
+public class DnsZoneComparator extends AbstractDnsComparator&lt;DnsZone&gt; {
+
+  private DnsZoneRepository dnsZoneRepository;
+
+  /**
+   * Instantiates a new dns zone comparator.
+   *
+   * @param dnsZoneRepository the dns zone repository
+   */
+  DnsZoneComparator(DnsZoneRepository dnsZoneRepository) {
+<span class="fc" id="L40">    super(true);</span>
+<span class="fc" id="L41">    this.dnsZoneRepository = dnsZoneRepository;</span>
+<span class="fc" id="L42">  }</span>
+
+  @Override
+  public int compare(DnsZone o1, DnsZone o2) {
+<span class="nc bnc" id="L46" title="All 4 branches missed.">    final String s1 = o1 != null &amp;&amp; o1.getName() != null ? o1.getName() : &quot;&quot;;</span>
+<span class="nc bnc" id="L47" title="All 4 branches missed.">    final String s2 = o2 != null &amp;&amp; o2.getName() != null ? o2.getName() : &quot;&quot;;</span>
+<span class="nc" id="L48">    log.debug(&quot;msg=[Comparing zones.] zone1=[{}] zone2=[{}]&quot;, s1, s2);</span>
+<span class="nc bnc" id="L49" title="All 4 branches missed.">    if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L50">      final String[] sa1 = s1.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc" id="L51">      final String[] sa2 = s2.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc" id="L52">      int c = sa2.length - sa1.length;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">      if (c == 0) {</span>
+<span class="nc" id="L54">        c = compare(sa1, sa2);</span>
+      }
+<span class="nc" id="L56">      log.debug(&quot;msg=[Both zones are dns reverse zones.] result=[{}]&quot;, c);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">      return isAsc() ? c : -1 * c;</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">    } else if (!dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L59">      log.debug(&quot;msg=[First is non reverse zone, second is reverse zone.] &quot;</span>
+          + &quot;first=[{}] second=[{}] result=[-1]&quot;, s1, s2);
+<span class="nc bnc" id="L61" title="All 2 branches missed.">      return isAsc() ? -1 : 1;</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">    } else if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; !dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L63">      log.debug(&quot;msg=[First is reverse zone, second is non reverse zone.] &quot;</span>
+          + &quot;first=[{}] second=[{}] result=[1]&quot;, s1, s2);
+<span class="nc bnc" id="L65" title="All 2 branches missed.">      return isAsc() ? 1 : -1;</span>
+    }
+<span class="nc" id="L67">    final int result = s1.compareToIgnoreCase(s2);</span>
+<span class="nc" id="L68">    log.debug(&quot;msg=[Both zones are non dns reverse zones.] result=[{}]&quot;, result);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">    return isAsc() ? result : -1 * result;</span>
+  }
+
+  private int compare(String[] sa1, String[] sa2) {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">    final String[] sav1 = sa1 != null ? sa1 : new String[0];</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    final String[] sav2 = sa2 != null ? sa2 : new String[0];</span>
+<span class="nc" id="L75">    final int len = Math.min(sav1.length, sav2.length);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">    for (int i = len - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L77">      int c = compare(sav1[i], sav2[i]);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">      if (c != 0) {</span>
+<span class="nc" id="L79">        return c;</span>
+      }
+    }
+<span class="nc" id="L82">    return 0;</span>
+  }
+
+  private int compare(String s1, String s2) {
+<span class="nc" id="L86">    return format(s1, 3).compareToIgnoreCase(format(s2, 3));</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

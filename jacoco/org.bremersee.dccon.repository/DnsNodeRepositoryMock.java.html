@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsNodeRepositoryMock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository</a> &gt; <span class="el_source">DnsNodeRepositoryMock.java</span></div><h1>DnsNodeRepositoryMock.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsPair;
+import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.UnknownFilter;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * The dns node repository mock.
+ *
+ * @author Christian Bremer
+ */
+@Profile(&quot;!ldap&quot;)
+@Component
+<span class="fc" id="L41">@Slf4j</span>
+<span class="fc" id="L42">public class DnsNodeRepositoryMock implements DnsNodeRepository {</span>
+
+  /**
+   * Init.
+   */
+  @PostConstruct
+  public void init() {
+<span class="fc" id="L49">    log.warn(&quot;\n&quot;</span>
+        + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n&quot;
+        + &quot;!! MOCK is running:  DnsNodeRepository                                              !!\n&quot;
+        + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&quot;
+    );
+<span class="fc" id="L54">  }</span>
+
+  @Override
+  public List&lt;DnsNode&gt; findByIps(@NotNull Set&lt;String&gt; ips, UnknownFilter unknownFilter) {
+<span class="nc" id="L58">    return Collections.emptyList();</span>
+  }
+
+  @Override
+  public Optional&lt;DnsNode&gt; findByHostName(@NotNull String hostName, UnknownFilter unknownFilter) {
+<span class="nc" id="L63">    return Optional.empty();</span>
+  }
+
+  @Override
+  public Stream&lt;DnsNode&gt; findAll(String zoneName, UnknownFilter unknownFilter) {
+<span class="nc" id="L68">    return Stream.empty();</span>
+  }
+
+  @Override
+  public boolean exists(String zoneName, String nodeName, UnknownFilter unknownFilter) {
+<span class="nc" id="L73">    return false;</span>
+  }
+
+  @Override
+  public Optional&lt;DnsNode&gt; findOne(String zoneName, String nodeName, UnknownFilter unknownFilter) {
+<span class="nc" id="L78">    return Optional.empty();</span>
+  }
+
+  @Override
+  public Optional&lt;DnsPair&gt; findCorrelatedDnsNode(String zoneName, DnsRecord record) {
+<span class="nc" id="L83">    return Optional.empty();</span>
+  }
+
+  @Override
+  public Optional&lt;DnsNode&gt; save(String zoneName, DnsNode dnsNode) {
+<span class="nc" id="L88">    return Optional.empty();</span>
+  }
+
+  @Override
+  public boolean delete(String zoneName, DnsNode node) {
+<span class="nc" id="L93">    return false;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

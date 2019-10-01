@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainControllerProperties.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.config</a> &gt; <span class="el_source">DomainControllerProperties.java</span></div><h1>DomainControllerProperties.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.config;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.ldaptive.SearchScope;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * The domain controller properties.
+ *
+ * @author Christian Bremer
+ */
+@ConfigurationProperties(prefix = &quot;bremersee.domain-controller&quot;)
+@Component
+@Getter
+<span class="pc" id="L40">@Setter</span>
+<span class="nc" id="L41">@ToString</span>
+<span class="nc bnc" id="L42" title="All 386 branches missed.">@EqualsAndHashCode</span>
+<span class="fc" id="L43">@Slf4j</span>
+public class DomainControllerProperties implements Serializable {
+
+  private static final long serialVersionUID = 2L;
+
+<span class="fc" id="L48">  private String groupBaseDn;</span>
+
+<span class="fc" id="L50">  private String groupRdn = &quot;cn&quot;;</span>
+
+<span class="fc" id="L52">  private String groupMemberAttr = &quot;member&quot;;</span>
+
+<span class="pc" id="L54">  private String groupFindAllFilter = &quot;(objectClass=group)&quot;;</span>
+
+<span class="pc" id="L56">  private SearchScope groupFindAllSearchScope = SearchScope.ONELEVEL;</span>
+
+<span class="pc" id="L58">  private String groupFindOneFilter = &quot;(&amp;(objectClass=group)(sAMAccountName={0}))&quot;;</span>
+
+<span class="pc" id="L60">  private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;</span>
+
+
+<span class="fc" id="L63">  private String userBaseDn;</span>
+
+<span class="fc" id="L65">  private String userRdn = &quot;cn&quot;;</span>
+
+<span class="fc" id="L67">  private String userGroupAttr = &quot;memberOf&quot;;</span>
+
+<span class="pc" id="L69">  private String userFindAllFilter = &quot;(objectClass=user)&quot;;</span>
+
+<span class="pc" id="L71">  private SearchScope userFindAllSearchScope = SearchScope.ONELEVEL;</span>
+
+<span class="pc" id="L73">  private String userFindOneFilter = &quot;(&amp;(objectClass=user)(sAMAccountName={0}))&quot;;</span>
+
+<span class="pc" id="L75">  private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;</span>
+
+
+<span class="fc" id="L78">  private String dnsZoneBaseDn;</span>
+
+<span class="fc" id="L80">  private String dnsZoneRdn = &quot;dc&quot;;</span>
+
+<span class="pc" id="L82">  private String dnsZoneFindAllFilter = &quot;(objectClass=dnsZone)&quot;;</span>
+
+<span class="pc" id="L84">  private SearchScope dnsZoneFindAllSearchScope = SearchScope.SUBTREE;</span>
+
+<span class="pc" id="L86">  private String dnsZoneFindOneFilter = &quot;(&amp;(objectClass=dnsZone)(name={0}))&quot;;</span>
+
+<span class="pc" id="L88">  private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;</span>
+
+
+<span class="pc" id="L91">  private String defaultZone = &quot;example.org&quot;;</span>
+
+<span class="nc" id="L93">  private String dnsNodeBaseDn;</span>
+
+<span class="fc" id="L95">  private String dnsNodeRdn = &quot;dc&quot;;</span>
+
+<span class="pc" id="L97">  private String dnsNodeFindAllFilter = &quot;(objectClass=dnsNode)&quot;;</span>
+
+<span class="pc" id="L99">  private SearchScope dnsNodeFindAllSearchScope = SearchScope.SUBTREE;</span>
+
+<span class="pc" id="L101">  private String dnsNodeFindOneFilter = &quot;(&amp;(objectClass=dnsNode)(name={0}))&quot;;</span>
+
+<span class="pc" id="L103">  private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;</span>
+
+
+<span class="pc" id="L106">  private String kinitBinary = &quot;/usr/bin/kinit&quot;;</span>
+
+<span class="pc" id="L108">  private String kinitAdministratorName = &quot;Administrator&quot;;</span>
+
+<span class="pc" id="L110">  private String kinitPasswordFile = &quot;/var/lib/dc-con/dc-pass.txt&quot;;</span>
+
+<span class="pc" id="L112">  private String sudoBinary = &quot;/usr/bin/sudo&quot;;</span>
+
+<span class="pc" id="L114">  private boolean usingSudo = true;</span>
+
+<span class="pc" id="L116">  private String sambaToolBinary = &quot;/usr/bin/samba-tool&quot;;</span>
+
+<span class="pc" id="L118">  private String sambaToolExecDir = &quot;/tmp&quot;;</span>
+
+<span class="pc" id="L120">  private String loginShell = &quot;/bin/bash&quot;;</span>
+
+<span class="pc" id="L122">  private String homeDirectoryTemplate = &quot;\\\\data\\users\\{}&quot;;</span>
+
+<span class="pc" id="L124">  private String unixHomeDirTemplate = &quot;/home/{}&quot;;</span>
+
+
+<span class="pc" id="L127">  private String dhcpLeaseListBinary = &quot;/usr/sbin/dhcp-lease-list&quot;;</span>
+
+<span class="pc" id="L129">  private String dhcpLeaseListExecDir = &quot;/tmp&quot;;</span>
+
+
+<span class="pc" id="L132">  private String nameServerHost = &quot;ns.example.org&quot;;</span>
+
+<span class="fc" id="L134">  private String reverseZoneSuffixIp4 = &quot;.in-addr.arpa&quot;;</span>
+
+<span class="pc" id="L136">  private String reverseZoneSuffixIp6 = &quot;.ip6.arpa&quot;;</span>
+
+<span class="pc" id="L138">  private List&lt;String&gt; excludedZoneRegexList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L140">  private List&lt;String&gt; excludedNodeRegexList = new ArrayList&lt;&gt;();</span>
+
+
+<span class="fc" id="L143">  private String ip4Regex = &quot;^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$&quot;;</span>
+
+<span class="fc" id="L145">  private String macRegex = &quot;^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$&quot;;</span>
+
+
+<span class="fc" id="L148">  private String gravatarUrl = &quot;https://www.gravatar.com/avatar/{}?d=404&quot;;</span>
+
+  /**
+   * Possible values.
+   * &lt;ul&gt;
+   * &lt;li&gt;mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
+   * &lt;li&gt;identicon: a geometric pattern based on an email hash
+   * &lt;li&gt;monsterid: a generated 'monster' with different colors, faces, etc
+   * &lt;li&gt;wavatar: generated faces with differing features and backgrounds
+   * &lt;li&gt;retro: awesome generated, 8-bit arcade-style pixelated faces
+   * &lt;li&gt;robohash: a generated robot with different colors, faces, etc
+   * &lt;li&gt;blank: a transparent PNG image (border added to HTML below for demonstration purposes)
+   * &lt;/ul&gt;
+   */
+<span class="fc" id="L162">  private String gravatarUrlForDefault = &quot;https://www.gravatar.com/avatar/{}?d=retro&quot;;</span>
+
+
+  /**
+   * Instantiates a new Domain controller properties.
+   */
+<span class="fc" id="L168">  public DomainControllerProperties() {</span>
+<span class="fc" id="L169">    excludedZoneRegexList.add(&quot;^_msdcs\\..*$&quot;);</span>
+<span class="fc" id="L170">    excludedZoneRegexList.add(&quot;RootDNSServers&quot;);</span>
+
+<span class="fc" id="L172">    excludedNodeRegexList.add(&quot;^$&quot;);</span>
+<span class="fc" id="L173">    excludedNodeRegexList.add(&quot;_msdcs&quot;);</span>
+<span class="fc" id="L174">    excludedNodeRegexList.add(&quot;_sites&quot;);</span>
+<span class="fc" id="L175">    excludedNodeRegexList.add(&quot;_tcp&quot;);</span>
+<span class="fc" id="L176">    excludedNodeRegexList.add(&quot;_udp&quot;);</span>
+
+<span class="fc" id="L178">    excludedNodeRegexList.add(&quot;@&quot;);</span>
+<span class="fc" id="L179">    excludedNodeRegexList.add(&quot;_gc\\..*$&quot;);</span>
+<span class="fc" id="L180">    excludedNodeRegexList.add(&quot;_kerberos\\..*$&quot;);</span>
+<span class="fc" id="L181">    excludedNodeRegexList.add(&quot;_kpasswd\\..*$&quot;);</span>
+<span class="fc" id="L182">    excludedNodeRegexList.add(&quot;_ldap\\..*$&quot;);</span>
+<span class="fc" id="L183">    excludedNodeRegexList.add(&quot;ForestDnsZones&quot;);</span>
+<span class="fc" id="L184">  }</span>
+
+  /**
+   * Gets reverse zone suffix list.
+   *
+   * @return the reverse zone suffix list
+   */
+  public List&lt;String&gt; getReverseZoneSuffixList() {
+<span class="nc" id="L192">    return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);</span>
+  }
+
+  /**
+   * Build dns node base dn string.
+   *
+   * @param zoneName the zone name
+   * @return the string
+   */
+  public String buildDnsNodeBaseDn(String zoneName) {
+<span class="fc" id="L202">    return dnsNodeBaseDn.replace(&quot;{zoneName}&quot;, zoneName);</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

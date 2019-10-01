@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsNodeLdapMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository.ldap</a> &gt; <span class="el_source">DnsNodeLdapMapper.java</span></div><h1>DnsNodeLdapMapper.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository.ldap;
+
+import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.model.UnknownFilter;
+import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordValueTranscoder;
+import org.ldaptive.AttributeModification;
+import org.ldaptive.LdapEntry;
+import org.ldaptive.io.StringValueTranscoder;
+
+/**
+ * The dns node ldap mapper.
+ *
+ * @author Christian Bremer
+ */
+public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEntryMapper&lt;DnsNode&gt; {
+
+<span class="fc" id="L42">  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();</span>
+
+<span class="fc" id="L44">  private static final DnsRecordValueTranscoder DNS_RECORD_VALUE_TRANSCODER</span>
+      = new DnsRecordValueTranscoder();
+
+  private final String zoneName;
+
+  private final UnknownFilter unknownFilter;
+
+  /**
+   * Instantiates a new dns node ldap mapper.
+   *
+   * @param properties    the properties
+   * @param zoneName      the zone name
+   * @param unknownFilter the unknown filter
+   */
+  public DnsNodeLdapMapper(
+      DomainControllerProperties properties,
+      String zoneName,
+      UnknownFilter unknownFilter) {
+<span class="fc" id="L62">    super(properties);</span>
+<span class="fc" id="L63">    this.zoneName = zoneName;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">    this.unknownFilter = unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;</span>
+<span class="fc" id="L65">  }</span>
+
+  @Override
+  public String[] getObjectClasses() {
+<span class="nc" id="L69">    return new String[0];</span>
+  }
+
+  @Override
+  public String mapDn(final DnsNode dnsNode) {
+<span class="fc" id="L74">    return createDn(</span>
+<span class="fc" id="L75">        getProperties().getDnsNodeRdn(),</span>
+<span class="fc" id="L76">        dnsNode.getName(),</span>
+<span class="fc" id="L77">        getProperties().buildDnsNodeBaseDn(zoneName));</span>
+  }
+
+  @Override
+  public DnsNode map(final LdapEntry ldapEntry) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">    if (ldapEntry == null) {</span>
+<span class="fc" id="L83">      return null;</span>
+    }
+<span class="fc" id="L85">    final DnsNode destination = new DnsNode();</span>
+<span class="fc" id="L86">    map(ldapEntry, destination);</span>
+<span class="fc bfc" id="L87" title="All 4 branches covered.">    if (destination.getRecords().isEmpty() &amp;&amp; unknownFilter != UnknownFilter.ALL) {</span>
+<span class="fc" id="L88">      return null;</span>
+    }
+<span class="fc" id="L90">    return destination;</span>
+  }
+
+  @Override
+  public void map(
+      final LdapEntry ldapEntry,
+      final DnsNode dnsNode) {
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">    if (ldapEntry == null) {</span>
+<span class="nc" id="L98">      return;</span>
+    }
+<span class="fc" id="L100">    mapCommonAttributes(ldapEntry, dnsNode);</span>
+<span class="fc" id="L101">    dnsNode.setName(getAttributeValue(ldapEntry, &quot;name&quot;, STRING_VALUE_TRANSCODER, null));</span>
+<span class="fc" id="L102">    dnsNode.setRecords(LdaptiveEntryMapper</span>
+<span class="fc" id="L103">        .getAttributeValuesAsSet(ldapEntry, &quot;dnsRecord&quot;, DNS_RECORD_VALUE_TRANSCODER)</span>
+<span class="fc" id="L104">        .stream()</span>
+<span class="fc" id="L105">        .filter(unknownFilter::matches)</span>
+<span class="fc" id="L106">        .collect(Collectors.toSet()));</span>
+<span class="fc" id="L107">    dnsNode.setRecords(new TreeSet&lt;&gt;(dnsNode.getRecords()));</span>
+<span class="fc" id="L108">  }</span>
+
+  @Override
+  public AttributeModification[] mapAndComputeModifications(
+      final DnsNode source,
+      final LdapEntry destination) {
+
+    // Because I cannot transcode the record value into the raw record value,
+    // this call keeps existing records and deletes non existing records.
+    // Adding new records has to be done via the command line interface
+    // (see save method in DnsNodeRepositoryImpl).
+<span class="fc" id="L119">    final List&lt;AttributeModification&gt; modifications = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L120">    final List&lt;DnsRecord&gt; delete = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L121">    final DnsNode destinationNode = map(destination);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">    if (destinationNode != null) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">      for (final DnsRecord record : destinationNode.getRecords()) {</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (!source.getRecords().contains(record)) {</span>
+<span class="fc" id="L125">          delete.add(record);</span>
+        }
+<span class="fc" id="L127">      }</span>
+    }
+<span class="fc" id="L129">    LdaptiveEntryMapper.removeAttributes(</span>
+        destination, &quot;dnsRecord&quot;, delete, DNS_RECORD_VALUE_TRANSCODER, modifications);
+<span class="fc" id="L131">    return modifications.toArray(new AttributeModification[0]);</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

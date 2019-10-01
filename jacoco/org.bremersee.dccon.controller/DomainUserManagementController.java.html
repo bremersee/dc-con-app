@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainUserManagementController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.controller</a> &gt; <span class="el_source">DomainUserManagementController.java</span></div><h1>DomainUserManagementController.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.controller;
+
+import java.util.List;
+import javax.validation.Valid;
+import org.bremersee.dccon.api.DomainUserManagementApi;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.Password;
+import org.bremersee.dccon.service.DomainUserService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * The domain user management controller.
+ *
+ * @author Christian Bremer
+ */
+@RestController
+public class DomainUserManagementController implements DomainUserManagementApi {
+
+  private final DomainUserService domainUserService;
+
+  /**
+   * Instantiates a new domain user management controller.
+   *
+   * @param domainUserService the domain user service
+   */
+  public DomainUserManagementController(
+<span class="fc" id="L47">      final DomainUserService domainUserService) {</span>
+<span class="fc" id="L48">    this.domainUserService = domainUserService;</span>
+<span class="fc" id="L49">  }</span>
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;List&lt;DomainUser&gt;&gt; getUsers(final String sort) {
+<span class="nc" id="L54">    return ResponseEntity.ok(domainUserService.getUsers(sort));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;DomainUser&gt; addUser(
+      @Valid final DomainUser domainUser) {
+<span class="nc" id="L61">    return ResponseEntity.ok(domainUserService.addUser(domainUser));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;DomainUser&gt; getUser(final String userName) {
+<span class="fc" id="L67">    return ResponseEntity.of(domainUserService.getUser(userName));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;byte[]&gt; getUserAvatar(
+      final String userName,
+      final Boolean returnDefault) {
+
+<span class="nc" id="L76">    return domainUserService.getUserAvatar(userName, returnDefault)</span>
+<span class="nc" id="L77">        .map(avatar -&gt; ResponseEntity</span>
+<span class="nc" id="L78">            .status(HttpStatus.OK)</span>
+<span class="nc" id="L79">            .header(HttpHeaders.CONTENT_DISPOSITION, &quot;inline; filename=\&quot;&quot; + userName + &quot;.jpeg\&quot;&quot;)</span>
+<span class="nc" id="L80">            .body(avatar))</span>
+<span class="nc" id="L81">        .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.NOT_FOUND).build());</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;DomainUser&gt; updateUser(
+      final String userName,
+      final Boolean updateGroups,
+      @Valid final DomainUser domainUser) {
+<span class="nc" id="L90">    return ResponseEntity.of(domainUserService.updateUser(userName, updateGroups, domainUser));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;Void&gt; updateUserPassword(
+      final String userName,
+      @Valid final Password newPassword) {
+<span class="nc" id="L98">    domainUserService.updateUserPassword(userName, newPassword);</span>
+<span class="nc" id="L99">    return ResponseEntity.ok().build();</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;Boolean&gt; userExists(final String userName) {
+<span class="nc" id="L105">    return ResponseEntity.ok(domainUserService.userExists(userName));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;Boolean&gt; deleteUser(final String userName) {
+<span class="nc" id="L111">    return ResponseEntity.ok(domainUserService.deleteUser(userName));</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

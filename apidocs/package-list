@@ -1,0 +1,9 @@
+org.bremersee.dccon
+org.bremersee.dccon.config
+org.bremersee.dccon.controller
+org.bremersee.dccon.repository
+org.bremersee.dccon.repository.cli
+org.bremersee.dccon.repository.ldap
+org.bremersee.dccon.repository.ldap.transcoder
+org.bremersee.dccon.service
+org.bremersee.dccon.service.validator

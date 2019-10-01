@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsRecordDataMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository.ldap.transcoder</a> &gt; <span class="el_source">DnsRecordDataMapper.java</span></div><h1>DnsRecordDataMapper.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository.ldap.transcoder;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.exception.ServiceException;
+import org.ldaptive.io.Hex;
+import org.springframework.util.StringUtils;
+
+/**
+ * The dns record data mapper.
+ *
+ * @author Christian Bremer
+ */
+<span class="fc" id="L40">@Slf4j</span>
+public abstract class DnsRecordDataMapper {
+
+  private DnsRecordDataMapper() {
+  }
+
+  /**
+   * Parse a dns record.
+   *
+   * @param data              the data
+   * @param dnsRecordSupplier the dns record supplier
+   * @return the dns record
+   */
+  public static DnsRecord parseA(final byte[] data, final Supplier&lt;DnsRecord&gt; dnsRecordSupplier) {
+<span class="fc" id="L54">    final DnsRecord dnsRecord = dnsRecordSupplier.get();</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">    if (data.length &gt;= 4) {</span>
+<span class="fc" id="L56">      try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {</span>
+<span class="fc" id="L57">        String ip = String.valueOf(dis.readUnsignedByte())</span>
+            + '.'
+<span class="fc" id="L59">            + dis.readUnsignedByte()</span>
+            + '.'
+<span class="fc" id="L61">            + dis.readUnsignedByte()</span>
+            + '.'
+<span class="fc" id="L63">            + dis.readUnsignedByte();</span>
+<span class="fc" id="L64">        dnsRecord.setRecordValue(ip);</span>
+<span class="nc" id="L65">      } catch (IOException ioe) {</span>
+<span class="nc" id="L66">        final ServiceException se = ServiceException.internalServerError(</span>
+            &quot;Parsing data of A record failed.&quot;,
+            &quot;org.bremersee:dc-con-app:7279a7e9-69a8-4d30-b1c2-14c10a3a705f&quot;,
+            ioe);
+<span class="nc" id="L70">        log.error(&quot;msg=[Parsing data of A record failed.]&quot;, se);</span>
+<span class="nc" id="L71">        throw se;</span>
+<span class="fc" id="L72">      }</span>
+    } else {
+<span class="nc" id="L74">      dnsRecord.setRecordValue(new String(Hex.encode(data)));</span>
+    }
+<span class="fc" id="L76">    log.debug(&quot;msg=[A record parsed.] recordValue=[{}] correlatedRecordValue=[{}]&quot;,</span>
+<span class="fc" id="L77">        dnsRecord.getRecordValue(), dnsRecord.getCorrelatedRecordValue());</span>
+<span class="fc" id="L78">    return dnsRecord;</span>
+  }
+
+  /**
+   * Parse cname dns record.
+   *
+   * @param data              the data
+   * @param dnsRecordSupplier the dns record supplier
+   * @return the dns record
+   */
+  public static DnsRecord parseCname(
+      final byte[] data,
+      final Supplier&lt;DnsRecord&gt; dnsRecordSupplier) {
+<span class="fc" id="L91">    return parsePtr(data, dnsRecordSupplier);</span>
+  }
+
+  /**
+   * Parse ptr dns record.
+   *
+   * @param data              the data
+   * @param dnsRecordSupplier the dns record supplier
+   * @return the dns record
+   */
+  public static DnsRecord parsePtr(final byte[] data, final Supplier&lt;DnsRecord&gt; dnsRecordSupplier) {
+<span class="fc" id="L102">    final DnsRecord dnsRecord = dnsRecordSupplier.get();</span>
+<span class="pc bpc" id="L103" title="2 of 4 branches missed.">    if (data != null &amp;&amp; data.length &gt; 1) {</span>
+<span class="fc" id="L104">      try (final DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {</span>
+<span class="fc" id="L105">        int expectedLength = dis.readUnsignedByte();</span>
+<span class="fc" id="L106">        int actualLength = 0;</span>
+<span class="fc" id="L107">        final List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L108">        StringBuilder valueBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (char c : IOUtils.toString(dis, StandardCharsets.UTF_8).toCharArray()) {</span>
+<span class="fc" id="L110">          actualLength++;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">          if (c &gt; 32) {</span>
+<span class="fc" id="L112">            valueBuilder.append(c);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">          } else if (valueBuilder.length() &gt; 0) {</span>
+<span class="fc" id="L114">            values.add(valueBuilder.toString());</span>
+<span class="fc" id="L115">            valueBuilder = new StringBuilder();</span>
+          }
+        }
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (valueBuilder.length() &gt; 0) {</span>
+<span class="nc" id="L119">          values.add(valueBuilder.toString());</span>
+        }
+<span class="fc" id="L121">        final String value = StringUtils.collectionToDelimitedString(values, &quot;.&quot;);</span>
+<span class="fc" id="L122">        log.debug(&quot;msg=[PTR record parsed.] ptrValue=[{}] expectedLength=[{}] actualLength=[{}]&quot;,</span>
+<span class="fc" id="L123">            value, expectedLength, actualLength);</span>
+
+        try {
+<span class="nc" id="L126">          final InetAddress inetAddress = InetAddress.getByName(value);</span>
+<span class="nc" id="L127">          dnsRecord.setRecordValue(inetAddress.getHostName());</span>
+<span class="nc" id="L128">          dnsRecord.setCorrelatedRecordValue(inetAddress.getHostAddress());</span>
+
+<span class="fc" id="L130">        } catch (UnknownHostException e) {</span>
+<span class="fc" id="L131">          dnsRecord.setRecordValue(value);</span>
+<span class="nc" id="L132">        }</span>
+
+<span class="nc" id="L134">      } catch (IOException e) {</span>
+<span class="nc" id="L135">        log.error(&quot;Parsing PTR record value failed.&quot;, e);</span>
+<span class="fc" id="L136">      }</span>
+    }
+<span class="fc" id="L138">    return dnsRecord;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

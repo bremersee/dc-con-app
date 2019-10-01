@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NameServerManagementController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.controller</a> &gt; <span class="el_source">NameServerManagementController.java</span></div><h1>NameServerManagementController.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.controller;
+
+import java.util.List;
+import javax.validation.Valid;
+import org.bremersee.dccon.api.NameServerManagementApi;
+import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.UnknownFilter;
+import org.bremersee.dccon.service.NameServerService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * The name server management controller.
+ *
+ * @author Christian Bremer
+ */
+@RestController
+public class NameServerManagementController implements NameServerManagementApi {
+
+  private NameServerService nameServerService;
+
+  /**
+   * Instantiates a new name server management controller.
+   *
+   * @param nameServerService the name server service
+   */
+  public NameServerManagementController(
+<span class="fc" id="L48">      final NameServerService nameServerService) {</span>
+<span class="fc" id="L49">    this.nameServerService = nameServerService;</span>
+<span class="fc" id="L50">  }</span>
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;List&lt;DnsNode&gt;&gt; query(
+      final String query,
+      final UnknownFilter unknownFilter) {
+<span class="nc" id="L57">    return ResponseEntity.ok(nameServerService.query(query, unknownFilter));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;List&lt;DhcpLease&gt;&gt; getDhcpLeases(
+      final Boolean all,
+      final String sort) {
+<span class="nc" id="L65">    return ResponseEntity.ok(nameServerService.getDhcpLeases(all, sort));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;List&lt;DnsZone&gt;&gt; getDnsZones() {
+<span class="nc" id="L71">    return ResponseEntity.ok(nameServerService.getDnsZones());</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;DnsZone&gt; addDnsZone(
+      @Valid final DnsZone dnsZone) {
+<span class="nc" id="L78">    return ResponseEntity.ok(nameServerService.addDnsZone(dnsZone));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;Boolean&gt; deleteDnsZone(
+      final String zoneName) {
+<span class="nc" id="L85">    return ResponseEntity.ok(nameServerService.deleteDnsZone(zoneName));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;List&lt;DnsNode&gt;&gt; getDnsNodes(
+      final String zoneName,
+      final UnknownFilter unknownFilter) {
+<span class="nc" id="L93">    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;DnsNode&gt; saveDnsNode(
+      String zoneName,
+      @Valid DnsNode dnsNode) {
+<span class="nc" id="L101">    return nameServerService.save(zoneName, dnsNode)</span>
+<span class="nc" id="L102">        .map(ResponseEntity::ok)</span>
+<span class="nc" id="L103">        .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.NO_CONTENT).build());</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;DnsNode&gt; getDnsNode(
+      String zoneName,
+      String nodeName,
+      UnknownFilter unknownFilter) {
+<span class="nc" id="L112">    return ResponseEntity.of(nameServerService.getDnsNode(zoneName, nodeName, unknownFilter));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;Boolean&gt; deleteDnsNode(String zoneName, String nodeName) {
+<span class="nc" id="L118">    return ResponseEntity.ok(nameServerService.deleteDnsNode(zoneName, nodeName));</span>
+  }
+
+  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @Override
+  public ResponseEntity&lt;Void&gt; deleteAllDnsNodes(String zoneName, List&lt;String&gt; nodeNames) {
+<span class="nc" id="L124">    nameServerService.deleteAllDnsNodes(zoneName, nodeNames);</span>
+<span class="nc" id="L125">    return ResponseEntity.ok().build();</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

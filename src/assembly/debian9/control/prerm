@@ -1,6 +1,0 @@
-#!/bin/bash
-
-/bin/systemctl stop dc-con.service
-/bin/systemctl disable dc-con.service
-
-exit 0

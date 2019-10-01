@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DhcpRepositoryImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository</a> &gt; <span class="el_source">DhcpRepositoryImpl.java</span></div><h1>DhcpRepositoryImpl.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * The dhcp repository implementation.
+ *
+ * @author Christian Bremer
+ */
+@Profile(&quot;cli&quot;)
+@Component(&quot;dhcpRepository&quot;)
+<span class="nc" id="L41">@Slf4j</span>
+public class DhcpRepositoryImpl extends AbstractRepository implements DhcpRepository {
+
+  private DhcpLeaseParser parser;
+
+  /**
+   * Instantiates a new dhcp repository.
+   *
+   * @param properties the domain controller properties
+   */
+  public DhcpRepositoryImpl(DomainControllerProperties properties) {
+<span class="nc" id="L52">    super(properties, null);</span>
+<span class="nc" id="L53">    parser = DhcpLeaseParser.defaultParser();</span>
+<span class="nc" id="L54">  }</span>
+
+  /**
+   * Sets dhcp lease parser.
+   *
+   * @param parser the dhcp lease parser
+   */
+  @Autowired(required = false)
+  public void setParser(DhcpLeaseParser parser) {
+<span class="nc" id="L63">    this.parser = parser;</span>
+<span class="nc" id="L64">  }</span>
+
+  @Override
+  public List&lt;DhcpLease&gt; findAll() {
+<span class="nc" id="L68">    return find(true);</span>
+  }
+
+  @Cacheable(cacheNames = &quot;dhcp-leases-by-ip&quot;)
+  public Map&lt;String, DhcpLease&gt; findActiveByIp() {
+<span class="nc" id="L73">    return findActiveMap(true);</span>
+  }
+
+  @Cacheable(cacheNames = &quot;dhcp-leases-by-name&quot;)
+  public Map&lt;String, DhcpLease&gt; findActiveByHostName() {
+<span class="nc" id="L78">    return findActiveMap(false);</span>
+  }
+
+  private Map&lt;String, DhcpLease&gt; findActiveMap(boolean ip) {
+<span class="nc" id="L82">    final List&lt;DhcpLease&gt; leases = find(false);</span>
+<span class="nc" id="L83">    leases.sort(ComparatorBuilder.builder()</span>
+<span class="nc" id="L84">        .fromWellKnownText(&quot;begin,desc&quot;)</span>
+<span class="nc" id="L85">        .build());</span>
+<span class="nc" id="L86">    final Map&lt;String, DhcpLease&gt; leaseMap = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">    for (final DhcpLease lease : leases) {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">      final String key = ip</span>
+<span class="nc" id="L89">          ? lease.getIp()</span>
+<span class="nc" id="L90">          : lease.getHostname().toUpperCase();</span>
+<span class="nc" id="L91">      leaseMap.putIfAbsent(key, lease);</span>
+<span class="nc" id="L92">    }</span>
+<span class="nc" id="L93">    return leaseMap;</span>
+  }
+
+  private List&lt;DhcpLease&gt; find(final boolean all) {
+<span class="nc" id="L97">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L98">    sudo(commands);</span>
+<span class="nc" id="L99">    commands.add(getProperties().getDhcpLeaseListBinary());</span>
+<span class="nc" id="L100">    commands.add(&quot;--parsable&quot;);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">    if (all) {</span>
+<span class="nc" id="L102">      commands.add(&quot;--all&quot;);</span>
+    }
+<span class="nc" id="L104">    return CommandExecutor.exec(</span>
+        commands,
+        null,
+<span class="nc" id="L107">        getProperties().getDhcpLeaseListExecDir(),</span>
+        parser);
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

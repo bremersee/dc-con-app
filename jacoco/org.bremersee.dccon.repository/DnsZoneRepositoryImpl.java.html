@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsZoneRepositoryImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository</a> &gt; <span class="el_source">DnsZoneRepositoryImpl.java</span></div><h1>DnsZoneRepositoryImpl.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import static org.bremersee.dccon.repository.cli.CommandExecutorResponse.toExceptionMessage;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.data.ldaptive.LdaptiveTemplate;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
+import org.bremersee.exception.ServiceException;
+import org.ldaptive.SearchFilter;
+import org.ldaptive.SearchRequest;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * The dns zone repository.
+ *
+ * @author Christian Bremer
+ */
+@Profile(&quot;ldap&quot;)
+@Component(&quot;dnsZoneRepository&quot;)
+<span class="nc" id="L51">@Slf4j</span>
+public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
+
+  private final List&lt;Pattern&gt; excludedZoneNamePatterns;
+
+  private LdaptiveEntryMapper&lt;DnsZone&gt; dnsZoneLdapMapper;
+
+  /**
+   * Instantiates a new dns zone repository.
+   *
+   * @param properties   the properties
+   * @param ldapTemplate the ldap template
+   */
+  public DnsZoneRepositoryImpl(
+      DomainControllerProperties properties,
+      LdaptiveTemplate ldapTemplate) {
+<span class="nc" id="L67">    super(properties, ldapTemplate);</span>
+<span class="nc" id="L68">    this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);</span>
+<span class="nc" id="L69">    this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()</span>
+<span class="nc" id="L70">        .map(Pattern::compile).collect(Collectors.toList());</span>
+<span class="nc" id="L71">  }</span>
+
+  /**
+   * Sets dns zone ldap mapper.
+   *
+   * @param dnsZoneLdapMapper the dns zone ldap mapper
+   */
+  @SuppressWarnings(&quot;unused&quot;)
+  public void setDnsZoneLdapMapper(LdaptiveEntryMapper&lt;DnsZone&gt; dnsZoneLdapMapper) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    if (dnsZoneLdapMapper != null) {</span>
+<span class="nc" id="L81">      this.dnsZoneLdapMapper = dnsZoneLdapMapper;</span>
+    }
+<span class="nc" id="L83">  }</span>
+
+  private boolean isNonExcludedDnsZone(final DnsZone zone) {
+<span class="nc bnc" id="L86" title="All 4 branches missed.">    return zone != null &amp;&amp; !isExcludedDnsZone(zone);</span>
+  }
+
+  private boolean isNonExcludedDnsZone(final String zoneName) {
+<span class="nc bnc" id="L90" title="All 4 branches missed.">    return zoneName != null &amp;&amp; !isExcludedDnsZone(zoneName);</span>
+  }
+
+  private boolean isExcludedDnsZone(final DnsZone zone) {
+<span class="nc bnc" id="L94" title="All 4 branches missed.">    return zone != null &amp;&amp; isExcludedDnsZone(zone.getName());</span>
+  }
+
+  private boolean isExcludedDnsZone(final String zoneName) {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">    return zoneName != null &amp;&amp; excludedZoneNamePatterns.stream()</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        .anyMatch(pattern -&gt; pattern.matcher(zoneName).matches());</span>
+  }
+
+  @Override
+  public boolean isDnsReverseZone(final String dnsZoneName) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">    return dnsZoneName != null &amp;&amp; getProperties().getReverseZoneSuffixList().stream()</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        .anyMatch(suffix -&gt; dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));</span>
+  }
+
+  @Override
+  public Stream&lt;DnsZone&gt; findAll() {
+<span class="nc" id="L110">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="nc" id="L111">        getProperties().getDnsZoneBaseDn(),</span>
+<span class="nc" id="L112">        new SearchFilter(getProperties().getDnsZoneFindAllFilter()));</span>
+<span class="nc" id="L113">    searchRequest.setSearchScope(getProperties().getDnsZoneFindAllSearchScope());</span>
+<span class="nc" id="L114">    return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper)</span>
+<span class="nc" id="L115">        .filter(this::isNonExcludedDnsZone);</span>
+  }
+
+  @Override
+  public boolean exists(@NotNull String zoneName) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">    return isNonExcludedDnsZone(zoneName)</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        &amp;&amp; getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);</span>
+  }
+
+  @Override
+  public Optional&lt;DnsZone&gt; findOne(@NotNull String zoneName) {
+<span class="nc" id="L126">    final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsZoneFindOneFilter());</span>
+<span class="nc" id="L127">    searchFilter.setParameter(0, zoneName);</span>
+<span class="nc" id="L128">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="nc" id="L129">        getProperties().getDnsZoneBaseDn(),</span>
+        searchFilter);
+<span class="nc" id="L131">    searchRequest.setSearchScope(getProperties().getDnsZoneFindOneSearchScope());</span>
+<span class="nc" id="L132">    return getLdapTemplate()</span>
+<span class="nc" id="L133">        .findOne(searchRequest, dnsZoneLdapMapper)</span>
+<span class="nc" id="L134">        .filter(this::isNonExcludedDnsZone);</span>
+  }
+
+  @Override
+  public DnsZone save(@NotNull final String zoneName) {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">    if (isExcludedDnsZone(zoneName)) {</span>
+<span class="nc" id="L140">      throw ServiceException.badRequest(</span>
+          &quot;Zone name is not allowed.&quot;,
+          &quot;org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9&quot;);
+    }
+<span class="nc" id="L144">    return findOne(zoneName)</span>
+<span class="nc" id="L145">        .orElseGet(() -&gt; execDnsZoneCmd(</span>
+            &quot;zonecreate&quot;,
+<span class="nc" id="L147">            zoneName, response -&gt; findOne(zoneName)</span>
+<span class="nc" id="L148">                .orElseThrow(() -&gt; ServiceException.internalServerError(</span>
+                    &quot;msg=[Saving dns zone failed.] &quot;
+<span class="nc" id="L150">                        + CommandExecutorResponse.toExceptionMessage(response),</span>
+                    &quot;org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0&quot;))));
+  }
+
+  @Override
+  public boolean delete(@NotNull String zoneName) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">    if (exists(zoneName)) {</span>
+<span class="nc" id="L157">      execDnsZoneCmd(</span>
+          &quot;zonedelete&quot;,
+          zoneName,
+          (CommandExecutorResponseValidator) response -&gt; {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">            if (exists(zoneName)) {</span>
+<span class="nc" id="L162">              throw ServiceException.internalServerError(</span>
+<span class="nc" id="L163">                  &quot;msg=[Deleting dns zone failed.] &quot; + toExceptionMessage(response),</span>
+                  &quot;org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3&quot;);
+            }
+<span class="nc" id="L166">          });</span>
+<span class="nc" id="L167">      return true;</span>
+    }
+<span class="nc" id="L169">    return false;</span>
+  }
+
+  private &lt;T&gt; T execDnsZoneCmd(
+      final String dnsCommand,
+      final String zoneName,
+      final CommandExecutorResponseParser&lt;T&gt; parser) {
+
+<span class="nc" id="L177">    kinit();</span>
+<span class="nc" id="L178">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L179">    sudo(commands);</span>
+<span class="nc" id="L180">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L181">    commands.add(&quot;dns&quot;);</span>
+<span class="nc" id="L182">    commands.add(dnsCommand);</span>
+<span class="nc" id="L183">    commands.add(getProperties().getNameServerHost());</span>
+<span class="nc" id="L184">    commands.add(zoneName);</span>
+<span class="nc" id="L185">    auth(commands);</span>
+<span class="nc" id="L186">    return CommandExecutor.exec(</span>
+<span class="nc" id="L187">        commands, null, getProperties().getSambaToolExecDir(), parser);</span>
+  }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

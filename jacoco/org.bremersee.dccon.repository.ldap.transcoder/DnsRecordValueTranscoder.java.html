@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsRecordValueTranscoder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository.ldap.transcoder</a> &gt; <span class="el_source">DnsRecordValueTranscoder.java</span></div><h1>DnsRecordValueTranscoder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository.ldap.transcoder;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.repository.DnsRecordType;
+import org.bremersee.exception.ServiceException;
+import org.ldaptive.io.AbstractBinaryValueTranscoder;
+
+/**
+ * The dns record value transcoder.
+ *
+ * @author Christian Bremer
+ */
+<span class="fc" id="L41">@Slf4j</span>
+<span class="fc" id="L42">public class DnsRecordValueTranscoder extends AbstractBinaryValueTranscoder&lt;DnsRecord&gt; {</span>
+
+  private static final long ACTIVE_DIRECTORY_START_TIME;
+
+  static {
+<span class="fc" id="L47">    final GregorianCalendar cal = new GregorianCalendar();</span>
+<span class="fc" id="L48">    cal.setTimeZone(TimeZone.getTimeZone(&quot;GMT&quot;));</span>
+<span class="fc" id="L49">    cal.set(1601, Calendar.JANUARY, 1, 0, 0, 0);</span>
+<span class="fc" id="L50">    cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L51">    ACTIVE_DIRECTORY_START_TIME = cal.getTimeInMillis();</span>
+<span class="fc" id="L52">  }</span>
+
+  @Override
+  public DnsRecord decodeBinaryValue(final byte[] value) {
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">    if (value == null || value.length &lt; 24) {</span>
+<span class="nc" id="L57">      return null;</span>
+    }
+<span class="fc" id="L59">    try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(value))) {</span>
+<span class="fc" id="L60">      int dataLength = Short.reverseBytes((short) dis.readUnsignedShort()); // 2 bytes</span>
+<span class="fc" id="L61">      int type = Short.reverseBytes((short) dis.readUnsignedShort());       // 2 bytes</span>
+<span class="fc" id="L62">      int version = dis.readUnsignedByte();                                 // 1 byte</span>
+<span class="fc" id="L63">      int rank = dis.readUnsignedByte();                                    // 1 byte</span>
+<span class="fc" id="L64">      int flags = Short.reverseBytes((short) dis.readUnsignedShort());      // 2 bytes</span>
+<span class="fc" id="L65">      int serial = Integer.reverseBytes(dis.readInt());                     // 4 bytes</span>
+<span class="fc" id="L66">      int ttlSeconds = dis.readInt();                                       // 4 bytes</span>
+<span class="fc" id="L67">      int reserved = Integer.reverseBytes(dis.readInt());                   // 4 bytes</span>
+<span class="fc" id="L68">      int timeStamp = Integer.reverseBytes(dis.readInt());                  // 4 bytes</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">      byte[] data = value.length &gt; 24</span>
+<span class="pc" id="L70">          ? Arrays.copyOfRange(value, 24, value.length)</span>
+          : new byte[0];
+
+<span class="fc" id="L73">      long timeStampMillis = ACTIVE_DIRECTORY_START_TIME + Duration.ofHours(timeStamp).toMillis();</span>
+<span class="fc" id="L74">      OffsetDateTime dateTime = OffsetDateTime.ofInstant(</span>
+<span class="fc" id="L75">          new Date(timeStampMillis).toInstant(),</span>
+          ZoneOffset.UTC);
+<span class="fc" id="L77">      DnsRecordType typeMapping = DnsRecordType.fromValue(type);</span>
+
+<span class="fc" id="L79">      log.debug(&quot;msg=[DNS record value decoded.] dataLength=[{}] type=[{}] version=[{}] &quot;</span>
+              + &quot;rank=[{}] flags=[{}] serial=[{}] ttlSeconds=[{}] reserved=[{}] timeStamp=[{}] &quot;
+<span class="fc" id="L81">              + &quot;data(size)=[{}]&quot;, dataLength, typeMapping.name(), version, rank, flags, serial,</span>
+<span class="fc" id="L82">          ttlSeconds, reserved, dateTime, data.length);</span>
+
+<span class="fc" id="L84">      final DnsRecord dnsRecord = new DnsRecord();</span>
+<span class="fc" id="L85">      dnsRecord.setRecordRawValue(value);</span>
+<span class="fc" id="L86">      dnsRecord.setRecordType(typeMapping.name());</span>
+<span class="fc" id="L87">      dnsRecord.setSerial(serial);</span>
+<span class="fc" id="L88">      dnsRecord.setTimeStamp(dateTime);</span>
+<span class="fc" id="L89">      dnsRecord.setTtlSeconds(ttlSeconds);</span>
+<span class="fc" id="L90">      dnsRecord.setVersion(version);</span>
+
+<span class="fc" id="L92">      return typeMapping.mapData(data, () -&gt; dnsRecord);</span>
+
+<span class="nc" id="L94">    } catch (final IOException e) {</span>
+
+<span class="nc" id="L96">      final ServiceException se = ServiceException.internalServerError(</span>
+          &quot;Decoding dns record value failed.&quot;, e);
+<span class="nc" id="L98">      log.error(&quot;msg=[Decoding dns record value failed.]&quot;, se);</span>
+<span class="nc" id="L99">      throw se;</span>
+    }
+  }
+
+  @Override
+  public byte[] encodeBinaryValue(final DnsRecord value) {
+<span class="fc" id="L105">    return value.getRecordRawValue();</span>
+  }
+
+  @Override
+  public Class&lt;DnsRecord&gt; getType() {
+<span class="fc" id="L110">    return DnsRecord.class;</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

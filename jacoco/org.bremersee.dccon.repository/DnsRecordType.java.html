@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsRecordType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository</a> &gt; <span class="el_source">DnsRecordType.java</span></div><h1>DnsRecordType.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import lombok.AccessLevel;
+import lombok.Getter;
+import org.bremersee.dccon.model.DnsRecord;
+import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordDataMapper;
+import org.ldaptive.io.Hex;
+
+/**
+ * The enum Dns record type.
+ *
+ * @author Christian Bremer
+ */
+<span class="fc" id="L34">@SuppressWarnings(&quot;unused&quot;)</span>
+public enum DnsRecordType {
+
+  /**
+   * Unknown dns record type.
+   */
+<span class="fc" id="L40">  UNKNOWN(-1, null),</span>
+
+  /**
+   * A dns record type.
+   */
+<span class="fc" id="L45">  A(1, DnsRecordDataMapper::parseA),</span>
+
+  /**
+   * Ns dns record type.
+   */
+<span class="fc" id="L50">  NS(2, null),</span>
+
+  /**
+   * Md dns record type.
+   */
+<span class="fc" id="L55">  MD(3, null),</span>
+
+  /**
+   * Mf dns record type.
+   */
+<span class="fc" id="L60">  MF(4, null),</span>
+
+  /**
+   * Cname dns record type.
+   */
+<span class="fc" id="L65">  CNAME(5, DnsRecordDataMapper::parseCname),</span>
+
+  /**
+   * Soa dns record type.
+   */
+<span class="fc" id="L70">  SOA(6, null),</span>
+
+  /**
+   * Mb dns record type.
+   */
+<span class="fc" id="L75">  MB(7, null),</span>
+
+  /**
+   * Mg dns record type.
+   */
+<span class="fc" id="L80">  MG(8, null),</span>
+
+  /**
+   * Mr dns record type.
+   */
+<span class="fc" id="L85">  MR(9, null),</span>
+
+  /**
+   * Null dns record type.
+   */
+<span class="fc" id="L90">  NULL(10, null),</span>
+
+  /**
+   * Wks dns record type.
+   */
+<span class="fc" id="L95">  WKS(11, null),</span>
+
+  /**
+   * Ptr dns record type.
+   */
+<span class="fc" id="L100">  PTR(12, DnsRecordDataMapper::parsePtr),</span>
+
+  /**
+   * Hinfo dns record type.
+   */
+<span class="fc" id="L105">  HINFO(13, null),</span>
+
+  /**
+   * Minfo dns record type.
+   */
+<span class="fc" id="L110">  MINFO(14, null),</span>
+
+  /**
+   * Mx dns record type.
+   */
+<span class="fc" id="L115">  MX(15, null),</span>
+
+  /**
+   * Txt dns record type.
+   */
+<span class="fc" id="L120">  TXT(16, null),</span>
+
+  /**
+   * Rp dns record type.
+   */
+<span class="fc" id="L125">  RP(17, null),</span>
+
+  /**
+   * Afsdb dns record type.
+   */
+<span class="fc" id="L130">  AFSDB(18, null),</span>
+
+  /**
+   * X 25 dns record type.
+   */
+<span class="fc" id="L135">  X25(19, null),</span>
+
+  /**
+   * Isdn dns record type.
+   */
+<span class="fc" id="L140">  ISDN(20, null),</span>
+
+  /**
+   * Rt dns record type.
+   */
+<span class="fc" id="L145">  RT(21, null),</span>
+
+  /**
+   * Nsap dns record type.
+   */
+<span class="fc" id="L150">  NSAP(22, null),</span>
+
+  /**
+   * Nsap ptr dns record type.
+   */
+<span class="fc" id="L155">  NSAP_PTR(23, null),</span>
+
+  /**
+   * Sig dns record type.
+   */
+<span class="fc" id="L160">  SIG(24, null),</span>
+
+  /**
+   * Key dns record type.
+   */
+<span class="fc" id="L165">  KEY(25, null),</span>
+
+  /**
+   * Px dns record type.
+   */
+<span class="fc" id="L170">  PX(26, null),</span>
+
+  /**
+   * Gpos dns record type.
+   */
+<span class="fc" id="L175">  GPOS(27, null),</span>
+
+  /**
+   * Aaaa dns record type.
+   */
+<span class="fc" id="L180">  AAAA(28, null),</span>
+
+  /**
+   * Loc dns record type.
+   */
+<span class="fc" id="L185">  LOC(29, null),</span>
+
+  /**
+   * Nxt dns record type.
+   */
+<span class="fc" id="L190">  NXT(30, null),</span>
+
+  /**
+   * Eid dns record type.
+   */
+<span class="fc" id="L195">  EID(31, null),</span>
+
+  /**
+   * Nimloc dns record type.
+   */
+<span class="fc" id="L200">  NIMLOC(32, null),</span>
+
+  /**
+   * Srv dns record type.
+   */
+<span class="fc" id="L205">  SRV(33, null),</span>
+
+  /**
+   * Atma dns record type.
+   */
+<span class="fc" id="L210">  ATMA(34, null),</span>
+
+  /**
+   * Naptr dns record type.
+   */
+<span class="fc" id="L215">  NAPTR(35, null),</span>
+
+  /**
+   * Kx dns record type.
+   */
+<span class="fc" id="L220">  KX(36, null),</span>
+
+  /**
+   * Cert dns record type.
+   */
+<span class="fc" id="L225">  CERT(37, null),</span>
+
+  /**
+   * A 6 dns record type.
+   */
+<span class="fc" id="L230">  A6(38, null),</span>
+
+  /**
+   * Dname dns record type.
+   */
+<span class="fc" id="L235">  DNAME(39, null),</span>
+
+  /**
+   * Sink dns record type.
+   */
+<span class="fc" id="L240">  SINK(40, null),</span>
+
+  /**
+   * Opt dns record type.
+   */
+<span class="fc" id="L245">  OPT(41, null),</span>
+
+  /**
+   * Apl dns record type.
+   */
+<span class="fc" id="L250">  APL(42, null),</span>
+  /**
+   * Ds dns record type.
+   */
+<span class="fc" id="L254">  DS(43, null),</span>
+
+  /**
+   * Sshfp dns record type.
+   */
+<span class="fc" id="L259">  SSHFP(44, null),</span>
+
+  /**
+   * Ipseckey dns record type.
+   */
+<span class="fc" id="L264">  IPSECKEY(45, null),</span>
+
+  /**
+   * Rrsig dns record type.
+   */
+<span class="fc" id="L269">  RRSIG(46, null),</span>
+
+  /**
+   * Nsec dns record type.
+   */
+<span class="fc" id="L274">  NSEC(47, null),</span>
+
+  /**
+   * Dnskey dns record type.
+   */
+<span class="fc" id="L279">  DNSKEY(48, null),</span>
+
+  /**
+   * Dhcid dns record type.
+   */
+<span class="fc" id="L284">  DHCID(49, null),</span>
+
+  /**
+   * Nsec 3 dns record type.
+   */
+<span class="fc" id="L289">  NSEC3(50, null),</span>
+
+  /**
+   * Nsec 3 param dns record type.
+   */
+<span class="fc" id="L294">  NSEC3PARAM(51, null),</span>
+
+  /**
+   * Tlsa dns record type.
+   */
+<span class="fc" id="L299">  TLSA(52, null),</span>
+
+  /**
+   * Hip dns record type.
+   */
+<span class="fc" id="L304">  HIP(55, null),</span>
+
+  /**
+   * Ninfo dns record type.
+   */
+<span class="fc" id="L309">  NINFO(56, null),</span>
+
+  /**
+   * Rkey dns record type.
+   */
+<span class="fc" id="L314">  RKEY(57, null),</span>
+
+  /**
+   * Talink dns record type.
+   */
+<span class="fc" id="L319">  TALINK(58, null),</span>
+
+  /**
+   * Cds dns record type.
+   */
+<span class="fc" id="L324">  CDS(59, null),</span>
+
+  /**
+   * Cdnskey dns record type.
+   */
+<span class="fc" id="L329">  CDNSKEY(60, null),</span>
+
+  /**
+   * Openpgpkey dns record type.
+   */
+<span class="fc" id="L334">  OPENPGPKEY(61, null),</span>
+
+  /**
+   * Csync dns record type.
+   */
+<span class="fc" id="L339">  CSYNC(62, null),</span>
+
+  /**
+   * Spf dns record type.
+   */
+<span class="fc" id="L344">  SPF(99, null),</span>
+
+  /**
+   * Uinfo dns record type.
+   */
+<span class="fc" id="L349">  UINFO(100, null),</span>
+
+  /**
+   * Uid dns record type.
+   */
+<span class="fc" id="L354">  UID(101, null),</span>
+
+  /**
+   * Gid dns record type.
+   */
+<span class="fc" id="L359">  GID(102, null),</span>
+
+  /**
+   * Unspec dns record type.
+   */
+<span class="fc" id="L364">  UNSPEC(103, null),</span>
+
+  /**
+   * Nid dns record type.
+   */
+<span class="fc" id="L369">  NID(104, null),</span>
+
+  /**
+   * L 32 dns record type.
+   */
+<span class="fc" id="L374">  L32(105, null),</span>
+
+  /**
+   * L 64 dns record type.
+   */
+<span class="fc" id="L379">  L64(106, null),</span>
+
+  /**
+   * Lp dns record type.
+   */
+<span class="fc" id="L384">  LP(107, null),</span>
+
+  /**
+   * Eui 48 dns record type.
+   */
+<span class="fc" id="L389">  EUI48(108, null),</span>
+
+  /**
+   * Eui 64 dns record type.
+   */
+<span class="fc" id="L394">  EUI64(109, null),</span>
+
+  /**
+   * Tkey dns record type.
+   */
+<span class="fc" id="L399">  TKEY(249, null),</span>
+
+  /**
+   * Tsig dns record type.
+   */
+<span class="fc" id="L404">  TSIG(250, null),</span>
+
+  /**
+   * Ixfr dns record type.
+   */
+<span class="fc" id="L409">  IXFR(251, null),</span>
+
+  /**
+   * Axfr dns record type.
+   */
+<span class="fc" id="L414">  AXFR(252, null),</span>
+
+  /**
+   * Mailb dns record type.
+   */
+<span class="fc" id="L419">  MAILB(253, null),</span>
+
+  /**
+   * Maila dns record type.
+   */
+<span class="fc" id="L424">  MAILA(254, null),</span>
+
+  /**
+   * Any dns record type.
+   */
+<span class="fc" id="L429">  ANY(255, null),</span>
+
+  /**
+   * Uri dns record type.
+   */
+<span class="fc" id="L434">  URI(256, null),</span>
+
+  /**
+   * Caa dns record type.
+   */
+<span class="fc" id="L439">  CAA(257, null),</span>
+
+  /**
+   * Ta dns record type.
+   */
+<span class="fc" id="L444">  TA(32768, null),</span>
+
+  /**
+   * Dlv dns record type.
+   */
+<span class="fc" id="L449">  DLV(32769, null);</span>
+
+  /**
+   * Internal lookup table to map values to types.
+   */
+<span class="fc" id="L454">  private final static Map&lt;Integer, DnsRecordType&gt; VALUE_TYPE_MAP = new HashMap&lt;&gt;();</span>
+
+  /**
+   * Internal lookup table to map strings to types.
+   */
+<span class="fc" id="L459">  private final static Map&lt;String, DnsRecordType&gt; STRING_TYPE_MAP = new HashMap&lt;&gt;();</span>
+
+  static {
+<span class="fc bfc" id="L462" title="All 2 branches covered.">    for (DnsRecordType t : DnsRecordType.values()) {</span>
+<span class="fc" id="L463">      VALUE_TYPE_MAP.put(t.getValue(), t);</span>
+<span class="fc" id="L464">      STRING_TYPE_MAP.put(t.name(), t);</span>
+    }
+<span class="fc" id="L466">  }</span>
+
+  /**
+   * The value of this dns record type.
+   */
+<span class="fc" id="L471">  @Getter(AccessLevel.PACKAGE)</span>
+  private final int value;
+
+  private final BiFunction&lt;byte[], Supplier&lt;DnsRecord&gt;, DnsRecord&gt; dataMapper;
+
+  DnsRecordType(
+      final int value,
+<span class="fc" id="L478">      final BiFunction&lt;byte[], Supplier&lt;DnsRecord&gt;, DnsRecord&gt; dataMapper) {</span>
+<span class="fc" id="L479">    this.value = value;</span>
+<span class="fc" id="L480">    this.dataMapper = dataMapper;</span>
+<span class="fc" id="L481">  }</span>
+
+  /**
+   * Determine whether dns record one is correlated the dns record two.
+   *
+   * @param dnsRecord1 the dns record 1
+   * @param dnsRecord2 the dns record 2
+   * @return the boolean
+   */
+  public static boolean areCorrelated(final DnsRecord dnsRecord1, final DnsRecord dnsRecord2) {
+<span class="nc bnc" id="L491" title="All 4 branches missed.">    return dnsRecord1 != null &amp;&amp; dnsRecord2 != null</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">        &amp;&amp; areCorrelated(dnsRecord1.getRecordType(), dnsRecord2.getRecordType());</span>
+  }
+
+  /**
+   * Determine whether dns record one is correlated the dns record two.
+   *
+   * @param dnsRecordType1 the dns record type 1
+   * @param dnsRecordType2 the dns record type 2
+   * @return the boolean
+   */
+  public static boolean areCorrelated(final String dnsRecordType1, final String dnsRecordType2) {
+<span class="nc" id="L503">    return DnsRecordType.fromValue(dnsRecordType1)</span>
+<span class="nc" id="L504">        .isCorrelatedWith(DnsRecordType.fromValue(dnsRecordType2));</span>
+  }
+
+  /**
+   * Find dns record type by integer.
+   *
+   * @param value the value
+   * @return the dns record type
+   */
+  public static DnsRecordType fromValue(final int value) {
+<span class="fc" id="L514">    return VALUE_TYPE_MAP.getOrDefault(value, UNKNOWN);</span>
+  }
+
+  /**
+   * Find dns record type by string.
+   *
+   * @param value the value
+   * @return the dns record type
+   */
+  public static DnsRecordType fromValue(final String value) {
+<span class="nc bnc" id="L524" title="All 2 branches missed.">    if (value == null) {</span>
+<span class="nc" id="L525">      return UNKNOWN;</span>
+    }
+<span class="nc" id="L527">    return STRING_TYPE_MAP.getOrDefault(value.toUpperCase(), UNKNOWN);</span>
+  }
+
+  /**
+   * Determine whether this dns record equals the given one.
+   *
+   * @param recordType the record type
+   * @return the boolean
+   */
+  public boolean is(final String recordType) {
+<span class="nc bnc" id="L537" title="All 2 branches missed.">    return this == fromValue(recordType);</span>
+  }
+
+  /**
+   * Determine whether this dns record is correlated the dns record two.
+   *
+   * @param dnsRecordType the dns record type
+   * @return the boolean
+   */
+  public boolean isCorrelatedWith(DnsRecordType dnsRecordType) {
+<span class="nc bnc" id="L547" title="All 3 branches missed.">    switch (this) {</span>
+      case A:
+      case AAAA:
+<span class="nc bnc" id="L550" title="All 2 branches missed.">        return PTR == dnsRecordType;</span>
+      case PTR:
+<span class="nc bnc" id="L552" title="All 4 branches missed.">        return A == dnsRecordType || AAAA == dnsRecordType;</span>
+      default:
+<span class="nc" id="L554">        return false;</span>
+    }
+  }
+
+  /**
+   * Map data from active directory to dns record.
+   *
+   * @param data              the data
+   * @param dnsRecordSupplier the dns record supplier
+   * @return the dns record
+   */
+  public DnsRecord mapData(final byte[] data, final Supplier&lt;DnsRecord&gt; dnsRecordSupplier) {
+<span class="fc" id="L566">    final DnsRecord dnsRecord = dnsRecordSupplier.get();</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">    if (dataMapper == null) {</span>
+<span class="pc bpc" id="L568" title="2 of 4 branches missed.">      if (data == null || data.length == 0) {</span>
+<span class="nc" id="L569">        dnsRecord.setRecordValue(&quot;&quot;);</span>
+      } else {
+<span class="fc" id="L571">        dnsRecord.setRecordValue(new String(Hex.encode(data)));</span>
+      }
+<span class="fc" id="L573">      return dnsRecord;</span>
+    }
+<span class="fc" id="L575">    return dataMapper.apply(data, () -&gt; dnsRecord);</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

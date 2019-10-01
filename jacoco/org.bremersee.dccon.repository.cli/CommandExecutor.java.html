@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository.cli</a> &gt; <span class="el_source">CommandExecutor.java</span></div><h1>CommandExecutor.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository.cli;
+
+import java.io.File;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.bremersee.exception.ServiceException;
+import org.springframework.http.HttpStatus;
+
+/**
+ * The command executor.
+ *
+ * @author Christian Bremer
+ */
+<span class="nc" id="L34">@Slf4j</span>
+public abstract class CommandExecutor {
+
+  private CommandExecutor() {
+  }
+
+  /**
+   * Exec command executor.
+   *
+   * @param commands the commands
+   * @param dir      the dir
+   * @return the command executor response
+   */
+  @SuppressWarnings(&quot;UnusedReturnValue&quot;)
+  public static CommandExecutorResponse exec(
+      final List&lt;String&gt; commands,
+      final String dir) {
+
+<span class="nc" id="L52">    return exec(commands, null, dir);</span>
+  }
+
+  /**
+   * Exec command executor.
+   *
+   * @param commands the commands
+   * @param env      the env
+   * @param dir      the dir
+   * @return the command executor response
+   */
+  @SuppressWarnings(&quot;WeakerAccess&quot;)
+  public static CommandExecutorResponse exec(
+      final List&lt;String&gt; commands,
+      final Map&lt;String, String&gt; env,
+      final String dir) {
+
+<span class="nc" id="L69">    return exec(commands, env, dir, response -&gt; response);</span>
+  }
+
+  /**
+   * Exec command executor.
+   *
+   * @param &lt;T&gt;            the type parameter
+   * @param commands       the commands
+   * @param env            the env
+   * @param dir            the dir
+   * @param responseParser the response parser
+   * @return the command executor response
+   */
+  public static &lt;T&gt; T exec(
+      final List&lt;String&gt; commands,
+      final Map&lt;String, String&gt; env,
+      final String dir,
+      final CommandExecutorResponseParser&lt;T&gt; responseParser) {
+
+    try {
+<span class="nc" id="L89">      ProcessBuilder pb = new ProcessBuilder(commands);</span>
+<span class="nc bnc" id="L90" title="All 4 branches missed.">      if (dir != null &amp;&amp; dir.trim().length() &gt; 0) {</span>
+<span class="nc" id="L91">        pb.directory(new File(dir));</span>
+      }
+<span class="nc bnc" id="L93" title="All 4 branches missed.">      if (env != null &amp;&amp; !env.isEmpty()) {</span>
+<span class="nc" id="L94">        pb.environment().putAll(env);</span>
+      }
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">      if (log.isTraceEnabled()) {</span>
+<span class="nc" id="L98">        log.trace(&quot;msg=[Running external program.] commands=[{}]&quot;, commands);</span>
+      }
+<span class="nc" id="L100">      final Process p = pb.start();</span>
+<span class="nc" id="L101">      final StringWriter out = new StringWriter();</span>
+<span class="nc" id="L102">      final StringWriter err = new StringWriter();</span>
+<span class="nc" id="L103">      IOUtils.copy(p.getInputStream(), out, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L104">      IOUtils.copy(p.getErrorStream(), err, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L105">      p.waitFor();</span>
+<span class="nc" id="L106">      final String output = out.toString();</span>
+<span class="nc" id="L107">      final String error = err.toString();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">      if (log.isTraceEnabled()) {</span>
+<span class="nc" id="L109">        log.trace(&quot;msg=[Program output]\n{}&quot;, output);</span>
+<span class="nc" id="L110">        log.trace(&quot;msg=[Program error output]\n{}&quot;, error);</span>
+      }
+<span class="nc" id="L112">      return responseParser.parse(new CommandExecutorResponse(output, error));</span>
+
+<span class="nc" id="L114">    } catch (final Exception e) {</span>
+<span class="nc" id="L115">      throw new ServiceException(</span>
+<span class="nc" id="L116">          HttpStatus.INTERNAL_SERVER_ERROR.value(),</span>
+          &quot;Running commands &quot; + commands + &quot; failed.&quot;,
+          &quot;org.bremersee:dc-con-app:6fa0f473-6204-4f75-9130-a1049910d8fd&quot;,
+          e);
+    }
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

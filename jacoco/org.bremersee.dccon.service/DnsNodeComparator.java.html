@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DnsNodeComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service</a> &gt; <span class="el_source">DnsNodeComparator.java</span></div><h1>DnsNodeComparator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service;
+
+import java.util.regex.Pattern;
+import org.bremersee.dccon.model.DnsNode;
+
+/**
+ * The dns node comparator.
+ *
+ * @author Christian Bremer
+ */
+public class DnsNodeComparator extends AbstractDnsComparator&lt;DnsNode&gt; {
+
+  /**
+   * Instantiates a dns node comparator.
+   */
+  DnsNodeComparator() {
+<span class="fc" id="L33">    this(Boolean.TRUE);</span>
+<span class="fc" id="L34">  }</span>
+
+  /**
+   * Instantiates a dns node comparator.
+   *
+   * @param asc use ascending sort order or not
+   */
+  private DnsNodeComparator(Boolean asc) {
+<span class="fc" id="L42">    super(asc);</span>
+<span class="fc" id="L43">  }</span>
+
+  @Override
+  public int compare(DnsNode o1, DnsNode o2) {
+<span class="nc bnc" id="L47" title="All 4 branches missed.">    final String s1 = o1 != null &amp;&amp; o1.getName() != null ? o1.getName() : &quot;&quot;;</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">    final String s2 = o2 != null &amp;&amp; o2.getName() != null ? o2.getName() : &quot;&quot;;</span>
+
+<span class="nc" id="L50">    final String[] sa1 = s1.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc" id="L51">    final String[] sa2 = s2.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">    if (sa1.length == sa2.length) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">      for (int i = 0; i &lt; sa1.length; i++) {</span>
+<span class="nc" id="L54">        int result = format(sa1[i], 3).compareTo(format(sa2[i], 3));</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (result != 0) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">          return isAsc() ? result : -1 * result;</span>
+        }
+      }
+<span class="nc" id="L59">      return 0;</span>
+    }
+
+<span class="nc" id="L62">    int result = format(s1, 3).compareToIgnoreCase(format(s2, 3));</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">    return isAsc() ? result : -1 * result;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

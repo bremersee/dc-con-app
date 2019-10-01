@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DhcpLeaseParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository.cli</a> &gt; <span class="el_source">DhcpLeaseParser.java</span></div><h1>DhcpLeaseParser.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository.cli;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DhcpLease;
+import org.springframework.util.StringUtils;
+
+/**
+ * The dhcp lease list parser parses the response of the linux command line tool {@code
+ * dhcp-lease-list}.
+ *
+ * &lt;p&gt;A response of {@code dhcp-lease-list} looks like this:
+ * &lt;pre&gt;
+ * MAC b8:xx:xx:xx:xx:xx IP 192.168.1.109 HOSTNAME ukelei BEGIN 2019-08-18 11:20:33 END 2019-08-18 11:50:33 MANUFACTURER Apple, Inc.
+ * MAC ac:xx:xx:xx:xx:yy IP 192.168.1.188 HOSTNAME -NA- BEGIN 2019-08-18 11:25:48 END 2019-08-18 11:55:48 MANUFACTURER Super Micro Computer, Inc.
+ * &lt;/pre&gt;
+ *
+ * @author Christian Bremer
+ */
+public interface DhcpLeaseParser extends CommandExecutorResponseParser&lt;List&lt;DhcpLease&gt;&gt; {
+
+  /**
+   * The constant MAC.
+   */
+  String MAC = &quot;MAC &quot;;
+
+  /**
+   * The constant IP.
+   */
+  String IP = &quot; IP &quot;;
+
+  /**
+   * The constant HOSTNAME.
+   */
+  String HOSTNAME = &quot; HOSTNAME &quot;;
+
+  /**
+   * The constant HOSTNAME_UNKNOWN.
+   */
+  String HOSTNAME_UNKNOWN = &quot;-NA-&quot;;
+
+  /**
+   * The constant BEGIN.
+   */
+  String BEGIN = &quot; BEGIN &quot;;
+
+  /**
+   * The constant END.
+   */
+  String END = &quot; END &quot;;
+
+  /**
+   * The constant MANUFACTURER.
+   */
+  String MANUFACTURER = &quot; MANUFACTURER &quot;;
+
+  /**
+   * Default parser dhcp leases parser.
+   *
+   * @return the dhcp leases parser
+   */
+  static DhcpLeaseParser defaultParser() {
+<span class="fc" id="L89">    return new Default();</span>
+  }
+
+  /**
+   * Default parser dhcp leases parser.
+   *
+   * @param unknownHostConverter the unknown host converter
+   * @return the dhcp leases parser
+   */
+  @SuppressWarnings(&quot;unused&quot;)
+  static DhcpLeaseParser defaultParser(BiFunction&lt;String, String, String&gt; unknownHostConverter) {
+<span class="nc" id="L100">    return new Default(unknownHostConverter);</span>
+  }
+
+  /**
+   * The default parser.
+   */
+<span class="fc" id="L106">  @Slf4j</span>
+  class Default implements DhcpLeaseParser {
+
+    private BiFunction&lt;String, String, String&gt; unknownHostConverter;
+
+    /**
+     * Instantiates a new default parser.
+     */
+    Default() {
+<span class="fc" id="L115">      this(null);</span>
+<span class="fc" id="L116">    }</span>
+
+    /**
+     * Instantiates a new default parser.
+     *
+     * &lt;p&gt;The unknown host converter converts the unknown host name {@link
+     * DhcpLeaseParser#HOSTNAME_UNKNOWN} into another host name. The parameters of the function are
+     * MAC and IP.
+     *
+     * @param unknownHostConverter the unknown host converter
+     */
+    Default(
+<span class="fc" id="L128">        BiFunction&lt;String, String, String&gt; unknownHostConverter) {</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">      if (unknownHostConverter == null) {</span>
+<span class="fc" id="L130">        this.unknownHostConverter = (mac, ip) -&gt; &quot;dhcp-&quot; + ip.replace(&quot;.&quot;, &quot;-&quot;);</span>
+      } else {
+<span class="nc" id="L132">        this.unknownHostConverter = unknownHostConverter;</span>
+      }
+<span class="fc" id="L134">    }</span>
+
+    @Override
+    public List&lt;DhcpLease&gt; parse(final CommandExecutorResponse response) {
+<span class="fc" id="L138">      final String output = response.getStdout();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">      if (!StringUtils.hasText(output)) {</span>
+<span class="nc" id="L140">        log.warn(&quot;Dhcp lease list command did not produce output. Error is [{}].&quot;,</span>
+<span class="nc" id="L141">            response.getStderr());</span>
+<span class="nc" id="L142">        return Collections.emptyList();</span>
+      }
+<span class="fc" id="L144">      try (final BufferedReader reader = new BufferedReader(new StringReader(output))) {</span>
+<span class="fc" id="L145">        return parseDhcpLeaseList(reader);</span>
+
+<span class="nc" id="L147">      } catch (IOException e) {</span>
+<span class="nc" id="L148">        log.error(&quot;Parsing dhcp lease list failed:\n&quot; + output + &quot;\n&quot;, e);</span>
+<span class="nc" id="L149">        return Collections.emptyList();</span>
+      }
+    }
+
+    private List&lt;DhcpLease&gt; parseDhcpLeaseList(final BufferedReader reader) throws IOException {
+<span class="fc" id="L154">      final List&lt;DhcpLease&gt; leases = new ArrayList&lt;&gt;();</span>
+      String line;
+<span class="fc bfc" id="L156" title="All 2 branches covered.">      while ((line = reader.readLine()) != null) {</span>
+<span class="fc" id="L157">        line = line.trim();</span>
+<span class="fc" id="L158">        final String mac = findDhcpLeasePart(line, MAC, IP);</span>
+<span class="fc" id="L159">        final String ip = findDhcpLeasePart(line, IP, HOSTNAME);</span>
+<span class="fc" id="L160">        String hostname = findDhcpLeasePart(line, HOSTNAME, BEGIN);</span>
+<span class="pc bpc" id="L161" title="1 of 4 branches missed.">        if (HOSTNAME_UNKNOWN.equalsIgnoreCase(hostname) &amp;&amp; ip != null) {</span>
+<span class="fc" id="L162">          hostname = unknownHostConverter.apply(mac, ip);</span>
+        }
+<span class="fc" id="L164">        final String begin = findDhcpLeasePart(line, BEGIN, END);</span>
+<span class="fc" id="L165">        final String end = findDhcpLeasePart(line, END, MANUFACTURER);</span>
+<span class="fc" id="L166">        final String manufacturer = findDhcpLeasePart(line, MANUFACTURER, null);</span>
+<span class="pc bpc" id="L167" title="5 of 10 branches missed.">        if (mac != null &amp;&amp; ip != null &amp;&amp; hostname != null &amp;&amp; begin != null &amp;&amp; end != null) {</span>
+<span class="fc" id="L168">          final DhcpLease lease = new DhcpLease(</span>
+<span class="fc" id="L169">              mac.replace(&quot;-&quot;, &quot;:&quot;).trim().toLowerCase(),</span>
+              ip,
+              hostname,
+<span class="fc" id="L172">              parseDhcpLeaseTime(begin),</span>
+<span class="fc" id="L173">              parseDhcpLeaseTime(end),</span>
+              manufacturer);
+<span class="fc" id="L175">          leases.add(lease);</span>
+        }
+<span class="fc" id="L177">      }</span>
+<span class="fc" id="L178">      return leases;</span>
+    }
+
+    private String findDhcpLeasePart(String line, String field, String nextField) {
+<span class="pc bpc" id="L182" title="2 of 4 branches missed.">      if (!StringUtils.hasText(line) || !StringUtils.hasText(field)) {</span>
+<span class="nc" id="L183">        return null;</span>
+      }
+<span class="fc" id="L185">      int start = line.indexOf(field);</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">      if (start &lt; 0) {</span>
+<span class="nc" id="L187">        return null;</span>
+      }
+<span class="fc" id="L189">      start = start + field.length();</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">      int end = StringUtils.hasText(nextField)</span>
+<span class="fc" id="L191">          ? line.indexOf(nextField, start)</span>
+<span class="fc" id="L192">          : line.length();</span>
+<span class="pc bpc" id="L193" title="2 of 4 branches missed.">      if (end &lt; 0 || end &lt;= start) {</span>
+<span class="nc" id="L194">        return null;</span>
+      }
+<span class="fc" id="L196">      return line.substring(start, end).trim();</span>
+    }
+
+    private OffsetDateTime parseDhcpLeaseTime(String time) {
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">      if (!StringUtils.hasText(time)) {</span>
+<span class="nc" id="L201">        return null;</span>
+      }
+<span class="fc" id="L203">      final LocalDateTime localDateTime = LocalDateTime.parse(</span>
+          time,
+<span class="fc" id="L205">          DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;));</span>
+      // As of https://linux.die.net/man/5/dhcpd.leases the time zone is always UTC
+<span class="fc" id="L207">      return OffsetDateTime.of(localDateTime, ZoneOffset.UTC);</span>
+    }
+
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

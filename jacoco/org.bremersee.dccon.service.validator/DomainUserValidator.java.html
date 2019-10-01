@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainUserValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service.validator</a> &gt; <span class="el_source">DomainUserValidator.java</span></div><h1>DomainUserValidator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service.validator;
+
+import java.util.stream.Collectors;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.repository.DomainGroupRepository;
+import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.util.StringUtils;
+
+/**
+ * The domain user validator interface.
+ *
+ * @author Christian Bremer
+ */
+public interface DomainUserValidator {
+
+  /**
+   * Do add validation.
+   *
+   * @param domainUser the domain user
+   */
+  void doAddValidation(DomainUser domainUser);
+
+  /**
+   * Do update validation.
+   *
+   * @param userName   the user name
+   * @param domainUser the domain user
+   */
+  void doUpdateValidation(String userName, DomainUser domainUser);
+
+  /**
+   * Default domain user validator.
+   *
+   * @param properties      the properties
+   * @param groupRepository the group repository
+   * @param userRepository  the user repository
+   * @return the domain user validator
+   */
+  static DomainUserValidator defaultValidator(
+      DomainControllerProperties properties,
+      DomainGroupRepository groupRepository,
+      DomainUserRepository userRepository) {
+<span class="fc" id="L60">    return new Default(properties, groupRepository, userRepository);</span>
+  }
+
+  /**
+   * The default domain user validator.
+   */
+  class Default extends AbstractDomainEntityValidator implements DomainUserValidator {
+
+    /**
+     * Instantiates a new default domain user validator.
+     *
+     * @param properties      the properties
+     * @param groupRepository the group repository
+     * @param userRepository  the user repository
+     */
+    Default(DomainControllerProperties properties,
+        DomainGroupRepository groupRepository,
+        DomainUserRepository userRepository) {
+<span class="fc" id="L78">      super(properties, groupRepository, userRepository);</span>
+<span class="fc" id="L79">    }</span>
+
+    @Override
+    public void doAddValidation(DomainUser domainUser) {
+<span class="nc" id="L83">      validateNameNotExists(domainUser.getUserName(), DomainUser.class);</span>
+<span class="nc" id="L84">      validate(domainUser);</span>
+<span class="nc" id="L85">    }</span>
+
+    @Override
+    public void doUpdateValidation(String userName, DomainUser domainUser) {
+<span class="nc" id="L89">      domainUser.setUserName(userName);</span>
+<span class="nc" id="L90">      validate(domainUser);</span>
+<span class="nc" id="L91">    }</span>
+
+    private void validate(DomainUser domainUser) {
+<span class="nc" id="L94">      domainUser.setGroups(domainUser.getGroups().stream()</span>
+<span class="nc" id="L95">          .filter(name -&gt; getGroupRepository().exists(name))</span>
+<span class="nc" id="L96">          .collect(Collectors.toList()));</span>
+
+      // Display name
+<span class="nc" id="L99">      final StringBuilder displayNameBuilder = new StringBuilder();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getFirstName())) {</span>
+<span class="nc" id="L101">        displayNameBuilder.append(domainUser.getFirstName());</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (StringUtils.hasText(domainUser.getLastName())) {</span>
+<span class="nc" id="L103">          displayNameBuilder.append(' ');</span>
+        }
+      }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getLastName())) {</span>
+<span class="nc" id="L107">        displayNameBuilder.append(domainUser.getLastName());</span>
+      }
+<span class="nc bnc" id="L109" title="All 2 branches missed.">      final String displayName = StringUtils.hasText(domainUser.getDisplayName())</span>
+<span class="nc" id="L110">          ? domainUser.getDisplayName()</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">          : displayNameBuilder.length() &gt; 0 ? displayNameBuilder.toString() : null;</span>
+<span class="nc" id="L112">      domainUser.setDisplayName(displayName);</span>
+
+      // Login shell
+<span class="nc bnc" id="L115" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getLoginShell())) {</span>
+<span class="nc" id="L116">        domainUser.setLoginShell(getProperties().getLoginShell());</span>
+      } else {
+<span class="nc" id="L118">        domainUser.setLoginShell(null);</span>
+      }
+
+      // Unix home
+<span class="nc bnc" id="L122" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getUnixHomeDirTemplate())) {</span>
+<span class="nc" id="L123">        domainUser.setUnixHomeDirectory(getProperties()</span>
+<span class="nc" id="L124">            .getUnixHomeDirTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
+      } else {
+<span class="nc" id="L126">        domainUser.setUnixHomeDirectory(null);</span>
+      }
+
+      // Home directory/share
+<span class="nc bnc" id="L130" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getHomeDirectoryTemplate())) {</span>
+<span class="nc" id="L131">        domainUser.setHomeDirectory(getProperties()</span>
+<span class="nc" id="L132">            .getHomeDirectoryTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
+      } else {
+<span class="nc" id="L134">        domainUser.setHomeDirectory(null);</span>
+      }
+<span class="nc" id="L136">    }</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
