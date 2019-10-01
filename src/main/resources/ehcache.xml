@@ -6,6 +6,7 @@
     <expiry>
       <ttl unit="seconds">30</ttl>
     </expiry>
+    <!--
     <listeners>
       <listener>
         <class>org.bremersee.dccon.config.CacheEventLogger</class>
@@ -18,6 +19,7 @@
         <events-to-fire-on>UPDATED</events-to-fire-on>
       </listener>
     </listeners>
+    -->
     <resources>
       <heap unit="entries">1</heap>
       <offheap unit="MB">1</offheap>
