@@ -84,10 +84,13 @@ public class SecurityConfiguration {
       log.info("Authorizing requests to /api/** with OAuth2.");
       http
           .antMatcher("/api/**")
+          .csrf().disable()
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
-          .anyRequest().authenticated()
+          .anyRequest()
+          .authenticated()
           .and()
+          .antMatcher("/api/**")
           .oauth2ResourceServer()
           .jwt()
           .jwtAuthenticationConverter(keycloakJwtConverter);
@@ -120,12 +123,13 @@ public class SecurityConfiguration {
       log.info("Authorizing requests to /api/** with basic auth.");
       http
           .antMatcher("/api/**")
+          .csrf().disable()
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
-          .anyRequest().authenticated()
+          .anyRequest()
+          .authenticated()
           .and()
-          .cors().disable()
-          .csrf().disable()
+          .antMatcher("/api/**")
           .httpBasic()
           .realmName("dc-con")
           .and()
@@ -172,15 +176,15 @@ public class SecurityConfiguration {
     protected void configure(HttpSecurity http) throws Exception {
       log.info("Authorizing requests to /actuator/** with password flow auth.");
       http
-          .authenticationProvider(passwordFlowAuthenticationManager)
           .requestMatcher(EndpointRequest.toAnyEndpoint())
-          .cors().disable()
           .csrf().disable()
+          .authenticationProvider(passwordFlowAuthenticationManager)
           .httpBasic()
           .realmName("actuator")
           .and()
           .requestMatcher(EndpointRequest.toAnyEndpoint())
           .authorizeRequests()
+          .antMatchers(HttpMethod.OPTIONS).permitAll()
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
           .anyRequest()
@@ -218,13 +222,13 @@ public class SecurityConfiguration {
       log.info("Authorizing requests to /actuator/** with basic auth.");
       http
           .requestMatcher(EndpointRequest.toAnyEndpoint())
-          .cors().disable()
           .csrf().disable()
           .httpBasic()
           .realmName("actuator")
           .and()
           .requestMatcher(EndpointRequest.toAnyEndpoint())
           .authorizeRequests()
+          .antMatchers(HttpMethod.OPTIONS).permitAll()
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
           .anyRequest()
