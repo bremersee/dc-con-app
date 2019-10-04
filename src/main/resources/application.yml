@@ -4,6 +4,8 @@ bremersee:
       - "127.0.0.1/32"
       - "::1"
   security:
+    cors:
+      allow-all: true
     oauth2:
       password-flow:
         client-id: omnia
@@ -67,8 +69,6 @@ spring:
     enabled: ${ZIPKIN_ENABLED:false}
     base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
   security:
-    cors:
-      allow-all: true
     oauth2:
       resourceserver:
         jwt:
