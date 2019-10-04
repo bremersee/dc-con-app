@@ -74,12 +74,23 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   }
 
   @Override
-  public Stream<DomainGroup> findAll() {
+  public Stream<DomainGroup> findAll(String query) {
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getGroupBaseDn(),
         new SearchFilter(getProperties().getGroupFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getGroupFindAllSearchScope());
-    return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
+    if (query == null || query.trim().length() == 0) {
+      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
+    } else {
+      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper)
+          .filter(domainGroup -> this.isQueryResult(domainGroup, query.trim().toLowerCase()));
+    }
+  }
+
+  private boolean isQueryResult(DomainGroup domainGroup, String query) {
+    return query != null && query.length() > 2 && domainGroup != null
+        && (contains(domainGroup.getName(), query)
+        || contains(domainGroup.getMembers(), query));
   }
 
   @Override

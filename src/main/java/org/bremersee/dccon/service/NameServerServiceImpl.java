@@ -148,14 +148,14 @@ public class NameServerServiceImpl implements NameServerService {
 
 
   @Override
-  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter) {
+  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter, String query) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
           zoneName,
           "org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c");
     }
-    return dnsNodeRepository.findAll(zoneName, unknownFilter)
+    return dnsNodeRepository.findAll(zoneName, unknownFilter, query)
         .sorted(dnsNodeComparator)
         .collect(Collectors.toList());
   }

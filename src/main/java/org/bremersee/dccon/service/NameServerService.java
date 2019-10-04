@@ -83,9 +83,13 @@ public interface NameServerService {
    *
    * @param zoneName      the zone name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @param query         the query
    * @return the dns nodes
    */
-  List<DnsNode> getDnsNodes(@NotNull String zoneName, @Nullable UnknownFilter unknownFilter);
+  List<DnsNode> getDnsNodes(
+      @NotNull String zoneName,
+      @Nullable UnknownFilter unknownFilter,
+      @Nullable String query);
 
   /**
    * Save dns node.

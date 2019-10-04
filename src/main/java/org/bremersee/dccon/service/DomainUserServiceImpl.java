@@ -91,9 +91,9 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public List<DomainUser> getUsers(final String sort) {
+  public List<DomainUser> getUsers(final String sort, final String query) {
     final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;
-    return domainUserRepository.findAll()
+    return domainUserRepository.findAll(query)
         .sorted(ComparatorBuilder.builder()
             .fromWellKnownText(sortOrder)
             .build())

@@ -75,9 +75,9 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public List<DomainGroup> getGroups(String sort) {
+  public List<DomainGroup> getGroups(String sort, String query) {
     final String sortOrder = StringUtils.hasText(sort) ? sort : DomainGroup.DEFAULT_SORT_ORDER;
-    return domainGroupRepository.findAll()
+    return domainGroupRepository.findAll(query)
         .sorted(ComparatorBuilder.builder()
             .fromWellKnownText(sortOrder)
             .build())

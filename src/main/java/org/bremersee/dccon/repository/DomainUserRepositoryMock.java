@@ -48,7 +48,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
   }
 
   @Override
-  public Stream<DomainUser> findAll() {
+  public Stream<DomainUser> findAll(String query) {
     return Stream.empty();
   }
 

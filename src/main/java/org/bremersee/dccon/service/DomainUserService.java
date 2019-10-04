@@ -36,10 +36,11 @@ public interface DomainUserService {
   /**
    * Get domain users.
    *
-   * @param sort the sort order
+   * @param sort  the sort order
+   * @param query the query
    * @return the users
    */
-  List<DomainUser> getUsers(@Nullable String sort);
+  List<DomainUser> getUsers(@Nullable String sort, @Nullable String query);
 
   /**
    * Gets user avatar.

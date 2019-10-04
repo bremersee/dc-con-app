@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -76,17 +75,34 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public Stream<DomainUser> findAll() {
+  public Stream<DomainUser> findAll(String query) {
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getUserBaseDn(),
         new SearchFilter(getProperties().getUserFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());
     searchRequest.setBinaryAttributes("jpegPhoto");
-    return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
+    if (query == null || query.trim().length() == 0) {
+      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
+    } else {
+      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper)
+          .filter(domainUser -> this.isQueryResult(domainUser, query.trim().toLowerCase()));
+    }
+  }
+
+  private boolean isQueryResult(DomainUser domainUser, String query) {
+    return query != null && query.length() > 2 && domainUser != null
+        && (contains(domainUser.getDisplayName(), query)
+        || contains(domainUser.getUserName(), query)
+        || contains(domainUser.getEmail(), query)
+        || contains(domainUser.getMobile(), query)
+        || contains(domainUser.getTelephoneNumber(), query)
+        || contains(domainUser.getFirstName(), query)
+        || contains(domainUser.getLastName(), query)
+        || contains(domainUser.getGroups(), query));
   }
 
   @Override
-  public Optional<DomainUser> findOne(@NotNull String userName) {
+  public Optional<DomainUser> findOne(String userName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -98,13 +114,13 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public boolean exists(@NotNull String userName) {
+  public boolean exists(String userName) {
     return getLdapTemplate()
         .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);
   }
 
   @Override
-  public DomainUser save(@NotNull DomainUser domainUser) {
+  public DomainUser save(DomainUser domainUser) {
     if (!exists(domainUser.getUserName())) {
       kinit();
       final List<String> commands = new ArrayList<>();
@@ -135,8 +151,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
             }
             if (!exists(domainUser.getUserName())) {
               throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
-                  + domainUser.getUserName() + "] "
-                  + CommandExecutorResponse.toExceptionMessage(response),
+                      + domainUser.getUserName() + "] "
+                      + CommandExecutorResponse.toExceptionMessage(response),
                   "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
             }
           });
@@ -145,7 +161,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public void savePassword(@NotNull String userName, @NotNull String newPassword) {
+  public void savePassword(String userName, String newPassword) {
     kinit();
     final List<String> commands = new ArrayList<>();
     sudo(commands);
@@ -176,7 +192,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public boolean delete(@NotNull String userName) {
+  public boolean delete(String userName) {
 
     if (exists(userName)) {
       kinit();

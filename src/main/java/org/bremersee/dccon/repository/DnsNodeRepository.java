@@ -72,11 +72,13 @@ public interface DnsNodeRepository {
    *
    * @param zoneName      the zone name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @param query         the query
    * @return the dns nodes
    */
   Stream<DnsNode> findAll(
       @NotNull String zoneName,
-      @Nullable UnknownFilter unknownFilter);
+      @Nullable UnknownFilter unknownFilter,
+      @Nullable String query);
 
   /**
    * Check whether dns node exists or not.
@@ -152,7 +154,8 @@ public interface DnsNodeRepository {
    * @param zoneName the zone name
    */
   default void deleteAll(@NotNull String zoneName) {
-    findAll(zoneName, UnknownFilter.ALL).forEach(dnsNode -> delete(zoneName, dnsNode));
+    findAll(zoneName, UnknownFilter.ALL, null)
+        .forEach(dnsNode -> delete(zoneName, dnsNode));
   }
 
   /**

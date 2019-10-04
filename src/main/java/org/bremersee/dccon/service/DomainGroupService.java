@@ -35,10 +35,11 @@ public interface DomainGroupService {
   /**
    * Get groups.
    *
-   * @param sort the sort order
+   * @param sort  the sort order
+   * @param query the query
    * @return the groups
    */
-  List<DomainGroup> getGroups(@Nullable String sort);
+  List<DomainGroup> getGroups(@Nullable String sort, @Nullable String query);
 
   /**
    * Add domain group.

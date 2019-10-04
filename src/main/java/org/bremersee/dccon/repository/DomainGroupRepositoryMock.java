@@ -48,7 +48,7 @@ public class DomainGroupRepositoryMock implements DomainGroupRepository {
   }
 
   @Override
-  public Stream<DomainGroup> findAll() {
+  public Stream<DomainGroup> findAll(String query) {
     return Stream.empty();
   }
 

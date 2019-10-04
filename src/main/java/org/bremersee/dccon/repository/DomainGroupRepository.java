@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainGroup;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -33,9 +34,10 @@ public interface DomainGroupRepository {
   /**
    * Find all groups.
    *
+   * @param query the query
    * @return the groups
    */
-  Stream<DomainGroup> findAll();
+  Stream<DomainGroup> findAll(@Nullable String query);
 
   /**
    * Find group be name.

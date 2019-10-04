@@ -89,8 +89,9 @@ public class NameServerManagementController implements NameServerManagementApi {
   @Override
   public ResponseEntity<List<DnsNode>> getDnsNodes(
       final String zoneName,
-      final UnknownFilter unknownFilter) {
-    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter));
+      final UnknownFilter unknownFilter,
+      final String query) {
+    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter, query));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

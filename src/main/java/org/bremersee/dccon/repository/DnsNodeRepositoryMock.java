@@ -64,7 +64,7 @@ public class DnsNodeRepositoryMock implements DnsNodeRepository {
   }
 
   @Override
-  public Stream<DnsNode> findAll(String zoneName, UnknownFilter unknownFilter) {
+  public Stream<DnsNode> findAll(String zoneName, UnknownFilter unknownFilter, String query) {
     return Stream.empty();
   }
 

@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainUser;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -33,9 +34,10 @@ public interface DomainUserRepository {
   /**
    * Find all users.
    *
+   * @param query the query
    * @return the users
    */
-  Stream<DomainUser> findAll();
+  Stream<DomainUser> findAll(@Nullable String query);
 
   /**
    * Find user by name.

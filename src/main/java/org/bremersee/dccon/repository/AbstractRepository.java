@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -94,6 +95,25 @@ abstract class AbstractRepository {
   void auth(List<String> commands) {
     commands.add(USE_KERBEROS);
     commands.add(YES);
+  }
+
+  /**
+   * Checks whether the given value contains the given query.
+   *
+   * @param value the value
+   * @param query the query
+   * @return {@code true} if the value contains the query, otherwise {@code false}
+   */
+  boolean contains(Object value, String query) {
+    if (value instanceof Collection) {
+      for (Object item : (Collection) value) {
+        if (contains(item, query)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return value != null && value.toString().toLowerCase().contains(query);
   }
 
 }

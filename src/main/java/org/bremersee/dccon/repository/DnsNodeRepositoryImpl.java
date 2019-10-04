@@ -153,7 +153,8 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   public List<DnsNode> findByIps(final Set<String> ips, final UnknownFilter unknownFilter) {
     final List<DnsNode> nodes = new ArrayList<>();
     for (DnsZone zone : dnsZoneRepository.findNonDnsReverseZones().collect(Collectors.toList())) {
-      for (DnsNode node : findAll(zone.getName(), unknownFilter).collect(Collectors.toList())) {
+      for (DnsNode node : findAll(zone.getName(), unknownFilter, null)
+          .collect(Collectors.toList())) {
         for (DnsRecord record : node.getRecords()) {
           if (DnsRecordType.A.is(record.getRecordType())
               && ips.contains(record.getRecordValue())) {
@@ -189,17 +190,60 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   }
 
   @Override
-  public Stream<DnsNode> findAll(final String zoneName, final UnknownFilter unknownFilter) {
+  public Stream<DnsNode> findAll(
+      final String zoneName,
+      final UnknownFilter unknownFilter,
+      final String query) {
 
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().buildDnsNodeBaseDn(zoneName),
         new SearchFilter(getProperties().getDnsNodeFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());
     searchRequest.setBinaryAttributes("dnsRecord");
-    return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))
-        .filter(this::isNonExcludedDnsNode)
-        .map(dnsNode -> insertCorrelationValues(zoneName, dnsNode))
-        .map(dnsNode -> insertDhcpLeases(zoneName, dnsNode));
+    if (query == null || query.trim().length() == 0) {
+      return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))
+          .filter(this::isNonExcludedDnsNode)
+          .map(dnsNode -> insertCorrelationValues(zoneName, dnsNode))
+          .map(dnsNode -> insertDhcpLeases(zoneName, dnsNode));
+    } else {
+      return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))
+          .filter(this::isNonExcludedDnsNode)
+          .map(dnsNode -> insertCorrelationValues(zoneName, dnsNode))
+          .map(dnsNode -> insertDhcpLeases(zoneName, dnsNode))
+          .filter(dnsNode -> this.isQueryResult(dnsNode, query));
+    }
+  }
+
+  private boolean isQueryResult(DnsNode dnsNode, String query) {
+    return query != null && query.length() > 2 && dnsNode != null
+        && (contains(dnsNode.getName(), query)
+        || isQueryResult(dnsNode.getRecords(), query));
+  }
+
+  private boolean isQueryResult(Collection<DnsRecord> dnsRecords, String query) {
+    if (dnsRecords != null) {
+      for (DnsRecord dnsRecord : dnsRecords) {
+        if (isQueryResult(dnsRecord, query)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private boolean isQueryResult(DnsRecord dnsRecord, String query) {
+    return query != null && query.length() > 2 && dnsRecord != null
+        && (contains(dnsRecord.getRecordValue(), query)
+        || contains(dnsRecord.getCorrelatedRecordValue(), query)
+        || isQueryResult(dnsRecord.getDhcpLease(), query));
+  }
+
+  private boolean isQueryResult(DhcpLease dhcpLease, String query) {
+    return query != null && query.length() > 2 && dhcpLease != null
+        && (contains(dhcpLease.getHostname(), query)
+        || contains(dhcpLease.getIp(), query)
+        || contains(dhcpLease.getMac(), query)
+        || contains(dhcpLease.getManufacturer(), query));
   }
 
   @Override
