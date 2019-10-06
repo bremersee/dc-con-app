@@ -84,6 +84,8 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
     }
     mapCommonAttributes(ldapEntry, domainGroup);
     domainGroup.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
+    domainGroup
+        .setDescription(getAttributeValue(ldapEntry, "description", STRING_VALUE_TRANSCODER, null));
     domainGroup.setMembers(LdaptiveEntryMapper.getAttributeValuesAsList(
         ldapEntry,
         getProperties().getGroupMemberAttr(),
@@ -99,6 +101,8 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
         "name", source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
         "sAMAccountName", source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
+    setAttribute(destination,
+        "description", source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttributes(
         destination,
         getProperties().getGroupMemberAttr(),

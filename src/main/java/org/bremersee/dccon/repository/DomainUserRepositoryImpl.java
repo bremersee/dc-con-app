@@ -96,6 +96,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         || contains(domainUser.getEmail(), query)
         || contains(domainUser.getMobile(), query)
         || contains(domainUser.getTelephoneNumber(), query)
+        || contains(domainUser.getDescription(), query)
         || contains(domainUser.getFirstName(), query)
         || contains(domainUser.getLastName(), query)
         || contains(domainUser.getGroups(), query));

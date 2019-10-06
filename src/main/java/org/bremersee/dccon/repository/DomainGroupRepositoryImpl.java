@@ -90,6 +90,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   private boolean isQueryResult(DomainGroup domainGroup, String query) {
     return query != null && query.length() > 2 && domainGroup != null
         && (contains(domainGroup.getName(), query)
+        || contains(domainGroup.getDescription(), query)
         || contains(domainGroup.getMembers(), query));
   }
 

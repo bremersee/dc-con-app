@@ -115,6 +115,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "mobile", STRING_VALUE_TRANSCODER, null));
     domainUser.setGroups(LdaptiveEntryMapper.getAttributeValuesAsList(ldapEntry,
         getProperties().getUserGroupAttr(), userGroupValueTranscoder));
+    domainUser
+        .setDescription(getAttributeValue(ldapEntry, "description", STRING_VALUE_TRANSCODER, null));
 
     domainUser.setHomeDirectory(getAttributeValue(ldapEntry,
         "homeDirectory", STRING_VALUE_TRANSCODER, null));
@@ -170,6 +172,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         modifications);
     setAttribute(destination,
         "mobile", source.getMobile(), false, STRING_VALUE_TRANSCODER, modifications);
+    setAttribute(destination,
+        "description", source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
 
     setAttribute(destination,
         "homeDirectory", source.getHomeDirectory(), false, STRING_VALUE_TRANSCODER,
