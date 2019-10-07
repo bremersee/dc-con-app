@@ -43,17 +43,6 @@ public interface DomainUserService {
   List<DomainUser> getUsers(@Nullable String sort, @Nullable String query);
 
   /**
-   * Gets user avatar.
-   *
-   * @param userName      the user name
-   * @param returnDefault the return default flag
-   * @return the user avatar
-   */
-  Optional<byte[]> getUserAvatar(
-      @NotNull String userName,
-      Boolean returnDefault);
-
-  /**
    * Add domain user.
    *
    * @param domainUser the domain user
@@ -64,10 +53,11 @@ public interface DomainUserService {
   /**
    * Get domain user.
    *
-   * @param userName the user name
+   * @param userName           the user name
+   * @param addAvailableGroups the add available groups flag (default is {@code false})
    * @return the domain user
    */
-  Optional<DomainUser> getUser(@NotNull String userName);
+  Optional<DomainUser> getUser(@NotNull String userName, Boolean addAvailableGroups);
 
   /**
    * Update domain user.
@@ -92,6 +82,17 @@ public interface DomainUserService {
   void updateUserPassword(
       @NotNull String userName,
       @NotNull @Valid Password newPassword);
+
+  /**
+   * Gets user avatar.
+   *
+   * @param userName      the user name
+   * @param returnDefault the return default flag
+   * @return the user avatar
+   */
+  Optional<byte[]> getUserAvatar(
+      @NotNull String userName,
+      Boolean returnDefault);
 
   /**
    * Check whether user exists or not.

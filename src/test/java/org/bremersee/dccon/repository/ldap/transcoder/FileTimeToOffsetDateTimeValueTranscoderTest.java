@@ -8,14 +8,14 @@ import java.time.format.DateTimeFormatter;
 import org.junit.Test;
 
 /**
- * The active directory time value transcoder test.
+ * The file time value transcoder test.
  *
  * @author Christian Bremer
  */
-public class ActiveDirectoryTimeValueTranscoderTest {
+public class FileTimeToOffsetDateTimeValueTranscoderTest {
 
-  private static final ActiveDirectoryTimeValueTranscoder trancoder
-      = new ActiveDirectoryTimeValueTranscoder();
+  private static final FileTimeToOffsetDateTimeValueTranscoder trancoder
+      = new FileTimeToOffsetDateTimeValueTranscoder();
 
   private static final OffsetDateTime dateTime = OffsetDateTime.parse(
       "2019-12-31T23:59:50Z",

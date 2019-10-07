@@ -108,15 +108,15 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public Optional<DomainUser> getUser(@NotNull String userName) {
-    return domainUserRepository.findOne(userName);
+  public Optional<DomainUser> getUser(@NotNull String userName, Boolean addAvailableGroups) {
+    return domainUserRepository.findOne(userName, addAvailableGroups);
   }
 
   @Override
   public Optional<byte[]> getUserAvatar(
       final String userName,
       final Boolean returnDefault) {
-    return domainUserRepository.findOne(userName)
+    return domainUserRepository.findOne(userName, false)
         .map(domainUser -> findUserAvatar(domainUser, Boolean.TRUE.equals(returnDefault)));
   }
 
@@ -142,7 +142,7 @@ public class DomainUserServiceImpl implements DomainUserService {
       Boolean updateGroups,
       @NotNull @Valid DomainUser domainUser) {
 
-    return domainUserRepository.findOne(userName)
+    return domainUserRepository.findOne(userName, false)
         .map(oldDomainUser -> {
           if (!Boolean.TRUE.equals(updateGroups)) {
             domainUser.setGroups(oldDomainUser.getGroups());

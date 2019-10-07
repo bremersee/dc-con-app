@@ -25,7 +25,7 @@ import java.util.List;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.repository.ldap.transcoder.ActiveDirectoryTimeValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.FileTimeToOffsetDateTimeValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
@@ -49,8 +49,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
 
   private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
 
-  private static ActiveDirectoryTimeValueTranscoder AD_TIME_VALUE_TRANSCODER
-      = new ActiveDirectoryTimeValueTranscoder();
+  private static FileTimeToOffsetDateTimeValueTranscoder AD_TIME_VALUE_TRANSCODER
+      = new FileTimeToOffsetDateTimeValueTranscoder();
 
   private static UserAccountControlValueTranscoder USER_ACCOUNT_CONTROL_VALUE_TRANSCODER
       = new UserAccountControlValueTranscoder();

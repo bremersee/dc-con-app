@@ -95,14 +95,17 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   }
 
   @Override
-  public Optional<DomainGroup> findOne(@NotNull String groupName) {
+  public Optional<DomainGroup> findOne(@NotNull String groupName, Boolean addAvailableMembers) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getGroupFindOneFilter());
     searchFilter.setParameter(0, groupName);
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getGroupBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getGroupFindOneSearchScope());
-    return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);
+    return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper)
+        .map(domainGroup -> Boolean.TRUE.equals(addAvailableMembers)
+            ? addAvailableMembers(domainGroup)
+            : domainGroup);
   }
 
   @Override
@@ -166,4 +169,6 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
     }
     return false;
   }
+
+
 }

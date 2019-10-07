@@ -53,7 +53,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
   }
 
   @Override
-  public Optional<DomainUser> findOne(@NotNull String userName) {
+  public Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups) {
     return Optional.empty();
   }
 

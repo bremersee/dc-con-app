@@ -67,9 +67,9 @@ public class DomainUserLdapMapperTest {
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034"));
+        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135"));
+        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
 
     DomainUser destination = mapper.map(source);
     assertNotNull(destination);

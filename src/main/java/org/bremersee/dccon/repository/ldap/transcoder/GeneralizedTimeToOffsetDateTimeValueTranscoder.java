@@ -16,50 +16,39 @@
 
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
-import java.util.TimeZone;
-import lombok.extern.slf4j.Slf4j;
+import java.time.ZonedDateTime;
+import java.util.Optional;
 import org.ldaptive.io.AbstractStringValueTranscoder;
+import org.ldaptive.io.GeneralizedTimeValueTranscoder;
 import org.springframework.util.StringUtils;
 
 /**
- * The when time value transcoder.
+ * The generalized time value transcoder.
  *
  * @author Christian Bremer
  */
-@Slf4j
-public class WhenTimeValueTranscoder extends AbstractStringValueTranscoder<OffsetDateTime> {
+public class GeneralizedTimeToOffsetDateTimeValueTranscoder
+    extends AbstractStringValueTranscoder<OffsetDateTime> {
 
-  private static final String WHEN_DATE_PATTERN = "yyyyMMddHHmmss"; // 20180520150034.0Z
-
-  private static final SimpleDateFormat WHEN_DATE_FORMAT = new SimpleDateFormat(WHEN_DATE_PATTERN);
-
-  static {
-    WHEN_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-  }
+  private static final GeneralizedTimeValueTranscoder transcoder
+      = new GeneralizedTimeValueTranscoder();
 
   @Override
   public OffsetDateTime decodeStringValue(String value) {
-    if (!StringUtils.hasText(value) || value.length() < WHEN_DATE_PATTERN.length()) {
-      return null;
-    }
-    try {
-      return OffsetDateTime.ofInstant(
-          WHEN_DATE_FORMAT.parse(value.substring(0, WHEN_DATE_PATTERN.length())).toInstant(),
-          ZoneOffset.UTC);
-
-    } catch (final Exception e) {
-      log.error("Parsing when time [{}] failed. Returning null.", value, e);
-      return null;
-    }
+    return Optional.ofNullable(value)
+        .filter(StringUtils::hasText)
+        .map(transcoder::decodeStringValue)
+        .map(ZonedDateTime::toOffsetDateTime)
+        .orElse(null);
   }
 
   @Override
   public String encodeStringValue(OffsetDateTime value) {
-    return value != null ? WHEN_DATE_FORMAT.format(Date.from(value.toInstant())) : null;
+    return Optional.ofNullable(value)
+        .map(OffsetDateTime::toZonedDateTime)
+        .map(transcoder::encodeStringValue)
+        .orElse(null);
   }
 
   @Override

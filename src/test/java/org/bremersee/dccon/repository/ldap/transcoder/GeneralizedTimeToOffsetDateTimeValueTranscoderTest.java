@@ -8,15 +8,16 @@ import java.time.OffsetDateTime;
 import org.junit.Test;
 
 /**
- * The when time value transcoder test.
+ * The generalized time value transcoder test.
  *
  * @author Christian Bremer
  */
-public class WhenTimeValueTranscoderTest {
+public class GeneralizedTimeToOffsetDateTimeValueTranscoderTest {
 
-  private static final WhenTimeValueTranscoder transcoder = new WhenTimeValueTranscoder();
+  private static final GeneralizedTimeToOffsetDateTimeValueTranscoder transcoder
+      = new GeneralizedTimeToOffsetDateTimeValueTranscoder();
 
-  private static final String ldapValue = "20191226154554";
+  private static final String ldapValue = "20191226154554.000Z";
 
   /**
    * Decode and encode.

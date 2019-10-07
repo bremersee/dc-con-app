@@ -59,4 +59,5 @@ public class GroupMemberValueTranscoder extends AbstractStringValueTranscoder<St
   public Class<String> getType() {
     return String.class;
   }
+
 }

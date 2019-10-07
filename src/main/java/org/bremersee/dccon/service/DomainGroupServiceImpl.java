@@ -91,14 +91,16 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public Optional<DomainGroup> getGroupByName(@NotNull String groupName) {
-    return domainGroupRepository.findOne(groupName);
+  public Optional<DomainGroup> getGroupByName(
+      @NotNull String groupName,
+      Boolean addAvailableMembers) {
+    return domainGroupRepository.findOne(groupName, addAvailableMembers);
   }
 
   @Override
   public Optional<DomainGroup> updateGroup(@NotNull String groupName,
       @NotNull @Valid DomainGroup domainGroup) {
-    return domainGroupRepository.findOne(groupName)
+    return domainGroupRepository.findOne(groupName, false)
         .map(oldDomainGroup -> {
           domainGroupValidator.doUpdateValidation(groupName, domainGroup);
           return domainGroupRepository.save(domainGroup);

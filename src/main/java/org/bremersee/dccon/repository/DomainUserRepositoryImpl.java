@@ -80,7 +80,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         new SearchFilter(getProperties().getUserFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());
-    searchRequest.setBinaryAttributes("jpegPhoto");
+    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
     if (query == null || query.trim().length() == 0) {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
     } else {
@@ -103,15 +103,18 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public Optional<DomainUser> findOne(String userName) {
+  public Optional<DomainUser> findOne(String userName, Boolean addAvailableGroups) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getUserBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
-    searchRequest.setBinaryAttributes("jpegPhoto");
-    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
+    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper)
+        .map(domainUser -> Boolean.TRUE.equals(addAvailableGroups)
+            ? addAvailableGroups(domainUser)
+            : domainUser);
   }
 
   @Override

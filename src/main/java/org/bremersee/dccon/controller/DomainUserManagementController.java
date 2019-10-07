@@ -63,8 +63,10 @@ public class DomainUserManagementController implements DomainUserManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<DomainUser> getUser(final String userName) {
-    return ResponseEntity.of(domainUserService.getUser(userName));
+  public ResponseEntity<DomainUser> getUser(
+      final String userName,
+      final Boolean addAvailableGroups) {
+    return ResponseEntity.of(domainUserService.getUser(userName, addAvailableGroups));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")

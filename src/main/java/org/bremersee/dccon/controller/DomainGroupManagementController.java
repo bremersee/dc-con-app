@@ -60,8 +60,8 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<DomainGroup> getGroupByName(String groupName) {
-    return ResponseEntity.of(domainGroupService.getGroupByName(groupName));
+  public ResponseEntity<DomainGroup> getGroupByName(String groupName, Boolean addAvailableMembers) {
+    return ResponseEntity.of(domainGroupService.getGroupByName(groupName, addAvailableMembers));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

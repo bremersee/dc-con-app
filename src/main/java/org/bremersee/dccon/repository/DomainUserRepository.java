@@ -42,10 +42,11 @@ public interface DomainUserRepository {
   /**
    * Find user by name.
    *
-   * @param userName the user name
+   * @param userName           the user name
+   * @param addAvailableGroups the add available groups flag (default is {@code false})
    * @return the user
    */
-  Optional<DomainUser> findOne(@NotNull String userName);
+  Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups);
 
   /**
    * Check whether user exists or not.

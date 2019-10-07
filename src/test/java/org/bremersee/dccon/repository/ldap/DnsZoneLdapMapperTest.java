@@ -49,9 +49,9 @@ public class DnsZoneLdapMapperTest {
     LdapEntry ldapEntry = new LdapEntry();
     ldapEntry.setDn("dc=example.org,cn=zones,dc=example,dc=org");
     ldapEntry.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034"));
+        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
     ldapEntry.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135"));
+        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
     ldapEntry.addAttribute(new LdapAttribute("name", "example.org"));
 
     DnsZone dnsZone = mapper.map(ldapEntry);

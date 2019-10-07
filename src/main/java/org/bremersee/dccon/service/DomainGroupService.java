@@ -52,10 +52,11 @@ public interface DomainGroupService {
   /**
    * Get group by name.
    *
-   * @param groupName the group name
+   * @param groupName           the group name
+   * @param addAvailableMembers the add available members flag (default is {@code false})
    * @return the group
    */
-  Optional<DomainGroup> getGroupByName(@NotNull String groupName);
+  Optional<DomainGroup> getGroupByName(@NotNull String groupName, Boolean addAvailableMembers);
 
   /**
    * Update domain group.
