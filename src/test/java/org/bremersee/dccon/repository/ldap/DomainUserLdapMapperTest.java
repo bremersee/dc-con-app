@@ -2,11 +2,9 @@ package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValuesAsList;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -20,7 +18,6 @@ import org.junit.Test;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.IntegerValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -98,7 +95,6 @@ public class DomainUserLdapMapperTest {
   @Test
   public void mapAndComputeModifications() {
     DomainUser source = new DomainUser();
-    source.setAvatar("picture".getBytes(StandardCharsets.UTF_8));
     source.setCreated(OffsetDateTime.now());
     source.setDisplayName("Anna Livia Plurabelle");
     source.setEmail("anna@example.org");
@@ -119,9 +115,6 @@ public class DomainUserLdapMapperTest {
     mapper.mapAndComputeModifications(source, destination);
 
     StringValueTranscoder svt = new StringValueTranscoder();
-    assertArrayEquals(
-        source.getAvatar(),
-        getAttributeValue(destination, "jpegPhoto", new ByteArrayValueTranscoder(), null));
     assertEquals(
         source.getDisplayName(),
         getAttributeValue(destination, "displayName", svt, null));

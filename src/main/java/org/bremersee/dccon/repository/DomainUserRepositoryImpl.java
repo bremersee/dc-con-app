@@ -16,14 +16,18 @@
 
 package org.bremersee.dccon.repository;
 
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
@@ -32,8 +36,12 @@ import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.ldaptive.io.ByteArrayValueTranscoder;
+import org.ldaptive.io.StringValueTranscoder;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -45,6 +53,11 @@ import org.springframework.util.StringUtils;
 @Component("domainUserRepository")
 @Slf4j
 public class DomainUserRepositoryImpl extends AbstractRepository implements DomainUserRepository {
+
+  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
+
+  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
+      = new ByteArrayValueTranscoder();
 
   private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
 
@@ -111,10 +124,61 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
     searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setSizeLimit(1L);
     return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper)
         .map(domainUser -> Boolean.TRUE.equals(addAvailableGroups)
             ? addAvailableGroups(domainUser)
             : domainUser);
+  }
+
+  @Override
+  public Optional<byte[]> findAvatar(String userName, AvatarDefault avatarDefault, Integer size) {
+    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
+    searchFilter.setParameter(0, userName);
+    final SearchRequest searchRequest = new SearchRequest(
+        getProperties().getUserBaseDn(),
+        searchFilter);
+    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
+    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setReturnAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setReturnAttributes("mail");
+    searchRequest.setSizeLimit(1L);
+
+    return getLdapTemplate().findOne(searchRequest)
+        .map(ldapEntry -> {
+          byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
+              ldapEntry, DomainUser.LDAP_ATTR_AVATAR, BYTE_ARRAY_VALUE_TRANSCODER, null);
+          if (avatar != null && avatar.length > 0) {
+            // TODO size
+            return avatar;
+          }
+          String mail = LdaptiveEntryMapper
+              .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
+          if (StringUtils.hasText(mail)) {
+            final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));
+            final String hex = new String(Hex.encode(md5));
+            final String defaultAvatar = avatarDefault != null
+                ? avatarDefault.toString()
+                : AvatarDefault.NOT_FOUND.toString();
+            final String avatarSize =
+                size == null || size < 1 || size > 2048 ? "80" : size.toString();
+            final String url = getProperties().getGravatarUrl()
+                .replace("{hash}", hex)
+                .replace("{default}", defaultAvatar)
+                .replace("{size}", avatarSize);
+            try {
+              return IOUtils.toByteArray(new URL(url));
+            } catch (Exception e) {
+              if (AvatarDefault.NOT_FOUND.toString().equalsIgnoreCase(defaultAvatar)) {
+                return null;
+              }
+              log.error("msg=[Getting avatar failed. This should not happen.] url=[{}]",
+                  url, e);
+            }
+          }
+          // TODO return image for entries with no email
+          return null;
+        });
   }
 
   @Override

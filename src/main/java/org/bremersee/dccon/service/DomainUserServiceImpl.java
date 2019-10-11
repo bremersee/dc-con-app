@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +24,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.repository.DomainGroupRepository;
@@ -47,8 +47,6 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   private DomainUserValidator domainUserValidator;
 
-  private List<AvatarService> avatarServices;
-
   /**
    * Instantiates a new domain user service.
    *
@@ -63,7 +61,6 @@ public class DomainUserServiceImpl implements DomainUserService {
     this.domainUserRepository = domainUserRepository;
     this.domainUserValidator = DomainUserValidator.defaultValidator(
         properties, domainGroupRepository, domainUserRepository);
-    this.avatarServices = Collections.emptyList();
   }
 
   /**
@@ -75,18 +72,6 @@ public class DomainUserServiceImpl implements DomainUserService {
   public void setDomainUserValidator(DomainUserValidator domainUserValidator) {
     if (domainUserValidator != null) {
       this.domainUserValidator = domainUserValidator;
-    }
-  }
-
-  /**
-   * Sets avatar services.
-   *
-   * @param avatarServices the avatar services
-   */
-  @Autowired(required = false)
-  public void setAvatarServices(List<AvatarService> avatarServices) {
-    if (avatarServices != null) {
-      this.avatarServices = avatarServices;
     }
   }
 
@@ -103,7 +88,6 @@ public class DomainUserServiceImpl implements DomainUserService {
   @Override
   public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
     domainUserValidator.doAddValidation(domainUser);
-    findUserAvatar(domainUser, false);
     return domainUserRepository.save(domainUser);
   }
 
@@ -115,25 +99,10 @@ public class DomainUserServiceImpl implements DomainUserService {
   @Override
   public Optional<byte[]> getUserAvatar(
       final String userName,
-      final Boolean returnDefault) {
-    return domainUserRepository.findOne(userName, false)
-        .map(domainUser -> findUserAvatar(domainUser, Boolean.TRUE.equals(returnDefault)));
-  }
+      final AvatarDefault avatarDefault,
+      final Integer size) {
 
-  private byte[] findUserAvatar(
-      final DomainUser domainUser,
-      final boolean returnDefault) {
-
-    if (domainUser.getAvatar() == null) {
-      for (AvatarService avatarService : avatarServices) {
-        byte[] avatar = avatarService.findAvatar(domainUser, returnDefault);
-        if (avatar != null) {
-          domainUser.setAvatar(avatar);
-          break;
-        }
-      }
-    }
-    return domainUser.getAvatar();
+    return domainUserRepository.findAvatar(userName, avatarDefault, size);
   }
 
   @Override
@@ -148,7 +117,6 @@ public class DomainUserServiceImpl implements DomainUserService {
             domainUser.setGroups(oldDomainUser.getGroups());
           }
           domainUserValidator.doUpdateValidation(userName, domainUser);
-          findUserAvatar(domainUser, false);
           return domainUserRepository.save(domainUser);
         });
   }

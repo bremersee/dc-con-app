@@ -145,21 +145,7 @@ public class DomainControllerProperties implements Serializable {
   private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
 
 
-  private String gravatarUrl = "https://www.gravatar.com/avatar/{}?d=404";
-
-  /**
-   * Possible values.
-   * <ul>
-   * <li>mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
-   * <li>identicon: a geometric pattern based on an email hash
-   * <li>monsterid: a generated 'monster' with different colors, faces, etc
-   * <li>wavatar: generated faces with differing features and backgrounds
-   * <li>retro: awesome generated, 8-bit arcade-style pixelated faces
-   * <li>robohash: a generated robot with different colors, faces, etc
-   * <li>blank: a transparent PNG image (border added to HTML below for demonstration purposes)
-   * </ul>
-   */
-  private String gravatarUrlForDefault = "https://www.gravatar.com/avatar/{}?d=retro";
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}";
 
 
   /**

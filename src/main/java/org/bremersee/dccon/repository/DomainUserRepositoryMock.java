@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -54,6 +55,12 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
 
   @Override
   public Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<byte[]> findAvatar(@NotNull String userName, AvatarDefault avatarDefault,
+      Integer size) {
     return Optional.empty();
   }
 

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.springframework.lang.Nullable;
@@ -87,12 +88,14 @@ public interface DomainUserService {
    * Gets user avatar.
    *
    * @param userName      the user name
-   * @param returnDefault the return default flag
+   * @param avatarDefault the avatar default
+   * @param size          the size
    * @return the user avatar
    */
   Optional<byte[]> getUserAvatar(
       @NotNull String userName,
-      Boolean returnDefault);
+      @Nullable AvatarDefault avatarDefault,
+      @Nullable Integer size);
 
   /**
    * Check whether user exists or not.

@@ -19,6 +19,7 @@ package org.bremersee.dccon.controller;
 import java.util.List;
 import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainUserManagementApi;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.service.DomainUserService;
@@ -73,12 +74,13 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<byte[]> getUserAvatar(
       final String userName,
-      final Boolean returnDefault) {
+      final AvatarDefault avatarDefault,
+      final Integer size) {
 
-    return domainUserService.getUserAvatar(userName, returnDefault)
+    return domainUserService.getUserAvatar(userName, avatarDefault, size)
         .map(avatar -> ResponseEntity
             .status(HttpStatus.OK)
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + userName + ".jpeg\"")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + userName + ".jpg\"")
             .body(avatar))
         .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }

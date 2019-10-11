@@ -30,7 +30,6 @@ import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTra
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.IntegerValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -43,9 +42,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
     LdaptiveEntryMapper<DomainUser> {
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
-
-  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
-      = new ByteArrayValueTranscoder();
 
   private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
 
@@ -131,8 +127,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "logonCount", INT_VALUE_TRANSCODER, null));
     domainUser.setPasswordLastSet(getAttributeValue(ldapEntry,
         "pwdLastSet", AD_TIME_VALUE_TRANSCODER, null));
-    domainUser.setAvatar(getAttributeValue(ldapEntry,
-        "jpegPhoto", BYTE_ARRAY_VALUE_TRANSCODER, null));
 
     Integer userAccountControlValue = getAttributeValue(ldapEntry,
         "userAccountControl", USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
@@ -184,8 +178,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
     setAttribute(destination,
         "loginShell", source.getLoginShell(), false, STRING_VALUE_TRANSCODER,
         modifications);
-    setAttribute(destination,
-        "jpegPhoto", source.getAvatar(), true, BYTE_ARRAY_VALUE_TRANSCODER, modifications);
 
     setAttributes(destination,
         getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,

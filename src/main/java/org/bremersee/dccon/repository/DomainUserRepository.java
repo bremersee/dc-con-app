@@ -19,6 +19,7 @@ package org.bremersee.dccon.repository;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -47,6 +48,19 @@ public interface DomainUserRepository {
    * @return the user
    */
   Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups);
+
+  /**
+   * Find avatar.
+   *
+   * @param userName      the user name
+   * @param avatarDefault the avatar default
+   * @param size          the size
+   * @return the avatar
+   */
+  Optional<byte[]> findAvatar(
+      @NotNull String userName,
+      @Nullable AvatarDefault avatarDefault,
+      @Nullable Integer size);
 
   /**
    * Check whether user exists or not.
