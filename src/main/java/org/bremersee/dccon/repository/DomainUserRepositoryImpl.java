@@ -16,12 +16,18 @@
 
 package org.bremersee.dccon.repository;
 
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
@@ -32,6 +38,7 @@ import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.img.ImageScaler;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
@@ -39,6 +46,8 @@ import org.ldaptive.SearchRequest;
 import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
@@ -58,6 +67,10 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
       = new ByteArrayValueTranscoder();
+
+  private static final ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();
+
+  private static final String NO_EMAIL_AVATAR = "classpath:mp.jpg";
 
   private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
 
@@ -133,6 +146,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   @Override
   public Optional<byte[]> findAvatar(String userName, AvatarDefault avatarDefault, Integer size) {
+    final int avatarSize =
+        size == null || size < 1 || size > 2048 ? 80 : size;
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -149,8 +164,18 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
           byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
               ldapEntry, DomainUser.LDAP_ATTR_AVATAR, BYTE_ARRAY_VALUE_TRANSCODER, null);
           if (avatar != null && avatar.length > 0) {
-            // TODO size
-            return avatar;
+            try {
+              final BufferedImage img = ImageIO.read(new ByteArrayInputStream(avatar));
+              final BufferedImage scaledImg = ImageScaler
+                  .scaleImage(img, new Dimension(avatarSize, avatarSize));
+              final ByteArrayOutputStream out = new ByteArrayOutputStream();
+              ImageIO.write(scaledImg, "JPG", out);
+              return out.toByteArray();
+
+            } catch (IOException e) {
+              log.error("msg=[Creating image from ldap attribute {} failed.]",
+                  DomainUser.LDAP_ATTR_AVATAR, e);
+            }
           }
           String mail = LdaptiveEntryMapper
               .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
@@ -160,12 +185,10 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
             final String defaultAvatar = avatarDefault != null
                 ? avatarDefault.toString()
                 : AvatarDefault.NOT_FOUND.toString();
-            final String avatarSize =
-                size == null || size < 1 || size > 2048 ? "80" : size.toString();
             final String url = getProperties().getGravatarUrl()
                 .replace("{hash}", hex)
                 .replace("{default}", defaultAvatar)
-                .replace("{size}", avatarSize);
+                .replace("{size}", String.valueOf(avatarSize));
             try {
               return IOUtils.toByteArray(new URL(url));
             } catch (Exception e) {
@@ -175,9 +198,26 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
               log.error("msg=[Getting avatar failed. This should not happen.] url=[{}]",
                   url, e);
             }
+          } else if (AvatarDefault.NOT_FOUND == avatarDefault) {
+            return null;
           }
-          // TODO return image for entries with no email
-          return null;
+          try {
+            final BufferedImage img = ImageIO
+                .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());
+            final BufferedImage scaledImg = ImageScaler
+                .scaleImage(img, new Dimension(avatarSize, avatarSize));
+            final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(scaledImg, "JPG", out);
+            return out.toByteArray();
+
+          } catch (IOException e) {
+            final ServiceException se = ServiceException.internalServerError(
+                "Getting default avatar for no email failed.",
+                "org.bremersee:dc-con-app:1ec0dda8-7358-4e1c-a8f2-f4bd64e439f0",
+                e);
+            log.error("msg=[{}]", se.getMessage(), se);
+            throw se;
+          }
         });
   }
 
