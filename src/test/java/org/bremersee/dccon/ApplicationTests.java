@@ -30,10 +30,10 @@ public class ApplicationTests {
   TestRestTemplate restTemplate;
 
   /**
-   * Integration tests.
+   * Access tests.
    */
   @Test
-  public void integrationTests() {
+  public void accessTests() {
     HttpStatus httpStatus = restTemplate
         .getForEntity("/api/info", String.class).getStatusCode();
     Assert.assertEquals(HttpStatus.UNAUTHORIZED, httpStatus);
