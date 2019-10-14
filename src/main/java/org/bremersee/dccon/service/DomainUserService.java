@@ -54,11 +54,10 @@ public interface DomainUserService {
   /**
    * Get domain user.
    *
-   * @param userName           the user name
-   * @param addAvailableGroups the add available groups flag (default is {@code false})
+   * @param userName the user name
    * @return the domain user
    */
-  Optional<DomainUser> getUser(@NotNull String userName, Boolean addAvailableGroups);
+  Optional<DomainUser> getUser(@NotNull String userName);
 
   /**
    * Update domain user.

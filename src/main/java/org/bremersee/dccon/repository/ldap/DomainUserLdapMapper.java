@@ -18,7 +18,6 @@ package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttribute;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,9 +110,9 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "mobile", STRING_VALUE_TRANSCODER, null));
     domainUser.setGroups(LdaptiveEntryMapper.getAttributeValuesAsList(ldapEntry,
         getProperties().getUserGroupAttr(), userGroupValueTranscoder));
-    domainUser
-        .setDescription(getAttributeValue(ldapEntry, "description", STRING_VALUE_TRANSCODER, null));
-
+    domainUser.getGroups().sort(String::compareToIgnoreCase);
+    domainUser.setDescription(getAttributeValue(ldapEntry,
+        "description", STRING_VALUE_TRANSCODER, null));
     domainUser.setHomeDirectory(getAttributeValue(ldapEntry,
         "homeDirectory", STRING_VALUE_TRANSCODER, null));
     domainUser.setUnixHomeDirectory(getAttributeValue(ldapEntry,
@@ -179,9 +178,10 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "loginShell", source.getLoginShell(), false, STRING_VALUE_TRANSCODER,
         modifications);
 
-    setAttributes(destination,
-        getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,
-        modifications);
+    // Groups must be set in group entity.
+    // setAttributes(destination,
+    //     getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,
+    //     modifications);
 
     Integer userAccountControlValue = getAttributeValue(destination,
         "userAccountControl", USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);

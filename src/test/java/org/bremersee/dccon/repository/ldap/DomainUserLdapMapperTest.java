@@ -1,7 +1,6 @@
 package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValuesAsList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -9,10 +8,8 @@ import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ldaptive.AttributeModification;
@@ -155,9 +152,10 @@ public class DomainUserLdapMapperTest {
         source.getUserName(),
         getAttributeValue(destination, "sAMAccountName", svt, null));
 
-    List<String> groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
-    assertEquals(1, groupDns.size());
-    assertEquals("cn=joyce,cn=Users,dc=example,dc=org", groupDns.get(0));
+    // Groups must be set in group entity.
+    // List<String> groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
+    // assertEquals(1, groupDns.size());
+    // assertEquals("cn=joyce,cn=Users,dc=example,dc=org", groupDns.get(0));
 
     IntegerValueTranscoder ivt = new IntegerValueTranscoder();
     assertEquals(
@@ -168,11 +166,11 @@ public class DomainUserLdapMapperTest {
     source.setGroups(new ArrayList<>());
 
     AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-    assertEquals(2, modifications.length);
+    assertEquals(1, modifications.length);
     assertEquals(
         66050,
         (long) getAttributeValue(destination, "userAccountControl", ivt, null));
-    groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
-    Assert.assertTrue(groupDns.isEmpty());
+    // groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
+    // Assert.assertTrue(groupDns.isEmpty());
   }
 }

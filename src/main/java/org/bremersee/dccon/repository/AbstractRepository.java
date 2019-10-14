@@ -18,22 +18,12 @@ package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.DomainGroup;
-import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
-import org.ldaptive.SearchFilter;
-import org.ldaptive.SearchRequest;
-import org.ldaptive.SearchScope;
-import org.ldaptive.io.StringValueTranscoder;
 import org.springframework.util.Assert;
 
 /**
@@ -124,43 +114,6 @@ abstract class AbstractRepository {
       return false;
     }
     return value != null && value.toString().toLowerCase().contains(query);
-  }
-
-  DomainGroup addAvailableMembers(DomainGroup domainGroup) {
-    domainGroup.setAvailableMembers(
-        findAvailableMembersOrGroup(false, domainGroup.getMembers()));
-    return domainGroup;
-  }
-
-  DomainUser addAvailableGroups(DomainUser domainUser) {
-    domainUser.setAvailableGroups(
-        findAvailableMembersOrGroup(true, domainUser.getGroups()));
-    return domainUser;
-  }
-
-  private List<String> findAvailableMembersOrGroup(
-      boolean isUserName,
-      Collection<String> existing) {
-    final String filter =
-        isUserName ? properties.getGroupFindAllFilter() : properties.getUserFindAllFilter();
-    final String baseDn = isUserName ? properties.getGroupBaseDn() : properties.getUserBaseDn();
-    final String attr = isUserName ? properties.getGroupRdn() : properties.getUserRdn();
-    final SearchScope searchScope = isUserName
-        ? properties.getGroupFindAllSearchScope()
-        : properties.getUserFindAllSearchScope();
-    final SearchFilter searchFilter = new SearchFilter(filter);
-    final SearchRequest searchRequest = new SearchRequest();
-    searchRequest.setBaseDn(baseDn);
-    searchRequest.setReturnAttributes(attr);
-    searchRequest.setSearchFilter(searchFilter);
-    searchRequest.setSearchScope(searchScope);
-    final Set<String> existingSet = new HashSet<>(existing);
-    return getLdapTemplate().findAll(searchRequest).stream()
-        .map(ldapEntry -> LdaptiveEntryMapper.getAttributeValue(
-            ldapEntry, attr, new StringValueTranscoder(), null))
-        .filter(name -> !existingSet.contains(name))
-        .sorted(String::compareToIgnoreCase)
-        .collect(Collectors.toList());
   }
 
 }

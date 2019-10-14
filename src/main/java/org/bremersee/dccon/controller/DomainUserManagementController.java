@@ -65,10 +65,39 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<DomainUser> getUser(
-      final String userName,
-      final Boolean addAvailableGroups) {
-    return ResponseEntity.of(domainUserService.getUser(userName, addAvailableGroups));
+      final String userName) {
+    return ResponseEntity.of(domainUserService.getUser(userName));
   }
+
+  /*
+  public ResponseEntity<DomainUser> setGroups(String userName, List<String> groups) {
+    return ResponseEntity.of(domainUserService.getUser(userName)
+        .flatMap(user -> {
+          user.setGroups(groups != null ? new ArrayList<>(groups) : new ArrayList<>());
+          return domainUserService.updateUser(userName, true, user);
+        }));
+  }
+
+  public ResponseEntity<DomainUser> addGroups(String userName, List<String> groups) {
+    return ResponseEntity.of(domainUserService.getUser(userName)
+        .flatMap(user -> {
+          final Set<String> groupSet = new HashSet<>(user.getGroups());
+          groupSet.addAll(groups);
+          user.setGroups(new ArrayList<>(groupSet));
+          return domainUserService.updateUser(userName, true, user);
+        }));
+  }
+
+  public ResponseEntity<DomainUser> removeGroups(String userName, List<String> groups) {
+    return ResponseEntity.of(domainUserService.getUser(userName)
+        .flatMap(user -> {
+          final Set<String> groupSet = new HashSet<>(user.getGroups());
+          groupSet.removeAll(groups);
+          user.setGroups(new ArrayList<>(groupSet));
+          return domainUserService.updateUser(userName, true, user);
+        }));
+  }
+  */
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override

@@ -43,11 +43,10 @@ public interface DomainUserRepository {
   /**
    * Find user by name.
    *
-   * @param userName           the user name
-   * @param addAvailableGroups the add available groups flag (default is {@code false})
+   * @param userName the user name
    * @return the user
    */
-  Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups);
+  Optional<DomainUser> findOne(@NotNull String userName);
 
   /**
    * Find avatar.
@@ -73,10 +72,12 @@ public interface DomainUserRepository {
   /**
    * Save domain user.
    *
-   * @param domainUser the domain user
+   * @param domainUser   the domain user
+   * @param updateGroups specifies whether the groups should also be updated or not (default is
+   *                     false)
    * @return the domain user
    */
-  DomainUser save(@NotNull DomainUser domainUser);
+  DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups);
 
   /**
    * Save password.

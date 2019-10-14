@@ -42,11 +42,10 @@ public interface DomainGroupRepository {
   /**
    * Find group be name.
    *
-   * @param groupName           the group name
-   * @param addAvailableMembers the add available members flag (default is {@code false})
+   * @param groupName the group name
    * @return the group
    */
-  Optional<DomainGroup> findOne(@NotNull String groupName, Boolean addAvailableMembers);
+  Optional<DomainGroup> findOne(@NotNull String groupName);
 
   /**
    * Check whether group exists or not.

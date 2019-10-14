@@ -53,7 +53,7 @@ public class DomainGroupRepositoryMock implements DomainGroupRepository {
   }
 
   @Override
-  public Optional<DomainGroup> findOne(@NotNull String groupName, Boolean addAvailableMembers) {
+  public Optional<DomainGroup> findOne(@NotNull String groupName) {
     return Optional.empty();
   }
 

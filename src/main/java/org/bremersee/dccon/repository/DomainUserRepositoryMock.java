@@ -54,7 +54,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
   }
 
   @Override
-  public Optional<DomainUser> findOne(@NotNull String userName, Boolean addAvailableGroups) {
+  public Optional<DomainUser> findOne(@NotNull String userName) {
     return Optional.empty();
   }
 
@@ -70,7 +70,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
   }
 
   @Override
-  public DomainUser save(@NotNull DomainUser domainUser) {
+  public DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups) {
     return DomainUser.builder().userName(domainUser.getUserName()).build();
   }
 

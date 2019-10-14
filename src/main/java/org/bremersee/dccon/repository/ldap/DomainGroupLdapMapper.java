@@ -90,6 +90,7 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
         ldapEntry,
         getProperties().getGroupMemberAttr(),
         groupMemberValueTranscoder));
+    domainGroup.getMembers().sort(String::compareToIgnoreCase);
   }
 
   @Override

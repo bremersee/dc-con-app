@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
@@ -74,17 +76,22 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
 
+  private DomainGroupRepository domainGroupRepository;
+
   /**
    * Instantiates a new domain user repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties            the properties
+   * @param ldapTemplate          the ldap template
+   * @param domainGroupRepository the domain group repository
    */
   public DomainUserRepositoryImpl(
       DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
+      LdaptiveTemplate ldapTemplate,
+      DomainGroupRepository domainGroupRepository) {
     super(properties, ldapTemplate);
     domainUserLdapMapper = new DomainUserLdapMapper(properties);
+    this.domainGroupRepository = domainGroupRepository;
   }
 
   /**
@@ -129,7 +136,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public Optional<DomainUser> findOne(String userName, Boolean addAvailableGroups) {
+  public Optional<DomainUser> findOne(String userName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -138,10 +145,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
     searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
     searchRequest.setSizeLimit(1L);
-    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper)
-        .map(domainUser -> Boolean.TRUE.equals(addAvailableGroups)
-            ? addAvailableGroups(domainUser)
-            : domainUser);
+    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
   }
 
   @Override
@@ -228,7 +232,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public DomainUser save(DomainUser domainUser) {
+  public DomainUser save(DomainUser domainUser, Boolean updateGroups) {
     if (!exists(domainUser.getUserName())) {
       kinit();
       final List<String> commands = new ArrayList<>();
@@ -265,7 +269,32 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
             }
           });
     }
-    return getLdapTemplate().save(domainUser, domainUserLdapMapper);
+
+    final DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
+    if (Boolean.TRUE.equals(updateGroups)) {
+      final Set<String> oldGroups = new HashSet<>(updatedDomainUser.getGroups());
+      final Set<String> newGroups = new HashSet<>(domainUser.getGroups());
+      for (final String newGroup : newGroups) {
+        if (!oldGroups.remove(newGroup)) {
+          domainGroupRepository.findOne(newGroup).ifPresent(group -> {
+            group.getMembers().add(domainUser.getUserName());
+            domainGroupRepository.save(group);
+          });
+        }
+      }
+      for (final String oldGroup : oldGroups) {
+        domainGroupRepository.findOne(oldGroup).ifPresent(group -> {
+          group.getMembers().remove(domainUser.getUserName());
+          domainGroupRepository.save(group);
+        });
+      }
+      updatedDomainUser.getGroups().clear();
+      updatedDomainUser.getGroups().addAll(newGroups);
+    } else {
+      updatedDomainUser.setGroups(domainUser.getGroups());
+    }
+    updatedDomainUser.getGroups().sort(String::compareToIgnoreCase);
+    return updatedDomainUser;
   }
 
   @Override

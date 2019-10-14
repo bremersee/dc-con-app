@@ -88,12 +88,12 @@ public class DomainUserServiceImpl implements DomainUserService {
   @Override
   public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
     domainUserValidator.doAddValidation(domainUser);
-    return domainUserRepository.save(domainUser);
+    return domainUserRepository.save(domainUser, true);
   }
 
   @Override
-  public Optional<DomainUser> getUser(@NotNull String userName, Boolean addAvailableGroups) {
-    return domainUserRepository.findOne(userName, addAvailableGroups);
+  public Optional<DomainUser> getUser(@NotNull String userName) {
+    return domainUserRepository.findOne(userName);
   }
 
   @Override
@@ -111,13 +111,13 @@ public class DomainUserServiceImpl implements DomainUserService {
       Boolean updateGroups,
       @NotNull @Valid DomainUser domainUser) {
 
-    return domainUserRepository.findOne(userName, false)
+    return domainUserRepository.findOne(userName)
         .map(oldDomainUser -> {
           if (!Boolean.TRUE.equals(updateGroups)) {
             domainUser.setGroups(oldDomainUser.getGroups());
           }
           domainUserValidator.doUpdateValidation(userName, domainUser);
-          return domainUserRepository.save(domainUser);
+          return domainUserRepository.save(domainUser, updateGroups);
         });
   }
 

@@ -60,8 +60,8 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<DomainGroup> getGroupByName(String groupName, Boolean addAvailableMembers) {
-    return ResponseEntity.of(domainGroupService.getGroupByName(groupName, addAvailableMembers));
+  public ResponseEntity<DomainGroup> getGroup(String groupName) {
+    return ResponseEntity.of(domainGroupService.getGroup(groupName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -69,6 +69,36 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
   public ResponseEntity<DomainGroup> updateGroup(String groupName, @Valid DomainGroup domainGroup) {
     return ResponseEntity.of(domainGroupService.updateGroup(groupName, domainGroup));
   }
+
+  /*
+  public ResponseEntity<DomainGroup> setMembers(String groupName, List<String> userNames) {
+    return ResponseEntity.of(domainGroupService.getGroup(groupName)
+        .flatMap(group -> {
+          group.setMembers(userNames != null ? new ArrayList<>(userNames) : new ArrayList<>());
+          return domainGroupService.updateGroup(groupName, group);
+        }));
+  }
+
+  public ResponseEntity<DomainGroup> addMembers(String groupName, List<String> userNames) {
+    return ResponseEntity.of(domainGroupService.getGroup(groupName)
+        .flatMap(group -> {
+          Set<String> members = new HashSet<>(group.getMembers());
+          members.addAll(userNames);
+          group.setMembers(new ArrayList<>(members));
+          return domainGroupService.updateGroup(groupName, group);
+        }));
+  }
+
+  public ResponseEntity<DomainGroup> removeMembers(String groupName, List<String> userNames) {
+    return ResponseEntity.of(domainGroupService.getGroup(groupName)
+        .flatMap(group -> {
+          Set<String> members = new HashSet<>(group.getMembers());
+          members.removeAll(userNames);
+          group.setMembers(new ArrayList<>(members));
+          return domainGroupService.updateGroup(groupName, group);
+        }));
+  }
+  */
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
