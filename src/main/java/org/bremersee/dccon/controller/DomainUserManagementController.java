@@ -22,11 +22,18 @@ import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
+import org.bremersee.dccon.service.AuthenticationService;
 import org.bremersee.dccon.service.DomainUserService;
+import org.bremersee.exception.ServiceException;
+import org.bremersee.security.authentication.KeycloakJwtAuthenticationToken;
+import org.bremersee.security.core.AuthorityConstants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -39,14 +46,19 @@ public class DomainUserManagementController implements DomainUserManagementApi {
 
   private final DomainUserService domainUserService;
 
+  private final AuthenticationService authenticationService;
+
   /**
    * Instantiates a new domain user management controller.
    *
-   * @param domainUserService the domain user service
+   * @param domainUserService     the domain user service
+   * @param authenticationService the authentication service
    */
   public DomainUserManagementController(
-      final DomainUserService domainUserService) {
+      final DomainUserService domainUserService,
+      AuthenticationService authenticationService) {
     this.domainUserService = domainUserService;
+    this.authenticationService = authenticationService;
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -123,11 +135,21 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     return ResponseEntity.of(domainUserService.updateUser(userName, updateGroups, domainUser));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Void> updateUserPassword(
       final String userName,
       @Valid final Password newPassword) {
+
+    if (!isAdmin()) {
+      if (!isUser(userName)) {
+        throw ServiceException.forbidden();
+      } else if (!authenticationService.passwordMatches(userName, newPassword.getPreviousValue())) {
+        throw ServiceException.badRequest(
+            "Previous password does not match.",
+            "password_does_not_match");
+      }
+    }
     domainUserService.updateUserPassword(userName, newPassword);
     return ResponseEntity.ok().build();
   }
@@ -142,6 +164,30 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<Boolean> deleteUser(final String userName) {
     return ResponseEntity.ok(domainUserService.deleteUser(userName));
+  }
+
+  private boolean isAdmin() {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      return false;
+    }
+    return authentication.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(AuthorityConstants.ADMIN_ROLE_NAME::equalsIgnoreCase);
+  }
+
+  private boolean isUser(String userName) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || userName == null) {
+      return false;
+    }
+    final String principalName;
+    if (authentication instanceof KeycloakJwtAuthenticationToken) {
+      principalName = ((KeycloakJwtAuthenticationToken) authentication).getPreferredName();
+    } else {
+      principalName = authentication.getName();
+    }
+    return userName.equalsIgnoreCase(principalName);
   }
 
 }

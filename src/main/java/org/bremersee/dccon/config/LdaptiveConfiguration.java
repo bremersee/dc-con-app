@@ -19,14 +19,12 @@ package org.bremersee.dccon.config;
 import java.time.Duration;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.data.ldaptive.LdaptiveConnectionConfigFactory;
 import org.bremersee.data.ldaptive.LdaptiveProperties;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.BindConnectionInitializer;
 import org.ldaptive.ConnectionConfig;
 import org.ldaptive.ConnectionFactory;
-import org.ldaptive.ConnectionInitializer;
-import org.ldaptive.Credential;
 import org.ldaptive.DefaultConnectionFactory;
 import org.ldaptive.pool.BlockingConnectionPool;
 import org.ldaptive.pool.ConnectionPool;
@@ -35,15 +33,11 @@ import org.ldaptive.pool.PoolConfig;
 import org.ldaptive.pool.PooledConnectionFactory;
 import org.ldaptive.pool.PruneStrategy;
 import org.ldaptive.pool.SearchValidator;
-import org.ldaptive.ssl.CredentialConfig;
-import org.ldaptive.ssl.SslConfig;
-import org.ldaptive.ssl.X509CredentialConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.util.StringUtils;
 
 /**
  * The ldaptive configuration.
@@ -87,7 +81,7 @@ public class LdaptiveConfiguration {
   }
 
   /**
-   * Connection factory connection factory.
+   * Create connection factory.
    *
    * @return the connection factory
    */
@@ -101,7 +95,7 @@ public class LdaptiveConfiguration {
   }
 
   /**
-   * Ldaptive template ldaptive template.
+   * Create ldaptive template.
    *
    * @param connectionFactory the connection factory
    * @return the ldaptive template
@@ -112,70 +106,11 @@ public class LdaptiveConfiguration {
   }
 
   private DefaultConnectionFactory defaultConnectionFactory() {
-    DefaultConnectionFactory factory = new DefaultConnectionFactory();
-    factory.setConnectionConfig(connectionConfig());
+    final ConnectionConfig connectionConfig = LdaptiveConnectionConfigFactory.defaultFactory()
+        .createConnectionConfig(properties);
+    final DefaultConnectionFactory factory = new DefaultConnectionFactory();
+    factory.setConnectionConfig(connectionConfig);
     return factory;
-  }
-
-  private ConnectionConfig connectionConfig() {
-
-    ConnectionConfig cc = new ConnectionConfig();
-    cc.setLdapUrl(properties.getLdapUrl());
-
-    if (properties.getConnectTimeout() > 0L) {
-      cc.setConnectTimeout(Duration.ofMillis(properties.getConnectTimeout()));
-    }
-    if (properties.getResponseTimeout() > 0L) {
-      cc.setResponseTimeout(Duration.ofMillis(properties.getResponseTimeout()));
-    }
-
-    cc.setUseSSL(properties.isUseSsl());
-    cc.setUseStartTLS(properties.isUseStartTls());
-
-    if ((properties.isUseSsl() || properties.isUseStartTls()) && hasSslConfig()) {
-      cc.setSslConfig(sslConfig());
-    }
-
-    // binds all operations to a dn
-    if (StringUtils.hasText(properties.getBindDn())) {
-      cc.setConnectionInitializer(connectionInitializer());
-    }
-
-    return cc;
-  }
-
-  private SslConfig sslConfig() {
-    SslConfig sc = new SslConfig();
-    sc.setCredentialConfig(sslCredentialConfig());
-    return sc;
-  }
-
-  private CredentialConfig sslCredentialConfig() {
-    X509CredentialConfig x509 = new X509CredentialConfig();
-    if (StringUtils.hasText(properties.getAuthenticationCertificate())) {
-      x509.setAuthenticationCertificate(properties.getAuthenticationCertificate());
-    }
-    if (StringUtils.hasText(properties.getAuthenticationKey())) {
-      x509.setAuthenticationKey(properties.getAuthenticationKey());
-    }
-    if (StringUtils.hasText(properties.getTrustCertificates())) {
-      x509.setTrustCertificates(properties.getTrustCertificates());
-    }
-    return x509;
-  }
-
-  private boolean hasSslConfig() {
-    return StringUtils.hasText(properties.getTrustCertificates())
-        || StringUtils.hasText(properties.getAuthenticationCertificate())
-        || StringUtils.hasText(properties.getAuthenticationKey());
-  }
-
-  private ConnectionInitializer connectionInitializer() {
-    // sasl is not supported at the moment
-    BindConnectionInitializer bci = new BindConnectionInitializer();
-    bci.setBindDn(properties.getBindDn());
-    bci.setBindCredential(new Credential(properties.getBindCredential()));
-    return bci;
   }
 
   private PooledConnectionFactory pooledConnectionFactory() {

@@ -38,6 +38,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 /**
  * The security configuration.
@@ -83,14 +84,14 @@ public class SecurityConfiguration {
     public void configure(HttpSecurity http) throws Exception {
       log.info("Authorizing requests to /api/** with OAuth2.");
       http
-          .antMatcher("/api/**")
+          .requestMatcher(new NegatedRequestMatcher(EndpointRequest.toAnyEndpoint()))
           .csrf().disable()
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
+          // .antMatchers("/public-api/**").permitAll()
           .anyRequest()
-          .authenticated()
-          .and()
-          .antMatcher("/api/**")
+          .authenticated();
+      http
           .oauth2ResourceServer()
           .jwt()
           .jwtAuthenticationConverter(keycloakJwtConverter);
