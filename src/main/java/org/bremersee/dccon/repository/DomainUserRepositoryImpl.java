@@ -306,7 +306,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     commands.add("user");
     commands.add("setpassword");
     commands.add(userName);
-    commands.add("--newpassword='" + newPassword + "'"); // works
+    commands.add("--newpassword=\"" + newPassword + "\"");
     auth(commands);
     CommandExecutor.exec(
         commands,
