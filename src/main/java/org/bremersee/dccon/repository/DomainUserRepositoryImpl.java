@@ -32,7 +32,9 @@ import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.bremersee.data.ldaptive.AbstractLdaptiveErrorHandler;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.data.ldaptive.LdaptiveException;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
@@ -46,7 +48,9 @@ import org.bremersee.exception.ServiceException;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.AttributeModificationType;
 import org.ldaptive.LdapAttribute;
+import org.ldaptive.LdapException;
 import org.ldaptive.ModifyRequest;
+import org.ldaptive.ResultCode;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.io.ByteArrayValueTranscoder;
@@ -54,6 +58,7 @@ import org.ldaptive.io.StringValueTranscoder;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
@@ -323,37 +328,26 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     final ModifyRequest modifyRequest = new ModifyRequest();
     modifyRequest.setDn(dn);
     modifyRequest.setAttributeModifications(attributeModification);
-    getLdapTemplate().modify(modifyRequest);
-
-    /*
-    kinit();
-    final List<String> commands = new ArrayList<>();
-    sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
-    commands.add("user");
-    commands.add("setpassword");
-    commands.add(userName);
-    commands.add("--newpassword=\"" + newPassword + "\""); // Doesn't work
-    auth(commands);
-    CommandExecutor.exec(
-        commands,
-        null,
-        getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> {
-          final String err = response.stderrToOneLine();
-          if (err.startsWith("ERROR:") && err.contains("check_password_restrictions")) {
-            throw ServiceException.badRequest(
-                "msg=[The password does not meet the complexity criteria!] userName=["
-                    + userName + "]",
-                "check_password_restrictions");
-          } else if (StringUtils.hasText(err)) {
-            throw ServiceException.internalServerError(
-                "msg=[Setting new password failed.] userName=[" + userName + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response),
-                "org.bremersee:dc-con-app:abc34c93-920e-4600-b5b4-3ce215a9fdeb");
+    getLdapTemplate()
+        .clone(new AbstractLdaptiveErrorHandler() {
+          @Override
+          public LdaptiveException map(final LdapException ldapException) {
+            final HttpStatus httpStatus;
+            final String errorCode;
+            if (ldapException.getResultCode() == ResultCode.CONSTRAINT_VIOLATION
+                && ldapException.getMessage().contains("check_password_restrictions")) {
+              httpStatus = HttpStatus.BAD_REQUEST;
+              errorCode = "check_password_restrictions";
+            } else {
+              httpStatus = ldapException.getResultCode() == ResultCode.NO_SUCH_OBJECT
+                  ? HttpStatus.NOT_FOUND
+                  : HttpStatus.INTERNAL_SERVER_ERROR;
+              errorCode = "org.bremersee.dc-con-app:a70939fb-2c94-412f-80c0-00a7d5dcf4a6";
+            }
+            return new LdaptiveException(httpStatus, errorCode, ldapException);
           }
-        });
-    */
+        })
+        .modify(modifyRequest);
   }
 
   @Override
