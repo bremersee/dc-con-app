@@ -43,6 +43,10 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.img.ImageScaler;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
+import org.ldaptive.AttributeModification;
+import org.ldaptive.AttributeModificationType;
+import org.ldaptive.LdapAttribute;
+import org.ldaptive.ModifyRequest;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.io.ByteArrayValueTranscoder;
@@ -299,6 +303,29 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   @Override
   public void savePassword(String userName, String newPassword) {
+    final String quotedPassword = "\"" + newPassword + "\"";
+    final char[] unicodePwd = quotedPassword.toCharArray();
+    final byte[] pwdArray = new byte[unicodePwd.length * 2];
+    for (int i = 0; i < unicodePwd.length; i++) {
+      pwdArray[i * 2 + 1] = (byte) (unicodePwd[i] >>> 8);
+      pwdArray[i * 2] = (byte) (unicodePwd[i] & 0xff);
+    }
+    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    ldapAttribute.setName("unicodePwd");
+    ldapAttribute.addBinaryValue(pwdArray);
+    final AttributeModification attributeModification = new AttributeModification();
+    attributeModification.setAttributeModificationType(AttributeModificationType.REPLACE);
+    attributeModification.setAttribute(ldapAttribute);
+    final String dn = LdaptiveEntryMapper.createDn(
+        getProperties().getUserRdn(),
+        userName,
+        getProperties().getUserBaseDn());
+    final ModifyRequest modifyRequest = new ModifyRequest();
+    modifyRequest.setDn(dn);
+    modifyRequest.setAttributeModifications(attributeModification);
+    getLdapTemplate().modify(modifyRequest);
+
+    /*
     kinit();
     final List<String> commands = new ArrayList<>();
     sudo(commands);
@@ -306,7 +333,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     commands.add("user");
     commands.add("setpassword");
     commands.add(userName);
-    commands.add("--newpassword=\"" + newPassword + "\"");
+    commands.add("--newpassword=\"" + newPassword + "\""); // Doesn't work
     auth(commands);
     CommandExecutor.exec(
         commands,
@@ -326,6 +353,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
                 "org.bremersee:dc-con-app:abc34c93-920e-4600-b5b4-3ce215a9fdeb");
           }
         });
+    */
   }
 
   @Override
