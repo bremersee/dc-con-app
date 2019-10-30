@@ -70,6 +70,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> addUser(
+      final Boolean email, // TODO
       @Valid final DomainUser domainUser) {
     return ResponseEntity.ok(domainUserService.addUser(domainUser));
   }
@@ -139,6 +140,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<Void> updateUserPassword(
       final String userName,
+      final Boolean email, // TODO
       @Valid final Password newPassword) {
 
     if (!isAdmin()) {

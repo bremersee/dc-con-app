@@ -243,6 +243,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   @Override
   public DomainUser save(DomainUser domainUser, Boolean updateGroups) {
     if (!exists(domainUser.getUserName())) {
+      // Maybe I can add an user directly:
+      // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
       kinit();
       final List<String> commands = new ArrayList<>();
       sudo(commands);
