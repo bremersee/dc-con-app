@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,8 @@ import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.PasswordComplexity;
+import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
@@ -83,9 +86,20 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private static final String NO_EMAIL_AVATAR = "classpath:mp.jpg";
 
-  private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
+  private static final String MIN_LENGTH_PLACEHOLDER = "{{MIN_LENGTH}}";
 
-  private DomainGroupRepository domainGroupRepository;
+  private static final String SIMPLE_PASSWORD_REGEX = "^(?=.{" + MIN_LENGTH_PLACEHOLDER
+      + ",75}$).*";
+
+  private static final String COMPLEX_PASSWORD_REGEX = "(?=^.{" + MIN_LENGTH_PLACEHOLDER + ",75}$)"
+      + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
+      + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
+
+  private final DomainRepository domainRepository;
+
+  private final DomainGroupRepository domainGroupRepository;
+
+  private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
 
   /**
    * Instantiates a new domain user repository.
@@ -95,12 +109,28 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserRepositoryImpl(
-      DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate,
-      DomainGroupRepository domainGroupRepository) {
+      final DomainControllerProperties properties,
+      final LdaptiveTemplate ldapTemplate,
+      final DomainRepository domainRepository,
+      final DomainGroupRepository domainGroupRepository) {
     super(properties, ldapTemplate);
-    domainUserLdapMapper = new DomainUserLdapMapper(properties);
+    this.domainUserLdapMapper = new DomainUserLdapMapper(properties);
+    this.domainRepository = domainRepository;
     this.domainGroupRepository = domainGroupRepository;
+  }
+
+  private Pattern getPasswordPattern() {
+    final PasswordInformation info = domainRepository.getPasswordInformation();
+    final String minLength = info.getMinimumPasswordLength() != null
+        ? info.getMinimumPasswordLength().toString()
+        : "7";
+    final String regex;
+    if (PasswordComplexity.OFF == info.getPasswordComplexity()) {
+      regex = SIMPLE_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, minLength);
+    } else {
+      regex = COMPLEX_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, minLength);
+    }
+    return Pattern.compile(regex);
   }
 
   /**
@@ -110,14 +140,14 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    */
   @SuppressWarnings("unused")
   public void setDomainUserLdapMapper(
-      LdaptiveEntryMapper<DomainUser> domainUserLdapMapper) {
+      final LdaptiveEntryMapper<DomainUser> domainUserLdapMapper) {
     if (domainUserLdapMapper != null) {
       this.domainUserLdapMapper = domainUserLdapMapper;
     }
   }
 
   @Override
-  public Stream<DomainUser> findAll(String query) {
+  public Stream<DomainUser> findAll(final String query) {
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getUserBaseDn(),
         new SearchFilter(getProperties().getUserFindAllFilter()));
@@ -131,7 +161,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     }
   }
 
-  private boolean isQueryResult(DomainUser domainUser, String query) {
+  private boolean isQueryResult(final DomainUser domainUser, final String query) {
     return query != null && query.length() > 2 && domainUser != null
         && (contains(domainUser.getDisplayName(), query)
         || contains(domainUser.getUserName(), query)
@@ -145,7 +175,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public Optional<DomainUser> findOne(String userName) {
+  public Optional<DomainUser> findOne(final String userName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -158,9 +188,12 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public Optional<byte[]> findAvatar(String userName, AvatarDefault avatarDefault, Integer size) {
-    final int avatarSize =
-        size == null || size < 1 || size > 2048 ? 80 : size;
+  public Optional<byte[]> findAvatar(
+      final String userName,
+      final AvatarDefault avatarDefault,
+      final Integer size) {
+
+    final int avatarSize = size == null || size < 1 || size > 2048 ? 80 : size;
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -174,7 +207,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
     return getLdapTemplate().findOne(searchRequest)
         .map(ldapEntry -> {
-          byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
+          final byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
               ldapEntry, DomainUser.LDAP_ATTR_AVATAR, BYTE_ARRAY_VALUE_TRANSCODER, null);
           if (avatar != null && avatar.length > 0) {
             try {
@@ -190,7 +223,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
                   DomainUser.LDAP_ATTR_AVATAR, e);
             }
           }
-          String mail = LdaptiveEntryMapper
+          final String mail = LdaptiveEntryMapper
               .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
           if (StringUtils.hasText(mail)) {
             final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));
@@ -235,14 +268,21 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public boolean exists(String userName) {
+  public boolean exists(final String userName) {
     return getLdapTemplate()
         .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);
   }
 
   @Override
-  public DomainUser save(DomainUser domainUser, Boolean updateGroups) {
+  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
     if (!exists(domainUser.getUserName())) {
+      if (StringUtils.hasText(domainUser.getPassword())
+          && !getPasswordPattern().matcher(domainUser.getPassword()).matches()) {
+        throw ServiceException.badRequest(
+            "msg=[The password does not meet the complexity criteria!] userName=["
+                + domainUser.getUserName() + "]",
+            "check_password_restrictions");
+      }
       // Maybe I can add an user directly:
       // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
       kinit();
@@ -252,11 +292,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       commands.add("user");
       commands.add("create");
       commands.add(domainUser.getUserName());
-      if (StringUtils.hasText(domainUser.getPassword())) {
-        commands.add("'" + domainUser.getPassword() + "'");
-      } else {
-        commands.add("--random-password");
-      }
+      commands.add("--random-password");
       commands.add("--use-username-as-cn");
       auth(commands);
 
@@ -265,13 +301,6 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
           null,
           getProperties().getSambaToolExecDir(),
           (CommandExecutorResponseValidator) response -> {
-            final String err = response.stderrToOneLine();
-            if (err.startsWith("ERROR:") && err.contains("check_password_restrictions")) {
-              throw ServiceException.badRequest(
-                  "msg=[The password does not meet the complexity criteria!] userName=["
-                      + domainUser.getUserName() + "]",
-                  "check_password_restrictions");
-            }
             if (!exists(domainUser.getUserName())) {
               throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
                       + domainUser.getUserName() + "] "
@@ -279,6 +308,9 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
                   "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
             }
           });
+      if (StringUtils.hasText(domainUser.getPassword())) {
+        savePassword(domainUser.getUserName(), domainUser.getPassword());
+      }
     }
 
     final DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
@@ -309,7 +341,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public void savePassword(String userName, String newPassword) {
+  public void savePassword(final String userName, final String newPassword) {
     final String quotedPassword = "\"" + newPassword + "\"";
     final char[] unicodePwd = quotedPassword.toCharArray();
     final byte[] pwdArray = new byte[unicodePwd.length * 2];
@@ -353,7 +385,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   }
 
   @Override
-  public boolean delete(String userName) {
+  public boolean delete(final String userName) {
 
     if (exists(userName)) {
       kinit();
