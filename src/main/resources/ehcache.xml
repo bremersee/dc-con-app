@@ -32,4 +32,14 @@
   <cache alias="dhcp-leases-by-name" uses-template="dhcp-leases-template">
   </cache>
 
+  <cache alias="password-information">
+    <expiry>
+      <ttl unit="minutes">1</ttl>
+    </expiry>
+    <resources>
+      <heap unit="entries">1</heap>
+      <offheap unit="MB">1</offheap>
+    </resources>
+  </cache>
+
 </config>

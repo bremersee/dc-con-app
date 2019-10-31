@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -48,7 +47,6 @@ import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -214,13 +212,13 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     }
   }
 
-  private boolean isQueryResult(DnsNode dnsNode, String query) {
+  private boolean isQueryResult(final DnsNode dnsNode, final String query) {
     return query != null && query.length() > 2 && dnsNode != null
         && (contains(dnsNode.getName(), query)
         || isQueryResult(dnsNode.getRecords(), query));
   }
 
-  private boolean isQueryResult(Collection<DnsRecord> dnsRecords, String query) {
+  private boolean isQueryResult(final Collection<DnsRecord> dnsRecords, final String query) {
     if (dnsRecords != null) {
       for (DnsRecord dnsRecord : dnsRecords) {
         if (isQueryResult(dnsRecord, query)) {
@@ -231,14 +229,14 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
     return false;
   }
 
-  private boolean isQueryResult(DnsRecord dnsRecord, String query) {
+  private boolean isQueryResult(final DnsRecord dnsRecord, final String query) {
     return query != null && query.length() > 2 && dnsRecord != null
         && (contains(dnsRecord.getRecordValue(), query)
         || contains(dnsRecord.getCorrelatedRecordValue(), query)
         || isQueryResult(dnsRecord.getDhcpLease(), query));
   }
 
-  private boolean isQueryResult(DhcpLease dhcpLease, String query) {
+  private boolean isQueryResult(final DhcpLease dhcpLease, final String query) {
     return query != null && query.length() > 2 && dhcpLease != null
         && (contains(dhcpLease.getHostname(), query)
         || contains(dhcpLease.getIp(), query)
@@ -480,7 +478,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   }
 
   @Override
-  public boolean delete(@NotNull String zoneName, @NotNull String nodeName) {
+  public boolean delete(final String zoneName, final String nodeName) {
     return findOne(zoneName, nodeName, ALL, false, false)
         .map(node -> delete(zoneName, node))
         .orElse(false);
@@ -499,7 +497,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   }
 
   @Override
-  public void deleteAll(@NotNull String zoneName, @Nullable Collection<String> nodeNames) {
+  public void deleteAll(final String zoneName, final Collection<String> nodeNames) {
     if (nodeNames != null && !nodeNames.isEmpty()) {
       for (String nodeName : new LinkedHashSet<>(nodeNames)) {
         findOne(zoneName, nodeName, ALL, false, false)
@@ -603,7 +601,7 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
    * @param zoneName the dns zone name (e. g. {@code eixe.bremersee.org})
    * @return the dns node name (e. g. {@code pluto})
    */
-  Optional<String> getDnsNodeNameByFqdn(String fqdn, String zoneName) {
+  Optional<String> getDnsNodeNameByFqdn(final String fqdn, final String zoneName) {
     if (fqdn == null || zoneName == null) {
       return Optional.empty();
     }

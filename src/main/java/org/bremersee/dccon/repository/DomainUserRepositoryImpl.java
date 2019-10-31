@@ -106,6 +106,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    *
    * @param properties            the properties
    * @param ldapTemplate          the ldap template
+   * @param domainRepository      the domain repository
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserRepositoryImpl(

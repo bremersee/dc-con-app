@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -62,8 +61,8 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
    * @param ldapTemplate the ldap template
    */
   public DnsZoneRepositoryImpl(
-      DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
+      final DomainControllerProperties properties,
+      final LdaptiveTemplate ldapTemplate) {
     super(properties, ldapTemplate);
     this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
     this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()
@@ -76,7 +75,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
    * @param dnsZoneLdapMapper the dns zone ldap mapper
    */
   @SuppressWarnings("unused")
-  public void setDnsZoneLdapMapper(LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
+  public void setDnsZoneLdapMapper(final LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
     if (dnsZoneLdapMapper != null) {
       this.dnsZoneLdapMapper = dnsZoneLdapMapper;
     }
@@ -116,13 +115,13 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   @Override
-  public boolean exists(@NotNull String zoneName) {
+  public boolean exists(final String zoneName) {
     return isNonExcludedDnsZone(zoneName)
         && getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
   }
 
   @Override
-  public Optional<DnsZone> findOne(@NotNull String zoneName) {
+  public Optional<DnsZone> findOne(final String zoneName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsZoneFindOneFilter());
     searchFilter.setParameter(0, zoneName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -135,7 +134,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   @Override
-  public DnsZone save(@NotNull final String zoneName) {
+  public DnsZone save(final String zoneName) {
     if (isExcludedDnsZone(zoneName)) {
       throw ServiceException.badRequest(
           "Zone name is not allowed.",
@@ -152,7 +151,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   @Override
-  public boolean delete(@NotNull String zoneName) {
+  public boolean delete(final String zoneName) {
     if (exists(zoneName)) {
       execDnsZoneCmd(
           "zonedelete",

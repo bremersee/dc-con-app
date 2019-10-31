@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -54,8 +53,9 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    * @param properties   the properties
    * @param ldapTemplate the ldap template
    */
-  public DomainGroupRepositoryImpl(DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
+  public DomainGroupRepositoryImpl(
+      final DomainControllerProperties properties,
+      final LdaptiveTemplate ldapTemplate) {
     super(properties, ldapTemplate);
     domainGroupLdapMapper = new DomainGroupLdapMapper(properties);
   }
@@ -67,14 +67,14 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    */
   @SuppressWarnings("unused")
   public void setDomainGroupLdapMapper(
-      LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper) {
+      final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper) {
     if (domainGroupLdapMapper != null) {
       this.domainGroupLdapMapper = domainGroupLdapMapper;
     }
   }
 
   @Override
-  public Stream<DomainGroup> findAll(String query) {
+  public Stream<DomainGroup> findAll(final String query) {
     final SearchRequest searchRequest = new SearchRequest(
         getProperties().getGroupBaseDn(),
         new SearchFilter(getProperties().getGroupFindAllFilter()));
@@ -87,7 +87,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
     }
   }
 
-  private boolean isQueryResult(DomainGroup domainGroup, String query) {
+  private boolean isQueryResult(final DomainGroup domainGroup, final String query) {
     return query != null && query.length() > 2 && domainGroup != null
         && (contains(domainGroup.getName(), query)
         || contains(domainGroup.getDescription(), query)
@@ -95,7 +95,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   }
 
   @Override
-  public Optional<DomainGroup> findOne(@NotNull String groupName) {
+  public Optional<DomainGroup> findOne(final String groupName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getGroupFindOneFilter());
     searchFilter.setParameter(0, groupName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -106,13 +106,13 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   }
 
   @Override
-  public boolean exists(@NotNull String groupName) {
+  public boolean exists(final String groupName) {
     return getLdapTemplate()
         .exists(DomainGroup.builder().name(groupName).build(), domainGroupLdapMapper);
   }
 
   @Override
-  public DomainGroup save(@NotNull DomainGroup domainGroup) {
+  public DomainGroup save(final DomainGroup domainGroup) {
     if (!exists(domainGroup.getName())) {
       kinit();
       final List<String> commands = new ArrayList<>();
@@ -139,7 +139,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   }
 
   @Override
-  public boolean delete(@NotNull String groupName) {
+  public boolean delete(final String groupName) {
 
     if (exists(groupName)) {
       kinit();

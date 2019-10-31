@@ -24,6 +24,7 @@ import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.PasswordInformationParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,7 @@ public class DomainRepositoryImpl extends AbstractRepository implements DomainRe
    *
    * @param properties the properties
    */
-  public DomainRepositoryImpl(DomainControllerProperties properties) {
+  public DomainRepositoryImpl(final DomainControllerProperties properties) {
     super(properties, null);
     this.passwordInformationParser = PasswordInformationParser.defaultParser();
   }
@@ -56,12 +57,13 @@ public class DomainRepositoryImpl extends AbstractRepository implements DomainRe
    */
   @Autowired(required = false)
   public void setPasswordInformationParser(
-      PasswordInformationParser passwordInformationParser) {
+      final PasswordInformationParser passwordInformationParser) {
     if (passwordInformationParser != null) {
       this.passwordInformationParser = passwordInformationParser;
     }
   }
 
+  @Cacheable(cacheNames = "password-information")
   @Override
   public PasswordInformation getPasswordInformation() {
     kinit();
