@@ -23,6 +23,7 @@ import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.service.AuthenticationService;
+import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.security.authentication.KeycloakJwtAuthenticationToken;
@@ -46,18 +47,23 @@ public class DomainUserManagementController implements DomainUserManagementApi {
 
   private final DomainUserService domainUserService;
 
+  private final DomainGroupService domainGroupService;
+
   private final AuthenticationService authenticationService;
 
   /**
    * Instantiates a new domain user management controller.
    *
    * @param domainUserService     the domain user service
+   * @param domainGroupService    the domain group service
    * @param authenticationService the authentication service
    */
   public DomainUserManagementController(
       final DomainUserService domainUserService,
+      DomainGroupService domainGroupService,
       AuthenticationService authenticationService) {
     this.domainUserService = domainUserService;
+    this.domainGroupService = domainGroupService;
     this.authenticationService = authenticationService;
   }
 
@@ -160,6 +166,13 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<Boolean> userExists(final String userName) {
     return ResponseEntity.ok(domainUserService.userExists(userName));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<Boolean> isUserNameInUse(String userName) {
+    return ResponseEntity.ok(domainUserService.userExists(userName)
+        || domainGroupService.groupExists(userName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")

@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,14 +36,19 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   private final DomainGroupService domainGroupService;
 
+  private final DomainUserService domainUserService;
+
   /**
    * Instantiates a new domain group management controller.
    *
    * @param domainGroupService the domain group service
+   * @param domainUserService  the domain user service
    */
   public DomainGroupManagementController(
-      final DomainGroupService domainGroupService) {
+      final DomainGroupService domainGroupService,
+      DomainUserService domainUserService) {
     this.domainGroupService = domainGroupService;
+    this.domainUserService = domainUserService;
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -104,6 +110,13 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
   @Override
   public ResponseEntity<Boolean> groupExists(String groupName) {
     return ResponseEntity.ok(domainGroupService.groupExists(groupName));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<Boolean> isGroupNameInUse(String groupName) {
+    return ResponseEntity.ok(domainUserService.userExists(groupName)
+        || domainGroupService.groupExists(groupName));
   }
 
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
