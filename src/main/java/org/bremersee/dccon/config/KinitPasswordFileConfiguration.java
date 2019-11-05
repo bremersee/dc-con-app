@@ -39,19 +39,19 @@ public class KinitPasswordFileConfiguration {
 
   private final DomainControllerProperties properties;
 
-  private final LdaptiveProperties adProperties;
+  private final LdaptiveProperties ldaptiveProperties;
 
   /**
    * Instantiates a new kinit password file configuration.
    *
-   * @param properties   the properties
-   * @param adProperties the ad properties
+   * @param properties         the properties
+   * @param ldaptiveProperties the ldaptive properties
    */
   public KinitPasswordFileConfiguration(
       DomainControllerProperties properties,
-      LdaptiveProperties adProperties) {
+      LdaptiveProperties ldaptiveProperties) {
     this.properties = properties;
-    this.adProperties = adProperties;
+    this.ldaptiveProperties = ldaptiveProperties;
   }
 
   /**
@@ -66,7 +66,7 @@ public class KinitPasswordFileConfiguration {
     final File file = new File(properties.getKinitPasswordFile());
     if (!file.exists()) {
       try (final FileOutputStream out = new FileOutputStream(file)) {
-        out.write(adProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
+        out.write(ldaptiveProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
         out.flush();
       } catch (IOException e) {
         log.error("Creating kinit password file failed.");
