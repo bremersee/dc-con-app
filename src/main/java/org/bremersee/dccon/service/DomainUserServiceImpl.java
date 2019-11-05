@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
@@ -45,6 +46,8 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   private final DomainUserRepository domainUserRepository;
 
+  private final EmailService emailService;
+
   private DomainUserValidator domainUserValidator;
 
   /**
@@ -52,13 +55,16 @@ public class DomainUserServiceImpl implements DomainUserService {
    *
    * @param properties            the properties
    * @param domainUserRepository  the domain user repository
+   * @param emailService          the email service
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
       final DomainControllerProperties properties,
       final DomainUserRepository domainUserRepository,
+      EmailService emailService,
       final DomainGroupRepository domainGroupRepository) {
     this.domainUserRepository = domainUserRepository;
+    this.emailService = emailService;
     this.domainUserValidator = DomainUserValidator.defaultValidator(
         properties, domainGroupRepository, domainUserRepository);
   }
@@ -86,9 +92,19 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
+  public DomainUser addUser(
+      final DomainUser domainUser,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
     domainUserValidator.doAddValidation(domainUser);
-    return domainUserRepository.save(domainUser, true);
+    final DomainUser addedDomainUser = domainUserRepository.save(domainUser, true);
+    if (Boolean.TRUE.equals(sendEmail)) {
+      emailService.sendEmailWithCredentials(
+          addedDomainUser.getUserName(),
+          domainUser.getPassword(),
+          language);
+    }
+    return addedDomainUser;
   }
 
   @Override
@@ -122,8 +138,18 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public void updateUserPassword(@NotNull String userName, @NotNull @Valid Password newPassword) {
+  public void updateUserPassword(
+      final String userName,
+      final Password newPassword,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
     domainUserRepository.savePassword(userName, newPassword.getValue());
+    if (Boolean.TRUE.equals(sendEmail)) {
+      emailService.sendEmailWithCredentials(
+          userName,
+          newPassword.getValue(),
+          language);
+    }
   }
 
   @Override

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
@@ -47,9 +48,14 @@ public interface DomainUserService {
    * Add domain user.
    *
    * @param domainUser the domain user
+   * @param sendEmail  specifies whether to send an email or not (default is {@code false})
+   * @param language   the language of the email
    * @return the domain user
    */
-  DomainUser addUser(@NotNull @Valid DomainUser domainUser);
+  DomainUser addUser(
+      @NotNull @Valid DomainUser domainUser,
+      @Nullable Boolean sendEmail,
+      @Nullable TwoLetterLanguageCode language);
 
   /**
    * Get domain user.
@@ -78,10 +84,14 @@ public interface DomainUserService {
    *
    * @param userName    the user name
    * @param newPassword the new password
+   * @param sendEmail   specifies whether to send an email or not (default is {@code false})
+   * @param language    the language of the email
    */
   void updateUserPassword(
       @NotNull String userName,
-      @NotNull @Valid Password newPassword);
+      @NotNull @Valid Password newPassword,
+      @Nullable Boolean sendEmail,
+      @Nullable TwoLetterLanguageCode language);
 
   /**
    * Gets user avatar.

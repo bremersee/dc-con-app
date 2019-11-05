@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller;
 
 import java.util.List;
 import javax.validation.Valid;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
@@ -76,9 +77,10 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @PreAuthorize("hasAuthority('ROLE_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> addUser(
-      final Boolean email, // TODO
-      @Valid final DomainUser domainUser) {
-    return ResponseEntity.ok(domainUserService.addUser(domainUser));
+      final Boolean email,
+      final TwoLetterLanguageCode language,
+      final DomainUser domainUser) {
+    return ResponseEntity.ok(domainUserService.addUser(domainUser, email, language));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
@@ -146,7 +148,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @Override
   public ResponseEntity<Void> updateUserPassword(
       final String userName,
-      final Boolean email, // TODO
+      final Boolean email,
+      final TwoLetterLanguageCode language,
       @Valid final Password newPassword) {
 
     if (!isAdmin()) {
@@ -158,7 +161,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
             "password_does_not_match");
       }
     }
-    domainUserService.updateUserPassword(userName, newPassword);
+    domainUserService.updateUserPassword(userName, newPassword, email, language);
     return ResponseEntity.ok().build();
   }
 

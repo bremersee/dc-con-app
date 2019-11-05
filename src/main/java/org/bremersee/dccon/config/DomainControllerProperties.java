@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,12 @@ import org.springframework.stereotype.Component;
 public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 2L;
+
+
+  private String companyName = "example.org";
+
+  private String companyUrl = "http://example.org";
+
 
   private String groupBaseDn;
 
@@ -148,6 +155,9 @@ public class DomainControllerProperties implements Serializable {
   private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}";
 
 
+  private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();
+
+
   /**
    * Instantiates a new Domain controller properties.
    */
@@ -188,4 +198,26 @@ public class DomainControllerProperties implements Serializable {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }
 
+  /**
+   * The mail with credentials properties.
+   *
+   * @author Christian Bremer
+   */
+  @Getter
+  @Setter
+  @ToString
+  @EqualsAndHashCode
+  @NoArgsConstructor
+  @SuppressWarnings("WeakerAccess")
+  public static class MailWithCredentialsProperties {
+
+    private String sender = "no-reply@example.org";
+
+    private String templateBasename = "classpath:mail-with-credentials";
+
+    private String templateSuffix = ".html";
+
+    private String loginUrl = "http://localhost:4200";
+
+  }
 }
