@@ -31,11 +31,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class AsyncConfiguration implements AsyncConfigurer {
+public class AsyncConfiguration { // implements AsyncConfigurer {
 
+  /*
   @Override
   public Executor getAsyncExecutor() {
-    return new ThreadPoolTaskExecutor();
+    return new ThreadPoolTaskExecutor(); // This is to simple, throws Thread pool not initialized.
   }
+  */
 
 }
