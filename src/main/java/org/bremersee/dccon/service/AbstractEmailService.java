@@ -57,7 +57,7 @@ public abstract class AbstractEmailService implements EmailService {
     this.templateEngine = templateEngine;
   }
 
-  @Async
+  // @Async
   @Override
   public void sendEmailWithCredentials(
       final String userName,
