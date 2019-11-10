@@ -25,6 +25,11 @@ bremersee:
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@example.org}
       login-url: http://localhost:4200
+  mail-template:
+    resolvers:
+      - prefix: "classpath:mail"
+        resolvable-patterns:
+          - "*"
 
 eureka:
   client:

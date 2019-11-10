@@ -23,8 +23,8 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.TemplateEngine;
 
 /**
  * The email service mock.
@@ -37,17 +37,17 @@ import org.springframework.stereotype.Component;
 public class EmailServiceMock extends AbstractEmailService {
 
   /**
-   * Instantiates a new email service mock.
+   * Instantiates a new Email service mock.
    *
-   * @param domainControllerProperties the domain controller properties
-   * @param messageSource              the message source
-   * @param userRepository             the user repository
+   * @param properties     the properties
+   * @param userRepository the user repository
+   * @param templateEngine the template engine
    */
   public EmailServiceMock(
-      final DomainControllerProperties domainControllerProperties,
-      final MessageSource messageSource,
-      final DomainUserRepository userRepository) {
-    super(domainControllerProperties, messageSource, userRepository);
+      DomainControllerProperties properties,
+      DomainUserRepository userRepository,
+      TemplateEngine templateEngine) {
+    super(properties, userRepository, templateEngine);
   }
 
   /**
@@ -65,12 +65,8 @@ public class EmailServiceMock extends AbstractEmailService {
   @Override
   void doSendEmailWithCredentials(
       final DomainUser domainUser,
-      final Locale locale) {
-
-    final String mailText = parseMailTemplate(loadMailTemplate(
-        getDomainControllerProperties().getMailWithCredentials().getTemplateBasename(),
-        locale),
-        domainUser);
+      final Locale locale,
+      final String mailText) {
     log.info("Email recipient=[{}], email text=\n{}", domainUser.getEmail(), mailText);
   }
 

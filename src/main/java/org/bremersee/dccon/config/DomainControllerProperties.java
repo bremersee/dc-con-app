@@ -213,11 +213,25 @@ public class DomainControllerProperties implements Serializable {
 
     private String sender = "no-reply@example.org";
 
-    private String templateBasename = "classpath:mail-with-credentials";
-
-    private String templateSuffix = ".html";
+    private String templateBasename = "mail-with-credentials";
 
     private String loginUrl = "http://localhost:4200";
 
+    private List<InlineAttachment> inlineAttachments = new ArrayList<>();
+  }
+
+  @Getter
+  @Setter
+  @ToString
+  @EqualsAndHashCode
+  @NoArgsConstructor
+  @SuppressWarnings("WeakerAccess")
+  public static class InlineAttachment {
+
+    private String contentId;
+
+    private String location;
+
+    private String mimeType;
   }
 }

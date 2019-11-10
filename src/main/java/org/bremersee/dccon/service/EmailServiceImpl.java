@@ -17,18 +17,22 @@
 package org.bremersee.dccon.service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.InlineAttachment;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.TemplateEngine;
 
 /**
  * The email service implementation.
@@ -40,45 +44,62 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EmailServiceImpl extends AbstractEmailService {
 
+  private ResourceLoader resourceLoader;
+
+  private MessageSource messageSource;
+
   private JavaMailSender javaMailSender;
 
   /**
-   * Instantiates a new email service.
+   * Instantiates a new Email service.
    *
-   * @param domainControllerProperties the domain controller properties
-   * @param messageSource              the message source
-   * @param userRepository             the user repository
-   * @param javaMailSender             the java mail sender
+   * @param properties     the properties
+   * @param userRepository the user repository
+   * @param templateEngine the template engine
+   * @param resourceLoader the resource loader
+   * @param messageSource  the message source
+   * @param javaMailSender the java mail sender
    */
   public EmailServiceImpl(
-      DomainControllerProperties domainControllerProperties,
-      MessageSource messageSource,
+      DomainControllerProperties properties,
       DomainUserRepository userRepository,
+      TemplateEngine templateEngine,
+      ResourceLoader resourceLoader,
+      MessageSource messageSource,
       JavaMailSender javaMailSender) {
-    super(domainControllerProperties, messageSource, userRepository);
+    super(properties, userRepository, templateEngine);
+    this.resourceLoader = resourceLoader;
+    this.messageSource = messageSource;
     this.javaMailSender = javaMailSender;
   }
 
   @Override
   void doSendEmailWithCredentials(
       final DomainUser domainUser,
-      final Locale locale) {
+      final Locale locale,
+      final String mailText) {
+
+    final List<InlineAttachment> inlineAttachments = getProperties()
+        .getMailWithCredentials()
+        .getInlineAttachments();
 
     final MimeMessagePreparator preparator = mimeMessage -> {
       MimeMessageHelper helper = new MimeMessageHelper(
           mimeMessage, true, StandardCharsets.UTF_8.name());
-      helper.setFrom(getDomainControllerProperties().getMailWithCredentials().getSender());
+      helper.setFrom(getProperties().getMailWithCredentials().getSender());
       helper.setTo(domainUser.getEmail());
-      helper.setSubject(Objects.requireNonNull(getMessageSource().getMessage(
-          "mail.subject.with-credentials",
-          new Object[0],
+      helper.setSubject(Objects.requireNonNull(messageSource.getMessage(
+          "mail-with-credentials.subject",
+          new Object[]{domainUser.getDisplayName()},
           "Welcome",
           locale)));
-      helper.setText(parseMailTemplate(
-          loadMailTemplate(
-              getDomainControllerProperties().getMailWithCredentials().getTemplateBasename(),
-              locale),
-          domainUser), true);
+      helper.setText(mailText, true);
+
+      for (InlineAttachment attachment : inlineAttachments) {
+        helper.addInline(attachment.getContentId(),
+            resourceLoader.getResource(attachment.getLocation()),
+            attachment.getMimeType());
+      }
     };
     javaMailSender.send(preparator);
   }

@@ -16,30 +16,19 @@
 
 package org.bremersee.dccon.service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
-import org.bremersee.exception.ServiceException;
-import org.springframework.context.MessageSource;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.common.TemplateParserContext;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.StringUtils;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 /**
  * The abstract email service.
@@ -49,86 +38,22 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public abstract class AbstractEmailService implements EmailService {
 
-  @Setter
-  private ResourceLoader resourceLoader = new DefaultResourceLoader();
-
-  @Setter
-  private TemplateParserContext templateParserContext = new TemplateParserContext("${", "}");
-
-  @Setter
-  private ExpressionParser parser = new SpelExpressionParser();
+  @Getter(AccessLevel.PACKAGE)
+  private DomainControllerProperties properties;
 
   @Getter(AccessLevel.PACKAGE)
-  private final DomainControllerProperties domainControllerProperties;
+  private DomainUserRepository userRepository;
 
   @Getter(AccessLevel.PACKAGE)
-  private final MessageSource messageSource;
+  private TemplateEngine templateEngine;
 
-  @Getter(AccessLevel.PACKAGE)
-  private final DomainUserRepository userRepository;
-
-  /**
-   * Instantiates a new Abstract email service.
-   *
-   * @param domainControllerProperties the domain controller properties
-   * @param messageSource              the message source
-   * @param userRepository             the user repository
-   */
-  AbstractEmailService(
-      final DomainControllerProperties domainControllerProperties,
-      final MessageSource messageSource,
-      final DomainUserRepository userRepository) {
-    this.domainControllerProperties = domainControllerProperties;
-    this.messageSource = messageSource;
+  public AbstractEmailService(
+      DomainControllerProperties properties,
+      DomainUserRepository userRepository,
+      TemplateEngine templateEngine) {
+    this.properties = properties;
     this.userRepository = userRepository;
-  }
-
-  /**
-   * Load mail template string.
-   *
-   * @param mailBaseName the mail base name
-   * @param language     the language
-   * @return the string
-   */
-  String loadMailTemplate(
-      @SuppressWarnings("SameParameterValue") final String mailBaseName,
-      final Locale language) {
-
-    final String languageSuffix = language != null && language.getLanguage() != null
-        ? "_" + language.getLanguage()
-        : "_" + Locale.ENGLISH.getLanguage();
-    final String templateSuffix = domainControllerProperties.getMailWithCredentials()
-        .getTemplateSuffix();
-    final String location = mailBaseName + languageSuffix + templateSuffix;
-    final Resource resource;
-    if (resourceLoader.getResource(location).exists()) {
-      resource = resourceLoader.getResource(location);
-    } else {
-      resource = resourceLoader.getResource(mailBaseName + templateSuffix);
-    }
-    try {
-      return IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
-    } catch (Exception e) {
-      final ServiceException se = ServiceException.internalServerError(
-          resource.getDescription() + " can not be read.", e);
-      log.error("Sending email failed.", se);
-      throw se;
-    }
-  }
-
-  /**
-   * Parse mail template string.
-   *
-   * @param mailTemplate the mail template
-   * @param domainUser   the domain user
-   * @return the string
-   */
-  String parseMailTemplate(final String mailTemplate, final DomainUser domainUser) {
-    final Expression expression = parser.parseExpression(mailTemplate, templateParserContext);
-    final StandardEvaluationContext context = new StandardEvaluationContext();
-    context.setVariable("props", domainControllerProperties);
-    context.setVariable("user", domainUser);
-    return expression.getValue(context, String.class);
+    this.templateEngine = templateEngine;
   }
 
   @Async
@@ -140,12 +65,22 @@ public abstract class AbstractEmailService implements EmailService {
 
     if (!StringUtils.hasText(clearPassword)) {
       log.debug("No clear password is present; sending no email with credentials.");
+      return;
     }
     final Locale locale = language != null ? language.toLocale() : Locale.ENGLISH;
     userRepository.findOne(userName).ifPresent(domainUser -> {
       if (StringUtils.hasText(domainUser.getEmail())) {
         domainUser.setPassword(clearPassword);
-        doSendEmailWithCredentials(domainUser, locale);
+        // TODO display name
+        final Context ctx = new Context(locale);
+        ctx.setLocale(locale);
+        ctx.setVariable("user", domainUser);
+        ctx.setVariable("props", properties);
+        ctx.setVariable("lang", locale.getLanguage());
+        final String mailText = templateEngine.process(
+            properties.getMailWithCredentials().getTemplateBasename(),
+            ctx);
+        doSendEmailWithCredentials(domainUser, locale, mailText);
       }
     });
   }
@@ -154,7 +89,9 @@ public abstract class AbstractEmailService implements EmailService {
    * Do send email with credentials.
    *
    * @param domainUser the domain user
-   * @param locale     the locale
    */
-  abstract void doSendEmailWithCredentials(@NotNull DomainUser domainUser, @NotNull Locale locale);
+  abstract void doSendEmailWithCredentials(
+      @NotNull DomainUser domainUser,
+      @NotNull Locale locale,
+      @NotNull String mailText);
 }
