@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
@@ -31,6 +32,7 @@ import org.thymeleaf.templateresource.ITemplateResource;
 /**
  * @author Christian Bremer
  */
+@Slf4j
 public class MailTemplateResource implements ITemplateResource {
 
   private ResourceLoader resourceLoader = new DefaultResourceLoader();
@@ -62,6 +64,8 @@ public class MailTemplateResource implements ITemplateResource {
     this.path = path;
     setCharacterEncoding(characterEncoding);
     setResourceLoader(resourceLoader);
+    log.info("MailTemplateResource (path={}, characterEncoding={})",
+        this.path, this.characterEncoding);
   }
 
   public void setResourceLoader(ResourceLoader resourceLoader) {

@@ -25,6 +25,7 @@ import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
@@ -50,7 +51,7 @@ public abstract class AbstractEmailService implements EmailService {
   public AbstractEmailService(
       DomainControllerProperties properties,
       DomainUserRepository userRepository,
-      TemplateEngine templateEngine) {
+      @Qualifier("mailTemplateEngine") TemplateEngine templateEngine) {
     this.properties = properties;
     this.userRepository = userRepository;
     this.templateEngine = templateEngine;
@@ -71,7 +72,9 @@ public abstract class AbstractEmailService implements EmailService {
     userRepository.findOne(userName).ifPresent(domainUser -> {
       if (StringUtils.hasText(domainUser.getEmail())) {
         domainUser.setPassword(clearPassword);
-        // TODO display name
+        if (!StringUtils.hasText(domainUser.getDisplayName())) {
+          domainUser.setDescription(domainUser.getUserName());
+        }
         final Context ctx = new Context(locale);
         ctx.setLocale(locale);
         ctx.setVariable("user", domainUser);

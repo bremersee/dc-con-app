@@ -1,10 +1,14 @@
 package org.bremersee.dccon;
 
+import java.util.Locale;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainUser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
@@ -14,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 /**
  * The application tests.
@@ -23,11 +29,35 @@ import org.springframework.test.context.junit4.SpringRunner;
 @ActiveProfiles({"test", "basic-auth"})
 public class ApplicationTests {
 
-  /**
-   * The rest template.
-   */
+  @Autowired
+  private DomainControllerProperties domainControllerProperties;
+
   @Autowired
   TestRestTemplate restTemplate;
+
+  @Autowired
+  @Qualifier("mailTemplateEngine")
+  TemplateEngine templateEngine;
+
+  @Test
+  public void mailWithCredentialsTest() {
+    final DomainUser domainUser = DomainUser.builder()
+        .displayName("Anna Livia Plurabelle")
+        .email("anna@example.org")
+        .userName("anna")
+        .password("changeit")
+        .build();
+    final Locale locale = Locale.ENGLISH;
+    final Context ctx = new Context(locale);
+    ctx.setLocale(locale);
+    ctx.setVariable("user", domainUser);
+    ctx.setVariable("props", domainControllerProperties);
+    ctx.setVariable("lang", locale.getLanguage());
+    final String mailText = templateEngine.process(
+        domainControllerProperties.getMailWithCredentials().getTemplateBasename(),
+        ctx);
+    System.out.println("Mail text:\n" + mailText);
+  }
 
   /**
    * Access tests.

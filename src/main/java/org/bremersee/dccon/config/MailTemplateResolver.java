@@ -17,6 +17,7 @@
 package org.bremersee.dccon.config;
 
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.IEngineConfiguration;
@@ -26,6 +27,7 @@ import org.thymeleaf.templateresource.ITemplateResource;
 /**
  * @author Christian Bremer
  */
+@Slf4j
 public class MailTemplateResolver extends AbstractConfigurableTemplateResolver {
 
   private ResourceLoader resourceLoader = new DefaultResourceLoader();
@@ -37,6 +39,7 @@ public class MailTemplateResolver extends AbstractConfigurableTemplateResolver {
     if (resourceLoader != null) {
       this.resourceLoader = resourceLoader;
     }
+    log.info("MailTemplateResolver (prefix={})", getPrefix());
   }
 
   @Override

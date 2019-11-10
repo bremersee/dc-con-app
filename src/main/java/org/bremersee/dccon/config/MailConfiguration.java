@@ -56,7 +56,7 @@ public class MailConfiguration {
     log.info("properties = {}", properties);
   }
 
-  @Bean
+  @Bean("mailTemplateEngine")
   public TemplateEngine mailTemplateEngine() {
     final SpringTemplateEngine templateEngine = new SpringTemplateEngine();
     templateEngine.setTemplateEngineMessageSource(mailMessageSource());

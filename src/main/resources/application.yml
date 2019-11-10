@@ -27,9 +27,10 @@ bremersee:
       login-url: http://localhost:4200
   mail-template:
     resolvers:
-      - prefix: "classpath:mail"
+      - prefix: "classpath:mail/"
         resolvable-patterns:
           - "*"
+        template-mode: HTML
 
 eureka:
   client:
