@@ -25,7 +25,6 @@ import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
@@ -51,13 +50,13 @@ public abstract class AbstractEmailService implements EmailService {
   public AbstractEmailService(
       DomainControllerProperties properties,
       DomainUserRepository userRepository,
-      @Qualifier("mailTemplateEngine") TemplateEngine templateEngine) {
+      TemplateEngine templateEngine) {
     this.properties = properties;
     this.userRepository = userRepository;
     this.templateEngine = templateEngine;
   }
 
-  // @Async
+  @Async
   @Override
   public void sendEmailWithCredentials(
       final String userName,

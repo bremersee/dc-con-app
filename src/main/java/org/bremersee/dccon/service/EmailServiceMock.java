@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
@@ -46,7 +47,7 @@ public class EmailServiceMock extends AbstractEmailService {
   public EmailServiceMock(
       DomainControllerProperties properties,
       DomainUserRepository userRepository,
-      TemplateEngine templateEngine) {
+      @Qualifier("mailTemplateEngine") TemplateEngine templateEngine) {
     super(properties, userRepository, templateEngine);
   }
 
