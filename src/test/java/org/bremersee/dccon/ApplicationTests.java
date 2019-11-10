@@ -32,13 +32,22 @@ public class ApplicationTests {
   @Autowired
   private DomainControllerProperties domainControllerProperties;
 
+  /**
+   * The Rest template.
+   */
   @Autowired
   TestRestTemplate restTemplate;
 
+  /**
+   * The Template engine.
+   */
   @Autowired
   @Qualifier("mailTemplateEngine")
   TemplateEngine templateEngine;
 
+  /**
+   * Mail with credentials test.
+   */
   @Test
   public void mailWithCredentialsTest() {
     final DomainUser domainUser = DomainUser.builder()
@@ -49,7 +58,6 @@ public class ApplicationTests {
         .build();
     final Locale locale = Locale.ENGLISH;
     final Context ctx = new Context(locale);
-    ctx.setLocale(locale);
     ctx.setVariable("user", domainUser);
     ctx.setVariable("props", domainControllerProperties);
     ctx.setVariable("lang", locale.getLanguage());

@@ -33,6 +33,8 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 /**
+ * The mail configuration.
+ *
  * @author Christian Bremer
  */
 @Configuration
@@ -46,16 +48,30 @@ public class MailConfiguration {
 
   private MessageSource messageSource;
 
+  /**
+   * Instantiates a new mail configuration.
+   *
+   * @param properties    the properties
+   * @param messageSource the message source
+   */
   public MailConfiguration(MailTemplateProperties properties, MessageSource messageSource) {
     this.properties = properties;
     this.messageSource = messageSource;
   }
 
+  /**
+   * Init.
+   */
   @PostConstruct
   public void init() {
     log.info("properties = {}", properties);
   }
 
+  /**
+   * Mail template engine.
+   *
+   * @return the mail template engine
+   */
   @Bean("mailTemplateEngine")
   public TemplateEngine mailTemplateEngine() {
     final SpringTemplateEngine templateEngine = new SpringTemplateEngine();
@@ -66,14 +82,32 @@ public class MailConfiguration {
     return templateEngine;
   }
 
+  /**
+   * Mail message source.
+   *
+   * @return the message source
+   */
+  @SuppressWarnings("WeakerAccess")
   protected MessageSource mailMessageSource() {
     return messageSource;
   }
 
+  /**
+   * Mail resource loader.
+   *
+   * @return the resource loader
+   */
+  @SuppressWarnings("WeakerAccess")
   protected ResourceLoader mailResourceLoader() {
     return new DefaultResourceLoader();
   }
 
+  /**
+   * Build mail template resolvers list.
+   *
+   * @return the list
+   */
+  @SuppressWarnings("WeakerAccess")
   protected List<ITemplateResolver> buildMailTemplateResolvers() {
     List<ITemplateResolver> resolvers = new ArrayList<>();
     int index = 1;
@@ -84,6 +118,14 @@ public class MailConfiguration {
     return resolvers;
   }
 
+  /**
+   * Build mail template resolver.
+   *
+   * @param resolverProperties the resolver properties
+   * @param index              the index
+   * @return the template resolver
+   */
+  @SuppressWarnings("WeakerAccess")
   protected ITemplateResolver buildMailTemplateResolver(
       MailResolverProperties resolverProperties,
       int index) {

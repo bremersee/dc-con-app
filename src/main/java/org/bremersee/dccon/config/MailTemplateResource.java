@@ -30,6 +30,8 @@ import org.springframework.util.StringUtils;
 import org.thymeleaf.templateresource.ITemplateResource;
 
 /**
+ * The mail template resource.
+ *
  * @author Christian Bremer
  */
 @Slf4j
@@ -41,22 +43,50 @@ public class MailTemplateResource implements ITemplateResource {
 
   private String characterEncoding = StandardCharsets.UTF_8.name();
 
+  /**
+   * Instantiates a new mail template resource.
+   *
+   * @param path the path
+   */
+  @SuppressWarnings("unused")
   public MailTemplateResource(String path) {
     this(path, null, null);
   }
 
+  /**
+   * Instantiates a new mail template resource.
+   *
+   * @param path              the path
+   * @param characterEncoding the character encoding
+   */
+  @SuppressWarnings("unused")
   public MailTemplateResource(
       String path,
       String characterEncoding) {
     this(path, characterEncoding, null);
   }
 
+  /**
+   * Instantiates a new mail template resource.
+   *
+   * @param path           the path
+   * @param resourceLoader the resource loader
+   */
+  @SuppressWarnings("unused")
   public MailTemplateResource(
       String path,
       ResourceLoader resourceLoader) {
     this(path, null, resourceLoader);
   }
 
+  /**
+   * Instantiates a new mail template resource.
+   *
+   * @param path              the path
+   * @param characterEncoding the character encoding
+   * @param resourceLoader    the resource loader
+   */
+  @SuppressWarnings("WeakerAccess")
   public MailTemplateResource(
       String path,
       String characterEncoding,
@@ -68,12 +98,24 @@ public class MailTemplateResource implements ITemplateResource {
         this.path, this.characterEncoding);
   }
 
+  /**
+   * Sets resource loader.
+   *
+   * @param resourceLoader the resource loader
+   */
+  @SuppressWarnings("WeakerAccess")
   public void setResourceLoader(ResourceLoader resourceLoader) {
     if (resourceLoader != null) {
       this.resourceLoader = resourceLoader;
     }
   }
 
+  /**
+   * Sets character encoding.
+   *
+   * @param characterEncoding the character encoding
+   */
+  @SuppressWarnings("WeakerAccess")
   public void setCharacterEncoding(String characterEncoding) {
     if (StringUtils.hasText(characterEncoding)) {
       this.characterEncoding = characterEncoding;
@@ -129,8 +171,10 @@ public class MailTemplateResource implements ITemplateResource {
     return new MailTemplateResource(newPath, characterEncoding, resourceLoader);
   }
 
-  private static String computeRelativeLocation(final String location,
+  private static String computeRelativeLocation(
+      final String location,
       final String relativeLocation) {
+
     final int separatorPos = location.lastIndexOf('/');
     if (separatorPos != -1) {
       final StringBuilder relativeBuilder = new StringBuilder(

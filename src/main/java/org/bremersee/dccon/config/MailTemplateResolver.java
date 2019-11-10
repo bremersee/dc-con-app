@@ -25,6 +25,8 @@ import org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver;
 import org.thymeleaf.templateresource.ITemplateResource;
 
 /**
+ * The mail template resolver.
+ *
  * @author Christian Bremer
  */
 @Slf4j
@@ -32,9 +34,19 @@ public class MailTemplateResolver extends AbstractConfigurableTemplateResolver {
 
   private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
+  /**
+   * Instantiates a new mail template resolver.
+   */
+  @SuppressWarnings("unused")
   public MailTemplateResolver() {
   }
 
+  /**
+   * Instantiates a new mail template resolver.
+   *
+   * @param resourceLoader the resource loader
+   */
+  @SuppressWarnings("WeakerAccess")
   public MailTemplateResolver(ResourceLoader resourceLoader) {
     if (resourceLoader != null) {
       this.resourceLoader = resourceLoader;

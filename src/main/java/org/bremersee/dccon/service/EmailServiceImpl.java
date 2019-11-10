@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.config.DomainControllerProperties.InlineAttachment;
+import org.bremersee.dccon.config.DomainControllerProperties.MailInlineAttachment;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -80,7 +80,7 @@ public class EmailServiceImpl extends AbstractEmailService {
       final Locale locale,
       final String mailText) {
 
-    final List<InlineAttachment> inlineAttachments = getProperties()
+    final List<MailInlineAttachment> inlineAttachments = getProperties()
         .getMailWithCredentials()
         .getInlineAttachments();
 
@@ -96,7 +96,7 @@ public class EmailServiceImpl extends AbstractEmailService {
           locale)));
       helper.setText(mailText, true);
 
-      for (InlineAttachment attachment : inlineAttachments) {
+      for (MailInlineAttachment attachment : inlineAttachments) {
         helper.addInline(attachment.getContentId(),
             resourceLoader.getResource(attachment.getLocation()),
             attachment.getMimeType());

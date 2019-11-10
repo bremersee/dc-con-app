@@ -47,6 +47,13 @@ public abstract class AbstractEmailService implements EmailService {
   @Getter(AccessLevel.PACKAGE)
   private TemplateEngine templateEngine;
 
+  /**
+   * Instantiates a new abstract email service.
+   *
+   * @param properties     the properties
+   * @param userRepository the user repository
+   * @param templateEngine the template engine
+   */
   public AbstractEmailService(
       DomainControllerProperties properties,
       DomainUserRepository userRepository,
@@ -75,7 +82,6 @@ public abstract class AbstractEmailService implements EmailService {
           domainUser.setDescription(domainUser.getUserName());
         }
         final Context ctx = new Context(locale);
-        ctx.setLocale(locale);
         ctx.setVariable("user", domainUser);
         ctx.setVariable("props", properties);
         ctx.setVariable("lang", locale.getLanguage());
@@ -91,6 +97,8 @@ public abstract class AbstractEmailService implements EmailService {
    * Do send email with credentials.
    *
    * @param domainUser the domain user
+   * @param locale     the locale
+   * @param mailText   the mail text
    */
   abstract void doSendEmailWithCredentials(
       @NotNull DomainUser domainUser,

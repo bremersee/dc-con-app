@@ -32,6 +32,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.thymeleaf.templatemode.TemplateMode;
 
 /**
+ * The mail template properties.
+ *
  * @author Christian Bremer
  */
 @ConfigurationProperties("bremersee.mail-template")
@@ -43,10 +45,14 @@ public class MailTemplateProperties {
 
   private List<MailResolverProperties> resolvers = new ArrayList<>();
 
+  /**
+   * The mail resolver properties.
+   */
   @Getter
   @Setter
   @ToString
   @EqualsAndHashCode
+  @SuppressWarnings("WeakerAccess")
   public static class MailResolverProperties {
 
     private boolean cacheable = false;
@@ -75,7 +81,7 @@ public class MailTemplateProperties {
 
     private Integer order;
 
-    private String prefix; // important
+    private String prefix = "classpath:"; // important
 
     private Set<String> rawTemplateModePatterns = new LinkedHashSet<>();
 
@@ -93,6 +99,11 @@ public class MailTemplateProperties {
 
     private Set<String> xmlTemplateModePatterns = new LinkedHashSet<>();
 
+    /**
+     * Resolvable patterns or default.
+     *
+     * @return the resolvable patterns
+     */
     public Set<String> resolvablePatternsOrDefault() {
       if (resolvablePatterns.isEmpty()) {
         return Collections.singleton("*");

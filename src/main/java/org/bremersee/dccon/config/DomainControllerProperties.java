@@ -217,16 +217,18 @@ public class DomainControllerProperties implements Serializable {
 
     private String loginUrl = "http://localhost:4200";
 
-    private List<InlineAttachment> inlineAttachments = new ArrayList<>();
+    private List<MailInlineAttachment> inlineAttachments = new ArrayList<>();
   }
 
+  /**
+   * The mail inline attachment.
+   */
   @Getter
   @Setter
   @ToString
   @EqualsAndHashCode
   @NoArgsConstructor
-  @SuppressWarnings("WeakerAccess")
-  public static class InlineAttachment {
+  public static class MailInlineAttachment {
 
     private String contentId;
 
