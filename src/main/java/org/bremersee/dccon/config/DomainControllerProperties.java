@@ -46,6 +46,7 @@ public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 2L;
 
+  private String personalName = "Anna Livia";
 
   private String companyName = "example.org";
 
@@ -213,7 +214,7 @@ public class DomainControllerProperties implements Serializable {
 
     private String sender = "no-reply@example.org";
 
-    private String templateBasename = "mail-with-credentials";
+    private String templateBasename = "personal-mail-with-credentials";
 
     private String loginUrl = "http://localhost:4200";
 

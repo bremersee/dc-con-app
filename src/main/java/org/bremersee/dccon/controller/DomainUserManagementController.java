@@ -152,7 +152,9 @@ public class DomainUserManagementController implements DomainUserManagementApi {
       final TwoLetterLanguageCode language,
       @Valid final Password newPassword) {
 
+    final Boolean sendEmail;
     if (!isAdmin()) {
+      sendEmail = Boolean.FALSE;
       if (!isUser(userName)) {
         throw ServiceException.forbidden();
       } else if (!authenticationService.passwordMatches(userName, newPassword.getPreviousValue())) {
@@ -160,8 +162,10 @@ public class DomainUserManagementController implements DomainUserManagementApi {
             "Previous password does not match.",
             "password_does_not_match");
       }
+    } else {
+      sendEmail = Boolean.TRUE.equals(email);
     }
-    domainUserService.updateUserPassword(userName, newPassword, email, language);
+    domainUserService.updateUserPassword(userName, newPassword, sendEmail, language);
     return ResponseEntity.ok().build();
   }
 
