@@ -25,9 +25,11 @@ bremersee:
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@example.org}
       login-url: http://localhost:4200
-  mail-template:
+  thymeleaf:
+    resolver-start-index: 2
     resolvers:
       - prefix: "classpath:mail/"
+        suffix: ".html"
         resolvable-patterns:
           - "*"
         template-mode: HTML

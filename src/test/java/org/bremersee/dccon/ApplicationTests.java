@@ -42,7 +42,7 @@ public class ApplicationTests {
    * The Template engine.
    */
   @Autowired
-  @Qualifier("mailTemplateEngine")
+  // @Qualifier("mailTemplateEngine")
   TemplateEngine templateEngine;
 
   /**
@@ -52,6 +52,7 @@ public class ApplicationTests {
   public void mailWithCredentialsTest() {
     final DomainUser domainUser = DomainUser.builder()
         .displayName("Anna Livia Plurabelle")
+        .firstName("Anna")
         .email("anna@example.org")
         .userName("anna")
         .password("changeit")

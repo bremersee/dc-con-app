@@ -25,7 +25,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainControllerProperties.MailInlineAttachment;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ResourceLoader;
@@ -52,7 +51,7 @@ public class EmailServiceImpl extends AbstractEmailService {
   private JavaMailSender javaMailSender;
 
   /**
-   * Instantiates a new Email service.
+   * Instantiates a new email service.
    *
    * @param properties     the properties
    * @param userRepository the user repository
@@ -64,7 +63,7 @@ public class EmailServiceImpl extends AbstractEmailService {
   public EmailServiceImpl(
       DomainControllerProperties properties,
       DomainUserRepository userRepository,
-      @Qualifier("mailTemplateEngine") TemplateEngine templateEngine,
+      TemplateEngine templateEngine,
       ResourceLoader resourceLoader,
       MessageSource messageSource,
       JavaMailSender javaMailSender) {
