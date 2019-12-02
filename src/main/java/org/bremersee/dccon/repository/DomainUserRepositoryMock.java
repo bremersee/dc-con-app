@@ -16,15 +16,30 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPasswordRegex;
+import static org.bremersee.dccon.repository.DomainUserRepositoryImpl.isQueryResult;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
+import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.exception.ServiceException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * The domain user repository mock.
@@ -36,6 +51,21 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainUserRepositoryMock implements DomainUserRepository {
 
+  private final Map<String, DomainUser> repo = new ConcurrentHashMap<>();
+
+  private Pattern passwordPattern = Pattern.compile(getComplexPasswordRegex(7));
+
+  private DomainRepository domainRepository;
+
+  private DomainGroupRepository groupRepository;
+
+  public DomainUserRepositoryMock(
+      DomainRepository domainRepository,
+      DomainGroupRepository groupRepository) {
+    this.domainRepository = domainRepository;
+    this.groupRepository = groupRepository;
+  }
+
   /**
    * Init.
    */
@@ -46,41 +76,114 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
         + "!! MOCK is running:  DomainUserRepository                                           !!\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     );
+    final PasswordInformation info = domainRepository.getPasswordInformation();
+    final int minLength = info.getMinimumPasswordLength() != null
+        ? info.getMinimumPasswordLength()
+        : 7;
+    this.passwordPattern = Pattern.compile(getComplexPasswordRegex(minLength));
+  }
+
+  private List<String> findDomainGroups(final String userName) {
+    return groupRepository.findAll(null)
+        .filter(domainGroup -> domainGroup.getMembers().contains(userName))
+        .map(DomainGroup::getName)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public Stream<DomainUser> findAll(String query) {
-    return Stream.empty();
+  public Stream<DomainUser> findAll(final String query) {
+    final boolean all = query == null || query.trim().length() == 0;
+    return repo.values().stream()
+        .filter(domainUser -> all || isQueryResult(domainUser, query.trim().toLowerCase()))
+        .map(domainUser -> domainUser.toBuilder()
+            .groups(findDomainGroups(domainUser.getUserName()))
+            .build());
   }
 
   @Override
-  public Optional<DomainUser> findOne(@NotNull String userName) {
-    return Optional.empty();
+  public Optional<DomainUser> findOne(final String userName) {
+    return Optional.ofNullable(repo.get(userName.toLowerCase()))
+        .flatMap(domainUser -> Optional.of(domainUser
+            .toBuilder()
+            .groups(findDomainGroups(domainUser.getUserName()))
+            .password(null)
+            .build()));
   }
 
   @Override
-  public Optional<byte[]> findAvatar(@NotNull String userName, AvatarDefault avatarDefault,
-      Integer size) {
-    return Optional.empty();
+  public Optional<byte[]> findAvatar(
+      final String userName,
+      final AvatarDefault avatarDefault,
+      final Integer size) {
+
+    final int avatarSize = size == null || size < 1 || size > 2048 ? 80 : size;
+    return findOne(userName)
+        .flatMap(domainUser -> Optional.ofNullable(
+            DomainUserRepositoryImpl.findAvatar(
+                domainUser.getEmail(),
+                new DomainControllerProperties().getGravatarUrl(),
+                avatarDefault,
+                avatarSize)));
   }
 
   @Override
-  public boolean exists(@NotNull String userName) {
-    return false;
+  public boolean exists(final String userName) {
+    return repo.get(userName.toLowerCase()) != null;
   }
 
   @Override
-  public DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups) {
+  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
+
+    if (!StringUtils.hasText(domainUser.getPassword())) {
+      domainUser.setPassword(domainRepository.createRandomPassword());
+    }
+    if (!passwordPattern.matcher(domainUser.getPassword()).matches()) {
+      throw ServiceException.badRequest(
+          "msg=[The password does not meet the complexity criteria!] userName=["
+              + domainUser.getUserName() + "]",
+          "check_password_restrictions");
+    }
+    final boolean doGroupUpdate = Boolean.TRUE.equals(updateGroups);
+    final Set<String> groups = doGroupUpdate
+        ? new HashSet<>(domainUser.getGroups())
+        : Collections.emptySet();
+    domainUser.getGroups().clear();
+    repo.put(domainUser.getUserName().toLowerCase(), domainUser);
+
+    if (doGroupUpdate) {
+      groups.forEach(groupName -> groupRepository.findOne(groupName).ifPresent(domainGroup -> {
+        if (!domainGroup.getMembers().contains(domainUser.getUserName())) {
+          domainGroup.getMembers().add(domainUser.getUserName());
+        }
+      }));
+    }
     return DomainUser.builder().userName(domainUser.getUserName()).build();
   }
 
   @Override
-  public void savePassword(@NotNull String userName, @NotNull String newPassword) {
-
+  public void savePassword(final String userName, final String newPassword) {
+    final DomainUser domainUser = repo.get(userName.toLowerCase());
+    if (domainUser == null) {
+      throw ServiceException.notFound(DomainUser.class.getSimpleName(), userName);
+    }
+    if (!passwordPattern.matcher(newPassword).matches()) {
+      throw ServiceException.badRequest(
+          "msg=[The password does not meet the complexity criteria!] userName=["
+              + domainUser.getUserName() + "]",
+          "check_password_restrictions");
+    }
+    domainUser.setPassword(newPassword);
   }
 
   @Override
-  public boolean delete(@NotNull String userName) {
-    return false;
+  public boolean delete(final String userName) {
+    return Optional.ofNullable(repo.remove(userName.toLowerCase()))
+        .map(DomainUser::getUserName)
+        .map(name -> {
+          groupRepository.findAll(null)
+              .forEach(domainGroup -> domainGroup.getMembers().remove(name));
+          return true;
+        })
+        .orElse(false);
   }
 }

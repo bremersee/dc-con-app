@@ -61,6 +61,9 @@ management:
         allowed-headers: "*"
         allowed-methods: "*"
         allowed-origins: "*"
+#  health:
+#    mail:
+#      enabled: false
 
 server:
   port: ${SERVER_PORT:8090}

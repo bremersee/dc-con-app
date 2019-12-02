@@ -86,15 +86,6 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private static final String NO_EMAIL_AVATAR = "classpath:mp.jpg";
 
-  private static final String MIN_LENGTH_PLACEHOLDER = "{{MIN_LENGTH}}";
-
-  private static final String SIMPLE_PASSWORD_REGEX = "^(?=.{" + MIN_LENGTH_PLACEHOLDER
-      + ",75}$).*";
-
-  private static final String COMPLEX_PASSWORD_REGEX = "(?=^.{" + MIN_LENGTH_PLACEHOLDER + ",75}$)"
-      + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
-      + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
-
   private final DomainRepository domainRepository;
 
   private final DomainGroupRepository domainGroupRepository;
@@ -122,14 +113,14 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private Pattern getPasswordPattern() {
     final PasswordInformation info = domainRepository.getPasswordInformation();
-    final String minLength = info.getMinimumPasswordLength() != null
-        ? info.getMinimumPasswordLength().toString()
-        : "7";
+    final int minLength = info.getMinimumPasswordLength() != null
+        ? info.getMinimumPasswordLength()
+        : 7;
     final String regex;
     if (PasswordComplexity.OFF == info.getPasswordComplexity()) {
-      regex = SIMPLE_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, minLength);
+      regex = DomainControllerProperties.getSimplePasswordRegex(minLength);
     } else {
-      regex = COMPLEX_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, minLength);
+      regex = DomainControllerProperties.getComplexPasswordRegex(minLength);
     }
     return Pattern.compile(regex);
   }
@@ -158,11 +149,11 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
     } else {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper)
-          .filter(domainUser -> this.isQueryResult(domainUser, query.trim().toLowerCase()));
+          .filter(domainUser -> isQueryResult(domainUser, query.trim().toLowerCase()));
     }
   }
 
-  private boolean isQueryResult(final DomainUser domainUser, final String query) {
+  static boolean isQueryResult(final DomainUser domainUser, final String query) {
     return query != null && query.length() > 2 && domainUser != null
         && (contains(domainUser.getDisplayName(), query)
         || contains(domainUser.getUserName(), query)
@@ -226,46 +217,56 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
           }
           final String mail = LdaptiveEntryMapper
               .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
-          if (StringUtils.hasText(mail)) {
-            final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));
-            final String hex = new String(Hex.encode(md5));
-            final String defaultAvatar = avatarDefault != null
-                ? avatarDefault.toString()
-                : AvatarDefault.NOT_FOUND.toString();
-            final String url = getProperties().getGravatarUrl()
-                .replace("{hash}", hex)
-                .replace("{default}", defaultAvatar)
-                .replace("{size}", String.valueOf(avatarSize));
-            try {
-              return IOUtils.toByteArray(new URL(url));
-            } catch (Exception e) {
-              if (AvatarDefault.NOT_FOUND.toString().equalsIgnoreCase(defaultAvatar)) {
-                return null;
-              }
-              log.error("msg=[Getting avatar failed. This should not happen.] url=[{}]",
-                  url, e);
-            }
-          } else if (AvatarDefault.NOT_FOUND == avatarDefault) {
-            return null;
-          }
-          try {
-            final BufferedImage img = ImageIO
-                .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());
-            final BufferedImage scaledImg = ImageScaler
-                .scaleImage(img, new Dimension(avatarSize, avatarSize));
-            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ImageIO.write(scaledImg, "JPG", out);
-            return out.toByteArray();
-
-          } catch (IOException e) {
-            final ServiceException se = ServiceException.internalServerError(
-                "Getting default avatar for no email failed.",
-                "org.bremersee:dc-con-app:1ec0dda8-7358-4e1c-a8f2-f4bd64e439f0",
-                e);
-            log.error("msg=[{}]", se.getMessage(), se);
-            throw se;
-          }
+          return findAvatar(mail, getProperties().getGravatarUrl(), avatarDefault, avatarSize);
         });
+  }
+
+  static byte[] findAvatar(
+      final String mail,
+      final String avatarUrlTemplate,
+      final AvatarDefault avatarDefault,
+      final int avatarSize) {
+
+    if (StringUtils.hasText(mail)) {
+      final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));
+      final String hex = new String(Hex.encode(md5));
+      final String defaultAvatar = avatarDefault != null
+          ? avatarDefault.toString()
+          : AvatarDefault.NOT_FOUND.toString();
+      final String url = avatarUrlTemplate
+          .replace("{hash}", hex)
+          .replace("{default}", defaultAvatar)
+          .replace("{size}", String.valueOf(avatarSize));
+      try {
+        return IOUtils.toByteArray(new URL(url));
+      } catch (Exception e) {
+        if (AvatarDefault.NOT_FOUND.toString().equalsIgnoreCase(defaultAvatar)) {
+          return null;
+        }
+        log.error("msg=[Getting avatar failed. This should not happen.] url=[{}]",
+            url, e);
+      }
+    } else if (AvatarDefault.NOT_FOUND == avatarDefault) {
+      return null;
+    }
+    try {
+      final BufferedImage img = ImageIO
+          .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());
+      final BufferedImage scaledImg = ImageScaler
+          .scaleImage(img, new Dimension(avatarSize, avatarSize));
+      final ByteArrayOutputStream out = new ByteArrayOutputStream();
+      ImageIO.write(scaledImg, "JPG", out);
+      return out.toByteArray();
+
+    } catch (IOException e) {
+      final ServiceException se = ServiceException.internalServerError(
+          "Getting default avatar for no email failed.",
+          "org.bremersee:dc-con-app:1ec0dda8-7358-4e1c-a8f2-f4bd64e439f0",
+          e);
+      log.error("msg=[{}]", se.getMessage(), se);
+      throw se;
+    }
+
   }
 
   @Override

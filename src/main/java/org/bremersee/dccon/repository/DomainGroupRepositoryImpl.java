@@ -83,11 +83,11 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
       return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
     } else {
       return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper)
-          .filter(domainGroup -> this.isQueryResult(domainGroup, query.trim().toLowerCase()));
+          .filter(domainGroup -> isQueryResult(domainGroup, query.trim().toLowerCase()));
     }
   }
 
-  private boolean isQueryResult(final DomainGroup domainGroup, final String query) {
+  static boolean isQueryResult(final DomainGroup domainGroup, final String query) {
     return query != null && query.length() > 2 && domainGroup != null
         && (contains(domainGroup.getName(), query)
         || contains(domainGroup.getDescription(), query)

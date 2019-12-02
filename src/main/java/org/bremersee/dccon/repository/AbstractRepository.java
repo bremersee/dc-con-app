@@ -104,8 +104,9 @@ abstract class AbstractRepository {
    * @param query the query
    * @return {@code true} if the value contains the query, otherwise {@code false}
    */
-  boolean contains(final Object value, final String query) {
+  static boolean contains(final Object value, final String query) {
     if (value instanceof Collection) {
+      //noinspection rawtypes
       for (Object item : (Collection) value) {
         if (contains(item, query)) {
           return true;

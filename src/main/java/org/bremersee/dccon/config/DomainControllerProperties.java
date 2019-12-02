@@ -46,6 +46,16 @@ public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 2L;
 
+  private static final String MIN_LENGTH_PLACEHOLDER = "{{MIN_LENGTH}}";
+
+  private static final String SIMPLE_PASSWORD_REGEX = "^(?=.{" + MIN_LENGTH_PLACEHOLDER
+      + ",75}$).*";
+
+  private static final String COMPLEX_PASSWORD_REGEX = "(?=^.{" + MIN_LENGTH_PLACEHOLDER + ",75}$)"
+      + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
+      + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
+
+
   private String personalName = "Anna Livia";
 
   private String companyName = "example.org";
@@ -197,6 +207,26 @@ public class DomainControllerProperties implements Serializable {
    */
   public String buildDnsNodeBaseDn(String zoneName) {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
+  }
+
+  /**
+   * Gets simple password regex.
+   *
+   * @param minLength the min length
+   * @return the simple password regex
+   */
+  public static String getSimplePasswordRegex(int minLength) {
+    return SIMPLE_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));
+  }
+
+  /**
+   * Gets complex password regex.
+   *
+   * @param minLength the min length
+   * @return the complex password regex
+   */
+  public static String getComplexPasswordRegex(int minLength) {
+    return COMPLEX_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));
   }
 
   /**

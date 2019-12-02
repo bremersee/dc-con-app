@@ -16,6 +16,10 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPasswordRegex;
+
+import java.util.regex.Pattern;
+import org.apache.commons.lang.RandomStringUtils;
 import org.bremersee.dccon.model.PasswordInformation;
 
 /**
@@ -31,5 +35,24 @@ public interface DomainRepository {
    * @return the password information
    */
   PasswordInformation getPasswordInformation();
+
+  default String createRandomPassword() {
+    final char[] source = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz".toCharArray();
+    final PasswordInformation passwordInformation = getPasswordInformation();
+    final int length;
+    if (passwordInformation != null
+        && passwordInformation.getMinimumPasswordLength() != null
+        && passwordInformation.getMinimumPasswordLength() > 12) {
+      length = passwordInformation.getMinimumPasswordLength();
+    } else {
+      length = 12;
+    }
+    final Pattern pattern = Pattern.compile(getComplexPasswordRegex(length));
+    String pw = RandomStringUtils.random(length, source);
+    while (!pattern.matcher(pw).matches()) {
+      pw = RandomStringUtils.random(length, source);
+    }
+    return pw;
+  }
 
 }

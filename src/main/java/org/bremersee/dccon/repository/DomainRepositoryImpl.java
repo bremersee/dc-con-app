@@ -80,4 +80,5 @@ public class DomainRepositoryImpl extends AbstractRepository implements DomainRe
         getProperties().getSambaToolExecDir(),
         passwordInformationParser);
   }
+
 }

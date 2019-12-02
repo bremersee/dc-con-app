@@ -18,6 +18,7 @@ package org.bremersee.dccon.repository;
 
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,10 @@ public class DomainRepositoryMock implements DomainRepository {
 
   @Override
   public PasswordInformation getPasswordInformation() {
-    return new PasswordInformation();
+    return PasswordInformation.builder()
+        .minimumPasswordLength(8)
+        .passwordComplexity(PasswordComplexity.ON)
+        .build();
   }
+
 }

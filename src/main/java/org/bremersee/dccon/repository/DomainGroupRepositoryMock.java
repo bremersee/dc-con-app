@@ -16,7 +16,11 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.bremersee.dccon.repository.DomainGroupRepositoryImpl.isQueryResult;
+
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
@@ -35,6 +39,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainGroupRepositoryMock implements DomainGroupRepository {
 
+  private final Map<String, DomainGroup> repo = new ConcurrentHashMap<>();
+
   /**
    * Init.
    */
@@ -49,26 +55,36 @@ public class DomainGroupRepositoryMock implements DomainGroupRepository {
 
   @Override
   public Stream<DomainGroup> findAll(String query) {
-    return Stream.empty();
+    if (query == null || query.trim().length() == 0) {
+      return repo.values().stream();
+    } else {
+      return repo.values().stream()
+          .filter(domainGroup -> isQueryResult(domainGroup, query.trim().toLowerCase()));
+    }
   }
 
   @Override
   public Optional<DomainGroup> findOne(@NotNull String groupName) {
-    return Optional.empty();
+    return Optional.ofNullable(repo.get(groupName.toLowerCase()));
   }
 
   @Override
   public boolean exists(@NotNull String groupName) {
-    return false;
+    return repo.get(groupName.toLowerCase()) != null;
   }
 
   @Override
   public DomainGroup save(@NotNull DomainGroup domainGroup) {
-    return DomainGroup.builder().name(domainGroup.getName()).build();
+    if (repo.size() > 100) {
+      // TODO throw an exception
+    }
+    repo.put(domainGroup.getName().toLowerCase(), domainGroup);
+    return domainGroup;
   }
 
   @Override
   public boolean delete(@NotNull String groupName) {
-    return false;
+    return repo.remove(groupName.toLowerCase()) != null;
   }
+
 }
