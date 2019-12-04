@@ -19,6 +19,8 @@ package org.bremersee.dccon.repository;
 import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPasswordRegex;
 import static org.bremersee.dccon.repository.DomainUserRepositoryImpl.isQueryResult;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +40,9 @@ import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.exception.ServiceException;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -49,19 +54,29 @@ import org.springframework.util.StringUtils;
 @Profile("!ldap")
 @Component
 @Slf4j
-public class DomainUserRepositoryMock implements DomainUserRepository {
+public class DomainUserRepositoryMock implements DomainUserRepository, MockRepository {
+
+  private static final String USERS_LOCATION = "classpath:demo/users.json";
+
+  private static final String GROUPS_LOCATION = "classpath:demo/groups.json";
+
+  private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
   private final Map<String, DomainUser> repo = new ConcurrentHashMap<>();
 
   private Pattern passwordPattern = Pattern.compile(getComplexPasswordRegex(7));
+
+  private ObjectMapper objectMapper;
 
   private DomainRepository domainRepository;
 
   private DomainGroupRepository groupRepository;
 
   public DomainUserRepositoryMock(
+      Jackson2ObjectMapperBuilder objectMapperBuilder,
       DomainRepository domainRepository,
       DomainGroupRepository groupRepository) {
+    this.objectMapper = objectMapperBuilder.build();
     this.domainRepository = domainRepository;
     this.groupRepository = groupRepository;
   }
@@ -80,7 +95,33 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
     final int minLength = info.getMinimumPasswordLength() != null
         ? info.getMinimumPasswordLength()
         : 7;
-    this.passwordPattern = Pattern.compile(getComplexPasswordRegex(minLength));
+    passwordPattern = Pattern.compile(getComplexPasswordRegex(minLength));
+    resetData();
+  }
+
+  @Override
+  public void resetData() {
+    DomainUser[] users;
+    DomainGroup[] groups;
+    try {
+      users = objectMapper.readValue(
+          resourceLoader.getResource(USERS_LOCATION).getInputStream(), DomainUser[].class);
+      groups = objectMapper.readValue(
+          resourceLoader.getResource(GROUPS_LOCATION).getInputStream(), DomainGroup[].class);
+    } catch (IOException e) {
+      throw ServiceException.internalServerError("Loading demo data failed.", e);
+    }
+    groupRepository.findAll(null).forEach(group -> groupRepository.delete(group.getName()));
+    repo.clear();
+    for (DomainUser user : users) {
+      if (!StringUtils.hasText(user.getPassword())) {
+        user.setPassword(domainRepository.createRandomPassword());
+      }
+      repo.put(user.getUserName().toLowerCase(), user);
+    }
+    for (DomainGroup group : groups) {
+      groupRepository.save(group);
+    }
   }
 
   private List<String> findDomainGroups(final String userName) {

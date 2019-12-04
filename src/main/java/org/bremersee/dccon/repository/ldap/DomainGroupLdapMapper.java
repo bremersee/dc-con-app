@@ -19,6 +19,11 @@ package org.bremersee.dccon.repository.ldap;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttribute;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttributes;
+import static org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants.DESCRIPTION;
+import static org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants.MEMBER;
+import static org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants.NAME;
+import static org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants.OBJECT_SID;
+import static org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants.SAM_ACCOUNT_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,13 +92,13 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
       return;
     }
     mapCommonAttributes(ldapEntry, domainGroup);
-    domainGroup.setSid(getAttributeValue(ldapEntry, "objectSid", sidValueTranscoder, null));
-    domainGroup.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
+    domainGroup.setSid(getAttributeValue(ldapEntry, OBJECT_SID, sidValueTranscoder, null));
+    domainGroup.setName(getAttributeValue(ldapEntry, NAME, STRING_VALUE_TRANSCODER, null));
     domainGroup
-        .setDescription(getAttributeValue(ldapEntry, "description", STRING_VALUE_TRANSCODER, null));
+        .setDescription(getAttributeValue(ldapEntry, DESCRIPTION, STRING_VALUE_TRANSCODER, null));
     domainGroup.setMembers(LdaptiveEntryMapper.getAttributeValuesAsList(
         ldapEntry,
-        getProperties().getGroupMemberAttr(),
+        MEMBER,
         groupMemberValueTranscoder));
     domainGroup.getMembers().sort(String::compareToIgnoreCase);
   }
@@ -104,14 +109,14 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
       final LdapEntry destination) {
     final List<AttributeModification> modifications = new ArrayList<>();
     setAttribute(destination,
-        "name", source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
+        NAME, source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "sAMAccountName", source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
+        SAM_ACCOUNT_NAME, source.getName(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "description", source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
+        DESCRIPTION, source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttributes(
         destination,
-        getProperties().getGroupMemberAttr(),
+        MEMBER,
         source.getMembers(),
         false,
         groupMemberValueTranscoder,

@@ -30,6 +30,7 @@ import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -78,6 +79,15 @@ public class DomainUserServiceImpl implements DomainUserService {
   public void setDomainUserValidator(DomainUserValidator domainUserValidator) {
     if (domainUserValidator != null) {
       this.domainUserValidator = domainUserValidator;
+    }
+  }
+
+  @Override
+  public void resetData() {
+    if (domainUserRepository instanceof MockRepository) {
+      ((MockRepository) domainUserRepository).resetData();
+    } else {
+      throw new UnsupportedOperationException("Reset data is not available.");
     }
   }
 

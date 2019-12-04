@@ -37,7 +37,6 @@ public class DomainUserLdapMapperTest {
     properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
     properties.setUserRdn("cn");
     properties.setUserBaseDn("cn=Users,dc=example,dc=org");
-    properties.setUserGroupAttr("memberOf");
     mapper = new DomainUserLdapMapper(properties);
   }
 

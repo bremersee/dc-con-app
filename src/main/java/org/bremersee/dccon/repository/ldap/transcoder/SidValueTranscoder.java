@@ -17,16 +17,19 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.Sid;
-import org.ldaptive.io.AbstractStringValueTranscoder;
+import org.ldaptive.ad.SecurityIdentifier;
+import org.ldaptive.io.AbstractBinaryValueTranscoder;
 
 /**
  * The SID value transcoder.
  *
  * @author Christian Bremer
  */
-public class SidValueTranscoder extends AbstractStringValueTranscoder<Sid> {
+@Slf4j
+public class SidValueTranscoder extends AbstractBinaryValueTranscoder<Sid> {
 
   private DomainControllerProperties properties;
 
@@ -40,19 +43,21 @@ public class SidValueTranscoder extends AbstractStringValueTranscoder<Sid> {
   }
 
   @Override
-  public Sid decodeStringValue(String value) {
+  public Sid decodeBinaryValue(byte[] value) {
     return Optional.ofNullable(value)
+        .map(SecurityIdentifier::toString)
         .map(objectSid -> Sid.builder()
-            .value(value)
-            .systemEntity(isSystemEntity(value))
+            .value(objectSid)
+            .systemEntity(isSystemEntity(objectSid))
             .build())
         .orElse(null);
   }
 
   @Override
-  public String encodeStringValue(Sid value) {
+  public byte[] encodeBinaryValue(Sid value) {
     return Optional.ofNullable(value)
         .map(Sid::getValue)
+        .map(SecurityIdentifier::toBytes)
         .orElse(null);
   }
 
@@ -69,7 +74,7 @@ public class SidValueTranscoder extends AbstractStringValueTranscoder<Sid> {
     if (index > -1) {
       try {
         return properties
-            .getMaxSystemSidSuffix() <= Integer.parseInt(objectSid.substring(index + 1));
+            .getMaxSystemSidSuffix() >= Integer.parseInt(objectSid.substring(index + 1));
       } catch (Exception ignored) {
         // ignored
       }

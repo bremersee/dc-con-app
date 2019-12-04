@@ -18,6 +18,26 @@ package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttribute;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DESCRIPTION;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DISPLAY_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.GECOS;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.GIVEN_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.HOME_DIRECTORY;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LAST_LOGON;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LOGIN_SHELL;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LOGON_COUNT;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MAIL;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MEMBER_OF;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MOBILE;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.OBJECT_SID;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.PWD_LAST_SET;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.SAM_ACCOUNT_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.SN;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.TELEPHONE_NUMBER;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.UID;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.UNIX_HOME_DIRECTORY;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.USER_ACCOUNT_CONTROL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,42 +117,43 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
       return;
     }
     mapCommonAttributes(ldapEntry, domainUser);
-    domainUser.setSid(getAttributeValue(ldapEntry, "objectSid", sidValueTranscoder, null));
+    domainUser.setSid(getAttributeValue(ldapEntry,
+        OBJECT_SID, sidValueTranscoder, null));
     domainUser.setUserName(getAttributeValue(ldapEntry,
-        "sAMAccountName", STRING_VALUE_TRANSCODER, null));
+        SAM_ACCOUNT_NAME, STRING_VALUE_TRANSCODER, null));
     domainUser.setFirstName(getAttributeValue(ldapEntry,
-        "givenName", STRING_VALUE_TRANSCODER, null));
+        GIVEN_NAME, STRING_VALUE_TRANSCODER, null));
     domainUser.setLastName(getAttributeValue(ldapEntry,
-        "sn", STRING_VALUE_TRANSCODER, null));
+        SN, STRING_VALUE_TRANSCODER, null));
     domainUser.setDisplayName(getAttributeValue(ldapEntry,
-        "displayName", STRING_VALUE_TRANSCODER, getAttributeValue(ldapEntry,
-            "gecos", STRING_VALUE_TRANSCODER, null)));
+        DISPLAY_NAME, STRING_VALUE_TRANSCODER, getAttributeValue(ldapEntry,
+            GECOS, STRING_VALUE_TRANSCODER, null)));
     domainUser.setEmail(getAttributeValue(ldapEntry,
-        "mail", STRING_VALUE_TRANSCODER, null));
+        MAIL, STRING_VALUE_TRANSCODER, null));
     domainUser.setTelephoneNumber(getAttributeValue(ldapEntry,
-        "telephoneNumber", STRING_VALUE_TRANSCODER, null));
+        TELEPHONE_NUMBER, STRING_VALUE_TRANSCODER, null));
     domainUser.setMobile(getAttributeValue(ldapEntry,
-        "mobile", STRING_VALUE_TRANSCODER, null));
+        MOBILE, STRING_VALUE_TRANSCODER, null));
     domainUser.setGroups(LdaptiveEntryMapper.getAttributeValuesAsList(ldapEntry,
-        getProperties().getUserGroupAttr(), userGroupValueTranscoder));
+        MEMBER_OF, userGroupValueTranscoder));
     domainUser.getGroups().sort(String::compareToIgnoreCase);
     domainUser.setDescription(getAttributeValue(ldapEntry,
-        "description", STRING_VALUE_TRANSCODER, null));
+        DESCRIPTION, STRING_VALUE_TRANSCODER, null));
     domainUser.setHomeDirectory(getAttributeValue(ldapEntry,
-        "homeDirectory", STRING_VALUE_TRANSCODER, null));
+        HOME_DIRECTORY, STRING_VALUE_TRANSCODER, null));
     domainUser.setUnixHomeDirectory(getAttributeValue(ldapEntry,
-        "unixHomeDirectory", STRING_VALUE_TRANSCODER, null));
+        UNIX_HOME_DIRECTORY, STRING_VALUE_TRANSCODER, null));
     domainUser.setLoginShell(getAttributeValue(ldapEntry,
-        "loginShell", STRING_VALUE_TRANSCODER, null));
+        LOGIN_SHELL, STRING_VALUE_TRANSCODER, null));
     domainUser.setLastLogon(getAttributeValue(ldapEntry,
-        "lastLogon", AD_TIME_VALUE_TRANSCODER, null));
+        LAST_LOGON, AD_TIME_VALUE_TRANSCODER, null));
     domainUser.setLogonCount(getAttributeValue(ldapEntry,
-        "logonCount", INT_VALUE_TRANSCODER, null));
+        LOGON_COUNT, INT_VALUE_TRANSCODER, null));
     domainUser.setPasswordLastSet(getAttributeValue(ldapEntry,
-        "pwdLastSet", AD_TIME_VALUE_TRANSCODER, null));
+        PWD_LAST_SET, AD_TIME_VALUE_TRANSCODER, null));
 
     Integer userAccountControlValue = getAttributeValue(ldapEntry,
-        "userAccountControl", USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
+        USER_ACCOUNT_CONTROL, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
     domainUser.setEnabled(
         UserAccountControlValueTranscoder.isUserAccountEnabled(userAccountControlValue));
   }
@@ -144,56 +165,56 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
 
     final List<AttributeModification> modifications = new ArrayList<>();
     setAttribute(destination,
-        "sAMAccountName", source.getUserName(), false, STRING_VALUE_TRANSCODER,
+        SAM_ACCOUNT_NAME, source.getUserName(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "name", source.getUserName(), false, STRING_VALUE_TRANSCODER,
+        NAME, source.getUserName(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "uid", source.getUserName(), false, STRING_VALUE_TRANSCODER,
+        UID, source.getUserName(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "givenName", source.getFirstName(), false, STRING_VALUE_TRANSCODER, modifications);
+        GIVEN_NAME, source.getFirstName(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "sn", source.getLastName(), false, STRING_VALUE_TRANSCODER, modifications);
+        SN, source.getLastName(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "displayName", source.getDisplayName(), false, STRING_VALUE_TRANSCODER,
+        DISPLAY_NAME, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "gecos", source.getDisplayName(), false, STRING_VALUE_TRANSCODER,
+        GECOS, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "mail", source.getEmail(), false, STRING_VALUE_TRANSCODER, modifications);
+        MAIL, source.getEmail(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "telephoneNumber", source.getTelephoneNumber(), false, STRING_VALUE_TRANSCODER,
+        TELEPHONE_NUMBER, source.getTelephoneNumber(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "mobile", source.getMobile(), false, STRING_VALUE_TRANSCODER, modifications);
+        MOBILE, source.getMobile(), false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination,
-        "description", source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
+        DESCRIPTION, source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);
 
     setAttribute(destination,
-        "homeDirectory", source.getHomeDirectory(), false, STRING_VALUE_TRANSCODER,
+        HOME_DIRECTORY, source.getHomeDirectory(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "unixHomeDirectory", source.getUnixHomeDirectory(), false, STRING_VALUE_TRANSCODER,
+        UNIX_HOME_DIRECTORY, source.getUnixHomeDirectory(), false, STRING_VALUE_TRANSCODER,
         modifications);
     setAttribute(destination,
-        "loginShell", source.getLoginShell(), false, STRING_VALUE_TRANSCODER,
+        LOGIN_SHELL, source.getLoginShell(), false, STRING_VALUE_TRANSCODER,
         modifications);
 
     // Groups must be set in group entity.
     // setAttributes(destination,
-    //     getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,
+    //     "memberOf", source.getGroups(), false, userGroupValueTranscoder,
     //     modifications);
 
     Integer userAccountControlValue = getAttributeValue(destination,
-        "userAccountControl", USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
+        USER_ACCOUNT_CONTROL, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
     userAccountControlValue = UserAccountControlValueTranscoder.getUserAccountControlValue(
         source.getEnabled(),
         userAccountControlValue);
     setAttribute(destination,
-        "userAccountControl", userAccountControlValue, false,
+        USER_ACCOUNT_CONTROL, userAccountControlValue, false,
         USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, modifications);
 
     return modifications.toArray(new AttributeModification[0]);

@@ -16,23 +16,36 @@
 
 package org.bremersee.dccon.controller;
 
+import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The throw error controller to test the error handling of the angular web application.
+ * The demo controller provides endpoints for testing and demonstration.
  *
  * @author Christian Bremer
  */
 @RestController
-public class ThrowErrorController {
+public class DemoController {
+
+  private DomainUserService domainUserService;
 
   /**
-   * Throw error response entity.
+   * Instantiates a new demo controller.
+   *
+   * @param domainUserService the domain user service
+   */
+  public DemoController(DomainUserService domainUserService) {
+    this.domainUserService = domainUserService;
+  }
+
+  /**
+   * Throws an error.
    *
    * @return the response entity
    */
@@ -40,6 +53,17 @@ public class ThrowErrorController {
   public ResponseEntity<Void> throwError() {
     final RuntimeException cause = new RuntimeException("Example error message");
     throw new ServiceException(HttpStatus.I_AM_A_TEAPOT, "teapot", cause);
+  }
+
+  /**
+   * Resets demo data.
+   *
+   * @return the response entity
+   */
+  @PostMapping(path = "/api/reset", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  public ResponseEntity<Void> resetData() {
+    domainUserService.resetData();
+    return ResponseEntity.ok().build();
   }
 
 }

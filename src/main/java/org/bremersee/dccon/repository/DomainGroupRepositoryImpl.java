@@ -28,6 +28,7 @@ import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
@@ -79,6 +80,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
         getProperties().getGroupBaseDn(),
         new SearchFilter(getProperties().getGroupFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getGroupFindAllSearchScope());
+    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);
     if (query == null || query.trim().length() == 0) {
       return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
     } else {
@@ -102,6 +104,7 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
         getProperties().getGroupBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getGroupFindOneSearchScope());
+    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);
     return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);
   }
 

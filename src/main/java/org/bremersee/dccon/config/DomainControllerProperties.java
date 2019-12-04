@@ -67,7 +67,7 @@ public class DomainControllerProperties implements Serializable {
 
   private String groupRdn = "cn";
 
-  private String groupMemberAttr = "member";
+  // private String groupMemberAttr = "member";
 
   private String groupFindAllFilter = "(objectClass=group)";
 
@@ -82,7 +82,7 @@ public class DomainControllerProperties implements Serializable {
 
   private String userRdn = "cn";
 
-  private String userGroupAttr = "memberOf";
+  // private String userGroupAttr = "memberOf";
 
   private String userFindAllFilter = "(objectClass=user)";
 

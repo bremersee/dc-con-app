@@ -31,7 +31,6 @@ public class DomainGroupLdapMapperTest {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
     properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
-    properties.setGroupMemberAttr("member");
     properties.setUserRdn("cn");
     properties.setUserBaseDn("cn=Users,dc=example,dc=org");
     mapper = new DomainGroupLdapMapper(properties);

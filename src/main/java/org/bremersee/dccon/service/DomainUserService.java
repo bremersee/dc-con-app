@@ -36,6 +36,11 @@ import org.springframework.validation.annotation.Validated;
 public interface DomainUserService {
 
   /**
+   * Reset data. This method is only available in a non productive environment.
+   */
+  void resetData();
+
+  /**
    * Get domain users.
    *
    * @param sort  the sort order

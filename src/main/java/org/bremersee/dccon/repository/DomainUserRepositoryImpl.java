@@ -46,6 +46,7 @@ import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.img.ImageScaler;
+import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.AttributeModification;
@@ -144,7 +145,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         new SearchFilter(getProperties().getUserFindAllFilter()));
     searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());
-    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
     if (query == null || query.trim().length() == 0) {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
     } else {
@@ -174,7 +175,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
-    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
     searchRequest.setSizeLimit(1L);
     return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
   }
@@ -192,15 +193,14 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn(),
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
-    searchRequest.setBinaryAttributes(DomainUser.LDAP_ATTR_AVATAR);
-    searchRequest.setReturnAttributes(DomainUser.LDAP_ATTR_AVATAR);
+    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
     searchRequest.setReturnAttributes("mail");
     searchRequest.setSizeLimit(1L);
 
     return getLdapTemplate().findOne(searchRequest)
         .map(ldapEntry -> {
           final byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
-              ldapEntry, DomainUser.LDAP_ATTR_AVATAR, BYTE_ARRAY_VALUE_TRANSCODER, null);
+              ldapEntry, DomainUserLdapConstants.JPEG_PHOTO, BYTE_ARRAY_VALUE_TRANSCODER, null);
           if (avatar != null && avatar.length > 0) {
             try {
               final BufferedImage img = ImageIO.read(new ByteArrayInputStream(avatar));
@@ -212,7 +212,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
             } catch (IOException e) {
               log.error("msg=[Creating image from ldap attribute {} failed.]",
-                  DomainUser.LDAP_ATTR_AVATAR, e);
+                  DomainUserLdapConstants.JPEG_PHOTO, e);
             }
           }
           final String mail = LdaptiveEntryMapper
