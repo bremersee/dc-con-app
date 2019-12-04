@@ -61,8 +61,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
    */
   public DomainUserManagementController(
       final DomainUserService domainUserService,
-      DomainGroupService domainGroupService,
-      AuthenticationService authenticationService) {
+      final DomainGroupService domainGroupService,
+      final AuthenticationService authenticationService) {
     this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
     this.authenticationService = authenticationService;
@@ -89,36 +89,6 @@ public class DomainUserManagementController implements DomainUserManagementApi {
       final String userName) {
     return ResponseEntity.of(domainUserService.getUser(userName));
   }
-
-  /*
-  public ResponseEntity<DomainUser> setGroups(String userName, List<String> groups) {
-    return ResponseEntity.of(domainUserService.getUser(userName)
-        .flatMap(user -> {
-          user.setGroups(groups != null ? new ArrayList<>(groups) : new ArrayList<>());
-          return domainUserService.updateUser(userName, true, user);
-        }));
-  }
-
-  public ResponseEntity<DomainUser> addGroups(String userName, List<String> groups) {
-    return ResponseEntity.of(domainUserService.getUser(userName)
-        .flatMap(user -> {
-          final Set<String> groupSet = new HashSet<>(user.getGroups());
-          groupSet.addAll(groups);
-          user.setGroups(new ArrayList<>(groupSet));
-          return domainUserService.updateUser(userName, true, user);
-        }));
-  }
-
-  public ResponseEntity<DomainUser> removeGroups(String userName, List<String> groups) {
-    return ResponseEntity.of(domainUserService.getUser(userName)
-        .flatMap(user -> {
-          final Set<String> groupSet = new HashSet<>(user.getGroups());
-          groupSet.removeAll(groups);
-          user.setGroups(new ArrayList<>(groupSet));
-          return domainUserService.updateUser(userName, true, user);
-        }));
-  }
-  */
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
@@ -152,7 +122,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
       final TwoLetterLanguageCode language,
       @Valid final Password newPassword) {
 
-    final Boolean sendEmail;
+    final boolean sendEmail;
     if (!isAdmin()) {
       sendEmail = Boolean.FALSE;
       if (!isUser(userName)) {
