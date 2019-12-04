@@ -1,6 +1,8 @@
 spring:
   application:
-    name: dc-con
+    name: ${APPLICATION_NAME:dc-con}
+  profiles:
+    active: ${ACTIVE_PROFILES:demo}
   cloud:
     config:
       enabled: ${CONFIG_CLIENT_ENABLED:false}
