@@ -18,6 +18,7 @@ package org.bremersee.dccon.service;
 
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.repository.DomainUserRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,17 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class AuthenticationServiceMock implements AuthenticationService {
+
+  private DomainUserRepository userRepository;
+
+  /**
+   * Instantiates a new Authentication service mock.
+   *
+   * @param userRepository the user repository
+   */
+  public AuthenticationServiceMock(DomainUserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   /**
    * Init.
@@ -45,7 +57,9 @@ public class AuthenticationServiceMock implements AuthenticationService {
 
   @Override
   public boolean passwordMatches(String userName, String clearPassword) {
-    return "true".equalsIgnoreCase(clearPassword);
+    return userRepository.findOne(userName)
+        .map(domainUser -> clearPassword != null && clearPassword.equals(domainUser.getPassword()))
+        .orElse(false);
   }
 
 }
