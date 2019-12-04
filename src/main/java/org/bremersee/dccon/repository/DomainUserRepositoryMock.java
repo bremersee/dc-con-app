@@ -134,6 +134,11 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
   @Override
   public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
 
+    if (repo.size() > 100 && repo.get(domainUser.getUserName().toLowerCase()) == null) {
+      throw ServiceException.internalServerError(
+          "Maximum size of users is exceeded.",
+          "org.bremersee:dc-con-app:9272263e-2074-46f7-ba64-23978981a1d3");
+    }
     if (!StringUtils.hasText(domainUser.getPassword())) {
       domainUser.setPassword(domainRepository.createRandomPassword());
     }
@@ -154,10 +159,11 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
       groups.forEach(groupName -> groupRepository.findOne(groupName).ifPresent(domainGroup -> {
         if (!domainGroup.getMembers().contains(domainUser.getUserName())) {
           domainGroup.getMembers().add(domainUser.getUserName());
+          groupRepository.save(domainGroup);
         }
       }));
     }
-    return DomainUser.builder().userName(domainUser.getUserName()).build();
+    return domainUser.toBuilder().groups(findDomainGroups(domainUser.getUserName())).build();
   }
 
   @Override
@@ -180,8 +186,11 @@ public class DomainUserRepositoryMock implements DomainUserRepository {
     return Optional.ofNullable(repo.remove(userName.toLowerCase()))
         .map(DomainUser::getUserName)
         .map(name -> {
-          groupRepository.findAll(null)
-              .forEach(domainGroup -> domainGroup.getMembers().remove(name));
+          groupRepository.findAll(null).forEach(domainGroup -> {
+            if (domainGroup.getMembers().remove(name)) {
+              groupRepository.save(domainGroup);
+            }
+          });
           return true;
         })
         .orElse(false);

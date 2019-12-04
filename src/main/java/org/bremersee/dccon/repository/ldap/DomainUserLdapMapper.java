@@ -25,6 +25,7 @@ import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.ldap.transcoder.FileTimeToOffsetDateTimeValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.SidValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
@@ -52,6 +53,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
 
   private UserGroupValueTranscoder userGroupValueTranscoder;
 
+  private SidValueTranscoder sidValueTranscoder;
+
   /**
    * Instantiates a new domain user ldap mapper.
    *
@@ -60,6 +63,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
   public DomainUserLdapMapper(DomainControllerProperties properties) {
     super(properties);
     this.userGroupValueTranscoder = new UserGroupValueTranscoder(properties);
+    this.sidValueTranscoder = new SidValueTranscoder(properties);
   }
 
   @Override
@@ -93,6 +97,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
       return;
     }
     mapCommonAttributes(ldapEntry, domainUser);
+    domainUser.setSid(getAttributeValue(ldapEntry, "objectSid", sidValueTranscoder, null));
     domainUser.setUserName(getAttributeValue(ldapEntry,
         "sAMAccountName", STRING_VALUE_TRANSCODER, null));
     domainUser.setFirstName(getAttributeValue(ldapEntry,
@@ -119,7 +124,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
         "unixHomeDirectory", STRING_VALUE_TRANSCODER, null));
     domainUser.setLoginShell(getAttributeValue(ldapEntry,
         "loginShell", STRING_VALUE_TRANSCODER, null));
-
     domainUser.setLastLogon(getAttributeValue(ldapEntry,
         "lastLogon", AD_TIME_VALUE_TRANSCODER, null));
     domainUser.setLogonCount(getAttributeValue(ldapEntry,

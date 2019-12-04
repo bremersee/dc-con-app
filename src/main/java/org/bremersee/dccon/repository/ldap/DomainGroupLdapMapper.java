@@ -26,6 +26,7 @@ import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.ldap.transcoder.GroupMemberValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.SidValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.io.StringValueTranscoder;
@@ -42,6 +43,8 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
 
   private GroupMemberValueTranscoder groupMemberValueTranscoder;
 
+  private SidValueTranscoder sidValueTranscoder;
+
   /**
    * Instantiates a new domain group ldap mapper.
    *
@@ -50,6 +53,7 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
   public DomainGroupLdapMapper(DomainControllerProperties properties) {
     super(properties);
     this.groupMemberValueTranscoder = new GroupMemberValueTranscoder(properties);
+    this.sidValueTranscoder = new SidValueTranscoder(properties);
   }
 
   @Override
@@ -83,6 +87,7 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
       return;
     }
     mapCommonAttributes(ldapEntry, domainGroup);
+    domainGroup.setSid(getAttributeValue(ldapEntry, "objectSid", sidValueTranscoder, null));
     domainGroup.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
     domainGroup
         .setDescription(getAttributeValue(ldapEntry, "description", STRING_VALUE_TRANSCODER, null));

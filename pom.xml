@@ -38,6 +38,7 @@
     </debBaseName>
     <debName>${debBaseName}.deb</debName>
     <debChangesName>${debBaseName}.changes</debChangesName>
+    <dockerfile.image>dc-con-app</dockerfile.image>
   </properties>
 
   <scm>

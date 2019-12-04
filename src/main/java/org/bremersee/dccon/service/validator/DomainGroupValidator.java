@@ -81,7 +81,7 @@ public interface DomainGroupValidator {
     public void doAddValidation(DomainGroup domainGroup) {
       validateNameNotExists(domainGroup.getName(), DomainGroup.class);
       domainGroup.setMembers(domainGroup.getMembers().stream()
-          .filter(name -> getUserRepository().exists(name))
+          .filter(name -> getUserRepository().exists(name) || getGroupRepository().exists(name))
           .collect(Collectors.toList()));
     }
 
@@ -89,7 +89,7 @@ public interface DomainGroupValidator {
     public void doUpdateValidation(String groupName, DomainGroup domainGroup) {
       domainGroup.setName(groupName);
       domainGroup.setMembers(domainGroup.getMembers().stream()
-          .filter(name -> getUserRepository().exists(name))
+          .filter(name -> getUserRepository().exists(name) || getGroupRepository().exists(name))
           .collect(Collectors.toList()));
     }
   }

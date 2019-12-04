@@ -93,6 +93,11 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
 
 
+  private String defaultSidPrefix = "S-1-5-21-";
+
+  private int maxSystemSidSuffix = 999;
+
+
   private String dnsZoneBaseDn;
 
   private String dnsZoneRdn = "dc";

@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.exception.ServiceException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -54,18 +55,17 @@ public class DomainGroupRepositoryMock implements DomainGroupRepository {
   }
 
   @Override
-  public Stream<DomainGroup> findAll(String query) {
-    if (query == null || query.trim().length() == 0) {
-      return repo.values().stream();
-    } else {
-      return repo.values().stream()
-          .filter(domainGroup -> isQueryResult(domainGroup, query.trim().toLowerCase()));
-    }
+  public Stream<DomainGroup> findAll(final String query) {
+    final boolean all = query == null || query.trim().length() == 0;
+    return repo.values().stream()
+        .filter(domainGroup -> all || isQueryResult(domainGroup, query.trim().toLowerCase()))
+        .map(domainGroup -> domainGroup.toBuilder().build());
   }
 
   @Override
   public Optional<DomainGroup> findOne(@NotNull String groupName) {
-    return Optional.ofNullable(repo.get(groupName.toLowerCase()));
+    return Optional.ofNullable(repo.get(groupName.toLowerCase()))
+        .flatMap(domainGroup -> Optional.of(domainGroup.toBuilder().build()));
   }
 
   @Override
@@ -75,11 +75,13 @@ public class DomainGroupRepositoryMock implements DomainGroupRepository {
 
   @Override
   public DomainGroup save(@NotNull DomainGroup domainGroup) {
-    if (repo.size() > 100) {
-      // TODO throw an exception
+    if (repo.size() > 100 && repo.get(domainGroup.getName().toLowerCase()) == null) {
+      throw ServiceException.internalServerError(
+          "Maximum size of groups is exceeded.",
+          "org.bremersee:dc-con-app:318a27fd-b083-460f-ac8e-0c59a490b391");
     }
     repo.put(domainGroup.getName().toLowerCase(), domainGroup);
-    return domainGroup;
+    return domainGroup.toBuilder().build();
   }
 
   @Override
