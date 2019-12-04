@@ -270,7 +270,7 @@
     },
     "members": [
       "klara",
-      "molly",
+      "demo-user",
       "elisabeth"
     ]
   },
@@ -285,7 +285,7 @@
       "systemEntity": false
     },
     "members": [
-      "leopold",
+      "demo-admin",
       "johann"
     ]
   }
