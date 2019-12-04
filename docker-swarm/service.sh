@@ -14,7 +14,7 @@ docker service create \
   --restart-window 60s \
   --update-delay 10s \
   --constraint 'node.role == worker' \
-  -e APPLICATION_NAME='dc-con-app' \
+  -e APPLICATION_NAME='dc-con' \
   -e ACTIVE_PROFILES=$2 \
   -e CONFIG_CLIENT_ENABLED='true' \
   -e CONFIG_URI='http://config-server:8888' \
