@@ -17,6 +17,7 @@
 package org.bremersee.dccon.controller;
 
 import org.bremersee.dccon.api.DomainManagementApi;
+import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.service.DomainService;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,13 @@ public class DomainManagementController implements DomainManagementApi {
   @Override
   public ResponseEntity<PasswordInformation> getPasswordInformation() {
     return ResponseEntity.ok(domainService.getPasswordInformation());
+  }
+
+  @Override
+  public ResponseEntity<Password> getRandomPassword() {
+    return ResponseEntity.ok(Password.builder()
+        .value(domainService.createRandomPassword())
+        .build());
   }
 
 }

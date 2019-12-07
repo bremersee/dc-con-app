@@ -43,4 +43,9 @@ public class DomainServiceImpl implements DomainService {
   public PasswordInformation getPasswordInformation() {
     return domainRepository.getPasswordInformation();
   }
+
+  @Override
+  public String createRandomPassword() {
+    return domainRepository.createRandomPassword();
+  }
 }

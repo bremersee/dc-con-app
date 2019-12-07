@@ -32,4 +32,11 @@ public interface DomainService {
    */
   PasswordInformation getPasswordInformation();
 
+  /**
+   * Create random password.
+   *
+   * @return the random password
+   */
+  String createRandomPassword();
+
 }
