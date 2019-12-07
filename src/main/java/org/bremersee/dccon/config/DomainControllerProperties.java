@@ -251,7 +251,7 @@ public class DomainControllerProperties implements Serializable {
 
     private String templateBasename = "personal-mail-with-credentials";
 
-    private String loginUrl = "http://localhost:4200";
+    private String loginUrl = "http://localhost:4200/change-password";
 
     private List<MailInlineAttachment> inlineAttachments = new ArrayList<>();
   }

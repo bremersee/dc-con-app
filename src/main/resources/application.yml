@@ -24,7 +24,7 @@ bremersee:
     dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@example.org}
-      login-url: http://localhost:4200
+      login-url: http://localhost:4200/change-password
   thymeleaf:
     resolver-start-index: 2
     resolvers:

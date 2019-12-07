@@ -67,7 +67,6 @@ pipeline {
         sh 'mvn -P gh-pages-site site site:stage scm-publish:publish-scm'
       }
     }
-
     stage('Push docker image') {
       agent {
         label 'maven'
@@ -82,6 +81,7 @@ pipeline {
         sh '''
           mvn -DskipTests -Ddockerfile.skip=false package dockerfile:push
           mvn -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=latest package dockerfile:push
+          docker system prune -a -f
         '''
       }
     }
