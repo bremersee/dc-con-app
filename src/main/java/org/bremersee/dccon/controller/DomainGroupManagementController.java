@@ -51,75 +51,45 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
     this.domainUserService = domainUserService;
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DomainGroup>> getGroups(String sort, String query) {
     return ResponseEntity.ok(domainGroupService.getGroups(sort, query));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainGroup> addGroup(
       @Valid DomainGroup group) {
     return ResponseEntity.ok(domainGroupService.addGroup(group));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<DomainGroup> getGroup(String groupName) {
     return ResponseEntity.of(domainGroupService.getGroup(groupName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainGroup> updateGroup(String groupName, @Valid DomainGroup domainGroup) {
     return ResponseEntity.of(domainGroupService.updateGroup(groupName, domainGroup));
   }
 
-  /*
-  public ResponseEntity<DomainGroup> setMembers(String groupName, List<String> userNames) {
-    return ResponseEntity.of(domainGroupService.getGroup(groupName)
-        .flatMap(group -> {
-          group.setMembers(userNames != null ? new ArrayList<>(userNames) : new ArrayList<>());
-          return domainGroupService.updateGroup(groupName, group);
-        }));
-  }
-
-  public ResponseEntity<DomainGroup> addMembers(String groupName, List<String> userNames) {
-    return ResponseEntity.of(domainGroupService.getGroup(groupName)
-        .flatMap(group -> {
-          Set<String> members = new HashSet<>(group.getMembers());
-          members.addAll(userNames);
-          group.setMembers(new ArrayList<>(members));
-          return domainGroupService.updateGroup(groupName, group);
-        }));
-  }
-
-  public ResponseEntity<DomainGroup> removeMembers(String groupName, List<String> userNames) {
-    return ResponseEntity.of(domainGroupService.getGroup(groupName)
-        .flatMap(group -> {
-          Set<String> members = new HashSet<>(group.getMembers());
-          members.removeAll(userNames);
-          group.setMembers(new ArrayList<>(members));
-          return domainGroupService.updateGroup(groupName, group);
-        }));
-  }
-  */
-
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Boolean> groupExists(String groupName) {
     return ResponseEntity.ok(domainGroupService.groupExists(groupName));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Boolean> isGroupNameInUse(String groupName) {
     return ResponseEntity.ok(domainUserService.userExists(groupName)
         || domainGroupService.groupExists(groupName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Boolean> deleteGroup(String groupName) {
     return ResponseEntity.ok(domainGroupService.deleteGroup(groupName));

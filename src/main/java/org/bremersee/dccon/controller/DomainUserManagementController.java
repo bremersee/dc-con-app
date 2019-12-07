@@ -68,13 +68,13 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     this.authenticationService = authenticationService;
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DomainUser>> getUsers(final String sort, String query) {
     return ResponseEntity.ok(domainUserService.getUsers(sort, query));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> addUser(
       final Boolean email,
@@ -83,14 +83,14 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     return ResponseEntity.ok(domainUserService.addUser(domainUser, email, language));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<DomainUser> getUser(
       final String userName) {
     return ResponseEntity.of(domainUserService.getUser(userName));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<byte[]> getUserAvatar(
       final String userName,
@@ -105,7 +105,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
         .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainUser> updateUser(
       final String userName,
@@ -114,7 +114,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     return ResponseEntity.of(domainUserService.updateUser(userName, updateGroups, domainUser));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Void> updateUserPassword(
       final String userName,
@@ -139,20 +139,20 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Boolean> userExists(final String userName) {
     return ResponseEntity.ok(domainUserService.userExists(userName));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Boolean> isUserNameInUse(String userName) {
     return ResponseEntity.ok(domainUserService.userExists(userName)
         || domainGroupService.groupExists(userName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Boolean> deleteUser(final String userName) {
     return ResponseEntity.ok(domainUserService.deleteUser(userName));
@@ -165,7 +165,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     }
     return authentication.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
-        .anyMatch(AuthorityConstants.ADMIN_ROLE_NAME::equalsIgnoreCase);
+        .anyMatch(roleName -> AuthorityConstants.ADMIN_ROLE_NAME.equalsIgnoreCase(roleName)
+            || "ROLE_DC_CON_ADMIN".equalsIgnoreCase(roleName));
   }
 
   private boolean isUser(String userName) {

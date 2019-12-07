@@ -49,7 +49,7 @@ public class NameServerManagementController implements NameServerManagementApi {
     this.nameServerService = nameServerService;
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsNode>> query(
       final String query,
@@ -57,7 +57,7 @@ public class NameServerManagementController implements NameServerManagementApi {
     return ResponseEntity.ok(nameServerService.query(query, unknownFilter));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DhcpLease>> getDhcpLeases(
       final Boolean all,
@@ -65,27 +65,27 @@ public class NameServerManagementController implements NameServerManagementApi {
     return ResponseEntity.ok(nameServerService.getDhcpLeases(all, sort));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsZone>> getDnsZones() {
     return ResponseEntity.ok(nameServerService.getDnsZones());
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DnsZone> addDnsZone(
       @Valid final DnsZone dnsZone) {
     return ResponseEntity.ok(nameServerService.addDnsZone(dnsZone));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Boolean> deleteDnsZone(
       final String zoneName) {
     return ResponseEntity.ok(nameServerService.deleteDnsZone(zoneName));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<List<DnsNode>> getDnsNodes(
       final String zoneName,
@@ -94,7 +94,7 @@ public class NameServerManagementController implements NameServerManagementApi {
     return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter, query));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DnsNode> saveDnsNode(
       String zoneName,
@@ -104,7 +104,7 @@ public class NameServerManagementController implements NameServerManagementApi {
         .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).build());
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<DnsNode> getDnsNode(
       String zoneName,
@@ -113,13 +113,13 @@ public class NameServerManagementController implements NameServerManagementApi {
     return ResponseEntity.of(nameServerService.getDnsNode(zoneName, nodeName, unknownFilter));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Boolean> deleteDnsNode(String zoneName, String nodeName) {
     return ResponseEntity.ok(nameServerService.deleteDnsNode(zoneName, nodeName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Void> deleteAllDnsNodes(String zoneName, List<String> nodeNames) {
     nameServerService.deleteAllDnsNodes(zoneName, nodeNames);

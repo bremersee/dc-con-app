@@ -67,6 +67,7 @@ public class SecurityProperties {
     if (roleSet.isEmpty()) {
       roleSet.add(AuthorityConstants.ACTUATOR_ROLE_NAME);
       roleSet.add(AuthorityConstants.ADMIN_ROLE_NAME);
+      roleSet.add("ROLE_DC_CON_ADMIN");
     }
     final StringBuilder sb = new StringBuilder();
     roleSet.forEach(
