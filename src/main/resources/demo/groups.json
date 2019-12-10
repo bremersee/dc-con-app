@@ -1,7 +1,7 @@
 [
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Enterprise Read-only Domain Controllers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Enterprise Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Enterprise Read-only Domain Controllers",
@@ -14,7 +14,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Domain Admins,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Domain Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Domain Admins",
@@ -29,7 +29,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Domain Users,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Domain Users,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Domain Users",
@@ -42,7 +42,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Domain Guests,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Domain Guests,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Domain Guests",
@@ -55,7 +55,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Domain Computers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Domain Computers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Domain Computers",
@@ -68,7 +68,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Domain Controllers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Domain Controllers",
@@ -81,7 +81,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Cert Publishers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Cert Publishers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Cert Publishers",
@@ -94,7 +94,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Schema Admins,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Schema Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Schema Admins",
@@ -109,7 +109,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Enterprise Admins,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Enterprise Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Enterprise Admins",
@@ -124,7 +124,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Group Policy Creator Owners,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Group Policy Creator Owners,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Group Policy Creator Owners",
@@ -139,7 +139,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Read-only Domain Controllers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Read-only Domain Controllers",
@@ -152,7 +152,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=RAS and IAS Servers,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=RAS and IAS Servers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "RAS and IAS Servers",
@@ -165,7 +165,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Allowed RODC Password Replication Group,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Allowed RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Allowed RODC Password Replication Group",
@@ -178,7 +178,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=Denied RODC Password Replication Group,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=Denied RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
     "name": "Denied RODC Password Replication Group",
@@ -200,7 +200,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=DnsAdmins,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=DnsAdmins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:33Z",
     "modified": "2018-05-20T15:53:02Z",
     "name": "DnsAdmins",
@@ -215,7 +215,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=DnsUpdateProxy,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=DnsUpdateProxy,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:33Z",
     "modified": "2018-05-20T15:00:33Z",
     "name": "DnsUpdateProxy",
@@ -228,7 +228,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=The Blooms,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=The Blooms,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:44Z",
     "modified": "2019-10-06T09:47:05Z",
     "name": "The Blooms",
@@ -244,7 +244,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=The Buddenbrooks,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=The Buddenbrooks,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:48Z",
     "modified": "2018-09-24T17:27:48Z",
     "name": "The Buddenbrooks",
@@ -260,7 +260,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=women,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=women,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:52Z",
     "modified": "2018-09-24T17:27:49Z",
     "name": "women",
@@ -276,7 +276,7 @@
   },
   {
     "_type": "DomainGroup",
-    "distinguishedName": "CN=men,CN=Users,DC=example,DC=org",
+    "distinguishedName": "CN=men,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:59Z",
     "modified": "2019-02-12T15:56:35Z",
     "name": "men",

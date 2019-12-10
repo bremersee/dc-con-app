@@ -67,8 +67,6 @@ public class DomainControllerProperties implements Serializable {
 
   private String groupRdn = "cn";
 
-  // private String groupMemberAttr = "member";
-
   private String groupFindAllFilter = "(objectClass=group)";
 
   private SearchScope groupFindAllSearchScope = SearchScope.ONELEVEL;
@@ -81,8 +79,6 @@ public class DomainControllerProperties implements Serializable {
   private String userBaseDn;
 
   private String userRdn = "cn";
-
-  // private String userGroupAttr = "memberOf";
 
   private String userFindAllFilter = "(objectClass=user)";
 
@@ -111,7 +107,7 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;
 
 
-  private String defaultZone = "example.org";
+  private String defaultZone = "samdom.example.org";
 
   private String dnsNodeBaseDn;
 
@@ -152,7 +148,7 @@ public class DomainControllerProperties implements Serializable {
   private String dhcpLeaseListExecDir = "/tmp";
 
 
-  private String nameServerHost = "ns.example.org";
+  private String nameServerHost = "ns.samdom.example.org";
 
   private String reverseZoneSuffixIp4 = ".in-addr.arpa";
 

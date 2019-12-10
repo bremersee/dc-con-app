@@ -16,11 +16,17 @@
 
 package org.bremersee.dccon.repository;
 
+import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -34,6 +40,24 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class DnsZoneRepositoryMock implements DnsZoneRepository {
+
+  private static final String DISTINGUISHED_NAME_TEMPLATE = "DC=%s,"
+      + "CN=MicrosoftDNS,DC=DomainDnsZones,DC=samdom,DC=example,DC=org";
+
+  private final Map<String, DnsZone> repo = new ConcurrentHashMap<>();
+
+  @Getter(AccessLevel.PACKAGE)
+  private final DomainControllerProperties properties;
+
+  /**
+   * Instantiates a new dns zone repository mock.
+   *
+   * @param properties the properties
+   */
+  public DnsZoneRepositoryMock(
+      DomainControllerProperties properties) {
+    this.properties = properties;
+  }
 
   /**
    * Init.
@@ -49,31 +73,45 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
 
   @Override
   public boolean isDnsReverseZone(String dnsZoneName) {
-    return false;
+    return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
+        .anyMatch(suffix -> dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));
   }
 
   @Override
   public Stream<DnsZone> findAll() {
-    return Stream.empty();
+    return repo.values().stream()
+        .map(this::build);
   }
 
   @Override
   public boolean exists(@NotNull String zoneName) {
-    return false;
+    return repo.containsKey(zoneName.toLowerCase());
   }
 
   @Override
   public Optional<DnsZone> findOne(@NotNull String zoneName) {
-    return Optional.empty();
+    return Optional.ofNullable(build(repo.get(zoneName.toLowerCase())));
   }
 
   @Override
   public DnsZone save(@NotNull String zoneName) {
-    return DnsZone.builder().name(zoneName).build();
+    return build(repo.computeIfAbsent(zoneName.toLowerCase(), key -> DnsZone.builder()
+        .created(OffsetDateTime.now())
+        .modified(OffsetDateTime.now())
+        .name(zoneName)
+        .build()));
   }
 
   @Override
   public boolean delete(@NotNull String zoneName) {
-    return false;
+    return repo.remove(zoneName.toLowerCase()) != null;
   }
+
+  private DnsZone build(DnsZone dnsZone) {
+    return dnsZone == null ? null : dnsZone.toBuilder()
+        .defaultZone(dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()))
+        .distinguishedName(String.format(DISTINGUISHED_NAME_TEMPLATE, dnsZone.getName()))
+        .build();
+  }
+
 }
