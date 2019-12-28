@@ -17,7 +17,7 @@ docker service create \
   -e APPLICATION_NAME='dc-con' \
   -e ACTIVE_PROFILES=$2 \
   -e CONFIG_CLIENT_ENABLED='true' \
-  -e CONFIG_URI='http://config-server:8888' \
+  -e CONFIG_URI='https://config.dev.bremersee.org' \
   -e CONFIG_USER='configclient' \
   -e CONFIG_PASSWORD_FILE='/run/secrets/config-server-client-user-password' \
   -e CONFIG_CLIENT_FAIL_FAST='true' \
