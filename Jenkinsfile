@@ -6,28 +6,28 @@ pipeline {
     DEV_TAG='latest'
     PROD_TAG='release'
   }
-  tools {
-    jdk 'jdk8'
-    maven 'm3'
-  }
   stages {
-    stage('Tools') {
-      steps {
-        sh 'java -version'
-        sh 'mvn -B --version'
-      }
-    }
     stage('Test') {
       agent {
         label 'maven'
       }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
       steps {
+        sh 'java -version'
+        sh 'mvn -B --version'
         sh 'mvn -B clean test'
       }
     }
     stage('Deploy snapshot') {
       agent {
         label 'maven'
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
       }
       when {
         branch 'develop'
@@ -43,6 +43,10 @@ pipeline {
       when {
         branch 'master'
       }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
       steps {
         sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
@@ -56,6 +60,10 @@ pipeline {
           branch 'develop'
           branch 'master'
         }
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
       }
       steps {
         sh '''
@@ -92,6 +100,10 @@ pipeline {
       when {
         branch 'develop'
       }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
       steps {
         sh 'mvn -B site-deploy'
       }
@@ -102,6 +114,10 @@ pipeline {
       }
       when {
         branch 'master'
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
       }
       steps {
         sh 'mvn -B -P gh-pages-site site site:stage scm-publish:publish-scm'
