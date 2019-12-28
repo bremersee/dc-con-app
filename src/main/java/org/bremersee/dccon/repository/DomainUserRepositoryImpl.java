@@ -101,6 +101,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    * @param domainRepository      the domain repository
    * @param domainGroupRepository the domain group repository
    */
+  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
   public DomainUserRepositoryImpl(
       final DomainControllerProperties properties,
       final LdaptiveTemplate ldapTemplate,
@@ -380,7 +381,11 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
                   : HttpStatus.INTERNAL_SERVER_ERROR;
               errorCode = "org.bremersee.dc-con-app:a70939fb-2c94-412f-80c0-00a7d5dcf4a6";
             }
-            return new LdaptiveException(httpStatus, errorCode, ldapException);
+            return LdaptiveException.builder()
+                .httpStatus(httpStatus.value())
+                .errorCode(errorCode)
+                .cause(ldapException)
+                .build();
           }
         })
         .modify(modifyRequest);

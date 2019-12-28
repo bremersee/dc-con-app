@@ -49,10 +49,14 @@ public class DemoController {
    *
    * @return the response entity
    */
-  @GetMapping(path = "/api/error", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @GetMapping(path = "/api/error", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> throwError() {
     final RuntimeException cause = new RuntimeException("Example error message");
-    throw new ServiceException(HttpStatus.I_AM_A_TEAPOT, "teapot", cause);
+    throw ServiceException.builder()
+        .httpStatus(HttpStatus.I_AM_A_TEAPOT.value())
+        .reason("teapot")
+        .cause(cause)
+        .build();
   }
 
   /**
@@ -60,7 +64,7 @@ public class DemoController {
    *
    * @return the response entity
    */
-  @PostMapping(path = "/api/reset", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @PostMapping(path = "/api/reset", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> resetData() {
     domainUserService.resetData();
     return ResponseEntity.ok().build();

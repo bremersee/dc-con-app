@@ -6,13 +6,15 @@ pipeline {
     DEV_TAG='latest'
     PROD_TAG='release'
   }
+  tools {
+    jdk 'jdk8'
+    maven 'm3'
+  }
   stages {
-    stage('Build') {
-      agent {
-        label 'maven'
-      }
+    stage('Tools') {
       steps {
-        sh 'mvn clean compile'
+        sh 'java -version'
+        sh 'mvn -B --version'
       }
     }
     stage('Test') {
@@ -20,7 +22,7 @@ pipeline {
         label 'maven'
       }
       steps {
-        sh 'mvn test'
+        sh 'mvn -B clean test'
       }
     }
     stage('Deploy snapshot') {
@@ -31,7 +33,7 @@ pipeline {
         branch 'develop'
       }
       steps {
-        sh 'mvn -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
+        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
       }
     }
     stage('Deploy release') {
@@ -42,29 +44,7 @@ pipeline {
         branch 'master'
       }
       steps {
-        sh 'mvn -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
-      }
-    }
-    stage('Deploy snapshot site') {
-      agent {
-        label 'maven'
-      }
-      when {
-        branch 'develop'
-      }
-      steps {
-        sh 'mvn site-deploy'
-      }
-    }
-    stage('Deploy release site') {
-      agent {
-        label 'maven'
-      }
-      when {
-        branch 'master'
-      }
-      steps {
-        sh 'mvn -P gh-pages-site site site:stage scm-publish:publish-scm'
+        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
     }
     stage('Push docker image') {
@@ -79,8 +59,8 @@ pipeline {
       }
       steps {
         sh '''
-          mvn -DskipTests -Ddockerfile.skip=false package dockerfile:push
-          mvn -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=latest package dockerfile:push
+          mvn -B -DskipTests -Ddockerfile.skip=false package dockerfile:push
+          mvn -B -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=latest package dockerfile:push
           docker system prune -a -f
         '''
       }
@@ -103,6 +83,28 @@ pipeline {
             docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "default,demo"
           fi
         '''
+      }
+    }
+    stage('Deploy snapshot site') {
+      agent {
+        label 'maven'
+      }
+      when {
+        branch 'develop'
+      }
+      steps {
+        sh 'mvn -B site-deploy'
+      }
+    }
+    stage('Deploy release site') {
+      agent {
+        label 'maven'
+      }
+      when {
+        branch 'master'
+      }
+      steps {
+        sh 'mvn -B -P gh-pages-site site site:stage scm-publish:publish-scm'
       }
     }
   }

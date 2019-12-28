@@ -18,6 +18,7 @@ package org.bremersee.dccon.config;
 
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.security.authentication.AuthenticationProperties;
 import org.bremersee.security.authentication.KeycloakJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,19 +105,19 @@ public class SecurityConfiguration {
   @Profile("basic-auth")
   @Order(51)
   @Configuration
-  @EnableConfigurationProperties(SecurityProperties.class)
   @Slf4j
+  @EnableConfigurationProperties(AuthenticationProperties.class)
   static class ResourceServerBasicAuth extends WebSecurityConfigurerAdapter {
 
-    private final SecurityProperties securityProperties;
+    private final AuthenticationProperties properties;
 
     /**
      * Instantiates a new resource server for basic auth.
      *
-     * @param securityProperties the security properties
+     * @param properties the authentication properties
      */
-    public ResourceServerBasicAuth(SecurityProperties securityProperties) {
-      this.securityProperties = securityProperties;
+    public ResourceServerBasicAuth(AuthenticationProperties properties) {
+      this.properties = properties;
     }
 
     @Override
@@ -141,7 +142,7 @@ public class SecurityConfiguration {
     @Bean
     @Override
     public UserDetailsService userDetailsService() {
-      return new InMemoryUserDetailsManager(securityProperties.buildBasicAuthUserDetails());
+      return new InMemoryUserDetailsManager(properties.buildBasicAuthUserDetails());
     }
   }
 
@@ -151,11 +152,11 @@ public class SecurityConfiguration {
   @Profile("!basic-auth")
   @Order(52)
   @Configuration
-  @EnableConfigurationProperties(SecurityProperties.class)
   @Slf4j
+  @EnableConfigurationProperties(AuthenticationProperties.class)
   static class Actuator extends WebSecurityConfigurerAdapter {
 
-    private final SecurityProperties properties;
+    private final AuthenticationProperties properties;
 
     private final PasswordFlowAuthenticationManager passwordFlowAuthenticationManager;
 
@@ -167,7 +168,7 @@ public class SecurityConfiguration {
      */
     @Autowired
     public Actuator(
-        final SecurityProperties properties,
+        final AuthenticationProperties properties,
         final PasswordFlowAuthenticationManager passwordFlowAuthenticationManager) {
       this.properties = properties;
       this.passwordFlowAuthenticationManager = passwordFlowAuthenticationManager;
@@ -189,7 +190,7 @@ public class SecurityConfiguration {
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
           .anyRequest()
-          .access(properties.buildAccess())
+          .access(properties.getActuator().buildAccessExpression())
           .and()
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -202,11 +203,11 @@ public class SecurityConfiguration {
   @Profile("basic-auth")
   @Order(52)
   @Configuration
-  @EnableConfigurationProperties(SecurityProperties.class)
   @Slf4j
+  @EnableConfigurationProperties(AuthenticationProperties.class)
   static class ActuatorBasicAuth extends WebSecurityConfigurerAdapter {
 
-    private final SecurityProperties properties;
+    private final AuthenticationProperties properties;
 
     /**
      * Instantiates a new actuator security configuration for basic auth.
@@ -214,7 +215,7 @@ public class SecurityConfiguration {
      * @param properties the properties
      */
     @Autowired
-    public ActuatorBasicAuth(final SecurityProperties properties) {
+    public ActuatorBasicAuth(final AuthenticationProperties properties) {
       this.properties = properties;
     }
 
@@ -233,7 +234,7 @@ public class SecurityConfiguration {
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
           .anyRequest()
-          .access(properties.buildAccess())
+          .access(properties.getActuator().buildAccessExpression())
           .and()
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

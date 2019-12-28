@@ -1,19 +1,21 @@
 bremersee:
-  access:
-    ip-addresses:
-      - "127.0.0.1/32"
-      - "::1"
+  ldaptive:
+    enabled: false
   security:
     cors:
       allow-all: true
-    oauth2:
-      password-flow:
-        client-id: omnia
-        client-secret: changeit
-        token-endpoint: https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token
+    authentication:
+      enable-keycloak-support: false
   exception-mapping:
     api-paths:
       - /api/**
+    default-exception-mapping-config:
+      include-stack-trace: true
+      include-cause: true
+      include-application-name: true
+      include-exception-class-name: true
+      include-handler: true
+      include-path: true
   domain-controller:
     company-name: example.org
     company-url: http://example.org
@@ -26,7 +28,6 @@ bremersee:
       sender: ${spring.mail.username:no-reply@example.org}
       login-url: http://localhost:4200/change-password
   thymeleaf:
-    resolver-start-index: 2
     resolvers:
       - prefix: "classpath:mail/"
         suffix: ".html"
@@ -37,20 +38,12 @@ bremersee:
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:false}
-#    register-with-eureka: true
-#    prefer-same-zone-eureka: true
-#    service-url:
-#      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
-#  instance:
-#    health-check-url-path: /actuator/health
-#    home-page-url-path: /actuator/info
 
 logging:
   level:
     ROOT: info
     org.bremersee: debug
     org.springframework: info
-#    org.springframework.security.oauth2: debug
 
 management:
   endpoints:
@@ -61,14 +54,16 @@ management:
         allowed-headers: "*"
         allowed-methods: "*"
         allowed-origins: "*"
-#  health:
-#    mail:
-#      enabled: false
 
 server:
   port: ${SERVER_PORT:8090}
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
   jackson:
     date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
     default-property-inclusion: non_null
@@ -84,14 +79,59 @@ spring:
   zipkin:
     enabled: ${ZIPKIN_ENABLED:false}
     base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
   cache:
     jcache:
       config: classpath:ehcache.xml
+
+---
+
+spring:
+  profiles: basic-auth
+
+bremersee:
+  security:
+    authentication:
+      enable-keycloak-support: false
+      basic-auth-users:
+        - name: "admin"
+          password: "admin"
+          authorities:
+            - "ROLE_LOCAL_USER"
+            - "ROLE_ADMIN"
+        - name: "actuator"
+          password: "actuator"
+          authorities:
+            - "ROLE_ACTUATOR"
+        - name: "user"
+          password: "user"
+          authorities:
+            - "ROLE_LOCAL_USER"
+
+---
+
+spring:
+  profiles: test
+
+bremersee:
+  security:
+    authentication:
+      actuator:
+        ip-addresses:
+          - "8.8.8.0"
+      basic-auth-users:
+        - name: "admin"
+          password: "admin"
+          authorities:
+            - "ROLE_LOCAL_USER"
+            - "ROLE_ADMIN"
+        - name: "actuator"
+          password: "actuator"
+          authorities:
+            - "ROLE_ACTUATOR"
+        - name: "user"
+          password: "user"
+          authorities:
+            - "ROLE_LOCAL_USER"
 
 ---
 
@@ -100,6 +140,7 @@ spring:
 
 bremersee:
   ldaptive:
+    enabled: true
     ldap-url: ${LDAP_URL:ldaps://example.org:636}
     use-ssl: ${LDAP_SSL:true}
     use-start-tls: ${LDAP_START_TLS:false}
@@ -135,9 +176,9 @@ spring:
   profiles: debian9
 
 logging:
-  path: /var/log/dc-con
   file:
     max-history: 25
+    path: /var/log/dc-con
 
 server:
   tomcat:
@@ -145,48 +186,3 @@ server:
       enabled: true
       directory: /var/log/dc-con
 
----
-
-spring:
-  profiles: basic-auth
-
----
-
-spring:
-  profiles: test
-
-bremersee:
-  access:
-    ip-addresses:
-      - "8.8.8.0"
-    basic-auth-users:
-      - name: "admin"
-        password: "admin"
-        authorities:
-          - "ROLE_LOCAL_USER"
-          - "ROLE_ADMIN"
-      - name: "actuator"
-        password: "actuator"
-        authorities:
-          - "ROLE_ACTUATOR"
-      - name: "user"
-        password: "user"
-        authorities:
-          - "ROLE_LOCAL_USER"
-
----
-
-spring:
-  profiles: ide
-
-bremersee:
-  access:
-    ip-addresses:
-      - "8.8.8.0"
-
-logging:
-  level:
-    ROOT: info
-    org.bremersee: debug
-    org.springframework: info
-    org.springframework.security: debug

@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>1.0.10</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>2.0.1-SNAPSHOT</version>
+  <version>2.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -25,8 +25,8 @@
 
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>2.0.1-SNAPSHOT</dc-con-api-spring.version>
-    <common-base.version>1.3.2-SNAPSHOT</common-base.version>
+    <dc-con-api-spring.version>2.1.0-SNAPSHOT</dc-con-api-spring.version>
+    <common-base.version>1.4.0-SNAPSHOT</common-base.version>
     <comparator.version>2.0.6</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
@@ -77,14 +77,30 @@
       <artifactId>dc-con-api-spring</artifactId>
       <version>${dc-con-api-spring.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base-servlet</artifactId>
+      <artifactId>common-base-web-starter</artifactId>
       <version>${common-base.version}</version>
     </dependency>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base-ldaptive</artifactId>
+      <artifactId>common-base-webmvc-starter</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-security-starter</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-ldaptive-starter</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-thymeleaf-starter</artifactId>
       <version>${common-base.version}</version>
     </dependency>
     <dependency>
@@ -98,20 +114,7 @@
       <artifactId>commons-io</artifactId>
       <version>${commons-io.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.ldaptive</groupId>
-      <artifactId>ldaptive</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.ldaptive</groupId>
-      <artifactId>ldaptive-beans</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.swagger</groupId>
       <artifactId>swagger-annotations</artifactId>
@@ -150,31 +153,6 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-oauth2-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-oauth2-resource-server</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-oauth2-jose</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.jayway.jsonpath</groupId>
-      <artifactId>json-path</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.thymeleaf</groupId>
-      <artifactId>thymeleaf</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.thymeleaf</groupId>
-      <artifactId>thymeleaf-spring5</artifactId>
     </dependency>
 
     <dependency>
