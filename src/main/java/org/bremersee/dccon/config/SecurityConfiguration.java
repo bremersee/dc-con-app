@@ -19,7 +19,7 @@ package org.bremersee.dccon.config;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.security.authentication.AuthenticationProperties;
-import org.bremersee.security.authentication.KeycloakJwtConverter;
+import org.bremersee.security.authentication.JsonPathJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
@@ -60,17 +60,17 @@ public class SecurityConfiguration {
   @Slf4j
   static class ResourceServer extends WebSecurityConfigurerAdapter {
 
-    private KeycloakJwtConverter keycloakJwtConverter;
+    private JsonPathJwtConverter jwtConverter;
 
     /**
      * Instantiates a new resource server security configuration.
      *
-     * @param keycloakJwtConverter the keycloak jwt converter
+     * @param jwtConverter the jwt converter
      */
     @Autowired
     public ResourceServer(
-        KeycloakJwtConverter keycloakJwtConverter) {
-      this.keycloakJwtConverter = keycloakJwtConverter;
+        JsonPathJwtConverter jwtConverter) {
+      this.jwtConverter = jwtConverter;
     }
 
     /**
@@ -78,7 +78,7 @@ public class SecurityConfiguration {
      */
     @PostConstruct
     public void init() {
-      log.info("msg=[Using keycloak authentication.]");
+      log.info("msg=[Using jwt authentication.]");
     }
 
     @Override
@@ -95,7 +95,7 @@ public class SecurityConfiguration {
       http
           .oauth2ResourceServer()
           .jwt()
-          .jwtAuthenticationConverter(keycloakJwtConverter);
+          .jwtAuthenticationConverter(jwtConverter);
     }
   }
 

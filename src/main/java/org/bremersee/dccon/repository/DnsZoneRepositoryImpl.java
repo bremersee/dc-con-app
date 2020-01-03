@@ -100,8 +100,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
   @Override
   public boolean isDnsReverseZone(final String dnsZoneName) {
-    return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
-        .anyMatch(suffix -> dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+    return getProperties().isReverseZone(dnsZoneName);
   }
 
   @Override

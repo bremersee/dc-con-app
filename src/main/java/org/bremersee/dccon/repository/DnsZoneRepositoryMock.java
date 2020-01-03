@@ -73,8 +73,7 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
 
   @Override
   public boolean isDnsReverseZone(String dnsZoneName) {
-    return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
-        .anyMatch(suffix -> dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+    return getProperties().isReverseZone(dnsZoneName);
   }
 
   @Override
@@ -110,6 +109,7 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
   private DnsZone build(DnsZone dnsZone) {
     return dnsZone == null ? null : dnsZone.toBuilder()
         .defaultZone(dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()))
+        .reverseZone(getProperties().isReverseZone(dnsZone.getName()))
         .distinguishedName(String.format(DISTINGUISHED_NAME_TEMPLATE, dnsZone.getName()))
         .build();
   }

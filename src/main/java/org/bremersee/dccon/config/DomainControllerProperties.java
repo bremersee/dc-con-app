@@ -201,6 +201,17 @@ public class DomainControllerProperties implements Serializable {
   }
 
   /**
+   * Determines whether the given zone is a reverse zone or not.
+   *
+   * @param zoneName the zone name
+   * @return {@code true} if the zone is a reverse zone, otherwise {@code false}
+   */
+  public boolean isReverseZone(final String zoneName) {
+    return zoneName != null && getReverseZoneSuffixList().stream()
+        .anyMatch(suffix -> zoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+  }
+
+  /**
    * Build dns node base dn string.
    *
    * @param zoneName the zone name

@@ -27,7 +27,6 @@ import org.bremersee.dccon.service.AuthenticationService;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.security.authentication.KeycloakJwtAuthenticationToken;
 import org.bremersee.security.core.AuthorityConstants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -174,13 +173,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     if (authentication == null || userName == null) {
       return false;
     }
-    final String principalName;
-    if (authentication instanceof KeycloakJwtAuthenticationToken) {
-      principalName = ((KeycloakJwtAuthenticationToken) authentication).getPreferredName();
-    } else {
-      principalName = authentication.getName();
-    }
-    return userName.equalsIgnoreCase(principalName);
+    return userName.equalsIgnoreCase(authentication.getName());
   }
 
 }

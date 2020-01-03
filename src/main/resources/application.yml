@@ -5,7 +5,11 @@ bremersee:
     cors:
       allow-all: true
     authentication:
-      enable-keycloak-support: false
+      enable-jwt-support: ${JWT_SUPPORT:false}
+      password-flow:
+        client-id: ${OPENID_CLIENT_ID:omnia}
+        client-secret: ${OPENID_CLIENT_SECRET:changeit}
+        token-endpoint: ${OPENID_TOKEN_ENDPOINT:https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token}
   exception-mapping:
     api-paths:
       - /api/**
@@ -35,29 +39,6 @@ bremersee:
           - "*"
         template-mode: HTML
 
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED:false}
-
-logging:
-  level:
-    ROOT: info
-    org.bremersee: debug
-    org.springframework: info
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-      cors:
-        allowed-headers: "*"
-        allowed-methods: "*"
-        allowed-origins: "*"
-
-server:
-  port: ${SERVER_PORT:8090}
-
 spring:
   security:
     oauth2:
@@ -83,6 +64,29 @@ spring:
     jcache:
       config: classpath:ehcache.xml
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      cors:
+        allowed-headers: "*"
+        allowed-methods: "*"
+        allowed-origins: "*"
+
+server:
+  port: ${SERVER_PORT:8090}
+
+logging:
+  level:
+    ROOT: info
+    org.bremersee: debug
+    org.springframework: info
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:false}
+
 ---
 
 spring:
@@ -91,7 +95,7 @@ spring:
 bremersee:
   security:
     authentication:
-      enable-keycloak-support: false
+      enable-jwt-support: false
       basic-auth-users:
         - name: "admin"
           password: "admin"
