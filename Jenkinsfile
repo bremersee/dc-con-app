@@ -3,8 +3,8 @@ pipeline {
   environment {
     SERVICE_NAME='dc-con-app'
     DOCKER_IMAGE='bremersee/dc-con-app'
-    DEV_TAG='latest'
-    PROD_TAG='release'
+    DEV_TAG='snapshot'
+    PROD_TAG='latest'
   }
   stages {
     stage('Test') {
@@ -15,10 +15,32 @@ pipeline {
         jdk 'jdk8'
         maven 'm3'
       }
+      when {
+        not {
+          branch 'feature/*'
+        }
+      }
       steps {
         sh 'java -version'
         sh 'mvn -B --version'
         sh 'mvn -B clean test'
+      }
+    }
+    stage('Test feature') {
+      agent {
+        label 'maven'
+      }
+      when {
+        branch 'feature/*'
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
+      steps {
+        sh 'java -version'
+        sh 'mvn -B --version'
+        sh 'mvn -B -P feature,allow-features clean test'
       }
     }
     stage('Deploy snapshot') {
@@ -51,15 +73,31 @@ pipeline {
         sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
     }
-    stage('Push docker image') {
+    stage('Push snapshot') {
       agent {
         label 'maven'
       }
       when {
-        anyOf {
-          branch 'develop'
-          branch 'master'
-        }
+        branch 'develop'
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
+      steps {
+        sh '''
+          mvn -B -DskipTests -Ddockerfile.skip=false package dockerfile:push
+          mvn -B -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=snapshot package dockerfile:push
+          docker system prune -a -f
+        '''
+      }
+    }
+    stage('Push release') {
+      agent {
+        label 'maven'
+      }
+      when {
+        branch 'master'
       }
       tools {
         jdk 'jdk8'
