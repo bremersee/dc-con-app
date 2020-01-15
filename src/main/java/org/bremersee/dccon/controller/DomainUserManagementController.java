@@ -16,7 +16,10 @@
 
 package org.bremersee.dccon.controller;
 
+import static org.bremersee.security.core.AuthorityConstants.ADMIN_ROLE_NAME;
+
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.api.DomainUserManagementApi;
@@ -27,7 +30,6 @@ import org.bremersee.dccon.service.AuthenticationService;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.security.core.AuthorityConstants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,8 +56,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   /**
    * Instantiates a new domain user management controller.
    *
-   * @param domainUserService     the domain user service
-   * @param domainGroupService    the domain group service
+   * @param domainUserService the domain user service
+   * @param domainGroupService the domain group service
    * @param authenticationService the authentication service
    */
   public DomainUserManagementController(
@@ -158,22 +160,20 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   }
 
   private boolean isAdmin() {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null) {
-      return false;
-    }
-    return authentication.getAuthorities().stream()
-        .map(GrantedAuthority::getAuthority)
-        .anyMatch(roleName -> AuthorityConstants.ADMIN_ROLE_NAME.equalsIgnoreCase(roleName)
-            || "ROLE_DC_CON_ADMIN".equalsIgnoreCase(roleName));
+    return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+        .map(Authentication::getAuthorities)
+        .map(authorities -> authorities.stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(roleName -> ADMIN_ROLE_NAME
+                .equalsIgnoreCase(roleName) || "ROLE_DC_CON_ADMIN".equalsIgnoreCase(roleName)))
+        .orElse(false);
   }
 
   private boolean isUser(String userName) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || userName == null) {
-      return false;
-    }
-    return userName.equalsIgnoreCase(authentication.getName());
+    return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+        .map(Authentication::getName)
+        .map(name -> name.equalsIgnoreCase(userName))
+        .orElse(false);
   }
 
 }

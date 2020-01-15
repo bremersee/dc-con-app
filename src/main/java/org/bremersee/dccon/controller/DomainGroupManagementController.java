@@ -46,7 +46,7 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
    */
   public DomainGroupManagementController(
       final DomainGroupService domainGroupService,
-      DomainUserService domainUserService) {
+      final DomainUserService domainUserService) {
     this.domainGroupService = domainGroupService;
     this.domainUserService = domainUserService;
   }

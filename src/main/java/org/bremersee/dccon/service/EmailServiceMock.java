@@ -17,12 +17,16 @@
 package org.bremersee.dccon.service;
 
 import java.util.Locale;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 
@@ -33,13 +37,14 @@ import org.thymeleaf.TemplateEngine;
  */
 @Component("emailServiceMock")
 @ConditionalOnProperty(name = "spring.mail.host", matchIfMissing = true, havingValue = "false")
+@Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Slf4j
 public class EmailServiceMock extends AbstractEmailService {
 
   /**
    * Instantiates a new Email service mock.
    *
-   * @param properties     the properties
+   * @param properties the properties
    * @param userRepository the user repository
    * @param templateEngine the template engine
    */
@@ -53,7 +58,7 @@ public class EmailServiceMock extends AbstractEmailService {
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
     log.warn("\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"

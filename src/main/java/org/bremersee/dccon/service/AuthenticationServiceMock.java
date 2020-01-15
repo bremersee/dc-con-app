@@ -16,10 +16,11 @@
 
 package org.bremersee.dccon.service;
 
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -46,7 +47,7 @@ public class AuthenticationServiceMock implements AuthenticationService {
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
     log.warn("\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"

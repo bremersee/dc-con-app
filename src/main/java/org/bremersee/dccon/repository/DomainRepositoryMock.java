@@ -16,11 +16,12 @@
 
 package org.bremersee.dccon.repository;
 
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,7 +37,7 @@ public class DomainRepositoryMock implements DomainRepository {
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
     log.warn("\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"

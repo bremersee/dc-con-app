@@ -28,18 +28,18 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.exception.ServiceException;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -79,7 +79,7 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
     log.warn("\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
@@ -115,16 +115,6 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
     for (DnsNode dnsNode : dnsNodes) {
       save(getProperties().getDefaultZone(), dnsNode);
     }
-  }
-
-  /**
-   * Keep dhcp lease caches up to date.
-   */
-  @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
-  public void keepDhcpLeaseCachesUpToDate() {
-    log.trace("msg=[Keeping dhcp lease cache up to date.]");
-    getDhcpRepository().findActiveByIp();
-    getDhcpRepository().findActiveByHostName();
   }
 
   @Override

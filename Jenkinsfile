@@ -25,22 +25,13 @@ pipeline {
         sh 'mvn -B --version'
         sh 'mvn -B clean test'
       }
-    }
-    stage('Test feature') {
-      agent {
-        label 'maven'
-      }
-      when {
-        branch 'feature/*'
-      }
-      tools {
-        jdk 'jdk8'
-        maven 'm3'
-      }
-      steps {
-        sh 'java -version'
-        sh 'mvn -B --version'
-        sh 'mvn -B -P feature,allow-features clean test'
+      post {
+        always {
+          junit '**/surefire-reports/*.xml'
+          jacoco(
+              execPattern: '**/coverage-reports/*.exec'
+          )
+        }
       }
     }
     stage('Deploy snapshot') {
@@ -135,6 +126,9 @@ pipeline {
       agent {
         label 'maven'
       }
+      environment {
+        CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
+      }
       when {
         branch 'develop'
       }
@@ -145,10 +139,18 @@ pipeline {
       steps {
         sh 'mvn -B site-deploy'
       }
+      post {
+        always {
+          sh 'curl -s https://codecov.io/bash | bash -s - -t ${CODECOV_TOKEN}'
+        }
+      }
     }
     stage('Deploy release site') {
       agent {
         label 'maven'
+      }
+      environment {
+        CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
       }
       when {
         branch 'master'
@@ -159,6 +161,36 @@ pipeline {
       }
       steps {
         sh 'mvn -B -P gh-pages-site site site:stage scm-publish:publish-scm'
+      }
+      post {
+        always {
+          sh 'curl -s https://codecov.io/bash | bash -s - -t ${CODECOV_TOKEN}'
+        }
+      }
+    }
+    stage('Test feature') {
+      agent {
+        label 'maven'
+      }
+      when {
+        branch 'feature/*'
+      }
+      tools {
+        jdk 'jdk8'
+        maven 'm3'
+      }
+      steps {
+        sh 'java -version'
+        sh 'mvn -B --version'
+        sh 'mvn -B -P feature,allow-features clean test'
+      }
+      post {
+        always {
+          junit '**/surefire-reports/*.xml'
+          jacoco(
+              execPattern: '**/coverage-reports/*.exec'
+          )
+        }
       }
     }
   }

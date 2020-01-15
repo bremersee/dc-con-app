@@ -16,19 +16,21 @@
 
 package org.bremersee.dccon.config;
 
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.security.authentication.AuthenticationProperties;
 import org.bremersee.security.authentication.JsonPathJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -40,6 +42,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.util.Assert;
 
 /**
  * The security configuration.
@@ -65,18 +68,18 @@ public class SecurityConfiguration {
     /**
      * Instantiates a new resource server security configuration.
      *
-     * @param jwtConverter the jwt converter
+     * @param jwtConverterProvider the jwt converter provider
      */
     @Autowired
-    public ResourceServer(
-        JsonPathJwtConverter jwtConverter) {
-      this.jwtConverter = jwtConverter;
+    public ResourceServer(ObjectProvider<JsonPathJwtConverter> jwtConverterProvider) {
+      jwtConverter = jwtConverterProvider.getIfAvailable();
+      Assert.notNull(jwtConverter, "JWT converter must be present.");
     }
 
     /**
      * Init.
      */
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void init() {
       log.info("msg=[Using jwt authentication.]");
     }
@@ -124,19 +127,19 @@ public class SecurityConfiguration {
     protected void configure(HttpSecurity http) throws Exception {
       log.info("Authorizing requests to /api/** with basic auth.");
       http
-          .antMatcher("/api/**")
+          .requestMatcher(new NegatedRequestMatcher(EndpointRequest.toAnyEndpoint()))
           .csrf().disable()
+          .formLogin().disable()
+          .httpBasic().realmName("dc-con")
+          .and()
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          .and()
+          .antMatcher("/api/**")
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
           .anyRequest()
-          .authenticated()
-          .and()
-          .antMatcher("/api/**")
-          .httpBasic()
-          .realmName("dc-con")
-          .and()
-          .sessionManagement()
-          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+          .authenticated();
     }
 
     @Bean
@@ -163,15 +166,18 @@ public class SecurityConfiguration {
     /**
      * Instantiates a new actuator security configuration.
      *
-     * @param properties                        the properties
+     * @param properties the properties
      * @param passwordFlowAuthenticationManager the password flow authentication manager
      */
     @Autowired
     public Actuator(
-        final AuthenticationProperties properties,
-        final PasswordFlowAuthenticationManager passwordFlowAuthenticationManager) {
+        AuthenticationProperties properties,
+        ObjectProvider<PasswordFlowAuthenticationManager> passwordFlowAuthenticationManager) {
       this.properties = properties;
-      this.passwordFlowAuthenticationManager = passwordFlowAuthenticationManager;
+      this.passwordFlowAuthenticationManager = passwordFlowAuthenticationManager.getIfAvailable();
+      Assert.notNull(
+          this.passwordFlowAuthenticationManager,
+          "Password flow authentication manager must be present.");
     }
 
     @Override

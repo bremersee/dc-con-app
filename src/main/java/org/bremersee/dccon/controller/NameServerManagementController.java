@@ -122,7 +122,11 @@ public class NameServerManagementController implements NameServerManagementApi {
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Void> deleteAllDnsNodes(String zoneName, List<String> nodeNames) {
-    nameServerService.deleteAllDnsNodes(zoneName, nodeNames);
+    if (nodeNames == null || nodeNames.isEmpty()) {
+      nameServerService.deleteAllDnsNodes(zoneName);
+    } else {
+      nameServerService.deleteAllDnsNodes(zoneName, nodeNames);
+    }
     return ResponseEntity.ok().build();
   }
 

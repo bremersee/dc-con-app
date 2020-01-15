@@ -20,10 +20,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveProperties;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -44,35 +46,40 @@ public class KinitPasswordFileConfiguration {
   /**
    * Instantiates a new kinit password file configuration.
    *
-   * @param properties         the properties
-   * @param ldaptiveProperties the ldaptive properties
+   * @param properties the properties
+   * @param ldaptivePropertiesProvider the provider of the ldaptive properties
    */
   public KinitPasswordFileConfiguration(
       DomainControllerProperties properties,
-      LdaptiveProperties ldaptiveProperties) {
+      ObjectProvider<LdaptiveProperties> ldaptivePropertiesProvider) {
     this.properties = properties;
-    this.ldaptiveProperties = ldaptiveProperties;
+    this.ldaptiveProperties = ldaptivePropertiesProvider.getIfAvailable();
   }
 
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
-    Assert.hasText(properties.getKinitAdministratorName(),
-        "Kinit administrator name must be present.");
-    Assert.hasText(properties.getKinitPasswordFile(),
-        "Kinit password file must be specified.");
-    final File file = new File(properties.getKinitPasswordFile());
-    if (!file.exists()) {
-      try (final FileOutputStream out = new FileOutputStream(file)) {
-        out.write(ldaptiveProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
-        out.flush();
-      } catch (IOException e) {
-        log.error("Creating kinit password file failed.");
+    if (ldaptiveProperties == null) {
+      log.warn("Kinit password file cannot be created because ldaptive properties are not "
+          + "present. You have to enable profile 'ldap'.");
+    } else {
+      Assert.hasText(properties.getKinitAdministratorName(),
+          "Kinit administrator name must be present.");
+      Assert.hasText(properties.getKinitPasswordFile(),
+          "Kinit password file must be specified.");
+      final File file = new File(properties.getKinitPasswordFile());
+      if (!file.exists()) {
+        try (final FileOutputStream out = new FileOutputStream(file)) {
+          out.write(ldaptiveProperties.getBindCredential().getBytes(StandardCharsets.UTF_8));
+          out.flush();
+        } catch (IOException e) {
+          log.error("Creating kinit password file failed.");
+        }
       }
+      Assert.isTrue(file.exists(), "Kinit password file must exist.");
     }
-    Assert.isTrue(file.exists(), "Kinit password file must exist.");
   }
 
 }

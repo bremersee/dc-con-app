@@ -27,7 +27,7 @@
 
     <dc-con-api-spring.version>2.1.0-SNAPSHOT</dc-con-api-spring.version>
     <common-base.version>1.4.1-SNAPSHOT</common-base.version>
-    <comparator.version>2.0.8</comparator.version>
+    <comparator.version>2.0.9-SNAPSHOT</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
     <springfox.version>2.9.2</springfox.version>
@@ -225,7 +225,6 @@
 
   <build>
     <finalName>dc-con</finalName>
-
     <pluginManagement>
       <plugins>
         <plugin>
