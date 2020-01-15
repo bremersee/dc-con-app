@@ -120,6 +120,22 @@ class DomainUserManagementControllerTest {
   }
 
   @Test
+  void updateUserPasswordAndExpectForbidden() {
+    String userName = findFirst().getUserName();
+    ResponseEntity<Void> response = restTemplate
+        .withBasicAuth("user", "user")
+        .exchange("/api/users/{name}/password",
+            HttpMethod.PUT,
+            new HttpEntity<>(Password.builder()
+                .value(UUID.randomUUID().toString())
+                .previousValue(UUID.randomUUID().toString())
+                .build()),
+            Void.class,
+            userName);
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+  }
+
+  @Test
   void userExists() {
     DomainUser expected = findFirst();
     ResponseEntity<Boolean> response = restTemplate
@@ -196,4 +212,5 @@ class DomainUserManagementControllerTest {
     assertTrue(actual.length > 0);
     return actual[0];
   }
+
 }
