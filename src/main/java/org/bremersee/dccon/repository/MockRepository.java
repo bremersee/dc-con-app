@@ -17,10 +17,15 @@
 package org.bremersee.dccon.repository;
 
 /**
+ * The mock repository interface.
+ *
  * @author Christian Bremer
  */
 public interface MockRepository {
 
+  /**
+   * Reset data.
+   */
   void resetData();
 
 }

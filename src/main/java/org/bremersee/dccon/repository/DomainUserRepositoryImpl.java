@@ -59,6 +59,7 @@ import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
@@ -96,18 +97,17 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   /**
    * Instantiates a new domain user repository.
    *
-   * @param properties            the properties
-   * @param ldapTemplate          the ldap template
-   * @param domainRepository      the domain repository
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
+   * @param domainRepository the domain repository
    * @param domainGroupRepository the domain group repository
    */
-  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
   public DomainUserRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate,
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
       final DomainRepository domainRepository,
       final DomainGroupRepository domainGroupRepository) {
-    super(properties, ldapTemplate);
+    super(properties, ldapTemplateProvider.getIfAvailable());
     this.domainUserLdapMapper = new DomainUserLdapMapper(properties);
     this.domainRepository = domainRepository;
     this.domainGroupRepository = domainGroupRepository;
@@ -195,7 +195,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         searchFilter);
     searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
     searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
-    searchRequest.setReturnAttributes("mail");
+    searchRequest.setReturnAttributes(DomainUserLdapConstants.MAIL);
     searchRequest.setSizeLimit(1L);
 
     return getLdapTemplate().findOne(searchRequest)
@@ -276,6 +276,34 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);
   }
 
+  void doAdd(final DomainUser domainUser) {
+    // Maybe I can add an user directly:
+    // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
+    kinit();
+    final List<String> commands = new ArrayList<>();
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("user");
+    commands.add("create");
+    commands.add(domainUser.getUserName());
+    commands.add("--random-password");
+    commands.add("--use-username-as-cn");
+    auth(commands);
+
+    CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        (CommandExecutorResponseValidator) response -> {
+          if (!exists(domainUser.getUserName())) {
+            throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
+                    + domainUser.getUserName() + "] "
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
+          }
+        });
+  }
+
   @Override
   public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
     if (!exists(domainUser.getUserName())) {
@@ -286,37 +314,13 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
                 + domainUser.getUserName() + "]",
             "check_password_restrictions");
       }
-      // Maybe I can add an user directly:
-      // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
-      kinit();
-      final List<String> commands = new ArrayList<>();
-      sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
-      commands.add("user");
-      commands.add("create");
-      commands.add(domainUser.getUserName());
-      commands.add("--random-password");
-      commands.add("--use-username-as-cn");
-      auth(commands);
-
-      CommandExecutor.exec(
-          commands,
-          null,
-          getProperties().getSambaToolExecDir(),
-          (CommandExecutorResponseValidator) response -> {
-            if (!exists(domainUser.getUserName())) {
-              throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
-                      + domainUser.getUserName() + "] "
-                      + CommandExecutorResponse.toExceptionMessage(response),
-                  "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
-            }
-          });
+      doAdd(domainUser);
       if (StringUtils.hasText(domainUser.getPassword())) {
         savePassword(domainUser.getUserName(), domainUser.getPassword());
       }
     }
 
-    final DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
+    DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
     if (Boolean.TRUE.equals(updateGroups)) {
       final Set<String> oldGroups = new HashSet<>(updatedDomainUser.getGroups());
       final Set<String> newGroups = new HashSet<>(domainUser.getGroups());
@@ -334,10 +338,13 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
           domainGroupRepository.save(group);
         });
       }
-      updatedDomainUser.getGroups().clear();
-      updatedDomainUser.getGroups().addAll(newGroups);
+      updatedDomainUser = updatedDomainUser.toBuilder()
+          .groups(new ArrayList<>(newGroups))
+          .build();
     } else {
-      updatedDomainUser.setGroups(domainUser.getGroups());
+      updatedDomainUser = updatedDomainUser.toBuilder()
+          .groups(new ArrayList<>(domainUser.getGroups()))
+          .build();
     }
     updatedDomainUser.getGroups().sort(String::compareToIgnoreCase);
     return updatedDomainUser;
@@ -395,27 +402,31 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   public boolean delete(final String userName) {
 
     if (exists(userName)) {
-      kinit();
-      final List<String> commands = new ArrayList<>();
-      sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
-      commands.add("user");
-      commands.add("delete");
-      commands.add(userName);
-      auth(commands);
-      CommandExecutor.exec(
-          commands,
-          null,
-          getProperties().getSambaToolExecDir(),
-          (CommandExecutorResponseValidator) response -> {
-            if (exists(userName)) {
-              throw ServiceException.internalServerError(
-                  "msg=[Deleting user failed.] userName=[" + userName + "] "
-                      + CommandExecutorResponse.toExceptionMessage(response));
-            }
-          });
+      doDelete(userName);
       return true;
     }
     return false;
+  }
+
+  void doDelete(final String userName) {
+    kinit();
+    final List<String> commands = new ArrayList<>();
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("user");
+    commands.add("delete");
+    commands.add(userName);
+    auth(commands);
+    CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        (CommandExecutorResponseValidator) response -> {
+          if (exists(userName)) {
+            throw ServiceException.internalServerError(
+                "msg=[Deleting user failed.] userName=[" + userName + "] "
+                    + CommandExecutorResponse.toExceptionMessage(response));
+          }
+        });
   }
 }

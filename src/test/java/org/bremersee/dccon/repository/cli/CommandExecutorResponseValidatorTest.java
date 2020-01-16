@@ -14,9 +14,27 @@
  * limitations under the License.
  */
 
+package org.bremersee.dccon.repository.cli;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
 /**
- * LDAP transcoder staff.
+ * The command executor response validator test.
  *
  * @author Christian Bremer
  */
-package org.bremersee.dccon.repository.ldap.transcoder;
+class CommandExecutorResponseValidatorTest {
+
+  /**
+   * Parse.
+   */
+  @Test
+  void parse() {
+    final String stdout = "OK";
+    CommandExecutorResponseValidator validator = response -> assertEquals(
+        stdout, response.getStdout());
+    validator.parse(new CommandExecutorResponse(stdout, null));
+  }
+}

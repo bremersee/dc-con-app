@@ -54,9 +54,9 @@ public class DomainUserServiceImpl implements DomainUserService {
   /**
    * Instantiates a new domain user service.
    *
-   * @param properties            the properties
-   * @param domainUserRepository  the domain user repository
-   * @param emailService          the email service
+   * @param properties the properties
+   * @param domainUserRepository the domain user repository
+   * @param emailService the email service
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(

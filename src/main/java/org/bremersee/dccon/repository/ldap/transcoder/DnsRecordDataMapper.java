@@ -46,7 +46,7 @@ public abstract class DnsRecordDataMapper {
   /**
    * Parse a dns record.
    *
-   * @param data              the data
+   * @param data the data
    * @param dnsRecordSupplier the dns record supplier
    * @return the dns record
    */
@@ -81,7 +81,7 @@ public abstract class DnsRecordDataMapper {
   /**
    * Parse cname dns record.
    *
-   * @param data              the data
+   * @param data the data
    * @param dnsRecordSupplier the dns record supplier
    * @return the dns record
    */
@@ -94,7 +94,7 @@ public abstract class DnsRecordDataMapper {
   /**
    * Parse ptr dns record.
    *
-   * @param data              the data
+   * @param data the data
    * @param dnsRecordSupplier the dns record supplier
    * @return the dns record
    */

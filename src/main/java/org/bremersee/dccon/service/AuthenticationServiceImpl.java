@@ -25,8 +25,10 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.ldaptive.ConnectionConfig;
 import org.ldaptive.DefaultConnectionFactory;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -47,13 +49,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   /**
    * Instantiates a new authentication service.
    *
-   * @param ldaptiveProperties         the ldaptive properties
+   * @param ldaptivePropertiesProvider the ldaptive properties provider
    * @param domainControllerProperties the domain controller properties
    */
   public AuthenticationServiceImpl(
-      final LdaptiveProperties ldaptiveProperties,
+      final ObjectProvider<LdaptiveProperties> ldaptivePropertiesProvider,
       final DomainControllerProperties domainControllerProperties) {
-    this.ldaptiveProperties = ldaptiveProperties;
+    this.ldaptiveProperties = ldaptivePropertiesProvider.getIfAvailable();
+    Assert.notNull(this.ldaptiveProperties, "Ldaptive properties must be present.");
     this.domainControllerProperties = domainControllerProperties;
     this.baseDnProvider = userName -> userName + "@" + domainControllerProperties.getDefaultZone();
   }

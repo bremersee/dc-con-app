@@ -48,8 +48,8 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   /**
    * Instantiates a new domain group service.
    *
-   * @param properties            the properties
-   * @param domainUserRepository  the domain user repository
+   * @param properties the properties
+   * @param domainUserRepository the domain user repository
    * @param domainGroupRepository the domain group repository
    */
   public DomainGroupServiceImpl(

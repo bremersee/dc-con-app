@@ -17,10 +17,19 @@
 package org.bremersee.dccon.service;
 
 /**
+ * The authentication service.
+ *
  * @author Christian Bremer
  */
 public interface AuthenticationService {
 
+  /**
+   * Checks whether password matches or not.
+   *
+   * @param userName the user name
+   * @param clearPassword the clear password
+   * @return {@code true} if the password matches, otherwise {@code false}
+   */
   boolean passwordMatches(String userName, String clearPassword);
 
 }

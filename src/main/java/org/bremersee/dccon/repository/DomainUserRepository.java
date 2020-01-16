@@ -51,9 +51,9 @@ public interface DomainUserRepository {
   /**
    * Find avatar.
    *
-   * @param userName      the user name
+   * @param userName the user name
    * @param avatarDefault the avatar default
-   * @param size          the size
+   * @param size the size
    * @return the avatar
    */
   Optional<byte[]> findAvatar(
@@ -72,9 +72,9 @@ public interface DomainUserRepository {
   /**
    * Save domain user.
    *
-   * @param domainUser   the domain user
+   * @param domainUser the domain user
    * @param updateGroups specifies whether the groups should also be updated or not (default is
-   *                     false)
+   *     false)
    * @return the domain user
    */
   DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups);
@@ -82,7 +82,7 @@ public interface DomainUserRepository {
   /**
    * Save password.
    *
-   * @param userName    the user name
+   * @param userName the user name
    * @param newPassword the new password
    */
   void savePassword(@NotNull String userName, @NotNull String newPassword);

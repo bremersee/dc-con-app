@@ -43,9 +43,9 @@ public abstract class AbstractDomainEntityValidator {
   /**
    * Instantiates a new abstract domain entity validator.
    *
-   * @param properties      the properties
+   * @param properties the properties
    * @param groupRepository the group repository
-   * @param userRepository  the user repository
+   * @param userRepository the user repository
    */
   protected AbstractDomainEntityValidator(
       DomainControllerProperties properties,
@@ -69,7 +69,7 @@ public abstract class AbstractDomainEntityValidator {
   /**
    * Throws an already exception if the name is already in use.
    *
-   * @param name        the name
+   * @param name the name
    * @param domainClass the domain class
    */
   protected void validateNameNotExists(String name, Class<?> domainClass) {

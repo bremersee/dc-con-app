@@ -43,7 +43,7 @@ public interface DomainUserService {
   /**
    * Get domain users.
    *
-   * @param sort  the sort order
+   * @param sort the sort order
    * @param query the query
    * @return the users
    */
@@ -53,8 +53,8 @@ public interface DomainUserService {
    * Add domain user.
    *
    * @param domainUser the domain user
-   * @param sendEmail  specifies whether to send an email or not (default is {@code false})
-   * @param language   the language of the email
+   * @param sendEmail specifies whether to send an email or not (default is {@code false})
+   * @param language the language of the email
    * @return the domain user
    */
   DomainUser addUser(
@@ -73,10 +73,10 @@ public interface DomainUserService {
   /**
    * Update domain user.
    *
-   * @param userName     the user name
+   * @param userName the user name
    * @param updateGroups specifies whether the groups should also be updated or not (default is
-   *                     false)
-   * @param domainUser   the domain user
+   *     false)
+   * @param domainUser the domain user
    * @return the domain user
    */
   Optional<DomainUser> updateUser(
@@ -87,10 +87,10 @@ public interface DomainUserService {
   /**
    * Update user password.
    *
-   * @param userName    the user name
+   * @param userName the user name
    * @param newPassword the new password
-   * @param sendEmail   specifies whether to send an email or not (default is {@code false})
-   * @param language    the language of the email
+   * @param sendEmail specifies whether to send an email or not (default is {@code false})
+   * @param language the language of the email
    */
   void updateUserPassword(
       @NotNull String userName,
@@ -101,9 +101,9 @@ public interface DomainUserService {
   /**
    * Gets user avatar.
    *
-   * @param userName      the user name
+   * @param userName the user name
    * @param avatarDefault the avatar default
-   * @param size          the size
+   * @param size the size
    * @return the user avatar
    */
   Optional<byte[]> getUserAvatar(

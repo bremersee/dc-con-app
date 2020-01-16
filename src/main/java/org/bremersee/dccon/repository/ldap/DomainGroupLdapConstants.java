@@ -17,22 +17,40 @@
 package org.bremersee.dccon.repository.ldap;
 
 /**
+ * The domain group ldap constants.
+ *
  * @author Christian Bremer
  */
 public class DomainGroupLdapConstants {
 
+  /**
+   * The constant DESCRIPTION.
+   */
   public static final String DESCRIPTION = "description";
 
+  /**
+   * The constant MEMBER.
+   */
   public static final String MEMBER = "member";
 
-  public static final String MOBILE = "mobile";
-
+  /**
+   * The constant NAME.
+   */
   public static final String NAME = "name";
 
+  /**
+   * The constant OBJECT_SID.
+   */
   public static final String OBJECT_SID = "objectSid";
 
+  /**
+   * The constant SAM_ACCOUNT_NAME.
+   */
   public static final String SAM_ACCOUNT_NAME = "sAMAccountName";
 
+  /**
+   * The constant BINARY_ATTRIBUTES.
+   */
   public static final String[] BINARY_ATTRIBUTES = {
       OBJECT_SID
   };

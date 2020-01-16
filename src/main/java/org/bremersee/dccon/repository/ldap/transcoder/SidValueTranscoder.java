@@ -34,7 +34,7 @@ public class SidValueTranscoder extends AbstractBinaryValueTranscoder<Sid> {
   private DomainControllerProperties properties;
 
   /**
-   * Instantiates a new Sid value transcoder.
+   * Instantiates a new sid value transcoder.
    *
    * @param properties the properties
    */

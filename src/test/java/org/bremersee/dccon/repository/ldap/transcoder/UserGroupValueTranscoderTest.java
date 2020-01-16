@@ -1,25 +1,25 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * The user group value transcoder test.
  *
  * @author Christian Bremer
  */
-public class UserGroupValueTranscoderTest {
+class UserGroupValueTranscoderTest {
 
   private static UserGroupValueTranscoder transcoder;
 
   /**
    * Init.
    */
-  @BeforeClass
-  public static void init() {
+  @BeforeAll
+  static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
     properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
@@ -30,7 +30,7 @@ public class UserGroupValueTranscoderTest {
    * Decode string value.
    */
   @Test
-  public void decodeStringValue() {
+  void decodeStringValue() {
     String expected = "cn=anna,cn=Users,dc=example,dc=org";
     assertEquals(expected, transcoder.encodeStringValue("anna"));
   }
@@ -39,7 +39,7 @@ public class UserGroupValueTranscoderTest {
    * Encode string value.
    */
   @Test
-  public void encodeStringValue() {
+  void encodeStringValue() {
     assertEquals(
         "anna",
         transcoder.decodeStringValue("cn=anna,cn=Users,dc=example,dc=org"));
@@ -49,7 +49,7 @@ public class UserGroupValueTranscoderTest {
    * Gets type.
    */
   @Test
-  public void getType() {
+  void getType() {
     assertEquals(String.class, transcoder.getType());
   }
 }

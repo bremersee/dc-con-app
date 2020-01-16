@@ -135,12 +135,12 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
 
     @Override
     public List<DhcpLease> parse(final CommandExecutorResponse response) {
-      final String output = response.getStdout();
-      if (!StringUtils.hasText(output)) {
+      if (!response.stdoutHasText()) {
         log.warn("Dhcp lease list command did not produce output. Error is [{}].",
             response.getStderr());
         return Collections.emptyList();
       }
+      final String output = response.getStdout();
       try (final BufferedReader reader = new BufferedReader(new StringReader(output))) {
         return parseDhcpLeaseList(reader);
 

@@ -40,7 +40,7 @@ public interface DomainUserValidator {
   /**
    * Do update validation.
    *
-   * @param userName   the user name
+   * @param userName the user name
    * @param domainUser the domain user
    */
   void doUpdateValidation(String userName, DomainUser domainUser);
@@ -48,9 +48,9 @@ public interface DomainUserValidator {
   /**
    * Default domain user validator.
    *
-   * @param properties      the properties
+   * @param properties the properties
    * @param groupRepository the group repository
-   * @param userRepository  the user repository
+   * @param userRepository the user repository
    * @return the domain user validator
    */
   static DomainUserValidator defaultValidator(
@@ -68,9 +68,9 @@ public interface DomainUserValidator {
     /**
      * Instantiates a new default domain user validator.
      *
-     * @param properties      the properties
+     * @param properties the properties
      * @param groupRepository the group repository
-     * @param userRepository  the user repository
+     * @param userRepository the user repository
      */
     Default(DomainControllerProperties properties,
         DomainGroupRepository groupRepository,

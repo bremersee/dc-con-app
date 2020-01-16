@@ -38,6 +38,9 @@ bremersee:
         resolvable-patterns:
           - "*"
         template-mode: HTML
+  messages:
+    default-locale: en
+    fallback-to-system-locale: false
 
 spring:
   security:

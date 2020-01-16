@@ -63,9 +63,9 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Instantiates a new abstract repository.
    *
-   * @param properties        the properties
-   * @param ldapTemplate      the ldap template
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param ldapTemplate the ldap template
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    */
   AbstractDnsNodeRepository(
@@ -168,7 +168,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Is query result boolean.
    *
    * @param dnsNode the dns node
-   * @param query   the query
+   * @param query the query
    * @return the boolean
    */
   boolean isQueryResult(final DnsNode dnsNode, final String query) {
@@ -181,7 +181,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Is query result boolean.
    *
    * @param dnsRecords the dns records
-   * @param query      the query
+   * @param query the query
    * @return the boolean
    */
   boolean isQueryResult(final Collection<DnsRecord> dnsRecords, final String query) {
@@ -199,7 +199,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Is query result boolean.
    *
    * @param dnsRecord the dns record
-   * @param query     the query
+   * @param query the query
    * @return the boolean
    */
   boolean isQueryResult(final DnsRecord dnsRecord, final String query) {
@@ -213,7 +213,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Is query result boolean.
    *
    * @param dhcpLease the dhcp lease
-   * @param query     the query
+   * @param query the query
    * @return the boolean
    */
   boolean isQueryResult(final DhcpLease dhcpLease, final String query) {
@@ -227,11 +227,11 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Find one optional.
    *
-   * @param zoneName              the zone name
-   * @param nodeName              the node name
-   * @param unknownFilter         the unknown filter
+   * @param zoneName the zone name
+   * @param nodeName the node name
+   * @param unknownFilter the unknown filter
    * @param withCorrelationValues the with correlation values
-   * @param withDhcpLeases        the with dhcp leases
+   * @param withDhcpLeases the with dhcp leases
    * @return the optional
    */
   abstract Optional<DnsNode> findOne(
@@ -253,7 +253,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Insert dhcp leases dns node.
    *
    * @param zoneName the zone name
-   * @param dnsNode  the dns node
+   * @param dnsNode the dns node
    * @return the dns node
    */
   DnsNode insertDhcpLeases(
@@ -283,7 +283,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Insert correlation values dns node.
    *
    * @param zoneName the zone name
-   * @param dnsNode  the dns node
+   * @param dnsNode the dns node
    * @return the dns node
    */
   DnsNode insertCorrelationValues(
@@ -298,7 +298,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Insert correlation value dns record.
    *
-   * @param zoneName  the zone name
+   * @param zoneName the zone name
    * @param dnsRecord the dns record
    * @return the dns record
    */
@@ -337,7 +337,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Build dns pair by ip 4 optional.
    *
-   * @param ip4         the ip 4
+   * @param ip4 the ip 4
    * @param reverseZone the reverse zone
    * @return the optional
    */
@@ -364,7 +364,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Build dns pair by fqdn optional.
    *
-   * @param fqdn    the fqdn
+   * @param fqdn the fqdn
    * @param dnsZone the dns zone
    * @return the optional
    */
@@ -405,9 +405,9 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Handle ptr records.
    *
-   * @param zoneName       the zone name
-   * @param nodeName       the node name
-   * @param newRecords     the new records
+   * @param zoneName the zone name
+   * @param nodeName the node name
+   * @param newRecords the new records
    * @param deletedRecords the deleted records
    */
   void handlePtrRecords(
@@ -421,11 +421,15 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
     }
     for (final DnsRecord record : deletedRecords) {
       findCorrelatedDnsNode(zoneName, record).ifPresent(pair -> {
-        pair.getNode().getRecords().remove(DnsRecord.builder()
+        final Set<DnsRecord> records = new LinkedHashSet<>(pair.getNode().getRecords());
+        records.remove(DnsRecord.builder()
             .recordType(DnsRecordType.PTR.name())
             .recordValue(nodeName + "." + zoneName)
             .build());
-        save(pair.getZoneName(), pair.getNode());
+        final DnsNode node = pair.getNode().toBuilder()
+            .records(records)
+            .build();
+        save(pair.getZoneName(), node);
       });
     }
     for (final DnsRecord record : newRecords) {
@@ -435,8 +439,12 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
             .recordValue(nodeName + "." + zoneName)
             .build();
         if (!pair.getNode().getRecords().contains(newRecord)) {
-          pair.getNode().getRecords().add(newRecord);
-          save(pair.getZoneName(), pair.getNode());
+          final Set<DnsRecord> records = new LinkedHashSet<>(pair.getNode().getRecords());
+          records.add(newRecord);
+          final DnsNode node = pair.getNode().toBuilder()
+              .records(records)
+              .build();
+          save(pair.getZoneName(), node);
         }
       });
     }
@@ -480,7 +488,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Checks whether the given IPv4 (e. g. {@code 192.168.1.123}) matches the given dns zone name (e.
    * g. {@code 1.168.192.in-addr.arpa}).
    *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123})
+   * @param ip the IPv4 (e. g. {@code 192.168.1.123})
    * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa})
    * @return {@code true} if the ip matches the dns reverse zone, otherwise {@code false}
    */
@@ -496,7 +504,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Returns the dns reverse node name.
    *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123}
+   * @param ip the IPv4 (e. g. {@code 192.168.1.123}
    * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
    * @return the dns reverse node name (e. g. {@code 123}
    */
@@ -507,7 +515,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
   /**
    * Returns the dns node name.
    *
-   * @param fqdn     the full qualified domain name (e. g. {@code pluto.eixe.bremersee.org})
+   * @param fqdn the full qualified domain name (e. g. {@code pluto.eixe.bremersee.org})
    * @param zoneName the dns zone name (e. g. {@code eixe.bremersee.org})
    * @return the dns node name (e. g. {@code pluto})
    */
@@ -525,7 +533,7 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
    * Split Ipv4 into parts, e. g. {@code 192.168.1} from the dns reverse zone name and into the node
    * name {@code 123}.
    *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123}
+   * @param ip the IPv4 (e. g. {@code 192.168.1.123}
    * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
    * @return the Ipv4 parts or {@code null} if the ip doesn't belong to the dns reverse zone
    */

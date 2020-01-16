@@ -66,8 +66,8 @@ public class NameServerServiceImpl implements NameServerService {
   /**
    * Instantiates a new name server service.
    *
-   * @param properties        the properties
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    * @param dnsNodeRepository the dns node repository
    */

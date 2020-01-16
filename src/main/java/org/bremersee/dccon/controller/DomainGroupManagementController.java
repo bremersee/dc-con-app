@@ -42,7 +42,7 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
    * Instantiates a new domain group management controller.
    *
    * @param domainGroupService the domain group service
-   * @param domainUserService  the domain user service
+   * @param domainUserService the domain user service
    */
   public DomainGroupManagementController(
       final DomainGroupService domainGroupService,

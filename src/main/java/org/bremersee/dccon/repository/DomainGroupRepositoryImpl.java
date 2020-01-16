@@ -33,6 +33,7 @@ import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -51,13 +52,13 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   /**
    * Instantiates a new domain group repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
    */
   public DomainGroupRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate) {
-    super(properties, ldapTemplate);
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+    super(properties, ldapTemplateProvider.getIfAvailable());
     domainGroupLdapMapper = new DomainGroupLdapMapper(properties);
   }
 
@@ -117,57 +118,65 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   @Override
   public DomainGroup save(final DomainGroup domainGroup) {
     if (!exists(domainGroup.getName())) {
-      kinit();
-      final List<String> commands = new ArrayList<>();
-      sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
-      commands.add("group");
-      commands.add("add");
-      commands.add(domainGroup.getName());
-      auth(commands);
-      CommandExecutor.exec(
-          commands,
-          null,
-          getProperties().getSambaToolExecDir(),
-          (CommandExecutorResponseValidator) response -> {
-            if (!exists(domainGroup.getName())) {
-              throw ServiceException.internalServerError("msg=[Saving group failed.] groupName=["
-                      + domainGroup.getName() + "] "
-                      + CommandExecutorResponse.toExceptionMessage(response),
-                  "org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a");
-            }
-          });
+      doAdd(domainGroup);
     }
     return getLdapTemplate().save(domainGroup, domainGroupLdapMapper);
+  }
+
+  void doAdd(final DomainGroup domainGroup) {
+    kinit();
+    final List<String> commands = new ArrayList<>();
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("group");
+    commands.add("add");
+    commands.add(domainGroup.getName());
+    auth(commands);
+    CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        (CommandExecutorResponseValidator) response -> {
+          if (!exists(domainGroup.getName())) {
+            throw ServiceException.internalServerError("msg=[Saving group failed.] groupName=["
+                    + domainGroup.getName() + "] "
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a");
+          }
+        });
   }
 
   @Override
   public boolean delete(final String groupName) {
 
     if (exists(groupName)) {
-      kinit();
-      final List<String> commands = new ArrayList<>();
-      sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
-      commands.add("group");
-      commands.add("delete");
-      commands.add(groupName);
-      auth(commands);
-      CommandExecutor.exec(
-          commands,
-          null,
-          getProperties().getSambaToolExecDir(),
-          (CommandExecutorResponseValidator) response -> {
-            if (exists(groupName)) {
-              throw ServiceException.internalServerError(
-                  "msg=[Deleting group failed.] groupName=[" + groupName + "] "
-                      + CommandExecutorResponse.toExceptionMessage(response),
-                  "org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52");
-            }
-          });
+      doDelete(groupName);
       return true;
     }
     return false;
+  }
+
+  void doDelete(final String groupName) {
+    kinit();
+    final List<String> commands = new ArrayList<>();
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("group");
+    commands.add("delete");
+    commands.add(groupName);
+    auth(commands);
+    CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        (CommandExecutorResponseValidator) response -> {
+          if (exists(groupName)) {
+            throw ServiceException.internalServerError(
+                "msg=[Deleting group failed.] groupName=[" + groupName + "] "
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52");
+          }
+        });
   }
 
 

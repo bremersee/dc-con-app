@@ -23,7 +23,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
-import org.springframework.util.StringUtils;
 
 /**
  * The password information parser.
@@ -48,32 +47,32 @@ public interface PasswordInformationParser
   @Slf4j
   class Default implements PasswordInformationParser {
 
-    private static final String PASSWORD_COMPLEXITY = "Password complexity:";
+    static final String PASSWORD_COMPLEXITY = "Password complexity:";
 
-    private static final String STORE_PLAINTEXT_PASSWORD = "Store plaintext passwords:";
+    static final String STORE_PLAINTEXT_PASSWORD = "Store plaintext passwords:";
 
-    private static final String PASSWORD_HISTORY_LENGTH = "Password history length:";
+    static final String PASSWORD_HISTORY_LENGTH = "Password history length:";
 
-    private static final String MINIMUM_PASSWORD_LENGTH = "Minimum password length:";
+    static final String MINIMUM_PASSWORD_LENGTH = "Minimum password length:";
 
-    private static final String MINIMUM_PASSWORD_AGE = "Minimum password age (days):";
+    static final String MINIMUM_PASSWORD_AGE = "Minimum password age (days):";
 
-    private static final String MAXIMUM_PASSWORD_AGE = "Maximum password age (days):";
+    static final String MAXIMUM_PASSWORD_AGE = "Maximum password age (days):";
 
-    private static final String ACCOUNT_LOCKOUT_DURATION = "Account lockout duration (mins):";
+    static final String ACCOUNT_LOCKOUT_DURATION = "Account lockout duration (mins):";
 
-    private static final String ACCOUNT_LOCKOUT_THRESHOLD = "Account lockout threshold (attempts):";
+    static final String ACCOUNT_LOCKOUT_THRESHOLD = "Account lockout threshold (attempts):";
 
-    private static final String RESET_ACCOUNT_LOCKOUT_AFTER = "Reset account lockout after (mins):";
+    static final String RESET_ACCOUNT_LOCKOUT_AFTER = "Reset account lockout after (mins):";
 
     @Override
     public PasswordInformation parse(final CommandExecutorResponse response) {
-      final String output = response.getStdout();
-      if (!StringUtils.hasText(output)) {
+      if (!response.stdoutHasText()) {
         log.warn("Password information command did not produce output. Error is [{}].",
             response.getStderr());
         return new PasswordInformation();
       }
+      final String output = response.getStdout();
       try (final BufferedReader reader = new BufferedReader(new StringReader(output))) {
         return parse(reader);
 
