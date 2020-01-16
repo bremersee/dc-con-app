@@ -40,6 +40,7 @@ import org.bremersee.dccon.repository.ldap.DnsNodeLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -62,17 +63,17 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
   /**
    * Instantiates a new dns node repository.
    *
-   * @param properties        the properties
-   * @param ldapTemplate      the ldap template
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    */
   public DnsNodeRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate,
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository) {
-    super(properties, ldapTemplate, dhcpRepository, dnsZoneRepository);
+    super(properties, ldapTemplateProvider.getIfAvailable(), dhcpRepository, dnsZoneRepository);
     this.dnsNodeLdapMapperMap = new ConcurrentHashMap<>();
     this.dnsNodeLdapMapperProvider = (zoneName, unknownFilter) -> new DnsNodeLdapMapper(
         getProperties(), zoneName, unknownFilter);
@@ -235,7 +236,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
     return Optional.ofNullable(newDnsNode);
   }
 
-  private void add(
+  void add(
       final String zoneName,
       final String nodeName,
       final Collection<DnsRecord> records) {

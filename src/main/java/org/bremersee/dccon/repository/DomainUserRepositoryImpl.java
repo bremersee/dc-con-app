@@ -59,6 +59,7 @@ import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
@@ -96,18 +97,17 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
   /**
    * Instantiates a new domain user repository.
    *
-   * @param properties            the properties
-   * @param ldapTemplate          the ldap template
-   * @param domainRepository      the domain repository
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
+   * @param domainRepository the domain repository
    * @param domainGroupRepository the domain group repository
    */
-  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
   public DomainUserRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate,
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
       final DomainRepository domainRepository,
       final DomainGroupRepository domainGroupRepository) {
-    super(properties, ldapTemplate);
+    super(properties, ldapTemplateProvider.getIfAvailable());
     this.domainUserLdapMapper = new DomainUserLdapMapper(properties);
     this.domainRepository = domainRepository;
     this.domainGroupRepository = domainGroupRepository;

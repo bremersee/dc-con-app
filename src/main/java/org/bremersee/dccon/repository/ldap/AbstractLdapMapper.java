@@ -55,9 +55,9 @@ abstract class AbstractLdapMapper {
   /**
    * Create distinguished name.
    *
-   * @param rdn      the rdn
+   * @param rdn the rdn
    * @param rdnValue the rdn value
-   * @param baseDn   the base dn
+   * @param baseDn the base dn
    * @return the string
    */
   String createDn(
@@ -70,7 +70,7 @@ abstract class AbstractLdapMapper {
   /**
    * Map common attributes.
    *
-   * @param source      the source
+   * @param source the source
    * @param destination the destination
    */
   void mapCommonAttributes(final LdapEntry source, final CommonAttributes destination) {

@@ -30,13 +30,13 @@ import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -57,13 +57,13 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   /**
    * Instantiates a new dns zone repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
    */
   public DnsZoneRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate) {
-    super(properties, ldapTemplate);
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+    super(properties, ldapTemplateProvider.getIfAvailable());
     this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
     this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()
         .map(Pattern::compile).collect(Collectors.toList());
@@ -74,7 +74,6 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
    *
    * @param dnsZoneLdapMapper the dns zone ldap mapper
    */
-  @SuppressWarnings("unused")
   public void setDnsZoneLdapMapper(final LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
     if (dnsZoneLdapMapper != null) {
       this.dnsZoneLdapMapper = dnsZoneLdapMapper;
@@ -140,33 +139,49 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
           "org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9");
     }
     return findOne(zoneName)
-        .orElseGet(() -> execDnsZoneCmd(
-            "zonecreate",
-            zoneName, response -> findOne(zoneName)
-                .orElseThrow(() -> ServiceException.internalServerError(
-                    "msg=[Saving dns zone failed.] "
-                        + CommandExecutorResponse.toExceptionMessage(response),
-                    "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0"))));
+        .orElseGet(() -> {
+          doSave(zoneName);
+          return findOne(zoneName)
+              .orElseThrow(() -> ServiceException.internalServerError(
+                  "msg=[Saving dns zone failed.]",
+                  "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0"));
+        });
+  }
+
+  void doSave(final String zoneName) {
+    execDnsZoneCmd(
+        "zonecreate",
+        zoneName,
+        (CommandExecutorResponseValidator) response -> {
+          if (!exists(zoneName)) {
+            log.error("Creating zone [{}] failed: {}", zoneName, response.toOneLine());
+          }
+        });
   }
 
   @Override
   public boolean delete(final String zoneName) {
     if (exists(zoneName)) {
-      execDnsZoneCmd(
-          "zonedelete",
-          zoneName,
-          (CommandExecutorResponseValidator) response -> {
-            if (exists(zoneName)) {
-              throw ServiceException.internalServerError(
-                  "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
-                  "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
-            }
-          });
+      doDelete(zoneName);
       return true;
     }
     return false;
   }
 
+  void doDelete(final String zoneName) {
+    execDnsZoneCmd(
+        "zonedelete",
+        zoneName,
+        (CommandExecutorResponseValidator) response -> {
+          if (exists(zoneName)) {
+            throw ServiceException.internalServerError(
+                "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
+                "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
+          }
+        });
+  }
+
+  @SuppressWarnings("UnusedReturnValue")
   private <T> T execDnsZoneCmd(
       final String dnsCommand,
       final String zoneName,

@@ -51,8 +51,8 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   /**
    * Instantiates a new dns node ldap mapper.
    *
-   * @param properties    the properties
-   * @param zoneName      the zone name
+   * @param properties the properties
+   * @param zoneName the zone name
    * @param unknownFilter the unknown filter
    */
   public DnsNodeLdapMapper(

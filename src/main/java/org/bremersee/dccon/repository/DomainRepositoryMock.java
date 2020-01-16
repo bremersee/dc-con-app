@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("!ldap")
+@Profile("!cli")
 @Component
 @Slf4j
 public class DomainRepositoryMock implements DomainRepository {

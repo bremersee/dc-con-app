@@ -421,11 +421,15 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
     }
     for (final DnsRecord record : deletedRecords) {
       findCorrelatedDnsNode(zoneName, record).ifPresent(pair -> {
-        pair.getNode().getRecords().remove(DnsRecord.builder()
+        final Set<DnsRecord> records = new LinkedHashSet<>(pair.getNode().getRecords());
+        records.remove(DnsRecord.builder()
             .recordType(DnsRecordType.PTR.name())
             .recordValue(nodeName + "." + zoneName)
             .build());
-        save(pair.getZoneName(), pair.getNode());
+        final DnsNode node = pair.getNode().toBuilder()
+            .records(records)
+            .build();
+        save(pair.getZoneName(), node);
       });
     }
     for (final DnsRecord record : newRecords) {
@@ -435,8 +439,12 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
             .recordValue(nodeName + "." + zoneName)
             .build();
         if (!pair.getNode().getRecords().contains(newRecord)) {
-          pair.getNode().getRecords().add(newRecord);
-          save(pair.getZoneName(), pair.getNode());
+          final Set<DnsRecord> records = new LinkedHashSet<>(pair.getNode().getRecords());
+          records.add(newRecord);
+          final DnsNode node = pair.getNode().toBuilder()
+              .records(records)
+              .build();
+          save(pair.getZoneName(), node);
         }
       });
     }

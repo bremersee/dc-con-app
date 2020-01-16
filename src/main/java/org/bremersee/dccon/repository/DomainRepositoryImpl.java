@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
+@Profile("cli")
 @Component("domainRepository")
 @Slf4j
 public class DomainRepositoryImpl extends AbstractRepository implements DomainRepository {

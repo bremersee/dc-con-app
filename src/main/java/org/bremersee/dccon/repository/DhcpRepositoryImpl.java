@@ -82,7 +82,7 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     return findActiveMap(false);
   }
 
-  private Map<String, DhcpLease> findActiveMap(final boolean ip) {
+  Map<String, DhcpLease> findActiveMap(final boolean ip) {
     final List<DhcpLease> leases = find(false);
     leases.sort(ComparatorBuilder.builder()
         .fromWellKnownText("begin,desc")
@@ -97,7 +97,7 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     return leaseMap;
   }
 
-  private List<DhcpLease> find(final boolean all) {
+  List<DhcpLease> find(final boolean all) {
     final List<String> commands = new ArrayList<>();
     sudo(commands);
     commands.add(getProperties().getDhcpLeaseListBinary());

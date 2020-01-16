@@ -33,6 +33,7 @@ import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -51,13 +52,13 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   /**
    * Instantiates a new domain group repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
    */
   public DomainGroupRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate) {
-    super(properties, ldapTemplate);
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+    super(properties, ldapTemplateProvider.getIfAvailable());
     domainGroupLdapMapper = new DomainGroupLdapMapper(properties);
   }
 

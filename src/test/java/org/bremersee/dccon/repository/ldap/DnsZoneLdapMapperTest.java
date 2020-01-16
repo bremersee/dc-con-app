@@ -1,13 +1,31 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.Month;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -17,15 +35,15 @@ import org.ldaptive.LdapEntry;
  *
  * @author Christian Bremer
  */
-public class DnsZoneLdapMapperTest {
+class DnsZoneLdapMapperTest {
 
   private static DnsZoneLdapMapper mapper;
 
   /**
    * Init.
    */
-  @BeforeClass
-  public static void init() {
+  @BeforeAll
+  static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setDnsZoneBaseDn("cn=zones,dc=example,dc=org");
     properties.setDnsZoneRdn("dc");
@@ -33,10 +51,18 @@ public class DnsZoneLdapMapperTest {
   }
 
   /**
+   * Gets object classes.
+   */
+  @Test
+  void getObjectClasses() {
+    assertArrayEquals(new String[0], mapper.getObjectClasses());
+  }
+
+  /**
    * Map distinguished name.
    */
   @Test
-  public void mapDn() {
+  void mapDn() {
     assertEquals("dc=example.org,cn=zones,dc=example,dc=org",
         mapper.mapDn(DnsZone.builder().name("example.org").build()));
   }
@@ -45,7 +71,13 @@ public class DnsZoneLdapMapperTest {
    * Map.
    */
   @Test
-  public void map() {
+  void map() {
+    assertNull(mapper.map(null));
+
+    DnsZone dnsZone = DnsZone.builder().build();
+    mapper.map(null, dnsZone);
+    assertEquals(DnsZone.builder().build(), dnsZone);
+
     LdapEntry ldapEntry = new LdapEntry();
     ldapEntry.setDn("dc=example.org,cn=zones,dc=example,dc=org");
     ldapEntry.addAttribute(new LdapAttribute(
@@ -54,7 +86,7 @@ public class DnsZoneLdapMapperTest {
         AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
     ldapEntry.addAttribute(new LdapAttribute("name", "example.org"));
 
-    DnsZone dnsZone = mapper.map(ldapEntry);
+    dnsZone = mapper.map(ldapEntry);
     assertNotNull(dnsZone);
     assertEquals(
         "dc=example.org,cn=zones,dc=example,dc=org",
@@ -80,7 +112,7 @@ public class DnsZoneLdapMapperTest {
    * Map and compute modifications.
    */
   @Test
-  public void mapAndComputeModifications() {
+  void mapAndComputeModifications() {
     // A dns zone ldap entry cannot be changed
     AttributeModification[] modifications = mapper.mapAndComputeModifications(
         new DnsZone(), new LdapEntry());
