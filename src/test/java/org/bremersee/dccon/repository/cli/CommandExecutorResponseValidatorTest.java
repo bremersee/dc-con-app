@@ -25,13 +25,13 @@ import org.junit.jupiter.api.Test;
  *
  * @author Christian Bremer
  */
-public class CommandExecutorResponseValidatorTest {
+class CommandExecutorResponseValidatorTest {
 
   /**
    * Parse.
    */
   @Test
-  public void parse() {
+  void parse() {
     final String stdout = "OK";
     CommandExecutorResponseValidator validator = response -> assertEquals(
         stdout, response.getStdout());

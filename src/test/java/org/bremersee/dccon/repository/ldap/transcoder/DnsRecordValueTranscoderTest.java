@@ -1,22 +1,22 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import org.bremersee.dccon.model.DnsRecord;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * The dns record value transcoder test.
  *
  * @author Christian Bremer
  */
-public class DnsRecordValueTranscoderTest {
+class DnsRecordValueTranscoderTest {
 
   private static final DnsRecordValueTranscoder transcoder = new DnsRecordValueTranscoder();
 
@@ -63,7 +63,7 @@ public class DnsRecordValueTranscoderTest {
    * Decode binary value record a.
    */
   @Test
-  public void decodeBinaryValueRecordA() {
+  void decodeBinaryValueRecordA() {
     DnsRecord actual = transcoder.decodeBinaryValue(Base64.getDecoder().decode(A_RECORD_BASE64));
     assertNotNull(actual);
     assertEquals(A_RECORD_TYPE, actual.getRecordType());
@@ -78,7 +78,7 @@ public class DnsRecordValueTranscoderTest {
    * Decode binary value record cname.
    */
   @Test
-  public void decodeBinaryValueRecordCname() {
+  void decodeBinaryValueRecordCname() {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(CNAME_RECORD_BASE64));
     assertNotNull(actual);
@@ -94,7 +94,7 @@ public class DnsRecordValueTranscoderTest {
    * Decode binary value record ptr.
    */
   @Test
-  public void decodeBinaryValueRecordPtr() {
+  void decodeBinaryValueRecordPtr() {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(PTR_RECORD_BASE64));
     assertNotNull(actual);
@@ -110,7 +110,7 @@ public class DnsRecordValueTranscoderTest {
    * Decode binary value record unknown.
    */
   @Test
-  public void decodeBinaryValueRecordUnknown() {
+  void decodeBinaryValueRecordUnknown() {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(UNKNOWN_RECORD_BASE64));
     assertNotNull(actual);
@@ -126,7 +126,7 @@ public class DnsRecordValueTranscoderTest {
    * Encode binary value.
    */
   @Test
-  public void encodeBinaryValue() {
+  void encodeBinaryValue() {
     DnsRecord dnsRecord = new DnsRecord();
     assertNull(transcoder.encodeBinaryValue(dnsRecord));
     dnsRecord.setRecordRawValue(Base64.getDecoder().decode(A_RECORD_BASE64));
@@ -139,7 +139,7 @@ public class DnsRecordValueTranscoderTest {
    * Gets type.
    */
   @Test
-  public void getType() {
+  void getType() {
     assertEquals(DnsRecord.class, transcoder.getType());
   }
 }

@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Christian Bremer
  */
-public class PasswordInformationParserTest {
+class PasswordInformationParserTest {
 
   private static final PasswordInformationParser parser = PasswordInformationParser.defaultParser();
 
@@ -45,7 +45,7 @@ public class PasswordInformationParserTest {
    * Parse empty password information.
    */
   @Test
-  public void parseEmptyPasswordInformation() {
+  void parseEmptyPasswordInformation() {
     CommandExecutorResponse response = new CommandExecutorResponse(null, null);
     PasswordInformation expected = new PasswordInformation();
     PasswordInformation actual = parser.parse(response);
@@ -57,7 +57,7 @@ public class PasswordInformationParserTest {
    * Parse password information.
    */
   @Test
-  public void parsePasswordInformation() {
+  void parsePasswordInformation() {
     String stdout = PASSWORD_COMPLEXITY + " on\n"
         + STORE_PLAINTEXT_PASSWORD + " false\n"
         + PASSWORD_HISTORY_LENGTH + " 1234\n"

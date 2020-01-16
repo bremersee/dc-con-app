@@ -33,13 +33,13 @@ import org.junit.jupiter.api.Test;
  * @author Christian Bremer
  */
 @Slf4j
-public class DhcpLeaseListParserTest {
+class DhcpLeaseListParserTest {
 
   /**
    * Parse empty dhcp lease list.
    */
   @Test
-  public void parseEmptyDhcpLeaseList() {
+  void parseEmptyDhcpLeaseList() {
     DhcpLeaseParser parser = DhcpLeaseParser
         .defaultParser((mac, ip) -> "dhcp-" + ip.replace(".", "-"));
     CommandExecutorResponse response = new CommandExecutorResponse(null, null);
@@ -54,7 +54,7 @@ public class DhcpLeaseListParserTest {
    * Parse dhcp lease list.
    */
   @Test
-  public void parseDhcpLeaseList() {
+  void parseDhcpLeaseList() {
     DhcpLeaseParser parser = DhcpLeaseParser.defaultParser();
     String line0 = "MAC b8:xx:xx:xx:xx:xx "
         + "IP 192.168.1.109 "

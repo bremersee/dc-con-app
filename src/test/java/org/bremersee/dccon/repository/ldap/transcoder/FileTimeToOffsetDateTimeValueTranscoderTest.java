@@ -1,18 +1,18 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * The file time value transcoder test.
  *
  * @author Christian Bremer
  */
-public class FileTimeToOffsetDateTimeValueTranscoderTest {
+class FileTimeToOffsetDateTimeValueTranscoderTest {
 
   private static final FileTimeToOffsetDateTimeValueTranscoder trancoder
       = new FileTimeToOffsetDateTimeValueTranscoder();
@@ -27,7 +27,7 @@ public class FileTimeToOffsetDateTimeValueTranscoderTest {
    * Decode string value.
    */
   @Test
-  public void decodeStringValue() {
+  void decodeStringValue() {
     assertNull(trancoder.decodeStringValue(null));
     assertNull(trancoder.decodeStringValue(""));
     assertNull(trancoder.decodeStringValue("0"));
@@ -39,7 +39,7 @@ public class FileTimeToOffsetDateTimeValueTranscoderTest {
    * Encode string value.
    */
   @Test
-  public void encodeStringValue() {
+  void encodeStringValue() {
     assertNull(trancoder.encodeStringValue(null));
     final String actual = trancoder.encodeStringValue(dateTime);
     assertEquals(ldapValue, actual);
@@ -49,7 +49,7 @@ public class FileTimeToOffsetDateTimeValueTranscoderTest {
    * Gets type.
    */
   @Test
-  public void getType() {
+  void getType() {
     assertEquals(OffsetDateTime.class, trancoder.getType());
   }
 }
