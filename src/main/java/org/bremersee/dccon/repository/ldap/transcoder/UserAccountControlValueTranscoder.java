@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository.ldap.transcoder;
 
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.io.AbstractStringValueTranscoder;
 import org.springframework.util.StringUtils;
@@ -46,12 +47,12 @@ public class UserAccountControlValueTranscoder extends AbstractStringValueTransc
   /**
    * Gets user account control value.
    *
-   * @param enabled       the enabled
+   * @param enabled the enabled
    * @param existingValue the existing value
    * @return the user account control value
    */
   public static int getUserAccountControlValue(Boolean enabled, Integer existingValue) {
-    int value = existingValue != null ? existingValue : 0;
+    int value = Optional.ofNullable(existingValue).orElse(0);
     if ((value & NORMAL_ACCOUNT) != NORMAL_ACCOUNT) {
       value = value + NORMAL_ACCOUNT;
     }
@@ -90,9 +91,9 @@ public class UserAccountControlValueTranscoder extends AbstractStringValueTransc
 
   @Override
   public String encodeStringValue(Integer value) {
-    return value != null
-        ? String.valueOf(value)
-        : String.valueOf(getUserAccountControlValue(true, 0));
+    return Optional.ofNullable(value)
+        .map(String::valueOf)
+        .orElseGet(() -> String.valueOf(getUserAccountControlValue(true, 0)));
   }
 
   @Override
