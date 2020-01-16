@@ -50,7 +50,7 @@ public abstract class AbstractEmailService implements EmailService {
   /**
    * Instantiates a new abstract email service.
    *
-   * @param properties     the properties
+   * @param properties the properties
    * @param userRepository the user repository
    * @param templateEngine the template engine
    */
@@ -97,8 +97,8 @@ public abstract class AbstractEmailService implements EmailService {
    * Do send email with credentials.
    *
    * @param domainUser the domain user
-   * @param locale     the locale
-   * @param mailText   the mail text
+   * @param locale the locale
+   * @param mailText the mail text
    */
   abstract void doSendEmailWithCredentials(
       @NotNull DomainUser domainUser,

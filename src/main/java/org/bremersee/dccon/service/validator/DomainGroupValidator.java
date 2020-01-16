@@ -39,7 +39,7 @@ public interface DomainGroupValidator {
   /**
    * Do update validation.
    *
-   * @param groupName   the group name
+   * @param groupName the group name
    * @param domainGroup the domain group
    */
   void doUpdateValidation(String groupName, DomainGroup domainGroup);
@@ -47,9 +47,9 @@ public interface DomainGroupValidator {
   /**
    * Default domain group validator.
    *
-   * @param properties      the properties
+   * @param properties the properties
    * @param groupRepository the group repository
-   * @param userRepository  the user repository
+   * @param userRepository the user repository
    * @return the domain group validator
    */
   static DomainGroupValidator defaultValidator(
@@ -67,9 +67,9 @@ public interface DomainGroupValidator {
     /**
      * Instantiates a new default domain group validator.
      *
-     * @param properties      the properties
+     * @param properties the properties
      * @param groupRepository the group repository
-     * @param userRepository  the user repository
+     * @param userRepository the user repository
      */
     Default(DomainControllerProperties properties,
         DomainGroupRepository groupRepository,

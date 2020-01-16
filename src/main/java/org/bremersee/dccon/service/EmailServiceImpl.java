@@ -25,6 +25,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainControllerProperties.MailInlineAttachment;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ResourceLoader;
@@ -32,6 +33,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.thymeleaf.TemplateEngine;
 
 /**
@@ -53,12 +55,12 @@ public class EmailServiceImpl extends AbstractEmailService {
   /**
    * Instantiates a new email service.
    *
-   * @param properties     the properties
+   * @param properties the properties
    * @param userRepository the user repository
    * @param templateEngine the template engine
    * @param resourceLoader the resource loader
-   * @param messageSource  the message source
-   * @param javaMailSender the java mail sender
+   * @param messageSource the message source
+   * @param javaMailSenderProvider the java mail sender provider
    */
   public EmailServiceImpl(
       DomainControllerProperties properties,
@@ -66,11 +68,12 @@ public class EmailServiceImpl extends AbstractEmailService {
       TemplateEngine templateEngine,
       ResourceLoader resourceLoader,
       MessageSource messageSource,
-      JavaMailSender javaMailSender) {
+      ObjectProvider<JavaMailSender> javaMailSenderProvider) {
     super(properties, userRepository, templateEngine);
     this.resourceLoader = resourceLoader;
     this.messageSource = messageSource;
-    this.javaMailSender = javaMailSender;
+    this.javaMailSender = javaMailSenderProvider.getIfAvailable();
+    Assert.notNull(this.javaMailSender, "Java mail sender must be present.");
   }
 
   @Override

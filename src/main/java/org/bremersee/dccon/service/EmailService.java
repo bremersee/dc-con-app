@@ -21,10 +21,19 @@ import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.springframework.lang.Nullable;
 
 /**
+ * The email service.
+ *
  * @author Christian Bremer
  */
 public interface EmailService {
 
+  /**
+   * Send email with credentials.
+   *
+   * @param userName the user name
+   * @param clearPassword the clear password
+   * @param language the language
+   */
   void sendEmailWithCredentials(
       @NotNull String userName,
       @Nullable String clearPassword,

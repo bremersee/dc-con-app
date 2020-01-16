@@ -50,7 +50,7 @@ abstract class AbstractRepository {
   /**
    * Instantiates a new abstract repository.
    *
-   * @param properties   the properties
+   * @param properties the properties
    * @param ldapTemplate the ldap template
    */
   AbstractRepository(

@@ -52,7 +52,7 @@ public interface DnsNodeRepository {
   /**
    * Find dns nodes by ips.
    *
-   * @param ips           the ips
+   * @param ips the ips
    * @param unknownFilter the unknown filter
    * @return the dns nodes
    */
@@ -61,7 +61,7 @@ public interface DnsNodeRepository {
   /**
    * Find dns node by host name.
    *
-   * @param hostName      the host name, can be a simple host name or a full qualified domain name
+   * @param hostName the host name, can be a simple host name or a full qualified domain name
    * @param unknownFilter the unknown filter
    * @return the dns node
    */
@@ -70,9 +70,9 @@ public interface DnsNodeRepository {
   /**
    * Find all.
    *
-   * @param zoneName      the zone name
+   * @param zoneName the zone name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
-   * @param query         the query
+   * @param query the query
    * @return the dns nodes
    */
   Stream<DnsNode> findAll(
@@ -83,8 +83,8 @@ public interface DnsNodeRepository {
   /**
    * Check whether dns node exists or not.
    *
-   * @param zoneName      the zone name
-   * @param nodeName      the node name
+   * @param zoneName the zone name
+   * @param nodeName the node name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return {@code true} if the dns node exists, otherwise {@code false}
    */
@@ -96,8 +96,8 @@ public interface DnsNodeRepository {
   /**
    * Find dns node by zone name and node name.
    *
-   * @param zoneName      the zone name
-   * @param nodeName      the node name
+   * @param zoneName the zone name
+   * @param nodeName the node name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns node
    */
@@ -110,7 +110,7 @@ public interface DnsNodeRepository {
    * Find correlated dns node optional.
    *
    * @param zoneName the zone name
-   * @param record   the record
+   * @param record the record
    * @return the optional
    */
   Optional<DnsPair> findCorrelatedDnsNode(
@@ -121,7 +121,7 @@ public interface DnsNodeRepository {
    * Save dns node.
    *
    * @param zoneName the zone name
-   * @param dnsNode  the dns node
+   * @param dnsNode the dns node
    * @return the dns node (will be {@link Optional#empty()}, if the node has no records)
    */
   Optional<DnsNode> save(@NotNull String zoneName, @NotNull DnsNode dnsNode);
@@ -143,7 +143,7 @@ public interface DnsNodeRepository {
    * Delete boolean.
    *
    * @param zoneName the zone name
-   * @param node     the node
+   * @param node the node
    * @return the boolean
    */
   boolean delete(@NotNull String zoneName, @NotNull DnsNode node);
@@ -161,7 +161,7 @@ public interface DnsNodeRepository {
   /**
    * Delete all dns nodes with the specified names from the specified dns zone.
    *
-   * @param zoneName  the zone name
+   * @param zoneName the zone name
    * @param nodeNames the node names
    */
   default void deleteAll(@NotNull String zoneName, @Nullable Collection<String> nodeNames) {

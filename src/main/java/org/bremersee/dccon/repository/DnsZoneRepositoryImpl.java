@@ -30,6 +30,7 @@ import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
@@ -74,6 +75,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
    *
    * @param dnsZoneLdapMapper the dns zone ldap mapper
    */
+  @SuppressWarnings("unused")
   public void setDnsZoneLdapMapper(final LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
     if (dnsZoneLdapMapper != null) {
       this.dnsZoneLdapMapper = dnsZoneLdapMapper;
@@ -139,24 +141,17 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
           "org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9");
     }
     return findOne(zoneName)
-        .orElseGet(() -> {
-          doSave(zoneName);
-          return findOne(zoneName)
-              .orElseThrow(() -> ServiceException.internalServerError(
-                  "msg=[Saving dns zone failed.]",
-                  "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0"));
-        });
+        .orElseGet(() -> doSave(zoneName));
   }
 
-  void doSave(final String zoneName) {
-    execDnsZoneCmd(
+  DnsZone doSave(final String zoneName) {
+    return execDnsZoneCmd(
         "zonecreate",
-        zoneName,
-        (CommandExecutorResponseValidator) response -> {
-          if (!exists(zoneName)) {
-            log.error("Creating zone [{}] failed: {}", zoneName, response.toOneLine());
-          }
-        });
+        zoneName, response -> findOne(zoneName)
+            .orElseThrow(() -> ServiceException.internalServerError(
+                "msg=[Saving dns zone failed.] "
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0")));
   }
 
   @Override
@@ -181,7 +176,6 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
         });
   }
 
-  @SuppressWarnings("UnusedReturnValue")
   private <T> T execDnsZoneCmd(
       final String dnsCommand,
       final String zoneName,

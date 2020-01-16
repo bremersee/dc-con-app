@@ -52,7 +52,7 @@ abstract class AbstractDnsComparator<T> implements Comparator<T> {
   /**
    * Format string.
    *
-   * @param value  the value
+   * @param value the value
    * @param length the length
    * @return the string
    */
