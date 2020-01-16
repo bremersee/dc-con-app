@@ -236,6 +236,13 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
     return Optional.ofNullable(newDnsNode);
   }
 
+  /**
+   * Add a dns node.
+   *
+   * @param zoneName the zone name
+   * @param nodeName the node name
+   * @param records the records
+   */
   void add(
       final String zoneName,
       final String nodeName,

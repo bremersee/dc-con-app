@@ -90,6 +90,13 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
     }
   }
 
+  /**
+   * Is query result boolean.
+   *
+   * @param domainGroup the domain group
+   * @param query the query
+   * @return the boolean
+   */
   static boolean isQueryResult(final DomainGroup domainGroup, final String query) {
     return query != null && query.length() > 2 && domainGroup != null
         && (contains(domainGroup.getName(), query)
@@ -123,6 +130,11 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
     return getLdapTemplate().save(domainGroup, domainGroupLdapMapper);
   }
 
+  /**
+   * Add group.
+   *
+   * @param domainGroup the domain group
+   */
   void doAdd(final DomainGroup domainGroup) {
     kinit();
     final List<String> commands = new ArrayList<>();
@@ -156,6 +168,11 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
     return false;
   }
 
+  /**
+   * Delete group.
+   *
+   * @param groupName the group name
+   */
   void doDelete(final String groupName) {
     kinit();
     final List<String> commands = new ArrayList<>();

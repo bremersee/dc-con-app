@@ -73,6 +73,13 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
   private DomainGroupRepository groupRepository;
 
+  /**
+   * Instantiates a new Domain user repository mock.
+   *
+   * @param objectMapperBuilder the object mapper builder
+   * @param domainRepository the domain repository
+   * @param groupRepository the group repository
+   */
   public DomainUserRepositoryMock(
       Jackson2ObjectMapperBuilder objectMapperBuilder,
       DomainRepository domainRepository,

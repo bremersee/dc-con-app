@@ -155,6 +155,13 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     }
   }
 
+  /**
+   * Is query result boolean.
+   *
+   * @param domainUser the domain user
+   * @param query the query
+   * @return the boolean
+   */
   static boolean isQueryResult(final DomainUser domainUser, final String query) {
     return query != null && query.length() > 2 && domainUser != null
         && (contains(domainUser.getDisplayName(), query)
@@ -222,6 +229,15 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         });
   }
 
+  /**
+   * Find avatar byte [ ].
+   *
+   * @param mail the mail
+   * @param avatarUrlTemplate the avatar url template
+   * @param avatarDefault the avatar default
+   * @param avatarSize the avatar size
+   * @return the byte [ ]
+   */
   static byte[] findAvatar(
       final String mail,
       final String avatarUrlTemplate,
@@ -276,6 +292,11 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);
   }
 
+  /**
+   * Add user.
+   *
+   * @param domainUser the domain user
+   */
   void doAdd(final DomainUser domainUser) {
     // Maybe I can add an user directly:
     // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
@@ -408,6 +429,11 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     return false;
   }
 
+  /**
+   * Delete user.
+   *
+   * @param userName the user name
+   */
   void doDelete(final String userName) {
     kinit();
     final List<String> commands = new ArrayList<>();

@@ -39,7 +39,7 @@ import org.springframework.validation.annotation.Validated;
 public interface DnsNodeRepository {
 
   /**
-   * get unknown filter or default one.
+   * Get unknown filter or default one.
    *
    * @param unknownFilter the unknown filter
    * @return the unknown filter
@@ -140,7 +140,7 @@ public interface DnsNodeRepository {
   }
 
   /**
-   * Delete boolean.
+   * Delete dns node.
    *
    * @param zoneName the zone name
    * @param node the node

@@ -82,6 +82,12 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     return findActiveMap(false);
   }
 
+  /**
+   * Find active dhcp leases and put them into a map.
+   *
+   * @param ip specifies whether the key of the map is the ip or the host name (upper case)
+   * @return the map with the dhcp leases
+   */
   Map<String, DhcpLease> findActiveMap(final boolean ip) {
     final List<DhcpLease> leases = find(false);
     leases.sort(ComparatorBuilder.builder()
@@ -97,6 +103,12 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     return leaseMap;
   }
 
+  /**
+   * Find dhcp leases.
+   *
+   * @param all specifies whether to return all leases or only active ones
+   * @return the dhcp leases
+   */
   List<DhcpLease> find(final boolean all) {
     final List<String> commands = new ArrayList<>();
     sudo(commands);

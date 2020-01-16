@@ -144,6 +144,12 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
         .orElseGet(() -> doSave(zoneName));
   }
 
+  /**
+   * Save dns zone.
+   *
+   * @param zoneName the zone name
+   * @return the dns zone
+   */
   DnsZone doSave(final String zoneName) {
     return execDnsZoneCmd(
         "zonecreate",
@@ -163,6 +169,11 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
     return false;
   }
 
+  /**
+   * Delete dns zone.
+   *
+   * @param zoneName the zone name
+   */
   void doDelete(final String zoneName) {
     execDnsZoneCmd(
         "zonedelete",

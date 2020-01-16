@@ -30,6 +30,12 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsZoneRepository {
 
+  /**
+   * Determines whether the given zone is a reverse zone.
+   *
+   * @param dnsZoneName the dns zone name
+   * @return the boolean
+   */
   boolean isDnsReverseZone(final String dnsZoneName);
 
   /**
@@ -39,10 +45,20 @@ public interface DnsZoneRepository {
    */
   Stream<DnsZone> findAll();
 
+  /**
+   * Find dns reverse zones stream.
+   *
+   * @return the stream
+   */
   default Stream<DnsZone> findDnsReverseZones() {
     return findAll().filter(dnsZone -> isDnsReverseZone(dnsZone.getName()));
   }
 
+  /**
+   * Find non dns reverse zones stream.
+   *
+   * @return the stream
+   */
   default Stream<DnsZone> findNonDnsReverseZones() {
     return findAll().filter(dnsZone -> !isDnsReverseZone(dnsZone.getName()));
   }

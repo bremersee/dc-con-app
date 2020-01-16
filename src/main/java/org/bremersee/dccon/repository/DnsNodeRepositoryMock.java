@@ -67,6 +67,14 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
 
   private final ObjectMapper objectMapper;
 
+  /**
+   * Instantiates a new dns node repository mock.
+   *
+   * @param properties the properties
+   * @param dhcpRepository the dhcp repository
+   * @param dnsZoneRepository the dns zone repository
+   * @param objectMapperBuilder the object mapper builder
+   */
   public DnsNodeRepositoryMock(
       DomainControllerProperties properties,
       DhcpRepository dhcpRepository,

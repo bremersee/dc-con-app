@@ -36,6 +36,11 @@ public interface DomainRepository {
    */
   PasswordInformation getPasswordInformation();
 
+  /**
+   * Create random password.
+   *
+   * @return the random password
+   */
   default String createRandomPassword() {
     final char[] source = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz".toCharArray();
     final PasswordInformation passwordInformation = getPasswordInformation();
