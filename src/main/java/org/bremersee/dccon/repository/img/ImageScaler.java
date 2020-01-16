@@ -31,7 +31,7 @@ public class ImageScaler {
   /**
    * Scale image.
    *
-   * @param img       the img
+   * @param img the img
    * @param dimension the dimension
    * @return the buffered image
    */

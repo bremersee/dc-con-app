@@ -41,7 +41,7 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param dir      the dir
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings("UnusedReturnValue")
@@ -56,8 +56,8 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param env      the env
-   * @param dir      the dir
+   * @param env the env
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings("WeakerAccess")
@@ -72,10 +72,10 @@ public abstract class CommandExecutor {
   /**
    * Exec command executor.
    *
-   * @param <T>            the type parameter
-   * @param commands       the commands
-   * @param env            the env
-   * @param dir            the dir
+   * @param <T> the type parameter
+   * @param commands the commands
+   * @param env the env
+   * @param dir the dir
    * @param responseParser the response parser
    * @return the command executor response
    */
