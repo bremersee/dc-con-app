@@ -5,12 +5,12 @@ pipeline {
     DOCKER_IMAGE='bremersee/dc-con-app'
     DEV_TAG='snapshot'
     PROD_TAG='latest'
-    DEPLOY_SNAPSHOT=true
+    DEPLOY_SNAPSHOT=false
     DEPLOY_RELEASE=true
-    PUSH_SNAPSHOT=true
+    PUSH_SNAPSHOT=false
     PUSH_RELEASE=true
-    DEPLOY_DEMO=true
-    SNAPSHOT_SITE=true
+    DEPLOY_DEMO=false
+    SNAPSHOT_SITE=false
     RELEASE_SITE=true
   }
   stages {
