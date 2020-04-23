@@ -102,25 +102,26 @@
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>      } <strong class="jxr_keyword">catch</strong> (<strong class="jxr_keyword">final</strong> IOException e) {
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>  
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>        <strong class="jxr_keyword">final</strong> ServiceException se = ServiceException.internalServerError(
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>            <span class="jxr_string">"Decoding dns record value failed."</span>, e);
-<a class="jxr_linenumber" name="L98" href="#L98">98</a>        log.error(<span class="jxr_string">"msg=[Decoding dns record value failed.]"</span>, se);
-<a class="jxr_linenumber" name="L99" href="#L99">99</a>        <strong class="jxr_keyword">throw</strong> se;
-<a class="jxr_linenumber" name="L100" href="#L100">100</a>     }
-<a class="jxr_linenumber" name="L101" href="#L101">101</a>   }
-<a class="jxr_linenumber" name="L102" href="#L102">102</a> 
-<a class="jxr_linenumber" name="L103" href="#L103">103</a>   @Override
-<a class="jxr_linenumber" name="L104" href="#L104">104</a>   <strong class="jxr_keyword">public</strong> byte[] encodeBinaryValue(<strong class="jxr_keyword">final</strong> DnsRecord value) {
-<a class="jxr_linenumber" name="L105" href="#L105">105</a>     <strong class="jxr_keyword">return</strong> value.getRecordRawValue();
-<a class="jxr_linenumber" name="L106" href="#L106">106</a>   }
-<a class="jxr_linenumber" name="L107" href="#L107">107</a> 
-<a class="jxr_linenumber" name="L108" href="#L108">108</a>   @Override
-<a class="jxr_linenumber" name="L109" href="#L109">109</a>   <strong class="jxr_keyword">public</strong> Class&lt;DnsRecord&gt; getType() {
-<a class="jxr_linenumber" name="L110" href="#L110">110</a>     <strong class="jxr_keyword">return</strong> DnsRecord.<strong class="jxr_keyword">class</strong>;
-<a class="jxr_linenumber" name="L111" href="#L111">111</a>   }
-<a class="jxr_linenumber" name="L112" href="#L112">112</a> 
-<a class="jxr_linenumber" name="L113" href="#L113">113</a> }
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>            <span class="jxr_string">"Decoding dns record value failed."</span>,
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>            <span class="jxr_string">"org.bremersee:dc-con-app:d62e15c8-5410-4608-b663-20a716908102"</span>, e);
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>        log.error(<span class="jxr_string">"msg=[Decoding dns record value failed.]"</span>, se);
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>       <strong class="jxr_keyword">throw</strong> se;
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>     }
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>   }
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> 
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>   @Override
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>   <strong class="jxr_keyword">public</strong> byte[] encodeBinaryValue(<strong class="jxr_keyword">final</strong> DnsRecord value) {
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>     <strong class="jxr_keyword">return</strong> value.getRecordRawValue();
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>   }
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> 
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>   @Override
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>   <strong class="jxr_keyword">public</strong> Class&lt;DnsRecord&gt; getType() {
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>     <strong class="jxr_keyword">return</strong> DnsRecord.<strong class="jxr_keyword">class</strong>;
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>   }
+<a class="jxr_linenumber" name="L113" href="#L113">113</a> 
+<a class="jxr_linenumber" name="L114" href="#L114">114</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>

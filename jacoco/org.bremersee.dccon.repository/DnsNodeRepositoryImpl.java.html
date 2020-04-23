@@ -17,7 +17,6 @@
 package org.bremersee.dccon.repository;
 
 import static org.bremersee.dccon.model.UnknownFilter.ALL;
-import static org.bremersee.dccon.model.UnknownFilter.NO_UNKNOWN;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,27 +27,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
-import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
-import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.ldap.DnsNodeLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -60,63 +53,50 @@ import org.springframework.util.StringUtils;
  */
 @Profile(&quot;ldap&quot;)
 @Component(&quot;dnsNodeRepository&quot;)
-<span class="fc" id="L63">@Slf4j</span>
-public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNodeRepository {
-
-  private final DhcpRepository dhcpRepository;
-
-  private final DnsZoneRepository dnsZoneRepository;
+<span class="fc" id="L56">@Slf4j</span>
+public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
 
   private final Map&lt;String, LdaptiveEntryMapper&lt;DnsNode&gt;&gt; dnsNodeLdapMapperMap;
-
-  private final List&lt;Pattern&gt; excludedNodeNamePatterns;
-
-  private final Pattern patternIp4;
 
   private DnsNodeLdapMapperProvider dnsNodeLdapMapperProvider;
 
   /**
    * Instantiates a new dns node repository.
    *
-   * @param properties        the properties
-   * @param ldapTemplate      the ldap template
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    */
   public DnsNodeRepositoryImpl(
       final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate,
+      final ObjectProvider&lt;LdaptiveTemplate&gt; ldapTemplateProvider,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository) {
-<span class="fc" id="L91">    super(properties, ldapTemplate);</span>
-<span class="fc" id="L92">    this.dhcpRepository = dhcpRepository;</span>
-<span class="fc" id="L93">    this.dnsZoneRepository = dnsZoneRepository;</span>
-<span class="fc" id="L94">    this.dnsNodeLdapMapperMap = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="pc" id="L95">    this.dnsNodeLdapMapperProvider = (zoneName, unknownFilter) -&gt; new DnsNodeLdapMapper(</span>
-<span class="nc" id="L96">        getProperties(), zoneName, unknownFilter);</span>
-<span class="fc" id="L97">    this.excludedNodeNamePatterns = properties.getExcludedNodeRegexList().stream()</span>
-<span class="fc" id="L98">        .map(Pattern::compile).collect(Collectors.toList());</span>
-<span class="fc" id="L99">    this.patternIp4 = Pattern.compile(properties.getIp4Regex());</span>
-<span class="fc" id="L100">  }</span>
+<span class="fc" id="L76">    super(properties, ldapTemplateProvider.getIfAvailable(), dhcpRepository, dnsZoneRepository);</span>
+<span class="fc" id="L77">    this.dnsNodeLdapMapperMap = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="pc" id="L78">    this.dnsNodeLdapMapperProvider = (zoneName, unknownFilter) -&gt; new DnsNodeLdapMapper(</span>
+<span class="nc" id="L79">        getProperties(), zoneName, unknownFilter);</span>
+<span class="fc" id="L80">  }</span>
 
   /**
    * Keep dhcp lease caches up to date.
    */
   @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
   public void keepDhcpLeaseCachesUpToDate() {
-<span class="nc" id="L107">    log.trace(&quot;msg=[Keeping dhcp lease cache up to date.]&quot;);</span>
-<span class="nc" id="L108">    dhcpRepository.findActiveByIp();</span>
-<span class="nc" id="L109">    dhcpRepository.findActiveByHostName();</span>
-<span class="nc" id="L110">  }</span>
+<span class="fc" id="L87">    log.trace(&quot;msg=[Keeping dhcp lease cache up to date.]&quot;);</span>
+<span class="fc" id="L88">    getDhcpRepository().findActiveByIp();</span>
+<span class="fc" id="L89">    getDhcpRepository().findActiveByHostName();</span>
+<span class="fc" id="L90">  }</span>
 
   private LdaptiveEntryMapper&lt;DnsNode&gt; getDnsNodeLdapMapper(
       final String zoneName,
       final UnknownFilter unknownFilter) {
-<span class="nc" id="L115">    final UnknownFilter filter = unknownFilter(unknownFilter);</span>
-<span class="nc" id="L116">    final String key = zoneName + &quot;:&quot; + filter.name();</span>
-<span class="nc" id="L117">    return dnsNodeLdapMapperMap.computeIfAbsent(</span>
+<span class="fc" id="L95">    final UnknownFilter filter = unknownFilter(unknownFilter);</span>
+<span class="fc" id="L96">    final String key = zoneName + &quot;:&quot; + filter.name();</span>
+<span class="fc" id="L97">    return dnsNodeLdapMapperMap.computeIfAbsent(</span>
         key,
-<span class="nc" id="L119">        k -&gt; dnsNodeLdapMapperProvider.getDnsNodeLdapMapper(zoneName, filter));</span>
+<span class="fc" id="L99">        k -&gt; dnsNodeLdapMapperProvider.getDnsNodeLdapMapper(zoneName, filter));</span>
   }
 
   /**
@@ -127,79 +107,34 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
   @SuppressWarnings(&quot;unused&quot;)
   public void setDnsNodeLdapMapperProvider(
       final DnsNodeLdapMapperProvider dnsNodeLdapMapperProvider) {
-<span class="nc bnc" id="L130" title="All 2 branches missed.">    if (dnsNodeLdapMapperProvider != null) {</span>
-<span class="nc" id="L131">      this.dnsNodeLdapMapperProvider = dnsNodeLdapMapperProvider;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">    if (dnsNodeLdapMapperProvider != null) {</span>
+<span class="fc" id="L111">      this.dnsNodeLdapMapperProvider = dnsNodeLdapMapperProvider;</span>
     }
-<span class="nc" id="L133">  }</span>
-
-  private boolean isNonExcludedDnsNode(final DnsNode dnsNode) {
-<span class="nc bnc" id="L136" title="All 4 branches missed.">    return dnsNode != null &amp;&amp; !isExcludedDnsNode(dnsNode);</span>
-  }
-
-  private boolean isNonExcludedDnsNode(final String dnsNodeName) {
-<span class="nc bnc" id="L140" title="All 4 branches missed.">    return dnsNodeName != null &amp;&amp; !isExcludedDnsNode(dnsNodeName);</span>
-  }
-
-  private boolean isExcludedDnsNode(final DnsNode dnsNode) {
-<span class="nc bnc" id="L144" title="All 4 branches missed.">    return dnsNode != null &amp;&amp; isExcludedDnsNode(dnsNode.getName());</span>
-  }
-
-  private boolean isExcludedDnsNode(final String dnsNodeName) {
-<span class="nc bnc" id="L148" title="All 2 branches missed.">    return dnsNodeName != null &amp;&amp; excludedNodeNamePatterns.stream()</span>
-<span class="nc bnc" id="L149" title="All 2 branches missed.">        .anyMatch(pattern -&gt; pattern.matcher(dnsNodeName).matches());</span>
-  }
+<span class="fc" id="L113">  }</span>
 
   @Override
-  public List&lt;DnsNode&gt; findByIps(final Set&lt;String&gt; ips, final UnknownFilter unknownFilter) {
-<span class="nc" id="L154">    final List&lt;DnsNode&gt; nodes = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L155" title="All 2 branches missed.">    for (DnsZone zone : dnsZoneRepository.findNonDnsReverseZones().collect(Collectors.toList())) {</span>
-<span class="nc bnc" id="L156" title="All 2 branches missed.">      for (DnsNode node : findAll(zone.getName(), unknownFilter).collect(Collectors.toList())) {</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">        for (DnsRecord record : node.getRecords()) {</span>
-<span class="nc bnc" id="L158" title="All 2 branches missed.">          if (DnsRecordType.A.is(record.getRecordType())</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">              &amp;&amp; ips.contains(record.getRecordValue())) {</span>
-<span class="nc" id="L160">            nodes.add(node);</span>
-          }
-<span class="nc" id="L162">        }</span>
-<span class="nc" id="L163">      }</span>
-<span class="nc" id="L164">    }</span>
-<span class="nc" id="L165">    return nodes;</span>
-  }
+  public Stream&lt;DnsNode&gt; findAll(
+      final String zoneName,
+      final UnknownFilter unknownFilter,
+      final String query) {
 
-  @Override
-  public Optional&lt;DnsNode&gt; findByHostName(
-      final String hostName,
-      final UnknownFilter unknownFilter) {
-
-<span class="nc" id="L173">    final List&lt;String&gt; zoneNames = dnsZoneRepository.findNonDnsReverseZones()</span>
-<span class="nc" id="L174">        .map(DnsZone::getName)</span>
-<span class="nc" id="L175">        .sorted((o1, o2) -&gt; {</span>
-<span class="nc" id="L176">          int n1 = StringUtils.countOccurrencesOf(o1, &quot;.&quot;);</span>
-<span class="nc" id="L177">          int n2 = StringUtils.countOccurrencesOf(o2, &quot;.&quot;);</span>
-<span class="nc" id="L178">          return n2 - n1;</span>
-        })
-<span class="nc" id="L180">        .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L181" title="All 2 branches missed.">    for (String zoneName : zoneNames) {</span>
-<span class="nc" id="L182">      final String suffix = &quot;.&quot; + zoneName;</span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">      if (hostName.endsWith(suffix)) {</span>
-<span class="nc" id="L184">        final String name = hostName.substring(0, hostName.length() - suffix.length());</span>
-<span class="nc" id="L185">        return findOne(zoneName, name, unknownFilter);</span>
-      }
-<span class="nc" id="L187">    }</span>
-<span class="nc" id="L188">    return findOne(getProperties().getDefaultZone(), hostName, unknownFilter);</span>
-  }
-
-  @Override
-  public Stream&lt;DnsNode&gt; findAll(final String zoneName, final UnknownFilter unknownFilter) {
-
-<span class="nc" id="L194">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L195">        getProperties().buildDnsNodeBaseDn(zoneName),</span>
-<span class="nc" id="L196">        new SearchFilter(getProperties().getDnsNodeFindAllFilter()));</span>
-<span class="nc" id="L197">    searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());</span>
-<span class="nc" id="L198">    searchRequest.setBinaryAttributes(&quot;dnsRecord&quot;);</span>
-<span class="nc" id="L199">    return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))</span>
-<span class="nc" id="L200">        .filter(this::isNonExcludedDnsNode)</span>
-<span class="nc" id="L201">        .map(dnsNode -&gt; insertCorrelationValues(zoneName, dnsNode))</span>
-<span class="nc" id="L202">        .map(dnsNode -&gt; insertDhcpLeases(zoneName, dnsNode));</span>
+<span class="fc" id="L121">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L122">        getProperties().buildDnsNodeBaseDn(zoneName),</span>
+<span class="fc" id="L123">        new SearchFilter(getProperties().getDnsNodeFindAllFilter()));</span>
+<span class="fc" id="L124">    searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());</span>
+<span class="fc" id="L125">    searchRequest.setBinaryAttributes(&quot;dnsRecord&quot;);</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">    if (query == null || query.trim().length() == 0) {</span>
+<span class="fc" id="L127">      return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))</span>
+<span class="fc" id="L128">          .filter(this::isNonExcludedDnsNode)</span>
+<span class="fc" id="L129">          .map(dnsNode -&gt; insertCorrelationValues(zoneName, dnsNode))</span>
+<span class="fc" id="L130">          .map(dnsNode -&gt; insertDhcpLeases(zoneName, dnsNode));</span>
+    } else {
+<span class="fc" id="L132">      return getLdapTemplate().findAll(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))</span>
+<span class="fc" id="L133">          .filter(this::isNonExcludedDnsNode)</span>
+<span class="fc" id="L134">          .map(dnsNode -&gt; insertCorrelationValues(zoneName, dnsNode))</span>
+<span class="fc" id="L135">          .map(dnsNode -&gt; insertDhcpLeases(zoneName, dnsNode))</span>
+<span class="fc" id="L136">          .filter(dnsNode -&gt; this.isQueryResult(dnsNode, query));</span>
+    }
   }
 
   @Override
@@ -207,143 +142,35 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final String zoneName,
       final String nodeName,
       final UnknownFilter unknownFilter) {
-<span class="nc bnc" id="L210" title="All 2 branches missed.">    return isNonExcludedDnsNode(nodeName)</span>
-<span class="nc bnc" id="L211" title="All 2 branches missed.">        &amp;&amp; dnsZoneRepository.exists(zoneName)</span>
-<span class="nc bnc" id="L212" title="All 2 branches missed.">        &amp;&amp; getLdapTemplate().exists(DnsNode.builder().name(nodeName).build(),</span>
-<span class="nc" id="L213">        getDnsNodeLdapMapper(zoneName, unknownFilter));</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">    return isNonExcludedDnsNode(nodeName)</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        &amp;&amp; getDnsZoneRepository().exists(zoneName)</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        &amp;&amp; getLdapTemplate().exists(DnsNode.builder().name(nodeName).build(),</span>
+<span class="fc" id="L148">        getDnsNodeLdapMapper(zoneName, unknownFilter));</span>
   }
 
   @Override
-  public Optional&lt;DnsNode&gt; findOne(
-      final String zoneName,
-      final String nodeName,
-      final UnknownFilter unknownFilter) {
-<span class="nc" id="L221">    return findOne(zoneName, nodeName, unknownFilter, true, true);</span>
-  }
-
-  private Optional&lt;DnsNode&gt; findOne(
+  Optional&lt;DnsNode&gt; findOne(
       final String zoneName,
       final String nodeName,
       final UnknownFilter unknownFilter,
       final boolean withCorrelationValues,
       final boolean withDhcpLeases) {
 
-<span class="nc" id="L231">    final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsNodeFindOneFilter());</span>
-<span class="nc" id="L232">    searchFilter.setParameter(0, nodeName);</span>
-<span class="nc" id="L233">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L234">        getProperties().buildDnsNodeBaseDn(zoneName),</span>
+<span class="fc" id="L159">    final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsNodeFindOneFilter());</span>
+<span class="fc" id="L160">    searchFilter.setParameter(0, nodeName);</span>
+<span class="fc" id="L161">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L162">        getProperties().buildDnsNodeBaseDn(zoneName),</span>
         searchFilter);
-<span class="nc" id="L236">    searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());</span>
-<span class="nc" id="L237">    searchRequest.setBinaryAttributes(&quot;dnsRecord&quot;);</span>
-<span class="nc" id="L238">    return getLdapTemplate().findOne(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))</span>
-<span class="nc" id="L239">        .filter(this::isNonExcludedDnsNode)</span>
-<span class="nc bnc" id="L240" title="All 2 branches missed.">        .map(dnsNode -&gt; withCorrelationValues</span>
-<span class="nc" id="L241">            ? insertCorrelationValues(zoneName, dnsNode)</span>
+<span class="fc" id="L164">    searchRequest.setSearchScope(getProperties().getDnsNodeFindAllSearchScope());</span>
+<span class="fc" id="L165">    searchRequest.setBinaryAttributes(&quot;dnsRecord&quot;);</span>
+<span class="fc" id="L166">    return getLdapTemplate().findOne(searchRequest, getDnsNodeLdapMapper(zoneName, unknownFilter))</span>
+<span class="fc" id="L167">        .filter(this::isNonExcludedDnsNode)</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        .map(dnsNode -&gt; withCorrelationValues</span>
+<span class="fc" id="L169">            ? insertCorrelationValues(zoneName, dnsNode)</span>
             : dnsNode)
-<span class="nc bnc" id="L243" title="All 2 branches missed.">        .map(dnsNode -&gt; withDhcpLeases</span>
-<span class="nc" id="L244">            ? insertDhcpLeases(zoneName, dnsNode)</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        .map(dnsNode -&gt; withDhcpLeases</span>
+<span class="fc" id="L172">            ? insertDhcpLeases(zoneName, dnsNode)</span>
             : dnsNode);
-  }
-
-  private DnsNode insertDhcpLeases(
-      final String zoneName,
-      final DnsNode dnsNode) {
-
-<span class="nc" id="L252">    final boolean isReverseZone = dnsZoneRepository.isDnsReverseZone(zoneName);</span>
-<span class="nc bnc" id="L253" title="All 2 branches missed.">    final Map&lt;String, DhcpLease&gt; leaseMap = isReverseZone</span>
-<span class="nc" id="L254">        ? dhcpRepository.findActiveByHostName() : dhcpRepository.findActiveByIp();</span>
-
-<span class="nc bnc" id="L256" title="All 2 branches missed.">    for (final DnsRecord record : dnsNode.getRecords()) {</span>
-<span class="nc bnc" id="L257" title="All 2 branches missed.">      if (DnsRecordType.A.is(record.getRecordType())) {</span>
-<span class="nc" id="L258">        record.setDhcpLease(leaseMap.get(record.getRecordValue()));</span>
-<span class="nc bnc" id="L259" title="All 2 branches missed.">      } else if (DnsRecordType.PTR.is(record.getRecordType())</span>
-<span class="nc bnc" id="L260" title="All 2 branches missed.">          &amp;&amp; record.getRecordValue().endsWith(&quot;.&quot; + getProperties().getDefaultZone())) {</span>
-<span class="nc" id="L261">        final String hostName = record.getRecordValue().substring(</span>
-            0,
-<span class="nc" id="L263">            record.getRecordValue().length() - (&quot;.&quot; + getProperties().getDefaultZone()).length())</span>
-<span class="nc" id="L264">            .toLowerCase();</span>
-<span class="nc" id="L265">        record.setDhcpLease(leaseMap.get(hostName));</span>
-      }
-<span class="nc" id="L267">    }</span>
-<span class="nc" id="L268">    return dnsNode;</span>
-  }
-
-  private DnsNode insertCorrelationValues(
-      final String zoneName,
-      final DnsNode dnsNode) {
-<span class="nc" id="L274">    dnsNode.setRecords(dnsNode.getRecords().stream()</span>
-<span class="nc" id="L275">        .map(dnsRecord -&gt; insertCorrelationValue(zoneName, dnsRecord))</span>
-<span class="nc" id="L276">        .collect(Collectors.toSet()));</span>
-<span class="nc" id="L277">    return dnsNode;</span>
-  }
-
-  private DnsRecord insertCorrelationValue(
-      final String zoneName,
-      final DnsRecord dnsRecord) {
-<span class="nc" id="L283">    return findCorrelatedDnsNode(zoneName, dnsRecord)</span>
-<span class="nc" id="L284">        .filter(dnsPair -&gt; Boolean.TRUE.equals(dnsPair.getNodeExists()))</span>
-<span class="nc" id="L285">        .flatMap(dnsPair -&gt; dnsPair.getNode().getRecords().stream()</span>
-<span class="nc" id="L286">            .filter(correlatedRecord -&gt; DnsRecordType.areCorrelated(dnsRecord, correlatedRecord))</span>
-<span class="nc" id="L287">            .findAny())</span>
-<span class="nc" id="L288">        .map(correlatedRecord -&gt; {</span>
-<span class="nc" id="L289">          dnsRecord.setCorrelatedRecordValue(correlatedRecord.getRecordValue());</span>
-<span class="nc" id="L290">          return dnsRecord;</span>
-        })
-<span class="nc" id="L292">        .orElse(dnsRecord);</span>
-  }
-
-  @Override
-  public Optional&lt;DnsPair&gt; findCorrelatedDnsNode(
-      final String zoneName,
-      final DnsRecord record) {
-
-<span class="nc bnc" id="L300" title="All 2 branches missed.">    if (DnsRecordType.A.is(record.getRecordType())) {</span>
-<span class="nc" id="L301">      final String ip4 = record.getRecordValue();</span>
-<span class="nc" id="L302">      return findDnsZoneByIp4(ip4)</span>
-<span class="nc" id="L303">          .flatMap(reverseZone -&gt; buildDnsPairByIp4(ip4, reverseZone));</span>
-<span class="nc bnc" id="L304" title="All 2 branches missed.">    } else if (DnsRecordType.PTR.is(record.getRecordType())) {</span>
-<span class="nc" id="L305">      final String fqdn = record.getRecordValue();</span>
-<span class="nc" id="L306">      return findDnsZoneByFqdn(fqdn)</span>
-<span class="nc" id="L307">          .flatMap(zone -&gt; buildDnsPairByFqdn(fqdn, zone));</span>
-    }
-<span class="nc" id="L309">    return Optional.empty();</span>
-  }
-
-  private Optional&lt;DnsPair&gt; buildDnsPairByIp4(
-      final String ip4,
-      final DnsZone reverseZone) {
-
-<span class="nc" id="L316">    return getDnsNodeNameByIp4(ip4, reverseZone.getName())</span>
-<span class="nc" id="L317">        .map(nodeName -&gt; findOne(reverseZone.getName(), nodeName, NO_UNKNOWN, false, false)</span>
-<span class="nc" id="L318">            .map(dnsNode -&gt; DnsPair.builder()</span>
-<span class="nc" id="L319">                .zoneName(reverseZone.getName())</span>
-<span class="nc" id="L320">                .node(dnsNode)</span>
-<span class="nc" id="L321">                .nodeExists(true)</span>
-<span class="nc" id="L322">                .build())</span>
-<span class="nc" id="L323">            .orElseGet(() -&gt; DnsPair.builder()</span>
-<span class="nc" id="L324">                .zoneName(reverseZone.getName())</span>
-<span class="nc" id="L325">                .node(DnsNode.builder()</span>
-<span class="nc" id="L326">                    .name(nodeName)</span>
-<span class="nc" id="L327">                    .build())</span>
-<span class="nc" id="L328">                .nodeExists(false)</span>
-<span class="nc" id="L329">                .build()));</span>
-  }
-
-  private Optional&lt;DnsPair&gt; buildDnsPairByFqdn(final String fqdn, final DnsZone dnsZone) {
-<span class="nc" id="L333">    return getDnsNodeNameByFqdn(fqdn, dnsZone.getName())</span>
-<span class="nc" id="L334">        .map(nodeName -&gt; findOne(dnsZone.getName(), nodeName, NO_UNKNOWN, false, false)</span>
-<span class="nc" id="L335">            .map(dnsNode -&gt; DnsPair.builder()</span>
-<span class="nc" id="L336">                .zoneName(dnsZone.getName())</span>
-<span class="nc" id="L337">                .node(dnsNode)</span>
-<span class="nc" id="L338">                .nodeExists(true)</span>
-<span class="nc" id="L339">                .build())</span>
-<span class="nc" id="L340">            .orElseGet(() -&gt; DnsPair.builder()</span>
-<span class="nc" id="L341">                .zoneName(dnsZone.getName())</span>
-<span class="nc" id="L342">                .node(DnsNode.builder()</span>
-<span class="nc" id="L343">                    .name(nodeName)</span>
-<span class="nc" id="L344">                    .build())</span>
-<span class="nc" id="L345">                .nodeExists(false)</span>
-<span class="nc" id="L346">                .build()));</span>
   }
 
   @Override
@@ -351,261 +178,108 @@ public class DnsNodeRepositoryImpl extends AbstractRepository implements DnsNode
       final String zoneName,
       final DnsNode dnsNode) {
 
-<span class="nc bnc" id="L354" title="All 2 branches missed.">    if (isExcludedDnsNode(dnsNode)) {</span>
-<span class="nc" id="L355">      throw ServiceException.badRequest(</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">    if (isExcludedDnsNode(dnsNode)) {</span>
+<span class="fc" id="L182">      throw ServiceException.badRequest(</span>
           &quot;Node name is not allowed.&quot;,
           &quot;org.bremersee:dc-con-app:8dd7165e-89af-4423-900a-5fc0a71fe7bf&quot;);
     }
     // Collect deleted records and save existing dns node
-<span class="nc" id="L360">    final Set&lt;DnsRecord&gt; deletedRecords = new LinkedHashSet&lt;&gt;();</span>
-<span class="nc" id="L361">    DnsNode newDnsNode = findOne(zoneName, dnsNode.getName(), ALL, false, false)</span>
-<span class="nc" id="L362">        .map(existingDnsNode -&gt; {</span>
-<span class="nc bnc" id="L363" title="All 2 branches missed.">          for (final DnsRecord existingDnsRecord : existingDnsNode.getRecords()) {</span>
-<span class="nc bnc" id="L364" title="All 2 branches missed.">            if (!dnsNode.getRecords().contains(existingDnsRecord)) {</span>
-<span class="nc" id="L365">              deletedRecords.add(existingDnsRecord);</span>
+<span class="fc" id="L187">    final Set&lt;DnsRecord&gt; deletedRecords = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L188">    DnsNode newDnsNode = findOne(zoneName, dnsNode.getName(), ALL, false, false)</span>
+<span class="fc" id="L189">        .map(existingDnsNode -&gt; {</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">          for (final DnsRecord existingDnsRecord : existingDnsNode.getRecords()) {</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (!dnsNode.getRecords().contains(existingDnsRecord)) {</span>
+<span class="fc" id="L192">              deletedRecords.add(existingDnsRecord);</span>
             }
-<span class="nc" id="L367">          }</span>
-<span class="nc bnc" id="L368" title="All 2 branches missed.">          if (deletedRecords.size() == existingDnsNode.getRecords().size()) {</span>
-<span class="nc" id="L369">            getLdapTemplate().delete(</span>
+<span class="fc" id="L194">          }</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">          if (deletedRecords.size() == existingDnsNode.getRecords().size()) {</span>
+<span class="fc" id="L196">            getLdapTemplate().delete(</span>
                 existingDnsNode,
-<span class="nc" id="L371">                getDnsNodeLdapMapper(zoneName, ALL));</span>
-<span class="nc" id="L372">            return DnsNode.builder()</span>
-<span class="nc" id="L373">                .name(dnsNode.getName())</span>
-<span class="nc" id="L374">                .build();</span>
+<span class="fc" id="L198">                getDnsNodeLdapMapper(zoneName, ALL));</span>
+<span class="fc" id="L199">            return DnsNode.builder()</span>
+<span class="fc" id="L200">                .name(dnsNode.getName())</span>
+<span class="fc" id="L201">                .build();</span>
           }
-<span class="nc" id="L376">          return getLdapTemplate().save(dnsNode, getDnsNodeLdapMapper(zoneName, ALL));</span>
+<span class="fc" id="L203">          return getLdapTemplate().save(dnsNode, getDnsNodeLdapMapper(zoneName, ALL));</span>
         })
-<span class="nc" id="L378">        .orElseGet(() -&gt; DnsNode.builder()</span>
-<span class="nc" id="L379">            .name(dnsNode.getName())</span>
-<span class="nc" id="L380">            .build());</span>
+<span class="fc" id="L205">        .orElseGet(() -&gt; DnsNode.builder()</span>
+<span class="fc" id="L206">            .name(dnsNode.getName())</span>
+<span class="fc" id="L207">            .build());</span>
 
     // Collect new records
-<span class="nc" id="L383">    final Set&lt;DnsRecord&gt; newRecords = new LinkedHashSet&lt;&gt;();</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">    for (final DnsRecord record : dnsNode.getRecords()) {</span>
-<span class="nc bnc" id="L385" title="All 2 branches missed.">      if (!newDnsNode.getRecords().contains(record)) {</span>
-<span class="nc" id="L386">        newRecords.add(record);</span>
+<span class="fc" id="L210">    final Set&lt;DnsRecord&gt; newRecords = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">    for (final DnsRecord record : dnsNode.getRecords()) {</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">      if (!newDnsNode.getRecords().contains(record)) {</span>
+<span class="fc" id="L213">        newRecords.add(record);</span>
       }
-<span class="nc" id="L388">    }</span>
+<span class="fc" id="L215">    }</span>
 
-<span class="nc bnc" id="L390" title="All 4 branches missed.">    if (newDnsNode.getRecords().isEmpty() &amp;&amp; newRecords.isEmpty()) {</span>
+<span class="pc bpc" id="L217" title="1 of 4 branches missed.">    if (newDnsNode.getRecords().isEmpty() &amp;&amp; newRecords.isEmpty()) {</span>
       // The dns node has no records, it will be deleted
-<span class="nc bnc" id="L392" title="All 2 branches missed.">      if (StringUtils.hasText(newDnsNode.getDistinguishedName())) {</span>
-<span class="nc" id="L393">        getLdapTemplate().delete(dnsNode, getDnsNodeLdapMapper(zoneName, ALL));</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">      if (StringUtils.hasText(newDnsNode.getDistinguishedName())) {</span>
+<span class="nc" id="L220">        getLdapTemplate().delete(dnsNode, getDnsNodeLdapMapper(zoneName, ALL));</span>
       }
-<span class="nc" id="L395">      newDnsNode = null;</span>
+<span class="nc" id="L222">      newDnsNode = null;</span>
     } else {
       // Add new record via cli
-<span class="nc" id="L398">      add(zoneName, dnsNode.getName(), newRecords);</span>
+<span class="fc" id="L225">      add(zoneName, dnsNode.getName(), newRecords);</span>
       // Load dns node from ldap
-<span class="nc" id="L400">      newDnsNode = findOne(zoneName, dnsNode.getName(), ALL, false, false)</span>
-<span class="nc" id="L401">          .orElseThrow(() -&gt; ServiceException.internalServerError(</span>
+<span class="fc" id="L227">      newDnsNode = findOne(zoneName, dnsNode.getName(), ALL, false, false)</span>
+<span class="pc" id="L228">          .orElseThrow(() -&gt; ServiceException.internalServerError(</span>
               &quot;Saving dns node failed.&quot;,
               &quot;org.bremersee:dc-con-app:7eabb994-f6db-49dc-870b-b4e2dd330a4c&quot;));
     }
 
     // Do A record to PTR record synchronization
-<span class="nc" id="L407">    handlePtrRecords(zoneName, dnsNode.getName(), newRecords, deletedRecords);</span>
+<span class="fc" id="L234">    handlePtrRecords(zoneName, dnsNode.getName(), newRecords, deletedRecords);</span>
 
-<span class="nc" id="L409">    return Optional.ofNullable(newDnsNode);</span>
+<span class="fc" id="L236">    return Optional.ofNullable(newDnsNode);</span>
   }
 
-  private void add(
+  /**
+   * Add a dns node.
+   *
+   * @param zoneName the zone name
+   * @param nodeName the node name
+   * @param records the records
+   */
+  void add(
       final String zoneName,
       final String nodeName,
       final Collection&lt;DnsRecord&gt; records) {
 
-<span class="nc bnc" id="L417" title="All 8 branches missed.">    if (zoneName == null || nodeName == null || records == null || records.isEmpty()) {</span>
-<span class="nc" id="L418">      return;</span>
+<span class="nc bnc" id="L251" title="All 8 branches missed.">    if (zoneName == null || nodeName == null || records == null || records.isEmpty()) {</span>
+<span class="nc" id="L252">      return;</span>
     }
 
-<span class="nc" id="L421">    kinit();</span>
-<span class="nc bnc" id="L422" title="All 2 branches missed.">    for (final DnsRecord record : records) {</span>
-<span class="nc" id="L423">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L424">      sudo(commands);</span>
-<span class="nc" id="L425">      commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L426">      commands.add(&quot;dns&quot;);</span>
-<span class="nc" id="L427">      commands.add(&quot;add&quot;);</span>
-<span class="nc" id="L428">      commands.add(getProperties().getNameServerHost());</span>
-<span class="nc" id="L429">      commands.add(zoneName);</span>
-<span class="nc" id="L430">      commands.add(nodeName);</span>
-<span class="nc" id="L431">      commands.add(record.getRecordType());</span>
-<span class="nc" id="L432">      commands.add(record.getRecordValue());</span>
-<span class="nc" id="L433">      auth(commands);</span>
-<span class="nc" id="L434">      CommandExecutor.exec(commands, getProperties().getSambaToolExecDir());</span>
-<span class="nc" id="L435">    }</span>
-<span class="nc" id="L436">  }</span>
-
-  @Override
-  public boolean delete(@NotNull String zoneName, @NotNull String nodeName) {
-<span class="nc" id="L440">    return findOne(zoneName, nodeName, ALL, false, false)</span>
-<span class="nc" id="L441">        .map(node -&gt; delete(zoneName, node))</span>
-<span class="nc" id="L442">        .orElse(false);</span>
-  }
+<span class="nc" id="L255">    kinit();</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">    for (final DnsRecord record : records) {</span>
+<span class="nc" id="L257">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L258">      sudo(commands);</span>
+<span class="nc" id="L259">      commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L260">      commands.add(&quot;dns&quot;);</span>
+<span class="nc" id="L261">      commands.add(&quot;add&quot;);</span>
+<span class="nc" id="L262">      commands.add(getProperties().getNameServerHost());</span>
+<span class="nc" id="L263">      commands.add(zoneName);</span>
+<span class="nc" id="L264">      commands.add(nodeName);</span>
+<span class="nc" id="L265">      commands.add(record.getRecordType());</span>
+<span class="nc" id="L266">      commands.add(record.getRecordValue());</span>
+<span class="nc" id="L267">      auth(commands);</span>
+<span class="nc" id="L268">      CommandExecutor.exec(commands, getProperties().getSambaToolExecDir());</span>
+<span class="nc" id="L269">    }</span>
+<span class="nc" id="L270">  }</span>
 
   @Override
   public boolean delete(final String zoneName, final DnsNode node) {
-<span class="nc bnc" id="L447" title="All 2 branches missed.">    if (isExcludedDnsNode(node)) {</span>
-<span class="nc" id="L448">      throw ServiceException.badRequest(</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">    if (isExcludedDnsNode(node)) {</span>
+<span class="fc" id="L275">      throw ServiceException.badRequest(</span>
           &quot;Node name is not allowed.&quot;,
           &quot;org.bremersee:dc-con-app:3e377240-eafd-45ea-9ee6-048ab3ca8cec&quot;);
     }
-<span class="nc" id="L452">    getLdapTemplate().delete(node, getDnsNodeLdapMapper(zoneName, ALL));</span>
-<span class="nc" id="L453">    handlePtrRecords(zoneName, node.getName(), Collections.emptySet(), node.getRecords());</span>
-<span class="nc" id="L454">    return true;</span>
-  }
-
-  @Override
-  public void deleteAll(@NotNull String zoneName, @Nullable Collection&lt;String&gt; nodeNames) {
-<span class="nc bnc" id="L459" title="All 4 branches missed.">    if (nodeNames != null &amp;&amp; !nodeNames.isEmpty()) {</span>
-<span class="nc bnc" id="L460" title="All 2 branches missed.">      for (String nodeName : new LinkedHashSet&lt;&gt;(nodeNames)) {</span>
-<span class="nc" id="L461">        findOne(zoneName, nodeName, ALL, false, false)</span>
-<span class="nc" id="L462">            .ifPresent(dnsNode -&gt; delete(zoneName, dnsNode));</span>
-<span class="nc" id="L463">      }</span>
-    }
-<span class="nc" id="L465">  }</span>
-
-  private void handlePtrRecords(
-      final String zoneName,
-      final String nodeName,
-      final Set&lt;DnsRecord&gt; newRecords,
-      final Set&lt;DnsRecord&gt; deletedRecords) {
-
-<span class="nc bnc" id="L473" title="All 2 branches missed.">    if (dnsZoneRepository.isDnsReverseZone(zoneName)) {</span>
-<span class="nc" id="L474">      return;</span>
-    }
-<span class="nc bnc" id="L476" title="All 2 branches missed.">    for (final DnsRecord record : deletedRecords) {</span>
-<span class="nc" id="L477">      findCorrelatedDnsNode(zoneName, record).ifPresent(pair -&gt; {</span>
-<span class="nc" id="L478">        pair.getNode().getRecords().remove(DnsRecord.builder()</span>
-<span class="nc" id="L479">            .recordType(DnsRecordType.PTR.name())</span>
-<span class="nc" id="L480">            .recordValue(nodeName + &quot;.&quot; + zoneName)</span>
-<span class="nc" id="L481">            .build());</span>
-<span class="nc" id="L482">        save(pair.getZoneName(), pair.getNode());</span>
-<span class="nc" id="L483">      });</span>
-<span class="nc" id="L484">    }</span>
-<span class="nc bnc" id="L485" title="All 2 branches missed.">    for (final DnsRecord record : newRecords) {</span>
-<span class="nc" id="L486">      findCorrelatedDnsNode(zoneName, record).ifPresent(pair -&gt; {</span>
-<span class="nc" id="L487">        final DnsRecord newRecord = DnsRecord.builder()</span>
-<span class="nc" id="L488">            .recordType(DnsRecordType.PTR.name())</span>
-<span class="nc" id="L489">            .recordValue(nodeName + &quot;.&quot; + zoneName)</span>
-<span class="nc" id="L490">            .build();</span>
-<span class="nc bnc" id="L491" title="All 2 branches missed.">        if (!pair.getNode().getRecords().contains(newRecord)) {</span>
-<span class="nc" id="L492">          pair.getNode().getRecords().add(newRecord);</span>
-<span class="nc" id="L493">          save(pair.getZoneName(), pair.getNode());</span>
-        }
-<span class="nc" id="L495">      });</span>
-<span class="nc" id="L496">    }</span>
-<span class="nc" id="L497">  }</span>
-
-  /**
-   * Find dns zone by an IPv4.
-   *
-   * @param ip the IPv4
-   * @return the dns zone or {@code empty}
-   */
-  private Optional&lt;DnsZone&gt; findDnsZoneByIp4(final String ip) {
-<span class="nc" id="L506">    return dnsZoneRepository.findDnsReverseZones()</span>
-<span class="nc" id="L507">        .filter(dnsZone -&gt; ip4MatchesDnsZone(ip, dnsZone.getName()))</span>
-<span class="nc" id="L508">        .findFirst();</span>
-  }
-
-  private Optional&lt;DnsZone&gt; findDnsZoneByFqdn(final String fqdn) {
-<span class="nc" id="L512">    final Map&lt;String, DnsZone&gt; zoneMap = dnsZoneRepository.findNonDnsReverseZones()</span>
-<span class="nc" id="L513">        .collect(Collectors.toMap(dnsNode -&gt; dnsNode.getName().toLowerCase(), dnsNode -&gt; dnsNode));</span>
-<span class="nc" id="L514">    String tmp = fqdn;</span>
-    int i;
-<span class="nc bnc" id="L516" title="All 2 branches missed.">    while ((i = tmp.indexOf('.')) &gt; -1) {</span>
-<span class="nc" id="L517">      final String zoneName = fqdn.substring(i + 1);</span>
-<span class="nc" id="L518">      final DnsZone dnsZone = zoneMap.get(zoneName.toLowerCase());</span>
-<span class="nc bnc" id="L519" title="All 2 branches missed.">      if (dnsZone != null) {</span>
-<span class="nc" id="L520">        return Optional.of(dnsZone);</span>
-      }
-<span class="nc" id="L522">      tmp = zoneName;</span>
-<span class="nc" id="L523">    }</span>
-<span class="nc" id="L524">    return Optional.empty();</span>
-  }
-
-  /**
-   * Checks whether the given IPv4 (e. g. {@code 192.168.1.123}) matches the given dns zone name (e.
-   * g. {@code 1.168.192.in-addr.arpa}).
-   *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123})
-   * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa})
-   * @return {@code true} if the ip matches the dns reverse zone, otherwise {@code false}
-   */
-  boolean ip4MatchesDnsZone(final String ip, final String zoneName) {
-<span class="pc bpc" id="L536" title="3 of 6 branches missed.">    if (ip == null || zoneName == null || !patternIp4.matcher(ip).matches()) {</span>
-<span class="nc" id="L537">      return false;</span>
-    }
-<span class="fc" id="L539">    return Optional.ofNullable(splitIp4(ip, zoneName))</span>
-<span class="fc" id="L540">        .map(ipParts -&gt; ip.equals(ipParts[0] + &quot;.&quot; + ipParts[1]))</span>
-<span class="fc" id="L541">        .orElse(false);</span>
-  }
-
-  /**
-   * Returns the dns reverse node name.
-   *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123}
-   * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
-   * @return the dns reverse node name (e. g. {@code 123}
-   */
-  Optional&lt;String&gt; getDnsNodeNameByIp4(final String ip, final String zoneName) {
-<span class="fc" id="L552">    return Optional.ofNullable(splitIp4(ip, zoneName)).map(parts -&gt; parts[1]);</span>
-  }
-
-  /**
-   * Returns the dns node name.
-   *
-   * @param fqdn     the full qualified domain name (e. g. {@code pluto.eixe.bremersee.org})
-   * @param zoneName the dns zone name (e. g. {@code eixe.bremersee.org})
-   * @return the dns node name (e. g. {@code pluto})
-   */
-  Optional&lt;String&gt; getDnsNodeNameByFqdn(String fqdn, String zoneName) {
-<span class="pc bpc" id="L563" title="2 of 4 branches missed.">    if (fqdn == null || zoneName == null) {</span>
-<span class="nc" id="L564">      return Optional.empty();</span>
-    }
-<span class="pc bpc" id="L566" title="1 of 2 branches missed.">    if (fqdn.toLowerCase().endsWith(&quot;.&quot; + zoneName.toLowerCase())) {</span>
-<span class="fc" id="L567">      return Optional.of(fqdn.substring(0, fqdn.length() - (&quot;.&quot; + zoneName).length()));</span>
-    }
-<span class="nc" id="L569">    return Optional.empty();</span>
-  }
-
-  /**
-   * Split Ipv4 into parts, e. g. {@code 192.168.1} from the dns reverse zone name and into the node
-   * name {@code 123}.
-   *
-   * @param ip       the IPv4 (e. g. {@code 192.168.1.123}
-   * @param zoneName the dns reverse zone name (e. g. {@code 1.168.192.in-addr.arpa}
-   * @return the Ipv4 parts or {@code null} if the ip doesn't belong to the dns reverse zone
-   */
-  String[] splitIp4(final String ip, final String zoneName) {
-<span class="pc bpc" id="L581" title="2 of 4 branches missed.">    if (ip == null || zoneName == null</span>
-<span class="pc bpc" id="L582" title="1 of 2 branches missed.">        || zoneName.length() &lt;= getProperties().getReverseZoneSuffixIp4().length()</span>
-<span class="pc bpc" id="L583" title="1 of 2 branches missed.">        || !patternIp4.matcher(ip).matches()) {</span>
-<span class="nc" id="L584">      return null;</span>
-    }
-<span class="fc" id="L586">    final String ipPart = zoneName.substring(</span>
-        0,
-<span class="fc" id="L588">        zoneName.length() - getProperties().getReverseZoneSuffixIp4().length());</span>
-<span class="fc" id="L589">    final String[] ipParts = ipPart.split(Pattern.quote(&quot;.&quot;));</span>
-<span class="fc" id="L590">    final StringBuilder ipBuilder = new StringBuilder();</span>
-<span class="fc bfc" id="L591" title="All 2 branches covered.">    for (int i = ipParts.length - 1; i &gt;= 0; i--) {</span>
-<span class="fc" id="L592">      ipBuilder.append(ipParts[i]);</span>
-<span class="fc bfc" id="L593" title="All 2 branches covered.">      if (i &gt; 0) {</span>
-<span class="fc" id="L594">        ipBuilder.append('.');</span>
-      }
-    }
-<span class="fc" id="L597">    final String ipPrefix = ipBuilder.toString();</span>
-<span class="fc" id="L598">    final String ipPostfix = ip.substring(ipPrefix.length() + 1);</span>
-    // ipPrefix is something like 192.168.1
-    // ipPostfix is something like 123
-    // or
-    // ipPrefix is something like 192.168
-    // ipPostfix is something like 1.123 // TODO is this correct or do it have to be 123.1 ?
-<span class="fc bfc" id="L604" title="All 2 branches covered.">    if (!ip.equals(ipPrefix + &quot;.&quot; + ipPostfix)) {</span>
-<span class="fc" id="L605">      return null;</span>
-    }
-<span class="fc" id="L607">    return new String[]{ipPrefix, ipPostfix};</span>
+<span class="fc" id="L279">    getLdapTemplate().delete(node, getDnsNodeLdapMapper(zoneName, ALL));</span>
+<span class="fc" id="L280">    handlePtrRecords(zoneName, node.getName(), Collections.emptySet(), node.getRecords());</span>
+<span class="fc" id="L281">    return true;</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

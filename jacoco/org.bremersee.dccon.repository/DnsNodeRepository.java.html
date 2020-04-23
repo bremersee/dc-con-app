@@ -39,20 +39,20 @@ import org.springframework.validation.annotation.Validated;
 public interface DnsNodeRepository {
 
   /**
-   * get unknown filter or default one.
+   * Get unknown filter or default one.
    *
    * @param unknownFilter the unknown filter
    * @return the unknown filter
    */
   @NotNull
   default UnknownFilter unknownFilter(@Nullable UnknownFilter unknownFilter) {
-<span class="nc bnc" id="L49" title="All 2 branches missed.">    return unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">    return unknownFilter != null ? unknownFilter : UnknownFilter.NO_UNKNOWN;</span>
   }
 
   /**
    * Find dns nodes by ips.
    *
-   * @param ips           the ips
+   * @param ips the ips
    * @param unknownFilter the unknown filter
    * @return the dns nodes
    */
@@ -61,7 +61,7 @@ public interface DnsNodeRepository {
   /**
    * Find dns node by host name.
    *
-   * @param hostName      the host name, can be a simple host name or a full qualified domain name
+   * @param hostName the host name, can be a simple host name or a full qualified domain name
    * @param unknownFilter the unknown filter
    * @return the dns node
    */
@@ -70,19 +70,21 @@ public interface DnsNodeRepository {
   /**
    * Find all.
    *
-   * @param zoneName      the zone name
+   * @param zoneName the zone name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @param query the query
    * @return the dns nodes
    */
   Stream&lt;DnsNode&gt; findAll(
       @NotNull String zoneName,
-      @Nullable UnknownFilter unknownFilter);
+      @Nullable UnknownFilter unknownFilter,
+      @Nullable String query);
 
   /**
    * Check whether dns node exists or not.
    *
-   * @param zoneName      the zone name
-   * @param nodeName      the node name
+   * @param zoneName the zone name
+   * @param nodeName the node name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return {@code true} if the dns node exists, otherwise {@code false}
    */
@@ -94,8 +96,8 @@ public interface DnsNodeRepository {
   /**
    * Find dns node by zone name and node name.
    *
-   * @param zoneName      the zone name
-   * @param nodeName      the node name
+   * @param zoneName the zone name
+   * @param nodeName the node name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns node
    */
@@ -108,7 +110,7 @@ public interface DnsNodeRepository {
    * Find correlated dns node optional.
    *
    * @param zoneName the zone name
-   * @param record   the record
+   * @param record the record
    * @return the optional
    */
   Optional&lt;DnsPair&gt; findCorrelatedDnsNode(
@@ -119,7 +121,7 @@ public interface DnsNodeRepository {
    * Save dns node.
    *
    * @param zoneName the zone name
-   * @param dnsNode  the dns node
+   * @param dnsNode the dns node
    * @return the dns node (will be {@link Optional#empty()}, if the node has no records)
    */
   Optional&lt;DnsNode&gt; save(@NotNull String zoneName, @NotNull DnsNode dnsNode);
@@ -132,16 +134,16 @@ public interface DnsNodeRepository {
    * @return {@code true} if the dns node was removed; {@code false} if dns node didn't exist
    */
   default boolean delete(@NotNull String zoneName, @NotNull String nodeName) {
-<span class="nc" id="L135">    return findOne(zoneName, nodeName, UnknownFilter.ALL)</span>
-<span class="nc" id="L136">        .map(node -&gt; delete(zoneName, node))</span>
-<span class="nc" id="L137">        .orElse(false);</span>
+<span class="nc" id="L137">    return findOne(zoneName, nodeName, UnknownFilter.ALL)</span>
+<span class="nc" id="L138">        .map(node -&gt; delete(zoneName, node))</span>
+<span class="nc" id="L139">        .orElse(false);</span>
   }
 
   /**
-   * Delete boolean.
+   * Delete dns node.
    *
    * @param zoneName the zone name
-   * @param node     the node
+   * @param node the node
    * @return the boolean
    */
   boolean delete(@NotNull String zoneName, @NotNull DnsNode node);
@@ -152,23 +154,24 @@ public interface DnsNodeRepository {
    * @param zoneName the zone name
    */
   default void deleteAll(@NotNull String zoneName) {
-<span class="nc" id="L155">    findAll(zoneName, UnknownFilter.ALL).forEach(dnsNode -&gt; delete(zoneName, dnsNode));</span>
-<span class="nc" id="L156">  }</span>
+<span class="fc" id="L157">    findAll(zoneName, UnknownFilter.ALL, null)</span>
+<span class="fc" id="L158">        .forEach(dnsNode -&gt; delete(zoneName, dnsNode));</span>
+<span class="fc" id="L159">  }</span>
 
   /**
    * Delete all dns nodes with the specified names from the specified dns zone.
    *
-   * @param zoneName  the zone name
+   * @param zoneName the zone name
    * @param nodeNames the node names
    */
   default void deleteAll(@NotNull String zoneName, @Nullable Collection&lt;String&gt; nodeNames) {
-<span class="nc bnc" id="L165" title="All 4 branches missed.">    if (nodeNames != null &amp;&amp; !nodeNames.isEmpty()) {</span>
-<span class="nc bnc" id="L166" title="All 2 branches missed.">      for (String nodeName : new LinkedHashSet&lt;&gt;(nodeNames)) {</span>
-<span class="nc" id="L167">        findOne(zoneName, nodeName, UnknownFilter.ALL)</span>
-<span class="nc" id="L168">            .ifPresent(dnsNode -&gt; delete(zoneName, dnsNode));</span>
-<span class="nc" id="L169">      }</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">    if (nodeNames != null &amp;&amp; !nodeNames.isEmpty()) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">      for (String nodeName : new LinkedHashSet&lt;&gt;(nodeNames)) {</span>
+<span class="nc" id="L170">        findOne(zoneName, nodeName, UnknownFilter.ALL)</span>
+<span class="nc" id="L171">            .ifPresent(dnsNode -&gt; delete(zoneName, dnsNode));</span>
+<span class="nc" id="L172">      }</span>
     }
-<span class="nc" id="L171">  }</span>
+<span class="nc" id="L174">  }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

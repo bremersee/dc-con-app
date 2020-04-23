@@ -18,19 +18,38 @@ package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttribute;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttributes;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DESCRIPTION;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DISPLAY_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.GECOS;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.GIVEN_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.HOME_DIRECTORY;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LAST_LOGON;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LOGIN_SHELL;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.LOGON_COUNT;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MAIL;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MEMBER_OF;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.MOBILE;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.OBJECT_SID;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.PWD_LAST_SET;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.SAM_ACCOUNT_NAME;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.SN;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.TELEPHONE_NUMBER;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.UID;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.UNIX_HOME_DIRECTORY;
+import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.USER_ACCOUNT_CONTROL;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.repository.ldap.transcoder.ActiveDirectoryTimeValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.FileTimeToOffsetDateTimeValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.SidValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTranscoder;
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.IntegerValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -42,20 +61,19 @@ import org.ldaptive.io.StringValueTranscoder;
 public class DomainUserLdapMapper extends AbstractLdapMapper implements
     LdaptiveEntryMapper&lt;DomainUser&gt; {
 
-<span class="fc" id="L45">  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();</span>
+<span class="fc" id="L64">  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();</span>
 
-<span class="fc" id="L47">  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER</span>
-      = new ByteArrayValueTranscoder();
+<span class="fc" id="L66">  private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();</span>
 
-<span class="fc" id="L50">  private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();</span>
+<span class="fc" id="L68">  private static FileTimeToOffsetDateTimeValueTranscoder AD_TIME_VALUE_TRANSCODER</span>
+      = new FileTimeToOffsetDateTimeValueTranscoder();
 
-<span class="fc" id="L52">  private static ActiveDirectoryTimeValueTranscoder AD_TIME_VALUE_TRANSCODER</span>
-      = new ActiveDirectoryTimeValueTranscoder();
-
-<span class="fc" id="L55">  private static UserAccountControlValueTranscoder USER_ACCOUNT_CONTROL_VALUE_TRANSCODER</span>
+<span class="fc" id="L71">  private static UserAccountControlValueTranscoder USER_ACCOUNT_CONTROL_VALUE_TRANSCODER</span>
       = new UserAccountControlValueTranscoder();
 
   private UserGroupValueTranscoder userGroupValueTranscoder;
+
+  private SidValueTranscoder sidValueTranscoder;
 
   /**
    * Instantiates a new domain user ldap mapper.
@@ -63,141 +81,144 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
    * @param properties the properties
    */
   public DomainUserLdapMapper(DomainControllerProperties properties) {
-<span class="fc" id="L66">    super(properties);</span>
-<span class="fc" id="L67">    this.userGroupValueTranscoder = new UserGroupValueTranscoder(properties);</span>
-<span class="fc" id="L68">  }</span>
+<span class="fc" id="L84">    super(properties);</span>
+<span class="fc" id="L85">    this.userGroupValueTranscoder = new UserGroupValueTranscoder(properties);</span>
+<span class="fc" id="L86">    this.sidValueTranscoder = new SidValueTranscoder(properties);</span>
+<span class="fc" id="L87">  }</span>
 
   @Override
   public String[] getObjectClasses() {
-<span class="nc" id="L72">    return new String[0];</span>
+<span class="fc" id="L91">    return new String[0];</span>
   }
 
   @Override
   public String mapDn(final DomainUser domainUser) {
-<span class="fc" id="L77">    return createDn(</span>
-<span class="fc" id="L78">        getProperties().getUserRdn(),</span>
-<span class="fc" id="L79">        domainUser.getUserName(),</span>
-<span class="fc" id="L80">        getProperties().getUserBaseDn());</span>
+<span class="fc" id="L96">    return createDn(</span>
+<span class="fc" id="L97">        getProperties().getUserRdn(),</span>
+<span class="fc" id="L98">        domainUser.getUserName(),</span>
+<span class="fc" id="L99">        getProperties().getUserBaseDn());</span>
   }
 
   @Override
   public DomainUser map(final LdapEntry ldapEntry) {
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">    if (ldapEntry == null) {</span>
-<span class="nc" id="L86">      return null;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">    if (ldapEntry == null) {</span>
+<span class="fc" id="L105">      return null;</span>
     }
-<span class="fc" id="L88">    final DomainUser destination = new DomainUser();</span>
-<span class="fc" id="L89">    map(ldapEntry, destination);</span>
-<span class="fc" id="L90">    return destination;</span>
+<span class="fc" id="L107">    final DomainUser destination = new DomainUser();</span>
+<span class="fc" id="L108">    map(ldapEntry, destination);</span>
+<span class="fc" id="L109">    return destination;</span>
   }
 
   @Override
   public void map(
       final LdapEntry ldapEntry,
       final DomainUser domainUser) {
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">    if (ldapEntry == null) {</span>
-<span class="nc" id="L98">      return;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">    if (ldapEntry == null) {</span>
+<span class="fc" id="L117">      return;</span>
     }
-<span class="fc" id="L100">    mapCommonAttributes(ldapEntry, domainUser);</span>
-<span class="fc" id="L101">    domainUser.setUserName(getAttributeValue(ldapEntry,</span>
-        &quot;sAMAccountName&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L103">    domainUser.setFirstName(getAttributeValue(ldapEntry,</span>
-        &quot;givenName&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L105">    domainUser.setLastName(getAttributeValue(ldapEntry,</span>
-        &quot;sn&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L107">    domainUser.setDisplayName(getAttributeValue(ldapEntry,</span>
-<span class="fc" id="L108">        &quot;displayName&quot;, STRING_VALUE_TRANSCODER, getAttributeValue(ldapEntry,</span>
-            &quot;gecos&quot;, STRING_VALUE_TRANSCODER, null)));
-<span class="fc" id="L110">    domainUser.setEmail(getAttributeValue(ldapEntry,</span>
-        &quot;mail&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L112">    domainUser.setTelephoneNumber(getAttributeValue(ldapEntry,</span>
-        &quot;telephoneNumber&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L114">    domainUser.setMobile(getAttributeValue(ldapEntry,</span>
-        &quot;mobile&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L116">    domainUser.setGroups(LdaptiveEntryMapper.getAttributeValuesAsList(ldapEntry,</span>
-<span class="fc" id="L117">        getProperties().getUserGroupAttr(), userGroupValueTranscoder));</span>
+<span class="fc" id="L119">    mapCommonAttributes(ldapEntry, domainUser);</span>
+<span class="fc" id="L120">    domainUser.setSid(getAttributeValue(ldapEntry,</span>
+        OBJECT_SID, sidValueTranscoder, null));
+<span class="fc" id="L122">    domainUser.setUserName(getAttributeValue(ldapEntry,</span>
+        SAM_ACCOUNT_NAME, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L124">    domainUser.setFirstName(getAttributeValue(ldapEntry,</span>
+        GIVEN_NAME, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L126">    domainUser.setLastName(getAttributeValue(ldapEntry,</span>
+        SN, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L128">    domainUser.setDisplayName(getAttributeValue(ldapEntry,</span>
+<span class="fc" id="L129">        DISPLAY_NAME, STRING_VALUE_TRANSCODER, getAttributeValue(ldapEntry,</span>
+            GECOS, STRING_VALUE_TRANSCODER, null)));
+<span class="fc" id="L131">    domainUser.setEmail(getAttributeValue(ldapEntry,</span>
+        MAIL, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L133">    domainUser.setTelephoneNumber(getAttributeValue(ldapEntry,</span>
+        TELEPHONE_NUMBER, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L135">    domainUser.setMobile(getAttributeValue(ldapEntry,</span>
+        MOBILE, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L137">    domainUser.setGroups(LdaptiveEntryMapper.getAttributeValuesAsList(ldapEntry,</span>
+        MEMBER_OF, userGroupValueTranscoder));
+<span class="fc" id="L139">    domainUser.getGroups().sort(String::compareToIgnoreCase);</span>
+<span class="fc" id="L140">    domainUser.setDescription(getAttributeValue(ldapEntry,</span>
+        DESCRIPTION, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L142">    domainUser.setHomeDirectory(getAttributeValue(ldapEntry,</span>
+        HOME_DIRECTORY, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L144">    domainUser.setUnixHomeDirectory(getAttributeValue(ldapEntry,</span>
+        UNIX_HOME_DIRECTORY, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L146">    domainUser.setLoginShell(getAttributeValue(ldapEntry,</span>
+        LOGIN_SHELL, STRING_VALUE_TRANSCODER, null));
+<span class="fc" id="L148">    domainUser.setLastLogon(getAttributeValue(ldapEntry,</span>
+        LAST_LOGON, AD_TIME_VALUE_TRANSCODER, null));
+<span class="fc" id="L150">    domainUser.setLogonCount(getAttributeValue(ldapEntry,</span>
+        LOGON_COUNT, INT_VALUE_TRANSCODER, null));
+<span class="fc" id="L152">    domainUser.setPasswordLastSet(getAttributeValue(ldapEntry,</span>
+        PWD_LAST_SET, AD_TIME_VALUE_TRANSCODER, null));
 
-<span class="fc" id="L119">    domainUser.setHomeDirectory(getAttributeValue(ldapEntry,</span>
-        &quot;homeDirectory&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L121">    domainUser.setUnixHomeDirectory(getAttributeValue(ldapEntry,</span>
-        &quot;unixHomeDirectory&quot;, STRING_VALUE_TRANSCODER, null));
-<span class="fc" id="L123">    domainUser.setLoginShell(getAttributeValue(ldapEntry,</span>
-        &quot;loginShell&quot;, STRING_VALUE_TRANSCODER, null));
-
-<span class="fc" id="L126">    domainUser.setLastLogon(getAttributeValue(ldapEntry,</span>
-        &quot;lastLogon&quot;, AD_TIME_VALUE_TRANSCODER, null));
-<span class="fc" id="L128">    domainUser.setLogonCount(getAttributeValue(ldapEntry,</span>
-        &quot;logonCount&quot;, INT_VALUE_TRANSCODER, null));
-<span class="fc" id="L130">    domainUser.setPasswordLastSet(getAttributeValue(ldapEntry,</span>
-        &quot;pwdLastSet&quot;, AD_TIME_VALUE_TRANSCODER, null));
-<span class="fc" id="L132">    domainUser.setAvatar(getAttributeValue(ldapEntry,</span>
-        &quot;jpegPhoto&quot;, BYTE_ARRAY_VALUE_TRANSCODER, null));
-
-<span class="fc" id="L135">    Integer userAccountControlValue = getAttributeValue(ldapEntry,</span>
-        &quot;userAccountControl&quot;, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
-<span class="fc" id="L137">    domainUser.setEnabled(</span>
-<span class="fc" id="L138">        UserAccountControlValueTranscoder.isUserAccountEnabled(userAccountControlValue));</span>
-<span class="fc" id="L139">  }</span>
+<span class="fc" id="L155">    Integer userAccountControlValue = getAttributeValue(ldapEntry,</span>
+        USER_ACCOUNT_CONTROL, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
+<span class="fc" id="L157">    domainUser.setEnabled(</span>
+<span class="fc" id="L158">        UserAccountControlValueTranscoder.isUserAccountEnabled(userAccountControlValue));</span>
+<span class="fc" id="L159">  }</span>
 
   @Override
   public AttributeModification[] mapAndComputeModifications(
       final DomainUser source,
       final LdapEntry destination) {
 
-<span class="fc" id="L146">    final List&lt;AttributeModification&gt; modifications = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L147">    setAttribute(destination,</span>
-<span class="fc" id="L148">        &quot;sAMAccountName&quot;, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
+<span class="fc" id="L166">    final List&lt;AttributeModification&gt; modifications = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L167">    setAttribute(destination,</span>
+<span class="fc" id="L168">        SAM_ACCOUNT_NAME, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
         modifications);
-<span class="fc" id="L150">    setAttribute(destination,</span>
-<span class="fc" id="L151">        &quot;name&quot;, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
+<span class="fc" id="L170">    setAttribute(destination,</span>
+<span class="fc" id="L171">        NAME, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
         modifications);
-<span class="fc" id="L153">    setAttribute(destination,</span>
-<span class="fc" id="L154">        &quot;uid&quot;, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
+<span class="fc" id="L173">    setAttribute(destination,</span>
+<span class="fc" id="L174">        UID, source.getUserName(), false, STRING_VALUE_TRANSCODER,</span>
         modifications);
-<span class="fc" id="L156">    setAttribute(destination,</span>
-<span class="fc" id="L157">        &quot;givenName&quot;, source.getFirstName(), false, STRING_VALUE_TRANSCODER, modifications);</span>
-<span class="fc" id="L158">    setAttribute(destination,</span>
-<span class="fc" id="L159">        &quot;sn&quot;, source.getLastName(), false, STRING_VALUE_TRANSCODER, modifications);</span>
-<span class="fc" id="L160">    setAttribute(destination,</span>
-<span class="fc" id="L161">        &quot;displayName&quot;, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,</span>
-        modifications);
-<span class="fc" id="L163">    setAttribute(destination,</span>
-<span class="fc" id="L164">        &quot;gecos&quot;, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,</span>
-        modifications);
-<span class="fc" id="L166">    setAttribute(destination,</span>
-<span class="fc" id="L167">        &quot;mail&quot;, source.getEmail(), false, STRING_VALUE_TRANSCODER, modifications);</span>
-<span class="fc" id="L168">    setAttribute(destination,</span>
-<span class="fc" id="L169">        &quot;telephoneNumber&quot;, source.getTelephoneNumber(), false, STRING_VALUE_TRANSCODER,</span>
-        modifications);
-<span class="fc" id="L171">    setAttribute(destination,</span>
-<span class="fc" id="L172">        &quot;mobile&quot;, source.getMobile(), false, STRING_VALUE_TRANSCODER, modifications);</span>
-
-<span class="fc" id="L174">    setAttribute(destination,</span>
-<span class="fc" id="L175">        &quot;homeDirectory&quot;, source.getHomeDirectory(), false, STRING_VALUE_TRANSCODER,</span>
-        modifications);
-<span class="fc" id="L177">    setAttribute(destination,</span>
-<span class="fc" id="L178">        &quot;unixHomeDirectory&quot;, source.getUnixHomeDirectory(), false, STRING_VALUE_TRANSCODER,</span>
-        modifications);
+<span class="fc" id="L176">    setAttribute(destination,</span>
+<span class="fc" id="L177">        GIVEN_NAME, source.getFirstName(), false, STRING_VALUE_TRANSCODER, modifications);</span>
+<span class="fc" id="L178">    setAttribute(destination,</span>
+<span class="fc" id="L179">        SN, source.getLastName(), false, STRING_VALUE_TRANSCODER, modifications);</span>
 <span class="fc" id="L180">    setAttribute(destination,</span>
-<span class="fc" id="L181">        &quot;loginShell&quot;, source.getLoginShell(), false, STRING_VALUE_TRANSCODER,</span>
+<span class="fc" id="L181">        DISPLAY_NAME, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,</span>
         modifications);
 <span class="fc" id="L183">    setAttribute(destination,</span>
-<span class="fc" id="L184">        &quot;jpegPhoto&quot;, source.getAvatar(), true, BYTE_ARRAY_VALUE_TRANSCODER, modifications);</span>
+<span class="fc" id="L184">        GECOS, source.getDisplayName(), false, STRING_VALUE_TRANSCODER,</span>
+        modifications);
+<span class="fc" id="L186">    setAttribute(destination,</span>
+<span class="fc" id="L187">        MAIL, source.getEmail(), false, STRING_VALUE_TRANSCODER, modifications);</span>
+<span class="fc" id="L188">    setAttribute(destination,</span>
+<span class="fc" id="L189">        TELEPHONE_NUMBER, source.getTelephoneNumber(), false, STRING_VALUE_TRANSCODER,</span>
+        modifications);
+<span class="fc" id="L191">    setAttribute(destination,</span>
+<span class="fc" id="L192">        MOBILE, source.getMobile(), false, STRING_VALUE_TRANSCODER, modifications);</span>
+<span class="fc" id="L193">    setAttribute(destination,</span>
+<span class="fc" id="L194">        DESCRIPTION, source.getDescription(), false, STRING_VALUE_TRANSCODER, modifications);</span>
 
-<span class="fc" id="L186">    setAttributes(destination,</span>
-<span class="fc" id="L187">        getProperties().getUserGroupAttr(), source.getGroups(), false, userGroupValueTranscoder,</span>
+<span class="fc" id="L196">    setAttribute(destination,</span>
+<span class="fc" id="L197">        HOME_DIRECTORY, source.getHomeDirectory(), false, STRING_VALUE_TRANSCODER,</span>
+        modifications);
+<span class="fc" id="L199">    setAttribute(destination,</span>
+<span class="fc" id="L200">        UNIX_HOME_DIRECTORY, source.getUnixHomeDirectory(), false, STRING_VALUE_TRANSCODER,</span>
+        modifications);
+<span class="fc" id="L202">    setAttribute(destination,</span>
+<span class="fc" id="L203">        LOGIN_SHELL, source.getLoginShell(), false, STRING_VALUE_TRANSCODER,</span>
         modifications);
 
-<span class="fc" id="L190">    Integer userAccountControlValue = getAttributeValue(destination,</span>
-        &quot;userAccountControl&quot;, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
-<span class="fc" id="L192">    userAccountControlValue = UserAccountControlValueTranscoder.getUserAccountControlValue(</span>
-<span class="fc" id="L193">        source.getEnabled(),</span>
+    // Groups must be set in group entity.
+    // setAttributes(destination,
+    //     &quot;memberOf&quot;, source.getGroups(), false, userGroupValueTranscoder,
+    //     modifications);
+
+<span class="fc" id="L211">    Integer userAccountControlValue = getAttributeValue(destination,</span>
+        USER_ACCOUNT_CONTROL, USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, null);
+<span class="fc" id="L213">    userAccountControlValue = UserAccountControlValueTranscoder.getUserAccountControlValue(</span>
+<span class="fc" id="L214">        source.getEnabled(),</span>
         userAccountControlValue);
-<span class="fc" id="L195">    setAttribute(destination,</span>
-        &quot;userAccountControl&quot;, userAccountControlValue, false,
+<span class="fc" id="L216">    setAttribute(destination,</span>
+        USER_ACCOUNT_CONTROL, userAccountControlValue, false,
         USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, modifications);
 
-<span class="fc" id="L199">    return modifications.toArray(new AttributeModification[0]);</span>
+<span class="fc" id="L220">    return modifications.toArray(new AttributeModification[0]);</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -51,52 +51,57 @@
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>  
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>    @Override
 <a class="jxr_linenumber" name="L45" href="#L45">45</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> compare(DnsZone o1, DnsZone o2) {
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">final</strong> String s1 = o1 != <strong class="jxr_keyword">null</strong> &amp;&amp; o1.getName() != <strong class="jxr_keyword">null</strong> ? o1.getName() : <span class="jxr_string">""</span>;
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>      <strong class="jxr_keyword">final</strong> String s2 = o2 != <strong class="jxr_keyword">null</strong> &amp;&amp; o2.getName() != <strong class="jxr_keyword">null</strong> ? o2.getName() : <span class="jxr_string">""</span>;
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>      log.debug(<span class="jxr_string">"msg=[Comparing zones.] zone1=[{}] zone2=[{}]"</span>, s1, s2);
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>      <strong class="jxr_keyword">if</strong> (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>        <strong class="jxr_keyword">final</strong> String[] sa1 = s1.split(Pattern.quote(<span class="jxr_string">"."</span>));
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>        <strong class="jxr_keyword">final</strong> String[] sa2 = s2.split(Pattern.quote(<span class="jxr_string">"."</span>));
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>        <strong class="jxr_keyword">int</strong> c = sa2.length - sa1.length;
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>        <strong class="jxr_keyword">if</strong> (c == 0) {
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>          c = compare(sa1, sa2);
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>        }
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>        log.debug(<span class="jxr_string">"msg=[Both zones are dns reverse zones.] result=[{}]"</span>, c);
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>        <strong class="jxr_keyword">return</strong> isAsc() ? c : -1 * c;
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>        log.debug(<span class="jxr_string">"msg=[First is non reverse zone, second is reverse zone.] "</span>
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>            + <span class="jxr_string">"first=[{}] second=[{}] result=[-1]"</span>, s1, s2);
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>        <strong class="jxr_keyword">return</strong> isAsc() ? -1 : 1;
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; !dnsZoneRepository.isDnsReverseZone(s2)) {
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>        log.debug(<span class="jxr_string">"msg=[First is reverse zone, second is non reverse zone.] "</span>
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>            + <span class="jxr_string">"first=[{}] second=[{}] result=[1]"</span>, s1, s2);
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>        <strong class="jxr_keyword">return</strong> isAsc() ? 1 : -1;
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>      }
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>      <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> result = s1.compareToIgnoreCase(s2);
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>      log.debug(<span class="jxr_string">"msg=[Both zones are non dns reverse zones.] result=[{}]"</span>, result);
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>      <strong class="jxr_keyword">return</strong> isAsc() ? result : -1 * result;
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>    }
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>  
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> compare(String[] sa1, String[] sa2) {
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>      <strong class="jxr_keyword">final</strong> String[] sav1 = sa1 != <strong class="jxr_keyword">null</strong> ? sa1 : <strong class="jxr_keyword">new</strong> String[0];
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>      <strong class="jxr_keyword">final</strong> String[] sav2 = sa2 != <strong class="jxr_keyword">null</strong> ? sa2 : <strong class="jxr_keyword">new</strong> String[0];
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>      <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> len = Math.min(sav1.length, sav2.length);
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>      <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = len - 1; i &gt;= 0; i--) {
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>        <strong class="jxr_keyword">int</strong> c = compare(sav1[i], sav2[i]);
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>        <strong class="jxr_keyword">if</strong> (c != 0) {
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>          <strong class="jxr_keyword">return</strong> c;
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>        }
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>      }
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>      <strong class="jxr_keyword">return</strong> 0;
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>    }
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>  
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> compare(String s1, String s2) {
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <strong class="jxr_keyword">return</strong> format(s1, 3).compareToIgnoreCase(format(s2, 3));
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>    }
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>  
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>  }
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">if</strong> (o1 != <strong class="jxr_keyword">null</strong> &amp;&amp; Boolean.TRUE.equals(o1.getDefaultZone())) {
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>        <strong class="jxr_keyword">return</strong> -1;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (o2 != <strong class="jxr_keyword">null</strong> &amp;&amp; Boolean.TRUE.equals(o2.getDefaultZone())) {
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>        <strong class="jxr_keyword">return</strong> 1;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>      }
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>      <strong class="jxr_keyword">final</strong> String s1 = o1 != <strong class="jxr_keyword">null</strong> &amp;&amp; o1.getName() != <strong class="jxr_keyword">null</strong> ? o1.getName() : <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      <strong class="jxr_keyword">final</strong> String s2 = o2 != <strong class="jxr_keyword">null</strong> &amp;&amp; o2.getName() != <strong class="jxr_keyword">null</strong> ? o2.getName() : <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>      log.debug(<span class="jxr_string">"msg=[Comparing zones.] zone1=[{}] zone2=[{}]"</span>, s1, s2);
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>      <strong class="jxr_keyword">if</strong> (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>        <strong class="jxr_keyword">final</strong> String[] sa1 = s1.split(Pattern.quote(<span class="jxr_string">"."</span>));
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>        <strong class="jxr_keyword">final</strong> String[] sa2 = s2.split(Pattern.quote(<span class="jxr_string">"."</span>));
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>        <strong class="jxr_keyword">int</strong> c = sa2.length - sa1.length;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>        <strong class="jxr_keyword">if</strong> (c == 0) {
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>          c = compare(sa1, sa2);
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>        }
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>        log.debug(<span class="jxr_string">"msg=[Both zones are dns reverse zones.] result=[{}]"</span>, c);
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>        <strong class="jxr_keyword">return</strong> isAsc() ? c : -1 * c;
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>        log.debug(<span class="jxr_string">"msg=[First is non reverse zone, second is reverse zone.] "</span>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>            + <span class="jxr_string">"first=[{}] second=[{}] result=[-1]"</span>, s1, s2);
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>        <strong class="jxr_keyword">return</strong> isAsc() ? -1 : 1;
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; !dnsZoneRepository.isDnsReverseZone(s2)) {
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>        log.debug(<span class="jxr_string">"msg=[First is reverse zone, second is non reverse zone.] "</span>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>            + <span class="jxr_string">"first=[{}] second=[{}] result=[1]"</span>, s1, s2);
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>        <strong class="jxr_keyword">return</strong> isAsc() ? 1 : -1;
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>      }
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> result = s1.compareToIgnoreCase(s2);
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>      log.debug(<span class="jxr_string">"msg=[Both zones are non dns reverse zones.] result=[{}]"</span>, result);
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      <strong class="jxr_keyword">return</strong> isAsc() ? result : -1 * result;
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>    }
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> compare(String[] sa1, String[] sa2) {
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>      <strong class="jxr_keyword">final</strong> String[] sav1 = sa1 != <strong class="jxr_keyword">null</strong> ? sa1 : <strong class="jxr_keyword">new</strong> String[0];
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>      <strong class="jxr_keyword">final</strong> String[] sav2 = sa2 != <strong class="jxr_keyword">null</strong> ? sa2 : <strong class="jxr_keyword">new</strong> String[0];
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> len = Math.min(sav1.length, sav2.length);
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = len - 1; i &gt;= 0; i--) {
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>        <strong class="jxr_keyword">int</strong> c = compare(sav1[i], sav2[i]);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>        <strong class="jxr_keyword">if</strong> (c != 0) {
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>          <strong class="jxr_keyword">return</strong> c;
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>        }
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      }
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <strong class="jxr_keyword">return</strong> 0;
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>    }
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> compare(String s1, String s2) {
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      <strong class="jxr_keyword">return</strong> format(s1, 3).compareToIgnoreCase(format(s2, 3));
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>    }
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>

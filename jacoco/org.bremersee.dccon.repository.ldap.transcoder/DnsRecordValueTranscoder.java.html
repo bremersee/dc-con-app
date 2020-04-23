@@ -94,21 +94,22 @@ import org.ldaptive.io.AbstractBinaryValueTranscoder;
 <span class="nc" id="L94">    } catch (final IOException e) {</span>
 
 <span class="nc" id="L96">      final ServiceException se = ServiceException.internalServerError(</span>
-          &quot;Decoding dns record value failed.&quot;, e);
-<span class="nc" id="L98">      log.error(&quot;msg=[Decoding dns record value failed.]&quot;, se);</span>
-<span class="nc" id="L99">      throw se;</span>
+          &quot;Decoding dns record value failed.&quot;,
+          &quot;org.bremersee:dc-con-app:d62e15c8-5410-4608-b663-20a716908102&quot;, e);
+<span class="nc" id="L99">      log.error(&quot;msg=[Decoding dns record value failed.]&quot;, se);</span>
+<span class="nc" id="L100">      throw se;</span>
     }
   }
 
   @Override
   public byte[] encodeBinaryValue(final DnsRecord value) {
-<span class="fc" id="L105">    return value.getRecordRawValue();</span>
+<span class="fc" id="L106">    return value.getRecordRawValue();</span>
   }
 
   @Override
   public Class&lt;DnsRecord&gt; getType() {
-<span class="fc" id="L110">    return DnsRecord.class;</span>
+<span class="fc" id="L111">    return DnsRecord.class;</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

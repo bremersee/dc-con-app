@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
  */
 @Profile(&quot;cli&quot;)
 @Component(&quot;dhcpRepository&quot;)
-<span class="nc" id="L41">@Slf4j</span>
+<span class="fc" id="L41">@Slf4j</span>
 public class DhcpRepositoryImpl extends AbstractRepository implements DhcpRepository {
 
   private DhcpLeaseParser parser;
@@ -48,10 +48,10 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    *
    * @param properties the domain controller properties
    */
-  public DhcpRepositoryImpl(DomainControllerProperties properties) {
-<span class="nc" id="L52">    super(properties, null);</span>
-<span class="nc" id="L53">    parser = DhcpLeaseParser.defaultParser();</span>
-<span class="nc" id="L54">  }</span>
+  public DhcpRepositoryImpl(final DomainControllerProperties properties) {
+<span class="fc" id="L52">    super(properties, null);</span>
+<span class="fc" id="L53">    parser = DhcpLeaseParser.defaultParser();</span>
+<span class="fc" id="L54">  }</span>
 
   /**
    * Sets dhcp lease parser.
@@ -59,54 +59,70 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    * @param parser the dhcp lease parser
    */
   @Autowired(required = false)
-  public void setParser(DhcpLeaseParser parser) {
-<span class="nc" id="L63">    this.parser = parser;</span>
-<span class="nc" id="L64">  }</span>
+  public void setParser(final DhcpLeaseParser parser) {
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">    if (parser != null) {</span>
+<span class="fc" id="L64">      this.parser = parser;</span>
+    }
+<span class="fc" id="L66">  }</span>
 
   @Override
   public List&lt;DhcpLease&gt; findAll() {
-<span class="nc" id="L68">    return find(true);</span>
+<span class="fc" id="L70">    return find(true);</span>
   }
 
   @Cacheable(cacheNames = &quot;dhcp-leases-by-ip&quot;)
+  @Override
   public Map&lt;String, DhcpLease&gt; findActiveByIp() {
-<span class="nc" id="L73">    return findActiveMap(true);</span>
+<span class="fc" id="L76">    return findActiveMap(true);</span>
   }
 
   @Cacheable(cacheNames = &quot;dhcp-leases-by-name&quot;)
+  @Override
   public Map&lt;String, DhcpLease&gt; findActiveByHostName() {
-<span class="nc" id="L78">    return findActiveMap(false);</span>
+<span class="fc" id="L82">    return findActiveMap(false);</span>
   }
 
-  private Map&lt;String, DhcpLease&gt; findActiveMap(boolean ip) {
-<span class="nc" id="L82">    final List&lt;DhcpLease&gt; leases = find(false);</span>
-<span class="nc" id="L83">    leases.sort(ComparatorBuilder.builder()</span>
-<span class="nc" id="L84">        .fromWellKnownText(&quot;begin,desc&quot;)</span>
-<span class="nc" id="L85">        .build());</span>
-<span class="nc" id="L86">    final Map&lt;String, DhcpLease&gt; leaseMap = new HashMap&lt;&gt;();</span>
-<span class="nc bnc" id="L87" title="All 2 branches missed.">    for (final DhcpLease lease : leases) {</span>
-<span class="nc bnc" id="L88" title="All 2 branches missed.">      final String key = ip</span>
-<span class="nc" id="L89">          ? lease.getIp()</span>
-<span class="nc" id="L90">          : lease.getHostname().toUpperCase();</span>
-<span class="nc" id="L91">      leaseMap.putIfAbsent(key, lease);</span>
-<span class="nc" id="L92">    }</span>
-<span class="nc" id="L93">    return leaseMap;</span>
+  /**
+   * Find active dhcp leases and put them into a map.
+   *
+   * @param ip specifies whether the key of the map is the ip or the host name (upper case)
+   * @return the map with the dhcp leases
+   */
+  Map&lt;String, DhcpLease&gt; findActiveMap(final boolean ip) {
+<span class="fc" id="L92">    final List&lt;DhcpLease&gt; leases = find(false);</span>
+<span class="fc" id="L93">    leases.sort(ComparatorBuilder.builder()</span>
+<span class="fc" id="L94">        .fromWellKnownText(&quot;begin,desc&quot;)</span>
+<span class="fc" id="L95">        .build());</span>
+<span class="fc" id="L96">    final Map&lt;String, DhcpLease&gt; leaseMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">    for (final DhcpLease lease : leases) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">      final String key = ip</span>
+<span class="fc" id="L99">          ? lease.getIp()</span>
+<span class="fc" id="L100">          : lease.getHostname().toUpperCase();</span>
+<span class="fc" id="L101">      leaseMap.putIfAbsent(key, lease);</span>
+<span class="fc" id="L102">    }</span>
+<span class="fc" id="L103">    return leaseMap;</span>
   }
 
-  private List&lt;DhcpLease&gt; find(final boolean all) {
-<span class="nc" id="L97">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L98">    sudo(commands);</span>
-<span class="nc" id="L99">    commands.add(getProperties().getDhcpLeaseListBinary());</span>
-<span class="nc" id="L100">    commands.add(&quot;--parsable&quot;);</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">    if (all) {</span>
-<span class="nc" id="L102">      commands.add(&quot;--all&quot;);</span>
+  /**
+   * Find dhcp leases.
+   *
+   * @param all specifies whether to return all leases or only active ones
+   * @return the dhcp leases
+   */
+  List&lt;DhcpLease&gt; find(final boolean all) {
+<span class="fc" id="L113">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L114">    sudo(commands);</span>
+<span class="fc" id="L115">    commands.add(getProperties().getDhcpLeaseListBinary());</span>
+<span class="fc" id="L116">    commands.add(&quot;--parsable&quot;);</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">    if (all) {</span>
+<span class="nc" id="L118">      commands.add(&quot;--all&quot;);</span>
     }
-<span class="nc" id="L104">    return CommandExecutor.exec(</span>
+<span class="fc" id="L120">    return CommandExecutor.exec(</span>
         commands,
         null,
-<span class="nc" id="L107">        getProperties().getDhcpLeaseListExecDir(),</span>
+<span class="fc" id="L123">        getProperties().getDhcpLeaseListExecDir(),</span>
         parser);
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

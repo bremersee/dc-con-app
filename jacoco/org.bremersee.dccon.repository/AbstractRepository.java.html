@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,7 +33,7 @@ import org.springframework.util.Assert;
  */
 abstract class AbstractRepository {
 
-<span class="fc" id="L35">  private static final Object KINIT_LOG = new Object();</span>
+<span class="fc" id="L36">  private static final Object KINIT_LOG = new Object();</span>
 
   private static final String KINIT_PASSWORD_FILE = &quot;--password-file={}&quot;;
 
@@ -40,50 +41,50 @@ abstract class AbstractRepository {
 
   private static final String YES = &quot;yes&quot;;
 
-<span class="fc" id="L43">  @Getter(AccessLevel.PACKAGE)</span>
+<span class="fc" id="L44">  @Getter(AccessLevel.PACKAGE)</span>
   private final DomainControllerProperties properties;
 
-<span class="nc" id="L46">  @Getter(AccessLevel.PACKAGE)</span>
+<span class="fc" id="L47">  @Getter(AccessLevel.PACKAGE)</span>
   private final LdaptiveTemplate ldapTemplate;
 
   /**
    * Instantiates a new abstract repository.
    *
-   * @param properties   the properties
+   * @param properties the properties
    * @param ldapTemplate the ldap template
    */
   AbstractRepository(
       final DomainControllerProperties properties,
-<span class="fc" id="L57">      final LdaptiveTemplate ldapTemplate) {</span>
-<span class="fc" id="L58">    Assert.notNull(properties, &quot;Domain controller properties must not be null.&quot;);</span>
-<span class="fc" id="L59">    this.properties = properties;</span>
-<span class="fc" id="L60">    this.ldapTemplate = ldapTemplate;</span>
-<span class="fc" id="L61">  }</span>
+<span class="fc" id="L58">      final LdaptiveTemplate ldapTemplate) {</span>
+<span class="fc" id="L59">    Assert.notNull(properties, &quot;Domain controller properties must not be null.&quot;);</span>
+<span class="fc" id="L60">    this.properties = properties;</span>
+<span class="fc" id="L61">    this.ldapTemplate = ldapTemplate;</span>
+<span class="fc" id="L62">  }</span>
 
   /**
    * Calls linux command {@code kinit} for authentication.
    */
   void kinit() {
-<span class="nc" id="L67">    synchronized (KINIT_LOG) {</span>
-<span class="nc" id="L68">      List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L69">      sudo(commands);</span>
-<span class="nc" id="L70">      commands.add(properties.getKinitBinary());</span>
-<span class="nc" id="L71">      commands.add(KINIT_PASSWORD_FILE.replace(&quot;{}&quot;, properties.getKinitPasswordFile()));</span>
-<span class="nc" id="L72">      commands.add(properties.getKinitAdministratorName());</span>
-<span class="nc" id="L73">      CommandExecutor.exec(commands, properties.getSambaToolExecDir());</span>
-<span class="nc" id="L74">    }</span>
-<span class="nc" id="L75">  }</span>
+<span class="nc" id="L68">    synchronized (KINIT_LOG) {</span>
+<span class="nc" id="L69">      List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L70">      sudo(commands);</span>
+<span class="nc" id="L71">      commands.add(properties.getKinitBinary());</span>
+<span class="nc" id="L72">      commands.add(KINIT_PASSWORD_FILE.replace(&quot;{}&quot;, properties.getKinitPasswordFile()));</span>
+<span class="nc" id="L73">      commands.add(properties.getKinitAdministratorName());</span>
+<span class="nc" id="L74">      CommandExecutor.exec(commands, properties.getSambaToolExecDir());</span>
+<span class="nc" id="L75">    }</span>
+<span class="nc" id="L76">  }</span>
 
   /**
    * Calls linux command {@code sudo}.
    *
    * @param commands the commands
    */
-  void sudo(List&lt;String&gt; commands) {
-<span class="nc bnc" id="L83" title="All 2 branches missed.">    if (properties.isUsingSudo()) {</span>
-<span class="nc" id="L84">      commands.add(properties.getSudoBinary());</span>
+  void sudo(final List&lt;String&gt; commands) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">    if (properties.isUsingSudo()) {</span>
+<span class="fc" id="L85">      commands.add(properties.getSudoBinary());</span>
     }
-<span class="nc" id="L86">  }</span>
+<span class="fc" id="L87">  }</span>
 
   /**
    * Adds the use kerberos option of the linux command {@code samba-tool} to the list of commands.
@@ -91,10 +92,30 @@ abstract class AbstractRepository {
    *
    * @param commands the commands
    */
-  void auth(List&lt;String&gt; commands) {
-<span class="nc" id="L95">    commands.add(USE_KERBEROS);</span>
-<span class="nc" id="L96">    commands.add(YES);</span>
-<span class="nc" id="L97">  }</span>
+  void auth(final List&lt;String&gt; commands) {
+<span class="nc" id="L96">    commands.add(USE_KERBEROS);</span>
+<span class="nc" id="L97">    commands.add(YES);</span>
+<span class="nc" id="L98">  }</span>
+
+  /**
+   * Checks whether the given value contains the given query.
+   *
+   * @param value the value
+   * @param query the query
+   * @return {@code true} if the value contains the query, otherwise {@code false}
+   */
+  static boolean contains(final Object value, final String query) {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    if (value instanceof Collection) {</span>
+      //noinspection rawtypes
+<span class="fc bfc" id="L110" title="All 2 branches covered.">      for (Object item : (Collection) value) {</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (contains(item, query)) {</span>
+<span class="fc" id="L112">          return true;</span>
+        }
+<span class="nc" id="L114">      }</span>
+<span class="fc" id="L115">      return false;</span>
+    }
+<span class="fc bfc" id="L117" title="All 4 branches covered.">    return value != null &amp;&amp; value.toString().toLowerCase().contains(query);</span>
+  }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

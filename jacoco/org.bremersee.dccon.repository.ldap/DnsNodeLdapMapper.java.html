@@ -51,8 +51,8 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   /**
    * Instantiates a new dns node ldap mapper.
    *
-   * @param properties    the properties
-   * @param zoneName      the zone name
+   * @param properties the properties
+   * @param zoneName the zone name
    * @param unknownFilter the unknown filter
    */
   public DnsNodeLdapMapper(
@@ -66,7 +66,7 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
 
   @Override
   public String[] getObjectClasses() {
-<span class="nc" id="L69">    return new String[0];</span>
+<span class="fc" id="L69">    return new String[0];</span>
   }
 
   @Override
@@ -94,8 +94,8 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   public void map(
       final LdapEntry ldapEntry,
       final DnsNode dnsNode) {
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">    if (ldapEntry == null) {</span>
-<span class="nc" id="L98">      return;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">    if (ldapEntry == null) {</span>
+<span class="fc" id="L98">      return;</span>
     }
 <span class="fc" id="L100">    mapCommonAttributes(ldapEntry, dnsNode);</span>
 <span class="fc" id="L101">    dnsNode.setName(getAttributeValue(ldapEntry, &quot;name&quot;, STRING_VALUE_TRANSCODER, null));</span>
@@ -132,4 +132,4 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

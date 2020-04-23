@@ -31,10 +31,10 @@ import org.bremersee.exception.ServiceException;
 @SuppressWarnings(&quot;WeakerAccess&quot;)
 public abstract class AbstractDomainEntityValidator {
 
-<span class="nc" id="L34">  @Getter(AccessLevel.PROTECTED)</span>
+<span class="fc" id="L34">  @Getter(AccessLevel.PROTECTED)</span>
   private DomainControllerProperties properties;
 
-<span class="nc" id="L37">  @Getter(AccessLevel.PROTECTED)</span>
+<span class="fc" id="L37">  @Getter(AccessLevel.PROTECTED)</span>
   private DomainGroupRepository groupRepository;
 
 <span class="nc" id="L40">  @Getter(AccessLevel.PROTECTED)</span>
@@ -43,9 +43,9 @@ public abstract class AbstractDomainEntityValidator {
   /**
    * Instantiates a new abstract domain entity validator.
    *
-   * @param properties      the properties
+   * @param properties the properties
    * @param groupRepository the group repository
-   * @param userRepository  the user repository
+   * @param userRepository the user repository
    */
   protected AbstractDomainEntityValidator(
       DomainControllerProperties properties,
@@ -69,7 +69,7 @@ public abstract class AbstractDomainEntityValidator {
   /**
    * Throws an already exception if the name is already in use.
    *
-   * @param name        the name
+   * @param name the name
    * @param domainClass the domain class
    */
   protected void validateNameNotExists(String name, Class&lt;?&gt; domainClass) {
@@ -82,4 +82,4 @@ public abstract class AbstractDomainEntityValidator {
 <span class="fc" id="L82">  }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

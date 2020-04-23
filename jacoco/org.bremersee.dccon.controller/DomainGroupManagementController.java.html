@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,52 +36,64 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   private final DomainGroupService domainGroupService;
 
+  private final DomainUserService domainUserService;
+
   /**
    * Instantiates a new domain group management controller.
    *
    * @param domainGroupService the domain group service
+   * @param domainUserService the domain user service
    */
   public DomainGroupManagementController(
-<span class="fc" id="L44">      final DomainGroupService domainGroupService) {</span>
-<span class="fc" id="L45">    this.domainGroupService = domainGroupService;</span>
-<span class="fc" id="L46">  }</span>
+      final DomainGroupService domainGroupService,
+<span class="fc" id="L49">      final DomainUserService domainUserService) {</span>
+<span class="fc" id="L50">    this.domainGroupService = domainGroupService;</span>
+<span class="fc" id="L51">    this.domainUserService = domainUserService;</span>
+<span class="fc" id="L52">  }</span>
 
-  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')&quot;)
   @Override
-  public ResponseEntity&lt;List&lt;DomainGroup&gt;&gt; getGroups(String sort) {
-<span class="fc" id="L51">    return ResponseEntity.ok(domainGroupService.getGroups(sort));</span>
+  public ResponseEntity&lt;List&lt;DomainGroup&gt;&gt; getGroups(String sort, String query) {
+<span class="fc" id="L57">    return ResponseEntity.ok(domainGroupService.getGroups(sort, query));</span>
   }
 
-  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')&quot;)
   @Override
   public ResponseEntity&lt;DomainGroup&gt; addGroup(
       @Valid DomainGroup group) {
-<span class="fc" id="L58">    return ResponseEntity.ok(domainGroupService.addGroup(group));</span>
+<span class="fc" id="L64">    return ResponseEntity.ok(domainGroupService.addGroup(group));</span>
   }
 
-  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')&quot;)
   @Override
-  public ResponseEntity&lt;DomainGroup&gt; getGroupByName(String groupName) {
-<span class="nc" id="L64">    return ResponseEntity.of(domainGroupService.getGroupByName(groupName));</span>
+  public ResponseEntity&lt;DomainGroup&gt; getGroup(String groupName) {
+<span class="fc" id="L70">    return ResponseEntity.of(domainGroupService.getGroup(groupName));</span>
   }
 
-  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')&quot;)
   @Override
   public ResponseEntity&lt;DomainGroup&gt; updateGroup(String groupName, @Valid DomainGroup domainGroup) {
-<span class="nc" id="L70">    return ResponseEntity.of(domainGroupService.updateGroup(groupName, domainGroup));</span>
+<span class="fc" id="L76">    return ResponseEntity.of(domainGroupService.updateGroup(groupName, domainGroup));</span>
   }
 
-  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')&quot;)
   @Override
   public ResponseEntity&lt;Boolean&gt; groupExists(String groupName) {
-<span class="nc" id="L76">    return ResponseEntity.ok(domainGroupService.groupExists(groupName));</span>
+<span class="fc" id="L82">    return ResponseEntity.ok(domainGroupService.groupExists(groupName));</span>
   }
 
-  @PreAuthorize(&quot;hasAuthority('ROLE_ADMIN')&quot;)
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')&quot;)
+  @Override
+  public ResponseEntity&lt;Boolean&gt; isGroupNameInUse(String groupName) {
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">    return ResponseEntity.ok(domainUserService.userExists(groupName)</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        || domainGroupService.groupExists(groupName));</span>
+  }
+
+  @PreAuthorize(&quot;hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')&quot;)
   @Override
   public ResponseEntity&lt;Boolean&gt; deleteGroup(String groupName) {
-<span class="nc" id="L82">    return ResponseEntity.ok(domainGroupService.deleteGroup(groupName));</span>
+<span class="fc" id="L95">    return ResponseEntity.ok(domainGroupService.deleteGroup(groupName));</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -40,7 +40,7 @@ public interface DomainUserValidator {
   /**
    * Do update validation.
    *
-   * @param userName   the user name
+   * @param userName the user name
    * @param domainUser the domain user
    */
   void doUpdateValidation(String userName, DomainUser domainUser);
@@ -48,9 +48,9 @@ public interface DomainUserValidator {
   /**
    * Default domain user validator.
    *
-   * @param properties      the properties
+   * @param properties the properties
    * @param groupRepository the group repository
-   * @param userRepository  the user repository
+   * @param userRepository the user repository
    * @return the domain user validator
    */
   static DomainUserValidator defaultValidator(
@@ -68,9 +68,9 @@ public interface DomainUserValidator {
     /**
      * Instantiates a new default domain user validator.
      *
-     * @param properties      the properties
+     * @param properties the properties
      * @param groupRepository the group repository
-     * @param userRepository  the user repository
+     * @param userRepository the user repository
      */
     Default(DomainControllerProperties properties,
         DomainGroupRepository groupRepository,
@@ -80,61 +80,61 @@ public interface DomainUserValidator {
 
     @Override
     public void doAddValidation(DomainUser domainUser) {
-<span class="nc" id="L83">      validateNameNotExists(domainUser.getUserName(), DomainUser.class);</span>
-<span class="nc" id="L84">      validate(domainUser);</span>
-<span class="nc" id="L85">    }</span>
+<span class="fc" id="L83">      validateNameNotExists(domainUser.getUserName(), DomainUser.class);</span>
+<span class="fc" id="L84">      validate(domainUser);</span>
+<span class="fc" id="L85">    }</span>
 
     @Override
     public void doUpdateValidation(String userName, DomainUser domainUser) {
-<span class="nc" id="L89">      domainUser.setUserName(userName);</span>
-<span class="nc" id="L90">      validate(domainUser);</span>
-<span class="nc" id="L91">    }</span>
+<span class="fc" id="L89">      domainUser.setUserName(userName);</span>
+<span class="fc" id="L90">      validate(domainUser);</span>
+<span class="fc" id="L91">    }</span>
 
     private void validate(DomainUser domainUser) {
-<span class="nc" id="L94">      domainUser.setGroups(domainUser.getGroups().stream()</span>
-<span class="nc" id="L95">          .filter(name -&gt; getGroupRepository().exists(name))</span>
-<span class="nc" id="L96">          .collect(Collectors.toList()));</span>
+<span class="fc" id="L94">      domainUser.setGroups(domainUser.getGroups().stream()</span>
+<span class="fc" id="L95">          .filter(name -&gt; getGroupRepository().exists(name))</span>
+<span class="fc" id="L96">          .collect(Collectors.toList()));</span>
 
       // Display name
-<span class="nc" id="L99">      final StringBuilder displayNameBuilder = new StringBuilder();</span>
-<span class="nc bnc" id="L100" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getFirstName())) {</span>
-<span class="nc" id="L101">        displayNameBuilder.append(domainUser.getFirstName());</span>
-<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (StringUtils.hasText(domainUser.getLastName())) {</span>
-<span class="nc" id="L103">          displayNameBuilder.append(' ');</span>
+<span class="fc" id="L99">      final StringBuilder displayNameBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">      if (StringUtils.hasText(domainUser.getFirstName())) {</span>
+<span class="fc" id="L101">        displayNameBuilder.append(domainUser.getFirstName());</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (StringUtils.hasText(domainUser.getLastName())) {</span>
+<span class="fc" id="L103">          displayNameBuilder.append(' ');</span>
         }
       }
-<span class="nc bnc" id="L106" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getLastName())) {</span>
-<span class="nc" id="L107">        displayNameBuilder.append(domainUser.getLastName());</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">      if (StringUtils.hasText(domainUser.getLastName())) {</span>
+<span class="fc" id="L107">        displayNameBuilder.append(domainUser.getLastName());</span>
       }
-<span class="nc bnc" id="L109" title="All 2 branches missed.">      final String displayName = StringUtils.hasText(domainUser.getDisplayName())</span>
-<span class="nc" id="L110">          ? domainUser.getDisplayName()</span>
-<span class="nc bnc" id="L111" title="All 2 branches missed.">          : displayNameBuilder.length() &gt; 0 ? displayNameBuilder.toString() : null;</span>
-<span class="nc" id="L112">      domainUser.setDisplayName(displayName);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">      final String displayName = StringUtils.hasText(domainUser.getDisplayName())</span>
+<span class="fc" id="L110">          ? domainUser.getDisplayName()</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">          : displayNameBuilder.length() &gt; 0 ? displayNameBuilder.toString() : null;</span>
+<span class="fc" id="L112">      domainUser.setDisplayName(displayName);</span>
 
       // Login shell
-<span class="nc bnc" id="L115" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getLoginShell())) {</span>
-<span class="nc" id="L116">        domainUser.setLoginShell(getProperties().getLoginShell());</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">      if (StringUtils.hasText(getProperties().getLoginShell())) {</span>
+<span class="fc" id="L116">        domainUser.setLoginShell(getProperties().getLoginShell());</span>
       } else {
 <span class="nc" id="L118">        domainUser.setLoginShell(null);</span>
       }
 
       // Unix home
-<span class="nc bnc" id="L122" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getUnixHomeDirTemplate())) {</span>
-<span class="nc" id="L123">        domainUser.setUnixHomeDirectory(getProperties()</span>
-<span class="nc" id="L124">            .getUnixHomeDirTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">      if (StringUtils.hasText(getProperties().getUnixHomeDirTemplate())) {</span>
+<span class="fc" id="L123">        domainUser.setUnixHomeDirectory(getProperties()</span>
+<span class="fc" id="L124">            .getUnixHomeDirTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
       } else {
 <span class="nc" id="L126">        domainUser.setUnixHomeDirectory(null);</span>
       }
 
       // Home directory/share
-<span class="nc bnc" id="L130" title="All 2 branches missed.">      if (StringUtils.hasText(getProperties().getHomeDirectoryTemplate())) {</span>
-<span class="nc" id="L131">        domainUser.setHomeDirectory(getProperties()</span>
-<span class="nc" id="L132">            .getHomeDirectoryTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">      if (StringUtils.hasText(getProperties().getHomeDirectoryTemplate())) {</span>
+<span class="fc" id="L131">        domainUser.setHomeDirectory(getProperties()</span>
+<span class="fc" id="L132">            .getHomeDirectoryTemplate().replace(&quot;{}&quot;, domainUser.getUserName()));</span>
       } else {
 <span class="nc" id="L134">        domainUser.setHomeDirectory(null);</span>
       }
-<span class="nc" id="L136">    }</span>
+<span class="fc" id="L136">    }</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

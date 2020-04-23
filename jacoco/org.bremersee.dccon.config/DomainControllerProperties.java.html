@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -37,151 +38,158 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = &quot;bremersee.domain-controller&quot;)
 @Component
 @Getter
-<span class="pc" id="L40">@Setter</span>
-<span class="nc" id="L41">@ToString</span>
-<span class="nc bnc" id="L42" title="All 386 branches missed.">@EqualsAndHashCode</span>
-<span class="fc" id="L43">@Slf4j</span>
+<span class="pc" id="L41">@Setter</span>
+<span class="nc" id="L42">@ToString</span>
+<span class="nc bnc" id="L43" title="All 404 branches missed.">@EqualsAndHashCode</span>
+<span class="fc" id="L44">@Slf4j</span>
 public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 2L;
 
-<span class="fc" id="L48">  private String groupBaseDn;</span>
+  private static final String MIN_LENGTH_PLACEHOLDER = &quot;{{MIN_LENGTH}}&quot;;
 
-<span class="fc" id="L50">  private String groupRdn = &quot;cn&quot;;</span>
+  private static final String SIMPLE_PASSWORD_REGEX = &quot;^(?=.{&quot; + MIN_LENGTH_PLACEHOLDER
+      + &quot;,75}$).*&quot;;
 
-<span class="fc" id="L52">  private String groupMemberAttr = &quot;member&quot;;</span>
-
-<span class="pc" id="L54">  private String groupFindAllFilter = &quot;(objectClass=group)&quot;;</span>
-
-<span class="pc" id="L56">  private SearchScope groupFindAllSearchScope = SearchScope.ONELEVEL;</span>
-
-<span class="pc" id="L58">  private String groupFindOneFilter = &quot;(&amp;(objectClass=group)(sAMAccountName={0}))&quot;;</span>
-
-<span class="pc" id="L60">  private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;</span>
+  private static final String COMPLEX_PASSWORD_REGEX = &quot;(?=^.{&quot; + MIN_LENGTH_PLACEHOLDER + &quot;,75}$)&quot;
+      + &quot;((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])&quot;
+      + &quot;|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*&quot;;
 
 
-<span class="fc" id="L63">  private String userBaseDn;</span>
+<span class="fc" id="L59">  private String personalName = &quot;Anna Livia&quot;;</span>
 
-<span class="fc" id="L65">  private String userRdn = &quot;cn&quot;;</span>
+<span class="fc" id="L61">  private String companyName = &quot;example.org&quot;;</span>
 
-<span class="fc" id="L67">  private String userGroupAttr = &quot;memberOf&quot;;</span>
-
-<span class="pc" id="L69">  private String userFindAllFilter = &quot;(objectClass=user)&quot;;</span>
-
-<span class="pc" id="L71">  private SearchScope userFindAllSearchScope = SearchScope.ONELEVEL;</span>
-
-<span class="pc" id="L73">  private String userFindOneFilter = &quot;(&amp;(objectClass=user)(sAMAccountName={0}))&quot;;</span>
-
-<span class="pc" id="L75">  private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;</span>
+<span class="pc" id="L63">  private String companyUrl = &quot;http://example.org&quot;;</span>
 
 
-<span class="fc" id="L78">  private String dnsZoneBaseDn;</span>
+<span class="fc" id="L66">  private String groupBaseDn;</span>
 
-<span class="fc" id="L80">  private String dnsZoneRdn = &quot;dc&quot;;</span>
+<span class="fc" id="L68">  private String groupRdn = &quot;cn&quot;;</span>
 
-<span class="pc" id="L82">  private String dnsZoneFindAllFilter = &quot;(objectClass=dnsZone)&quot;;</span>
+<span class="fc" id="L70">  private String groupFindAllFilter = &quot;(objectClass=group)&quot;;</span>
 
-<span class="pc" id="L84">  private SearchScope dnsZoneFindAllSearchScope = SearchScope.SUBTREE;</span>
+<span class="fc" id="L72">  private SearchScope groupFindAllSearchScope = SearchScope.ONELEVEL;</span>
 
-<span class="pc" id="L86">  private String dnsZoneFindOneFilter = &quot;(&amp;(objectClass=dnsZone)(name={0}))&quot;;</span>
+<span class="fc" id="L74">  private String groupFindOneFilter = &quot;(&amp;(objectClass=group)(sAMAccountName={0}))&quot;;</span>
 
-<span class="pc" id="L88">  private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;</span>
-
-
-<span class="pc" id="L91">  private String defaultZone = &quot;example.org&quot;;</span>
-
-<span class="nc" id="L93">  private String dnsNodeBaseDn;</span>
-
-<span class="fc" id="L95">  private String dnsNodeRdn = &quot;dc&quot;;</span>
-
-<span class="pc" id="L97">  private String dnsNodeFindAllFilter = &quot;(objectClass=dnsNode)&quot;;</span>
-
-<span class="pc" id="L99">  private SearchScope dnsNodeFindAllSearchScope = SearchScope.SUBTREE;</span>
-
-<span class="pc" id="L101">  private String dnsNodeFindOneFilter = &quot;(&amp;(objectClass=dnsNode)(name={0}))&quot;;</span>
-
-<span class="pc" id="L103">  private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;</span>
+<span class="fc" id="L76">  private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;</span>
 
 
-<span class="pc" id="L106">  private String kinitBinary = &quot;/usr/bin/kinit&quot;;</span>
+<span class="fc" id="L79">  private String userBaseDn;</span>
 
-<span class="pc" id="L108">  private String kinitAdministratorName = &quot;Administrator&quot;;</span>
+<span class="fc" id="L81">  private String userRdn = &quot;cn&quot;;</span>
 
-<span class="pc" id="L110">  private String kinitPasswordFile = &quot;/var/lib/dc-con/dc-pass.txt&quot;;</span>
+<span class="fc" id="L83">  private String userFindAllFilter = &quot;(objectClass=user)&quot;;</span>
 
-<span class="pc" id="L112">  private String sudoBinary = &quot;/usr/bin/sudo&quot;;</span>
+<span class="fc" id="L85">  private SearchScope userFindAllSearchScope = SearchScope.ONELEVEL;</span>
 
-<span class="pc" id="L114">  private boolean usingSudo = true;</span>
+<span class="fc" id="L87">  private String userFindOneFilter = &quot;(&amp;(objectClass=user)(sAMAccountName={0}))&quot;;</span>
 
-<span class="pc" id="L116">  private String sambaToolBinary = &quot;/usr/bin/samba-tool&quot;;</span>
-
-<span class="pc" id="L118">  private String sambaToolExecDir = &quot;/tmp&quot;;</span>
-
-<span class="pc" id="L120">  private String loginShell = &quot;/bin/bash&quot;;</span>
-
-<span class="pc" id="L122">  private String homeDirectoryTemplate = &quot;\\\\data\\users\\{}&quot;;</span>
-
-<span class="pc" id="L124">  private String unixHomeDirTemplate = &quot;/home/{}&quot;;</span>
+<span class="fc" id="L89">  private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;</span>
 
 
-<span class="pc" id="L127">  private String dhcpLeaseListBinary = &quot;/usr/sbin/dhcp-lease-list&quot;;</span>
+<span class="fc" id="L92">  private String defaultSidPrefix = &quot;S-1-5-21-&quot;;</span>
 
-<span class="pc" id="L129">  private String dhcpLeaseListExecDir = &quot;/tmp&quot;;</span>
-
-
-<span class="pc" id="L132">  private String nameServerHost = &quot;ns.example.org&quot;;</span>
-
-<span class="fc" id="L134">  private String reverseZoneSuffixIp4 = &quot;.in-addr.arpa&quot;;</span>
-
-<span class="pc" id="L136">  private String reverseZoneSuffixIp6 = &quot;.ip6.arpa&quot;;</span>
-
-<span class="pc" id="L138">  private List&lt;String&gt; excludedZoneRegexList = new ArrayList&lt;&gt;();</span>
-
-<span class="fc" id="L140">  private List&lt;String&gt; excludedNodeRegexList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L94">  private int maxSystemSidSuffix = 999;</span>
 
 
-<span class="fc" id="L143">  private String ip4Regex = &quot;^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$&quot;;</span>
+<span class="fc" id="L97">  private String dnsZoneBaseDn;</span>
 
-<span class="fc" id="L145">  private String macRegex = &quot;^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$&quot;;</span>
+<span class="fc" id="L99">  private String dnsZoneRdn = &quot;dc&quot;;</span>
+
+<span class="fc" id="L101">  private String dnsZoneFindAllFilter = &quot;(objectClass=dnsZone)&quot;;</span>
+
+<span class="fc" id="L103">  private SearchScope dnsZoneFindAllSearchScope = SearchScope.SUBTREE;</span>
+
+<span class="fc" id="L105">  private String dnsZoneFindOneFilter = &quot;(&amp;(objectClass=dnsZone)(name={0}))&quot;;</span>
+
+<span class="fc" id="L107">  private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;</span>
 
 
-<span class="fc" id="L148">  private String gravatarUrl = &quot;https://www.gravatar.com/avatar/{}?d=404&quot;;</span>
+<span class="fc" id="L110">  private String defaultZone = &quot;samdom.example.org&quot;;</span>
 
-  /**
-   * Possible values.
-   * &lt;ul&gt;
-   * &lt;li&gt;mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
-   * &lt;li&gt;identicon: a geometric pattern based on an email hash
-   * &lt;li&gt;monsterid: a generated 'monster' with different colors, faces, etc
-   * &lt;li&gt;wavatar: generated faces with differing features and backgrounds
-   * &lt;li&gt;retro: awesome generated, 8-bit arcade-style pixelated faces
-   * &lt;li&gt;robohash: a generated robot with different colors, faces, etc
-   * &lt;li&gt;blank: a transparent PNG image (border added to HTML below for demonstration purposes)
-   * &lt;/ul&gt;
-   */
-<span class="fc" id="L162">  private String gravatarUrlForDefault = &quot;https://www.gravatar.com/avatar/{}?d=retro&quot;;</span>
+<span class="nc" id="L112">  private String dnsNodeBaseDn;</span>
+
+<span class="fc" id="L114">  private String dnsNodeRdn = &quot;dc&quot;;</span>
+
+<span class="fc" id="L116">  private String dnsNodeFindAllFilter = &quot;(objectClass=dnsNode)&quot;;</span>
+
+<span class="fc" id="L118">  private SearchScope dnsNodeFindAllSearchScope = SearchScope.SUBTREE;</span>
+
+<span class="fc" id="L120">  private String dnsNodeFindOneFilter = &quot;(&amp;(objectClass=dnsNode)(name={0}))&quot;;</span>
+
+<span class="pc" id="L122">  private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;</span>
+
+
+<span class="pc" id="L125">  private String kinitBinary = &quot;/usr/bin/kinit&quot;;</span>
+
+<span class="pc" id="L127">  private String kinitAdministratorName = &quot;Administrator&quot;;</span>
+
+<span class="pc" id="L129">  private String kinitPasswordFile = &quot;/var/lib/dc-con/dc-pass.txt&quot;;</span>
+
+<span class="fc" id="L131">  private String sudoBinary = &quot;/usr/bin/sudo&quot;;</span>
+
+<span class="fc" id="L133">  private boolean usingSudo = true;</span>
+
+<span class="pc" id="L135">  private String sambaToolBinary = &quot;/usr/bin/samba-tool&quot;;</span>
+
+<span class="pc" id="L137">  private String sambaToolExecDir = &quot;/tmp&quot;;</span>
+
+<span class="fc" id="L139">  private String loginShell = &quot;/bin/bash&quot;;</span>
+
+<span class="fc" id="L141">  private String homeDirectoryTemplate = &quot;\\\\data\\users\\{}&quot;;</span>
+
+<span class="fc" id="L143">  private String unixHomeDirTemplate = &quot;/home/{}&quot;;</span>
+
+
+<span class="fc" id="L146">  private String dhcpLeaseListBinary = &quot;/usr/sbin/dhcp-lease-list&quot;;</span>
+
+<span class="fc" id="L148">  private String dhcpLeaseListExecDir = &quot;/tmp&quot;;</span>
+
+
+<span class="pc" id="L151">  private String nameServerHost = &quot;ns.samdom.example.org&quot;;</span>
+
+<span class="fc" id="L153">  private String reverseZoneSuffixIp4 = &quot;.in-addr.arpa&quot;;</span>
+
+<span class="pc" id="L155">  private String reverseZoneSuffixIp6 = &quot;.ip6.arpa&quot;;</span>
+
+<span class="fc" id="L157">  private List&lt;String&gt; excludedZoneRegexList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L159">  private List&lt;String&gt; excludedNodeRegexList = new ArrayList&lt;&gt;();</span>
+
+
+<span class="fc" id="L162">  private String ip4Regex = &quot;^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$&quot;;</span>
+
+<span class="fc" id="L164">  private String macRegex = &quot;^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$&quot;;</span>
+
+
+<span class="fc" id="L167">  private String gravatarUrl = &quot;https://www.gravatar.com/avatar/{hash}?d={default}&amp;s={size}&quot;;</span>
+
+
+<span class="fc" id="L170">  private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();</span>
 
 
   /**
    * Instantiates a new Domain controller properties.
    */
-<span class="fc" id="L168">  public DomainControllerProperties() {</span>
-<span class="fc" id="L169">    excludedZoneRegexList.add(&quot;^_msdcs\\..*$&quot;);</span>
-<span class="fc" id="L170">    excludedZoneRegexList.add(&quot;RootDNSServers&quot;);</span>
+<span class="fc" id="L176">  public DomainControllerProperties() {</span>
+<span class="fc" id="L177">    excludedZoneRegexList.add(&quot;^_msdcs\\..*$&quot;);</span>
+<span class="fc" id="L178">    excludedZoneRegexList.add(&quot;RootDNSServers&quot;);</span>
 
-<span class="fc" id="L172">    excludedNodeRegexList.add(&quot;^$&quot;);</span>
-<span class="fc" id="L173">    excludedNodeRegexList.add(&quot;_msdcs&quot;);</span>
-<span class="fc" id="L174">    excludedNodeRegexList.add(&quot;_sites&quot;);</span>
-<span class="fc" id="L175">    excludedNodeRegexList.add(&quot;_tcp&quot;);</span>
-<span class="fc" id="L176">    excludedNodeRegexList.add(&quot;_udp&quot;);</span>
+<span class="fc" id="L180">    excludedNodeRegexList.add(&quot;^$&quot;);</span>
+<span class="fc" id="L181">    excludedNodeRegexList.add(&quot;_msdcs&quot;);</span>
+<span class="fc" id="L182">    excludedNodeRegexList.add(&quot;_sites&quot;);</span>
+<span class="fc" id="L183">    excludedNodeRegexList.add(&quot;_tcp&quot;);</span>
+<span class="fc" id="L184">    excludedNodeRegexList.add(&quot;_udp&quot;);</span>
 
-<span class="fc" id="L178">    excludedNodeRegexList.add(&quot;@&quot;);</span>
-<span class="fc" id="L179">    excludedNodeRegexList.add(&quot;_gc\\..*$&quot;);</span>
-<span class="fc" id="L180">    excludedNodeRegexList.add(&quot;_kerberos\\..*$&quot;);</span>
-<span class="fc" id="L181">    excludedNodeRegexList.add(&quot;_kpasswd\\..*$&quot;);</span>
-<span class="fc" id="L182">    excludedNodeRegexList.add(&quot;_ldap\\..*$&quot;);</span>
-<span class="fc" id="L183">    excludedNodeRegexList.add(&quot;ForestDnsZones&quot;);</span>
-<span class="fc" id="L184">  }</span>
+<span class="fc" id="L186">    excludedNodeRegexList.add(&quot;@&quot;);</span>
+<span class="fc" id="L187">    excludedNodeRegexList.add(&quot;_gc\\..*$&quot;);</span>
+<span class="fc" id="L188">    excludedNodeRegexList.add(&quot;_kerberos\\..*$&quot;);</span>
+<span class="fc" id="L189">    excludedNodeRegexList.add(&quot;_kpasswd\\..*$&quot;);</span>
+<span class="fc" id="L190">    excludedNodeRegexList.add(&quot;_ldap\\..*$&quot;);</span>
+<span class="fc" id="L191">    excludedNodeRegexList.add(&quot;ForestDnsZones&quot;);</span>
+<span class="fc" id="L192">  }</span>
 
   /**
    * Gets reverse zone suffix list.
@@ -189,7 +197,18 @@ public class DomainControllerProperties implements Serializable {
    * @return the reverse zone suffix list
    */
   public List&lt;String&gt; getReverseZoneSuffixList() {
-<span class="nc" id="L192">    return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);</span>
+<span class="fc" id="L200">    return Arrays.asList(reverseZoneSuffixIp4, reverseZoneSuffixIp6);</span>
+  }
+
+  /**
+   * Determines whether the given zone is a reverse zone or not.
+   *
+   * @param zoneName the zone name
+   * @return {@code true} if the zone is a reverse zone, otherwise {@code false}
+   */
+  public boolean isReverseZone(final String zoneName) {
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">    return zoneName != null &amp;&amp; getReverseZoneSuffixList().stream()</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        .anyMatch(suffix -&gt; zoneName.toLowerCase().endsWith(suffix.toLowerCase()));</span>
   }
 
   /**
@@ -199,8 +218,66 @@ public class DomainControllerProperties implements Serializable {
    * @return the string
    */
   public String buildDnsNodeBaseDn(String zoneName) {
-<span class="fc" id="L202">    return dnsNodeBaseDn.replace(&quot;{zoneName}&quot;, zoneName);</span>
+<span class="fc" id="L221">    return dnsNodeBaseDn.replace(&quot;{zoneName}&quot;, zoneName);</span>
   }
 
+  /**
+   * Gets simple password regex.
+   *
+   * @param minLength the min length
+   * @return the simple password regex
+   */
+  public static String getSimplePasswordRegex(int minLength) {
+<span class="nc" id="L231">    return SIMPLE_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));</span>
+  }
+
+  /**
+   * Gets complex password regex.
+   *
+   * @param minLength the min length
+   * @return the complex password regex
+   */
+  public static String getComplexPasswordRegex(int minLength) {
+<span class="fc" id="L241">    return COMPLEX_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));</span>
+  }
+
+  /**
+   * The mail with credentials properties.
+   *
+   * @author Christian Bremer
+   */
+  @Getter
+<span class="pc" id="L250">  @Setter</span>
+<span class="nc" id="L251">  @ToString</span>
+<span class="nc bnc" id="L252" title="All 38 branches missed.">  @EqualsAndHashCode</span>
+<span class="fc" id="L253">  @NoArgsConstructor</span>
+  @SuppressWarnings(&quot;WeakerAccess&quot;)
+  public static class MailWithCredentialsProperties {
+
+<span class="pc" id="L257">    private String sender = &quot;no-reply@example.org&quot;;</span>
+
+<span class="fc" id="L259">    private String templateBasename = &quot;personal-mail-with-credentials&quot;;</span>
+
+<span class="fc" id="L261">    private String loginUrl = &quot;http://localhost:4200/change-password&quot;;</span>
+
+<span class="pc" id="L263">    private List&lt;MailInlineAttachment&gt; inlineAttachments = new ArrayList&lt;&gt;();</span>
+  }
+
+  /**
+   * The mail inline attachment.
+   */
+  @Getter
+<span class="nc" id="L270">  @Setter</span>
+<span class="nc" id="L271">  @ToString</span>
+<span class="nc bnc" id="L272" title="All 30 branches missed.">  @EqualsAndHashCode</span>
+<span class="nc" id="L273">  @NoArgsConstructor</span>
+  public static class MailInlineAttachment {
+
+<span class="nc" id="L276">    private String contentId;</span>
+
+<span class="nc" id="L278">    private String location;</span>
+
+<span class="nc" id="L280">    private String mimeType;</span>
+  }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

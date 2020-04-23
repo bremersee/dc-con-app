@@ -43,48 +43,53 @@ public class DnsZoneComparator extends AbstractDnsComparator&lt;DnsZone&gt; {
 
   @Override
   public int compare(DnsZone o1, DnsZone o2) {
-<span class="nc bnc" id="L46" title="All 4 branches missed.">    final String s1 = o1 != null &amp;&amp; o1.getName() != null ? o1.getName() : &quot;&quot;;</span>
-<span class="nc bnc" id="L47" title="All 4 branches missed.">    final String s2 = o2 != null &amp;&amp; o2.getName() != null ? o2.getName() : &quot;&quot;;</span>
-<span class="nc" id="L48">    log.debug(&quot;msg=[Comparing zones.] zone1=[{}] zone2=[{}]&quot;, s1, s2);</span>
-<span class="nc bnc" id="L49" title="All 4 branches missed.">    if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
-<span class="nc" id="L50">      final String[] sa1 = s1.split(Pattern.quote(&quot;.&quot;));</span>
-<span class="nc" id="L51">      final String[] sa2 = s2.split(Pattern.quote(&quot;.&quot;));</span>
-<span class="nc" id="L52">      int c = sa2.length - sa1.length;</span>
-<span class="nc bnc" id="L53" title="All 2 branches missed.">      if (c == 0) {</span>
-<span class="nc" id="L54">        c = compare(sa1, sa2);</span>
-      }
-<span class="nc" id="L56">      log.debug(&quot;msg=[Both zones are dns reverse zones.] result=[{}]&quot;, c);</span>
-<span class="nc bnc" id="L57" title="All 2 branches missed.">      return isAsc() ? c : -1 * c;</span>
-<span class="nc bnc" id="L58" title="All 4 branches missed.">    } else if (!dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
-<span class="nc" id="L59">      log.debug(&quot;msg=[First is non reverse zone, second is reverse zone.] &quot;</span>
-          + &quot;first=[{}] second=[{}] result=[-1]&quot;, s1, s2);
-<span class="nc bnc" id="L61" title="All 2 branches missed.">      return isAsc() ? -1 : 1;</span>
-<span class="nc bnc" id="L62" title="All 4 branches missed.">    } else if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; !dnsZoneRepository.isDnsReverseZone(s2)) {</span>
-<span class="nc" id="L63">      log.debug(&quot;msg=[First is reverse zone, second is non reverse zone.] &quot;</span>
-          + &quot;first=[{}] second=[{}] result=[1]&quot;, s1, s2);
-<span class="nc bnc" id="L65" title="All 2 branches missed.">      return isAsc() ? 1 : -1;</span>
+<span class="pc bpc" id="L46" title="2 of 4 branches missed.">    if (o1 != null &amp;&amp; Boolean.TRUE.equals(o1.getDefaultZone())) {</span>
+<span class="nc" id="L47">      return -1;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">    } else if (o2 != null &amp;&amp; Boolean.TRUE.equals(o2.getDefaultZone())) {</span>
+<span class="fc" id="L49">      return 1;</span>
     }
-<span class="nc" id="L67">    final int result = s1.compareToIgnoreCase(s2);</span>
-<span class="nc" id="L68">    log.debug(&quot;msg=[Both zones are non dns reverse zones.] result=[{}]&quot;, result);</span>
-<span class="nc bnc" id="L69" title="All 2 branches missed.">    return isAsc() ? result : -1 * result;</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">    final String s1 = o1 != null &amp;&amp; o1.getName() != null ? o1.getName() : &quot;&quot;;</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">    final String s2 = o2 != null &amp;&amp; o2.getName() != null ? o2.getName() : &quot;&quot;;</span>
+<span class="nc" id="L53">    log.debug(&quot;msg=[Comparing zones.] zone1=[{}] zone2=[{}]&quot;, s1, s2);</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">    if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L55">      final String[] sa1 = s1.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc" id="L56">      final String[] sa2 = s2.split(Pattern.quote(&quot;.&quot;));</span>
+<span class="nc" id="L57">      int c = sa2.length - sa1.length;</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">      if (c == 0) {</span>
+<span class="nc" id="L59">        c = compare(sa1, sa2);</span>
+      }
+<span class="nc" id="L61">      log.debug(&quot;msg=[Both zones are dns reverse zones.] result=[{}]&quot;, c);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">      return isAsc() ? c : -1 * c;</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">    } else if (!dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L64">      log.debug(&quot;msg=[First is non reverse zone, second is reverse zone.] &quot;</span>
+          + &quot;first=[{}] second=[{}] result=[-1]&quot;, s1, s2);
+<span class="nc bnc" id="L66" title="All 2 branches missed.">      return isAsc() ? -1 : 1;</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">    } else if (dnsZoneRepository.isDnsReverseZone(s1) &amp;&amp; !dnsZoneRepository.isDnsReverseZone(s2)) {</span>
+<span class="nc" id="L68">      log.debug(&quot;msg=[First is reverse zone, second is non reverse zone.] &quot;</span>
+          + &quot;first=[{}] second=[{}] result=[1]&quot;, s1, s2);
+<span class="nc bnc" id="L70" title="All 2 branches missed.">      return isAsc() ? 1 : -1;</span>
+    }
+<span class="nc" id="L72">    final int result = s1.compareToIgnoreCase(s2);</span>
+<span class="nc" id="L73">    log.debug(&quot;msg=[Both zones are non dns reverse zones.] result=[{}]&quot;, result);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    return isAsc() ? result : -1 * result;</span>
   }
 
   private int compare(String[] sa1, String[] sa2) {
-<span class="nc bnc" id="L73" title="All 2 branches missed.">    final String[] sav1 = sa1 != null ? sa1 : new String[0];</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">    final String[] sav2 = sa2 != null ? sa2 : new String[0];</span>
-<span class="nc" id="L75">    final int len = Math.min(sav1.length, sav2.length);</span>
-<span class="nc bnc" id="L76" title="All 2 branches missed.">    for (int i = len - 1; i &gt;= 0; i--) {</span>
-<span class="nc" id="L77">      int c = compare(sav1[i], sav2[i]);</span>
-<span class="nc bnc" id="L78" title="All 2 branches missed.">      if (c != 0) {</span>
-<span class="nc" id="L79">        return c;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">    final String[] sav1 = sa1 != null ? sa1 : new String[0];</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">    final String[] sav2 = sa2 != null ? sa2 : new String[0];</span>
+<span class="nc" id="L80">    final int len = Math.min(sav1.length, sav2.length);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">    for (int i = len - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L82">      int c = compare(sav1[i], sav2[i]);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">      if (c != 0) {</span>
+<span class="nc" id="L84">        return c;</span>
       }
     }
-<span class="nc" id="L82">    return 0;</span>
+<span class="nc" id="L87">    return 0;</span>
   }
 
   private int compare(String s1, String s2) {
-<span class="nc" id="L86">    return format(s1, 3).compareToIgnoreCase(format(s2, 3));</span>
+<span class="nc" id="L91">    return format(s1, 3).compareToIgnoreCase(format(s2, 3));</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

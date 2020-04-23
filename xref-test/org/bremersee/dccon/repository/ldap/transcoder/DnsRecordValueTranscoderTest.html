@@ -8,23 +8,23 @@
 <div id="overview"><a href="../../../../../../../testapidocs/org/bremersee/dccon/repository/ldap/transcoder/DnsRecordValueTranscoderTest.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> org.bremersee.dccon.repository.ldap.transcoder;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertArrayEquals;
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertEquals;
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertNotNull;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertNull;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.assertArrayEquals;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.assertEquals;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.assertNotNull;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.assertNull;
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   
 <a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> java.time.OffsetDateTime;
 <a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> java.time.format.DateTimeFormatter;
 <a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> java.util.Base64;
 <a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> org.bremersee.dccon.model.DnsRecord;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> org.junit.Test;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> org.junit.jupiter.api.Test;
 <a class="jxr_linenumber" name="L13" href="#L13">13</a>  
 <a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment"> * The dns record value transcoder test.</em>
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_javadoccomment"> *</em>
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment"> * @author Christian Bremer</em>
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment"> */</em>
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="DnsRecordValueTranscoderTest" href="../../../../../../org/bremersee/dccon/repository/ldap/transcoder/DnsRecordValueTranscoderTest.html#DnsRecordValueTranscoderTest">DnsRecordValueTranscoderTest</a> {
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">class</strong> <a name="DnsRecordValueTranscoderTest" href="../../../../../../org/bremersee/dccon/repository/ldap/transcoder/DnsRecordValueTranscoderTest.html#DnsRecordValueTranscoderTest">DnsRecordValueTranscoderTest</a> {
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  
 <a class="jxr_linenumber" name="L21" href="#L21">21</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> DnsRecordValueTranscoder transcoder = <strong class="jxr_keyword">new</strong> DnsRecordValueTranscoder();
 <a class="jxr_linenumber" name="L22" href="#L22">22</a>  
@@ -71,7 +71,7 @@
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">   * Decode binary value record a.</em>
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>    @Test
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordA() {
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>    <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordA() {
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>      DnsRecord actual = transcoder.decodeBinaryValue(Base64.getDecoder().decode(A_RECORD_BASE64));
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>      assertNotNull(actual);
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>      assertEquals(A_RECORD_TYPE, actual.getRecordType());
@@ -86,7 +86,7 @@
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment">   * Decode binary value record cname.</em>
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>  <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L80" href="#L80">80</a>    @Test
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordCname() {
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>    <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordCname() {
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>      DnsRecord actual = transcoder
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>          .decodeBinaryValue(Base64.getDecoder().decode(CNAME_RECORD_BASE64));
 <a class="jxr_linenumber" name="L84" href="#L84">84</a>      assertNotNull(actual);
@@ -102,7 +102,7 @@
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_javadoccomment">   * Decode binary value record ptr.</em>
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>    @Test
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordPtr() {
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>    <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordPtr() {
 <a class="jxr_linenumber" name="L98" href="#L98">98</a>      DnsRecord actual = transcoder
 <a class="jxr_linenumber" name="L99" href="#L99">99</a>          .decodeBinaryValue(Base64.getDecoder().decode(PTR_RECORD_BASE64));
 <a class="jxr_linenumber" name="L100" href="#L100">100</a>     assertNotNull(actual);
@@ -118,7 +118,7 @@
 <a class="jxr_linenumber" name="L110" href="#L110">110</a> <em class="jxr_javadoccomment">   * Decode binary value record unknown.</em>
 <a class="jxr_linenumber" name="L111" href="#L111">111</a> <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L112" href="#L112">112</a>   @Test
-<a class="jxr_linenumber" name="L113" href="#L113">113</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordUnknown() {
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>   <strong class="jxr_keyword">void</strong> decodeBinaryValueRecordUnknown() {
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>     DnsRecord actual = transcoder
 <a class="jxr_linenumber" name="L115" href="#L115">115</a>         .decodeBinaryValue(Base64.getDecoder().decode(UNKNOWN_RECORD_BASE64));
 <a class="jxr_linenumber" name="L116" href="#L116">116</a>     assertNotNull(actual);
@@ -134,7 +134,7 @@
 <a class="jxr_linenumber" name="L126" href="#L126">126</a> <em class="jxr_javadoccomment">   * Encode binary value.</em>
 <a class="jxr_linenumber" name="L127" href="#L127">127</a> <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L128" href="#L128">128</a>   @Test
-<a class="jxr_linenumber" name="L129" href="#L129">129</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> encodeBinaryValue() {
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>   <strong class="jxr_keyword">void</strong> encodeBinaryValue() {
 <a class="jxr_linenumber" name="L130" href="#L130">130</a>     DnsRecord dnsRecord = <strong class="jxr_keyword">new</strong> DnsRecord();
 <a class="jxr_linenumber" name="L131" href="#L131">131</a>     assertNull(transcoder.encodeBinaryValue(dnsRecord));
 <a class="jxr_linenumber" name="L132" href="#L132">132</a>     dnsRecord.setRecordRawValue(Base64.getDecoder().decode(A_RECORD_BASE64));
@@ -147,12 +147,12 @@
 <a class="jxr_linenumber" name="L139" href="#L139">139</a> <em class="jxr_javadoccomment">   * Gets type.</em>
 <a class="jxr_linenumber" name="L140" href="#L140">140</a> <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L141" href="#L141">141</a>   @Test
-<a class="jxr_linenumber" name="L142" href="#L142">142</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> getType() {
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>   <strong class="jxr_keyword">void</strong> getType() {
 <a class="jxr_linenumber" name="L143" href="#L143">143</a>     assertEquals(DnsRecord.<strong class="jxr_keyword">class</strong>, transcoder.getType());
 <a class="jxr_linenumber" name="L144" href="#L144">144</a>   }
 <a class="jxr_linenumber" name="L145" href="#L145">145</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>

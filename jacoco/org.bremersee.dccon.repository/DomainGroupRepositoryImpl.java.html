@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -29,10 +28,12 @@ import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,7 @@ import org.springframework.stereotype.Component;
  */
 @Profile(&quot;ldap&quot;)
 @Component(&quot;domainGroupRepository&quot;)
-<span class="nc" id="L46">@Slf4j</span>
+<span class="fc" id="L47">@Slf4j</span>
 public class DomainGroupRepositoryImpl extends AbstractRepository implements DomainGroupRepository {
 
   private LdaptiveEntryMapper&lt;DomainGroup&gt; domainGroupLdapMapper;
@@ -51,14 +52,15 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
   /**
    * Instantiates a new domain group repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
    */
-  public DomainGroupRepositoryImpl(DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
-<span class="nc" id="L59">    super(properties, ldapTemplate);</span>
-<span class="nc" id="L60">    domainGroupLdapMapper = new DomainGroupLdapMapper(properties);</span>
-<span class="nc" id="L61">  }</span>
+  public DomainGroupRepositoryImpl(
+      final DomainControllerProperties properties,
+      final ObjectProvider&lt;LdaptiveTemplate&gt; ldapTemplateProvider) {
+<span class="fc" id="L61">    super(properties, ldapTemplateProvider.getIfAvailable());</span>
+<span class="fc" id="L62">    domainGroupLdapMapper = new DomainGroupLdapMapper(properties);</span>
+<span class="fc" id="L63">  }</span>
 
   /**
    * Sets domain group ldap mapper.
@@ -67,92 +69,133 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    */
   @SuppressWarnings(&quot;unused&quot;)
   public void setDomainGroupLdapMapper(
-      LdaptiveEntryMapper&lt;DomainGroup&gt; domainGroupLdapMapper) {
-<span class="nc bnc" id="L71" title="All 2 branches missed.">    if (domainGroupLdapMapper != null) {</span>
-<span class="nc" id="L72">      this.domainGroupLdapMapper = domainGroupLdapMapper;</span>
+      final LdaptiveEntryMapper&lt;DomainGroup&gt; domainGroupLdapMapper) {
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">    if (domainGroupLdapMapper != null) {</span>
+<span class="fc" id="L74">      this.domainGroupLdapMapper = domainGroupLdapMapper;</span>
     }
-<span class="nc" id="L74">  }</span>
+<span class="fc" id="L76">  }</span>
 
   @Override
-  public Stream&lt;DomainGroup&gt; findAll() {
-<span class="nc" id="L78">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L79">        getProperties().getGroupBaseDn(),</span>
-<span class="nc" id="L80">        new SearchFilter(getProperties().getGroupFindAllFilter()));</span>
-<span class="nc" id="L81">    searchRequest.setSearchScope(getProperties().getGroupFindAllSearchScope());</span>
-<span class="nc" id="L82">    return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);</span>
+  public Stream&lt;DomainGroup&gt; findAll(final String query) {
+<span class="fc" id="L80">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L81">        getProperties().getGroupBaseDn(),</span>
+<span class="fc" id="L82">        new SearchFilter(getProperties().getGroupFindAllFilter()));</span>
+<span class="fc" id="L83">    searchRequest.setSearchScope(getProperties().getGroupFindAllSearchScope());</span>
+<span class="fc" id="L84">    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);</span>
+<span class="pc bpc" id="L85" title="1 of 4 branches missed.">    if (query == null || query.trim().length() == 0) {</span>
+<span class="fc" id="L86">      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);</span>
+    } else {
+<span class="fc" id="L88">      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper)</span>
+<span class="fc" id="L89">          .filter(domainGroup -&gt; isQueryResult(domainGroup, query.trim().toLowerCase()));</span>
+    }
+  }
+
+  /**
+   * Is query result boolean.
+   *
+   * @param domainGroup the domain group
+   * @param query the query
+   * @return the boolean
+   */
+  static boolean isQueryResult(final DomainGroup domainGroup, final String query) {
+<span class="pc bpc" id="L101" title="3 of 6 branches missed.">    return query != null &amp;&amp; query.length() &gt; 2 &amp;&amp; domainGroup != null</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        &amp;&amp; (contains(domainGroup.getName(), query)</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        || contains(domainGroup.getDescription(), query)</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        || contains(domainGroup.getMembers(), query));</span>
   }
 
   @Override
-  public Optional&lt;DomainGroup&gt; findOne(@NotNull String groupName) {
-<span class="nc" id="L87">    final SearchFilter searchFilter = new SearchFilter(getProperties().getGroupFindOneFilter());</span>
-<span class="nc" id="L88">    searchFilter.setParameter(0, groupName);</span>
-<span class="nc" id="L89">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L90">        getProperties().getGroupBaseDn(),</span>
+  public Optional&lt;DomainGroup&gt; findOne(final String groupName) {
+<span class="fc" id="L109">    final SearchFilter searchFilter = new SearchFilter(getProperties().getGroupFindOneFilter());</span>
+<span class="fc" id="L110">    searchFilter.setParameter(0, groupName);</span>
+<span class="fc" id="L111">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L112">        getProperties().getGroupBaseDn(),</span>
         searchFilter);
-<span class="nc" id="L92">    searchRequest.setSearchScope(getProperties().getGroupFindOneSearchScope());</span>
-<span class="nc" id="L93">    return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);</span>
+<span class="fc" id="L114">    searchRequest.setSearchScope(getProperties().getGroupFindOneSearchScope());</span>
+<span class="fc" id="L115">    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);</span>
+<span class="fc" id="L116">    return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);</span>
   }
 
   @Override
-  public boolean exists(@NotNull String groupName) {
-<span class="nc" id="L98">    return getLdapTemplate()</span>
-<span class="nc" id="L99">        .exists(DomainGroup.builder().name(groupName).build(), domainGroupLdapMapper);</span>
+  public boolean exists(final String groupName) {
+<span class="fc" id="L121">    return getLdapTemplate()</span>
+<span class="fc" id="L122">        .exists(DomainGroup.builder().name(groupName).build(), domainGroupLdapMapper);</span>
   }
 
   @Override
-  public DomainGroup save(@NotNull DomainGroup domainGroup) {
-<span class="nc bnc" id="L104" title="All 2 branches missed.">    if (!exists(domainGroup.getName())) {</span>
-<span class="nc" id="L105">      kinit();</span>
-<span class="nc" id="L106">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L107">      sudo(commands);</span>
-<span class="nc" id="L108">      commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L109">      commands.add(&quot;group&quot;);</span>
-<span class="nc" id="L110">      commands.add(&quot;add&quot;);</span>
-<span class="nc" id="L111">      commands.add(domainGroup.getName());</span>
-<span class="nc" id="L112">      auth(commands);</span>
-<span class="nc" id="L113">      CommandExecutor.exec(</span>
-          commands,
-          null,
-<span class="nc" id="L116">          getProperties().getSambaToolExecDir(),</span>
-          (CommandExecutorResponseValidator) response -&gt; {
-<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (!exists(domainGroup.getName())) {</span>
-<span class="nc" id="L119">              throw ServiceException.internalServerError(&quot;msg=[Saving group failed.] groupName=[&quot;</span>
-<span class="nc" id="L120">                      + domainGroup.getName() + &quot;] &quot;</span>
-<span class="nc" id="L121">                      + CommandExecutorResponse.toExceptionMessage(response),</span>
-                  &quot;org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a&quot;);
-            }
-<span class="nc" id="L124">          });</span>
+  public DomainGroup save(final DomainGroup domainGroup) {
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">    if (!exists(domainGroup.getName())) {</span>
+<span class="fc" id="L128">      doAdd(domainGroup);</span>
     }
-<span class="nc" id="L126">    return getLdapTemplate().save(domainGroup, domainGroupLdapMapper);</span>
+<span class="fc" id="L130">    return getLdapTemplate().save(domainGroup, domainGroupLdapMapper);</span>
   }
+
+  /**
+   * Add group.
+   *
+   * @param domainGroup the domain group
+   */
+  void doAdd(final DomainGroup domainGroup) {
+<span class="nc" id="L139">    kinit();</span>
+<span class="nc" id="L140">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L141">    sudo(commands);</span>
+<span class="nc" id="L142">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L143">    commands.add(&quot;group&quot;);</span>
+<span class="nc" id="L144">    commands.add(&quot;add&quot;);</span>
+<span class="nc" id="L145">    commands.add(domainGroup.getName());</span>
+<span class="nc" id="L146">    auth(commands);</span>
+<span class="nc" id="L147">    CommandExecutor.exec(</span>
+        commands,
+        null,
+<span class="nc" id="L150">        getProperties().getSambaToolExecDir(),</span>
+        (CommandExecutorResponseValidator) response -&gt; {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">          if (!exists(domainGroup.getName())) {</span>
+<span class="nc" id="L153">            throw ServiceException.internalServerError(&quot;msg=[Saving group failed.] groupName=[&quot;</span>
+<span class="nc" id="L154">                    + domainGroup.getName() + &quot;] &quot;</span>
+<span class="nc" id="L155">                    + CommandExecutorResponse.toExceptionMessage(response),</span>
+                &quot;org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a&quot;);
+          }
+<span class="nc" id="L158">        });</span>
+<span class="nc" id="L159">  }</span>
 
   @Override
-  public boolean delete(@NotNull String groupName) {
+  public boolean delete(final String groupName) {
 
-<span class="nc bnc" id="L132" title="All 2 branches missed.">    if (exists(groupName)) {</span>
-<span class="nc" id="L133">      kinit();</span>
-<span class="nc" id="L134">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L135">      sudo(commands);</span>
-<span class="nc" id="L136">      commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L137">      commands.add(&quot;group&quot;);</span>
-<span class="nc" id="L138">      commands.add(&quot;delete&quot;);</span>
-<span class="nc" id="L139">      commands.add(groupName);</span>
-<span class="nc" id="L140">      auth(commands);</span>
-<span class="nc" id="L141">      CommandExecutor.exec(</span>
-          commands,
-          null,
-<span class="nc" id="L144">          getProperties().getSambaToolExecDir(),</span>
-          (CommandExecutorResponseValidator) response -&gt; {
-<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (exists(groupName)) {</span>
-<span class="nc" id="L147">              throw ServiceException.internalServerError(</span>
-                  &quot;msg=[Deleting group failed.] groupName=[&quot; + groupName + &quot;] &quot;
-<span class="nc" id="L149">                      + CommandExecutorResponse.toExceptionMessage(response),</span>
-                  &quot;org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52&quot;);
-            }
-<span class="nc" id="L152">          });</span>
-<span class="nc" id="L153">      return true;</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">    if (exists(groupName)) {</span>
+<span class="fc" id="L165">      doDelete(groupName);</span>
+<span class="fc" id="L166">      return true;</span>
     }
-<span class="nc" id="L155">    return false;</span>
+<span class="fc" id="L168">    return false;</span>
   }
+
+  /**
+   * Delete group.
+   *
+   * @param groupName the group name
+   */
+  void doDelete(final String groupName) {
+<span class="nc" id="L177">    kinit();</span>
+<span class="nc" id="L178">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L179">    sudo(commands);</span>
+<span class="nc" id="L180">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L181">    commands.add(&quot;group&quot;);</span>
+<span class="nc" id="L182">    commands.add(&quot;delete&quot;);</span>
+<span class="nc" id="L183">    commands.add(groupName);</span>
+<span class="nc" id="L184">    auth(commands);</span>
+<span class="nc" id="L185">    CommandExecutor.exec(</span>
+        commands,
+        null,
+<span class="nc" id="L188">        getProperties().getSambaToolExecDir(),</span>
+        (CommandExecutorResponseValidator) response -&gt; {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">          if (exists(groupName)) {</span>
+<span class="nc" id="L191">            throw ServiceException.internalServerError(</span>
+                &quot;msg=[Deleting group failed.] groupName=[&quot; + groupName + &quot;] &quot;
+<span class="nc" id="L193">                    + CommandExecutorResponse.toExceptionMessage(response),</span>
+                &quot;org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52&quot;);
+          }
+<span class="nc" id="L196">        });</span>
+<span class="nc" id="L197">  }</span>
+
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

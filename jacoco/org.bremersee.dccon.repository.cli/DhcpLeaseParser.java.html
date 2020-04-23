@@ -97,7 +97,7 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser&lt;List&l
    */
   @SuppressWarnings(&quot;unused&quot;)
   static DhcpLeaseParser defaultParser(BiFunction&lt;String, String, String&gt; unknownHostConverter) {
-<span class="nc" id="L100">    return new Default(unknownHostConverter);</span>
+<span class="fc" id="L100">    return new Default(unknownHostConverter);</span>
   }
 
   /**
@@ -126,21 +126,21 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser&lt;List&l
      */
     Default(
 <span class="fc" id="L128">        BiFunction&lt;String, String, String&gt; unknownHostConverter) {</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">      if (unknownHostConverter == null) {</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">      if (unknownHostConverter == null) {</span>
 <span class="fc" id="L130">        this.unknownHostConverter = (mac, ip) -&gt; &quot;dhcp-&quot; + ip.replace(&quot;.&quot;, &quot;-&quot;);</span>
       } else {
-<span class="nc" id="L132">        this.unknownHostConverter = unknownHostConverter;</span>
+<span class="fc" id="L132">        this.unknownHostConverter = unknownHostConverter;</span>
       }
 <span class="fc" id="L134">    }</span>
 
     @Override
     public List&lt;DhcpLease&gt; parse(final CommandExecutorResponse response) {
-<span class="fc" id="L138">      final String output = response.getStdout();</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">      if (!StringUtils.hasText(output)) {</span>
-<span class="nc" id="L140">        log.warn(&quot;Dhcp lease list command did not produce output. Error is [{}].&quot;,</span>
-<span class="nc" id="L141">            response.getStderr());</span>
-<span class="nc" id="L142">        return Collections.emptyList();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">      if (!response.stdoutHasText()) {</span>
+<span class="fc" id="L139">        log.warn(&quot;Dhcp lease list command did not produce output. Error is [{}].&quot;,</span>
+<span class="fc" id="L140">            response.getStderr());</span>
+<span class="fc" id="L141">        return Collections.emptyList();</span>
       }
+<span class="fc" id="L143">      final String output = response.getStdout();</span>
 <span class="fc" id="L144">      try (final BufferedReader reader = new BufferedReader(new StringReader(output))) {</span>
 <span class="fc" id="L145">        return parseDhcpLeaseList(reader);</span>
 
@@ -210,4 +210,4 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser&lt;List&l
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

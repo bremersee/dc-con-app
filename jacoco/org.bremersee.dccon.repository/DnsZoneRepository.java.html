@@ -30,6 +30,12 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsZoneRepository {
 
+  /**
+   * Determines whether the given zone is a reverse zone.
+   *
+   * @param dnsZoneName the dns zone name
+   * @return the boolean
+   */
   boolean isDnsReverseZone(final String dnsZoneName);
 
   /**
@@ -39,12 +45,22 @@ public interface DnsZoneRepository {
    */
   Stream&lt;DnsZone&gt; findAll();
 
+  /**
+   * Find dns reverse zones stream.
+   *
+   * @return the stream
+   */
   default Stream&lt;DnsZone&gt; findDnsReverseZones() {
-<span class="nc" id="L43">    return findAll().filter(dnsZone -&gt; isDnsReverseZone(dnsZone.getName()));</span>
+<span class="fc" id="L54">    return findAll().filter(dnsZone -&gt; isDnsReverseZone(dnsZone.getName()));</span>
   }
 
+  /**
+   * Find non dns reverse zones stream.
+   *
+   * @return the stream
+   */
   default Stream&lt;DnsZone&gt; findNonDnsReverseZones() {
-<span class="nc bnc" id="L47" title="All 2 branches missed.">    return findAll().filter(dnsZone -&gt; !isDnsReverseZone(dnsZone.getName()));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">    return findAll().filter(dnsZone -&gt; !isDnsReverseZone(dnsZone.getName()));</span>
   }
 
   /**
@@ -81,4 +97,4 @@ public interface DnsZoneRepository {
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

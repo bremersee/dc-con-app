@@ -31,7 +31,7 @@
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> lombok.Getter;
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.bremersee.dccon.config.DomainControllerProperties;
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.bremersee.dccon.model.CommonAttributes;
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.bremersee.dccon.repository.ldap.transcoder.WhenTimeValueTranscoder;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.bremersee.dccon.repository.ldap.transcoder.GeneralizedTimeToOffsetDateTimeValueTranscoder;
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.ldaptive.LdapEntry;
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>  
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment">/**</em>
@@ -45,8 +45,8 @@
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>  
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String WHEN_CHANGED = <span class="jxr_string">"whenChanged"</span>;
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>  
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a name="WhenTimeValueTranscoder" href="../../../../../org/bremersee/dccon/repository/ldap/transcoder/WhenTimeValueTranscoder.html#WhenTimeValueTranscoder">WhenTimeValueTranscoder</a> WHEN_TIME_VALUE_TRANSCODER
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>        = <strong class="jxr_keyword">new</strong> <a name="WhenTimeValueTranscoder" href="../../../../../org/bremersee/dccon/repository/ldap/transcoder/WhenTimeValueTranscoder.html#WhenTimeValueTranscoder">WhenTimeValueTranscoder</a>();
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a name="GeneralizedTimeToOffsetDateTimeValueTranscoder" href="../../../../../org/bremersee/dccon/repository/ldap/transcoder/GeneralizedTimeToOffsetDateTimeValueTranscoder.html#GeneralizedTimeToOffsetDateTimeValueTranscoder">GeneralizedTimeToOffsetDateTimeValueTranscoder</a> WHEN_TIME_VALUE_TRANSCODER
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>        = <strong class="jxr_keyword">new</strong> <a name="GeneralizedTimeToOffsetDateTimeValueTranscoder" href="../../../../../org/bremersee/dccon/repository/ldap/transcoder/GeneralizedTimeToOffsetDateTimeValueTranscoder.html#GeneralizedTimeToOffsetDateTimeValueTranscoder">GeneralizedTimeToOffsetDateTimeValueTranscoder</a>();
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>  
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>    @Getter(AccessLevel.PROTECTED)
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>    <strong class="jxr_keyword">private</strong> <a name="DomainControllerProperties" href="../../../../../org/bremersee/dccon/config/DomainControllerProperties.html#DomainControllerProperties">DomainControllerProperties</a> properties;
@@ -63,9 +63,9 @@
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>    <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>  <em class="jxr_javadoccomment">   * Create distinguished name.</em>
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>  <em class="jxr_javadoccomment">   *</em>
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_javadoccomment">   * @param rdn      the rdn</em>
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_javadoccomment">   * @param rdn the rdn</em>
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>  <em class="jxr_javadoccomment">   * @param rdnValue the rdn value</em>
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">   * @param baseDn   the base dn</em>
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">   * @param baseDn the base dn</em>
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">   * @return the string</em>
 <a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>    String createDn(
@@ -78,7 +78,7 @@
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>    <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment">   * Map common attributes.</em>
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>  <em class="jxr_javadoccomment">   *</em>
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">   * @param source      the source</em>
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">   * @param source the source</em>
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">   * @param destination the destination</em>
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>    <strong class="jxr_keyword">void</strong> mapCommonAttributes(<strong class="jxr_keyword">final</strong> LdapEntry source, <strong class="jxr_keyword">final</strong> CommonAttributes destination) {
@@ -94,6 +94,6 @@
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>

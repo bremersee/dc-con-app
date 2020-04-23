@@ -16,14 +16,36 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPasswordRegex;
+import static org.bremersee.dccon.repository.DomainUserRepositoryImpl.isQueryResult;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
+import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.exception.ServiceException;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * The domain user repository mock.
@@ -32,49 +54,195 @@ import org.springframework.stereotype.Component;
  */
 @Profile(&quot;!ldap&quot;)
 @Component
-<span class="fc" id="L35">@Slf4j</span>
-<span class="fc" id="L36">public class DomainUserRepositoryMock implements DomainUserRepository {</span>
+<span class="fc" id="L57">@Slf4j</span>
+public class DomainUserRepositoryMock implements DomainUserRepository, MockRepository {
+
+  private static final String USERS_LOCATION = &quot;classpath:demo/users.json&quot;;
+
+  private static final String GROUPS_LOCATION = &quot;classpath:demo/groups.json&quot;;
+
+<span class="fc" id="L64">  private final ResourceLoader resourceLoader = new DefaultResourceLoader();</span>
+
+<span class="fc" id="L66">  private final Map&lt;String, DomainUser&gt; repo = new ConcurrentHashMap&lt;&gt;();</span>
+
+<span class="fc" id="L68">  private Pattern passwordPattern = Pattern.compile(getComplexPasswordRegex(7));</span>
+
+  private ObjectMapper objectMapper;
+
+  private DomainRepository domainRepository;
+
+  private DomainGroupRepository groupRepository;
+
+  /**
+   * Instantiates a new Domain user repository mock.
+   *
+   * @param objectMapperBuilder the object mapper builder
+   * @param domainRepository the domain repository
+   * @param groupRepository the group repository
+   */
+  public DomainUserRepositoryMock(
+      Jackson2ObjectMapperBuilder objectMapperBuilder,
+      DomainRepository domainRepository,
+<span class="fc" id="L86">      DomainGroupRepository groupRepository) {</span>
+<span class="fc" id="L87">    this.objectMapper = objectMapperBuilder.build();</span>
+<span class="fc" id="L88">    this.domainRepository = domainRepository;</span>
+<span class="fc" id="L89">    this.groupRepository = groupRepository;</span>
+<span class="fc" id="L90">  }</span>
 
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
-<span class="fc" id="L43">    log.warn(&quot;\n&quot;</span>
+<span class="fc" id="L97">    log.warn(&quot;\n&quot;</span>
         + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n&quot;
         + &quot;!! MOCK is running:  DomainUserRepository                                           !!\n&quot;
         + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&quot;
     );
-<span class="fc" id="L48">  }</span>
+<span class="fc" id="L102">    final PasswordInformation info = domainRepository.getPasswordInformation();</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">    final int minLength = info.getMinimumPasswordLength() != null</span>
+<span class="pc" id="L104">        ? info.getMinimumPasswordLength()</span>
+        : 7;
+<span class="fc" id="L106">    passwordPattern = Pattern.compile(getComplexPasswordRegex(minLength));</span>
+<span class="fc" id="L107">    resetData();</span>
+<span class="fc" id="L108">  }</span>
 
   @Override
-  public Stream&lt;DomainUser&gt; findAll() {
-<span class="nc" id="L52">    return Stream.empty();</span>
+  public void resetData() {
+    DomainUser[] users;
+    DomainGroup[] groups;
+    try {
+<span class="fc" id="L115">      users = objectMapper.readValue(</span>
+<span class="fc" id="L116">          resourceLoader.getResource(USERS_LOCATION).getInputStream(), DomainUser[].class);</span>
+<span class="fc" id="L117">      groups = objectMapper.readValue(</span>
+<span class="fc" id="L118">          resourceLoader.getResource(GROUPS_LOCATION).getInputStream(), DomainGroup[].class);</span>
+<span class="nc" id="L119">    } catch (IOException e) {</span>
+<span class="nc" id="L120">      throw ServiceException.internalServerError(&quot;Loading demo data failed.&quot;, e);</span>
+<span class="fc" id="L121">    }</span>
+<span class="fc" id="L122">    groupRepository.findAll(null).forEach(group -&gt; groupRepository.delete(group.getName()));</span>
+<span class="fc" id="L123">    repo.clear();</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">    for (DomainUser user : users) {</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">      if (!StringUtils.hasText(user.getPassword())) {</span>
+<span class="fc" id="L126">        user.setPassword(domainRepository.createRandomPassword());</span>
+      }
+<span class="fc" id="L128">      repo.put(user.getUserName().toLowerCase(), user);</span>
+    }
+<span class="fc bfc" id="L130" title="All 2 branches covered.">    for (DomainGroup group : groups) {</span>
+<span class="fc" id="L131">      groupRepository.save(group);</span>
+    }
+<span class="fc" id="L133">  }</span>
+
+  private List&lt;String&gt; findDomainGroups(final String userName) {
+<span class="fc" id="L136">    return groupRepository.findAll(null)</span>
+<span class="fc" id="L137">        .filter(domainGroup -&gt; domainGroup.getMembers().contains(userName))</span>
+<span class="fc" id="L138">        .map(DomainGroup::getName)</span>
+<span class="fc" id="L139">        .collect(Collectors.toList());</span>
   }
 
   @Override
-  public Optional&lt;DomainUser&gt; findOne(@NotNull String userName) {
-<span class="fc" id="L57">    return Optional.empty();</span>
+  public Stream&lt;DomainUser&gt; findAll(final String query) {
+<span class="pc bpc" id="L144" title="3 of 4 branches missed.">    final boolean all = query == null || query.trim().length() == 0;</span>
+<span class="fc" id="L145">    return repo.values().stream()</span>
+<span class="pc bpc" id="L146" title="3 of 4 branches missed.">        .filter(domainUser -&gt; all || isQueryResult(domainUser, query.trim().toLowerCase()))</span>
+<span class="fc" id="L147">        .map(domainUser -&gt; domainUser.toBuilder()</span>
+<span class="fc" id="L148">            .groups(findDomainGroups(domainUser.getUserName()))</span>
+<span class="fc" id="L149">            .build());</span>
   }
 
   @Override
-  public boolean exists(@NotNull String userName) {
-<span class="fc" id="L62">    return false;</span>
+  public Optional&lt;DomainUser&gt; findOne(final String userName) {
+<span class="fc" id="L154">    return Optional.ofNullable(repo.get(userName.toLowerCase()))</span>
+<span class="fc" id="L155">        .flatMap(domainUser -&gt; Optional.of(domainUser</span>
+<span class="fc" id="L156">            .toBuilder()</span>
+<span class="fc" id="L157">            .groups(findDomainGroups(domainUser.getUserName()))</span>
+<span class="fc" id="L158">            .password(null)</span>
+<span class="fc" id="L159">            .build()));</span>
   }
 
   @Override
-  public DomainUser save(@NotNull DomainUser domainUser) {
-<span class="nc" id="L67">    return DomainUser.builder().userName(domainUser.getUserName()).build();</span>
+  public Optional&lt;byte[]&gt; findAvatar(
+      final String userName,
+      final AvatarDefault avatarDefault,
+      final Integer size) {
+
+<span class="pc bpc" id="L168" title="3 of 6 branches missed.">    final int avatarSize = size == null || size &lt; 1 || size &gt; 2048 ? 80 : size;</span>
+<span class="fc" id="L169">    return findOne(userName)</span>
+<span class="fc" id="L170">        .flatMap(domainUser -&gt; Optional.ofNullable(</span>
+<span class="fc" id="L171">            DomainUserRepositoryImpl.findAvatar(</span>
+<span class="fc" id="L172">                domainUser.getEmail(),</span>
+<span class="fc" id="L173">                new DomainControllerProperties().getGravatarUrl(),</span>
+                avatarDefault,
+                avatarSize)));
   }
 
   @Override
-  public void savePassword(@NotNull String userName, @NotNull String newPassword) {
-
-<span class="nc" id="L73">  }</span>
+  public boolean exists(final String userName) {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">    return repo.get(userName.toLowerCase()) != null;</span>
+  }
 
   @Override
-  public boolean delete(@NotNull String userName) {
-<span class="nc" id="L77">    return false;</span>
+  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
+
+<span class="pc bpc" id="L186" title="3 of 4 branches missed.">    if (repo.size() &gt; 100 &amp;&amp; repo.get(domainUser.getUserName().toLowerCase()) == null) {</span>
+<span class="nc" id="L187">      throw ServiceException.internalServerError(</span>
+          &quot;Maximum size of users is exceeded.&quot;,
+          &quot;org.bremersee:dc-con-app:9272263e-2074-46f7-ba64-23978981a1d3&quot;);
+    }
+<span class="fc bfc" id="L191" title="All 2 branches covered.">    if (!StringUtils.hasText(domainUser.getPassword())) {</span>
+<span class="fc" id="L192">      domainUser.setPassword(domainRepository.createRandomPassword());</span>
+    }
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">    if (!passwordPattern.matcher(domainUser.getPassword()).matches()) {</span>
+<span class="nc" id="L195">      throw ServiceException.badRequest(</span>
+          &quot;msg=[The password does not meet the complexity criteria!] userName=[&quot;
+<span class="nc" id="L197">              + domainUser.getUserName() + &quot;]&quot;,</span>
+          &quot;check_password_restrictions&quot;);
+    }
+<span class="fc" id="L200">    final boolean doGroupUpdate = Boolean.TRUE.equals(updateGroups);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">    final Set&lt;String&gt; groups = doGroupUpdate</span>
+<span class="fc" id="L202">        ? new HashSet&lt;&gt;(domainUser.getGroups())</span>
+<span class="fc" id="L203">        : Collections.emptySet();</span>
+<span class="fc" id="L204">    domainUser.getGroups().clear();</span>
+<span class="fc" id="L205">    repo.put(domainUser.getUserName().toLowerCase(), domainUser);</span>
+
+<span class="fc bfc" id="L207" title="All 2 branches covered.">    if (doGroupUpdate) {</span>
+<span class="pc" id="L208">      groups.forEach(groupName -&gt; groupRepository.findOne(groupName).ifPresent(domainGroup -&gt; {</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (!domainGroup.getMembers().contains(domainUser.getUserName())) {</span>
+<span class="nc" id="L210">          domainGroup.getMembers().add(domainUser.getUserName());</span>
+<span class="nc" id="L211">          groupRepository.save(domainGroup);</span>
+        }
+<span class="nc" id="L213">      }));</span>
+    }
+<span class="fc" id="L215">    return domainUser.toBuilder().groups(findDomainGroups(domainUser.getUserName())).build();</span>
+  }
+
+  @Override
+  public void savePassword(final String userName, final String newPassword) {
+<span class="fc" id="L220">    final DomainUser domainUser = repo.get(userName.toLowerCase());</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">    if (domainUser == null) {</span>
+<span class="nc" id="L222">      throw ServiceException.notFound(DomainUser.class.getSimpleName(), userName);</span>
+    }
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">    if (!passwordPattern.matcher(newPassword).matches()) {</span>
+<span class="nc" id="L225">      throw ServiceException.badRequest(</span>
+          &quot;msg=[The password does not meet the complexity criteria!] userName=[&quot;
+<span class="nc" id="L227">              + domainUser.getUserName() + &quot;]&quot;,</span>
+          &quot;check_password_restrictions&quot;);
+    }
+<span class="fc" id="L230">    domainUser.setPassword(newPassword);</span>
+<span class="fc" id="L231">  }</span>
+
+  @Override
+  public boolean delete(final String userName) {
+<span class="fc" id="L235">    return Optional.ofNullable(repo.remove(userName.toLowerCase()))</span>
+<span class="fc" id="L236">        .map(DomainUser::getUserName)</span>
+<span class="fc" id="L237">        .map(name -&gt; {</span>
+<span class="fc" id="L238">          groupRepository.findAll(null).forEach(domainGroup -&gt; {</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (domainGroup.getMembers().remove(name)) {</span>
+<span class="fc" id="L240">              groupRepository.save(domainGroup);</span>
+            }
+<span class="fc" id="L242">          });</span>
+<span class="fc" id="L243">          return true;</span>
+        })
+<span class="fc" id="L245">        .orElse(false);</span>
   }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

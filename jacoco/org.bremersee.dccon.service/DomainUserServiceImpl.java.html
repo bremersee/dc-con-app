@@ -16,19 +16,21 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -40,31 +42,33 @@ import org.springframework.util.StringUtils;
  * @author Christian Bremer
  */
 @Component(&quot;domainUserService&quot;)
-<span class="fc" id="L43">@Slf4j</span>
+<span class="fc" id="L45">@Slf4j</span>
 public class DomainUserServiceImpl implements DomainUserService {
 
   private final DomainUserRepository domainUserRepository;
 
-  private DomainUserValidator domainUserValidator;
+  private final EmailService emailService;
 
-  private List&lt;AvatarService&gt; avatarServices;
+  private DomainUserValidator domainUserValidator;
 
   /**
    * Instantiates a new domain user service.
    *
-   * @param properties            the properties
-   * @param domainUserRepository  the domain user repository
+   * @param properties the properties
+   * @param domainUserRepository the domain user repository
+   * @param emailService the email service
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
       final DomainControllerProperties properties,
       final DomainUserRepository domainUserRepository,
-<span class="fc" id="L62">      final DomainGroupRepository domainGroupRepository) {</span>
-<span class="fc" id="L63">    this.domainUserRepository = domainUserRepository;</span>
-<span class="fc" id="L64">    this.domainUserValidator = DomainUserValidator.defaultValidator(</span>
+      EmailService emailService,
+<span class="fc" id="L66">      final DomainGroupRepository domainGroupRepository) {</span>
+<span class="fc" id="L67">    this.domainUserRepository = domainUserRepository;</span>
+<span class="fc" id="L68">    this.emailService = emailService;</span>
+<span class="fc" id="L69">    this.domainUserValidator = DomainUserValidator.defaultValidator(</span>
         properties, domainGroupRepository, domainUserRepository);
-<span class="fc" id="L66">    this.avatarServices = Collections.emptyList();</span>
-<span class="fc" id="L67">  }</span>
+<span class="fc" id="L71">  }</span>
 
   /**
    * Sets domain user validator.
@@ -73,67 +77,58 @@ public class DomainUserServiceImpl implements DomainUserService {
    */
   @Autowired(required = false)
   public void setDomainUserValidator(DomainUserValidator domainUserValidator) {
-<span class="nc bnc" id="L76" title="All 2 branches missed.">    if (domainUserValidator != null) {</span>
-<span class="nc" id="L77">      this.domainUserValidator = domainUserValidator;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    if (domainUserValidator != null) {</span>
+<span class="nc" id="L81">      this.domainUserValidator = domainUserValidator;</span>
     }
-<span class="nc" id="L79">  }</span>
-
-  /**
-   * Sets avatar services.
-   *
-   * @param avatarServices the avatar services
-   */
-  @Autowired(required = false)
-  public void setAvatarServices(List&lt;AvatarService&gt; avatarServices) {
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">    if (avatarServices != null) {</span>
-<span class="fc" id="L89">      this.avatarServices = avatarServices;</span>
-    }
-<span class="fc" id="L91">  }</span>
+<span class="nc" id="L83">  }</span>
 
   @Override
-  public List&lt;DomainUser&gt; getUsers(final String sort) {
-<span class="nc bnc" id="L95" title="All 2 branches missed.">    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;</span>
-<span class="nc" id="L96">    return domainUserRepository.findAll()</span>
-<span class="nc" id="L97">        .sorted(ComparatorBuilder.builder()</span>
-<span class="nc" id="L98">            .fromWellKnownText(sortOrder)</span>
-<span class="nc" id="L99">            .build())</span>
-<span class="nc" id="L100">        .collect(Collectors.toList());</span>
+  public void resetData() {
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">    if (domainUserRepository instanceof MockRepository) {</span>
+<span class="fc" id="L88">      ((MockRepository) domainUserRepository).resetData();</span>
+    } else {
+<span class="nc" id="L90">      throw new UnsupportedOperationException(&quot;Reset data is not available.&quot;);</span>
+    }
+<span class="fc" id="L92">  }</span>
+
+  @Override
+  public List&lt;DomainUser&gt; getUsers(final String sort, final String query) {
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;</span>
+<span class="fc" id="L97">    return domainUserRepository.findAll(query)</span>
+<span class="fc" id="L98">        .sorted(ComparatorBuilder.builder()</span>
+<span class="fc" id="L99">            .fromWellKnownText(sortOrder)</span>
+<span class="fc" id="L100">            .build())</span>
+<span class="fc" id="L101">        .collect(Collectors.toList());</span>
   }
 
   @Override
-  public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
-<span class="nc" id="L105">    domainUserValidator.doAddValidation(domainUser);</span>
-<span class="nc" id="L106">    findUserAvatar(domainUser, false);</span>
-<span class="nc" id="L107">    return domainUserRepository.save(domainUser);</span>
+  public DomainUser addUser(
+      final DomainUser domainUser,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
+<span class="fc" id="L109">    domainUserValidator.doAddValidation(domainUser);</span>
+<span class="fc" id="L110">    final DomainUser addedDomainUser = domainUserRepository.save(domainUser, true);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">    if (Boolean.TRUE.equals(sendEmail)) {</span>
+<span class="nc" id="L112">      emailService.sendEmailWithCredentials(</span>
+<span class="nc" id="L113">          addedDomainUser.getUserName(),</span>
+<span class="nc" id="L114">          domainUser.getPassword(),</span>
+          language);
+    }
+<span class="fc" id="L117">    return addedDomainUser;</span>
   }
 
   @Override
   public Optional&lt;DomainUser&gt; getUser(@NotNull String userName) {
-<span class="fc" id="L112">    return domainUserRepository.findOne(userName);</span>
+<span class="fc" id="L122">    return domainUserRepository.findOne(userName);</span>
   }
 
   @Override
   public Optional&lt;byte[]&gt; getUserAvatar(
       final String userName,
-      final Boolean returnDefault) {
-<span class="nc" id="L119">    return domainUserRepository.findOne(userName)</span>
-<span class="nc" id="L120">        .map(domainUser -&gt; findUserAvatar(domainUser, Boolean.TRUE.equals(returnDefault)));</span>
-  }
+      final AvatarDefault avatarDefault,
+      final Integer size) {
 
-  private byte[] findUserAvatar(
-      final DomainUser domainUser,
-      final boolean returnDefault) {
-
-<span class="nc bnc" id="L127" title="All 2 branches missed.">    if (domainUser.getAvatar() == null) {</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">      for (AvatarService avatarService : avatarServices) {</span>
-<span class="nc" id="L129">        byte[] avatar = avatarService.findAvatar(domainUser, returnDefault);</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (avatar != null) {</span>
-<span class="nc" id="L131">          domainUser.setAvatar(avatar);</span>
-<span class="nc" id="L132">          break;</span>
-        }
-<span class="nc" id="L134">      }</span>
-    }
-<span class="nc" id="L136">    return domainUser.getAvatar();</span>
+<span class="fc" id="L131">    return domainUserRepository.findAvatar(userName, avatarDefault, size);</span>
   }
 
   @Override
@@ -142,31 +137,40 @@ public class DomainUserServiceImpl implements DomainUserService {
       Boolean updateGroups,
       @NotNull @Valid DomainUser domainUser) {
 
-<span class="nc" id="L145">    return domainUserRepository.findOne(userName)</span>
-<span class="nc" id="L146">        .map(oldDomainUser -&gt; {</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">          if (!Boolean.TRUE.equals(updateGroups)) {</span>
-<span class="nc" id="L148">            domainUser.setGroups(oldDomainUser.getGroups());</span>
+<span class="fc" id="L140">    return domainUserRepository.findOne(userName)</span>
+<span class="fc" id="L141">        .map(oldDomainUser -&gt; {</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">          if (!Boolean.TRUE.equals(updateGroups)) {</span>
+<span class="fc" id="L143">            domainUser.setGroups(oldDomainUser.getGroups());</span>
           }
-<span class="nc" id="L150">          domainUserValidator.doUpdateValidation(userName, domainUser);</span>
-<span class="nc" id="L151">          findUserAvatar(domainUser, false);</span>
-<span class="nc" id="L152">          return domainUserRepository.save(domainUser);</span>
+<span class="fc" id="L145">          domainUserValidator.doUpdateValidation(userName, domainUser);</span>
+<span class="fc" id="L146">          return domainUserRepository.save(domainUser, updateGroups);</span>
         });
   }
 
   @Override
-  public void updateUserPassword(@NotNull String userName, @NotNull @Valid Password newPassword) {
-<span class="nc" id="L158">    domainUserRepository.savePassword(userName, newPassword.getValue());</span>
-<span class="nc" id="L159">  }</span>
+  public void updateUserPassword(
+      final String userName,
+      final Password newPassword,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
+<span class="fc" id="L156">    domainUserRepository.savePassword(userName, newPassword.getValue());</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">    if (Boolean.TRUE.equals(sendEmail)) {</span>
+<span class="nc" id="L158">      emailService.sendEmailWithCredentials(</span>
+          userName,
+<span class="nc" id="L160">          newPassword.getValue(),</span>
+          language);
+    }
+<span class="fc" id="L163">  }</span>
 
   @Override
   public Boolean userExists(@NotNull String userName) {
-<span class="nc" id="L163">    return domainUserRepository.exists(userName);</span>
+<span class="fc" id="L167">    return domainUserRepository.exists(userName);</span>
   }
 
   @Override
   public Boolean deleteUser(@NotNull String userName) {
-<span class="nc" id="L168">    return domainUserRepository.delete(userName);</span>
+<span class="fc" id="L172">    return domainUserRepository.delete(userName);</span>
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

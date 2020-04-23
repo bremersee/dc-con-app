@@ -16,25 +16,57 @@
 
 package org.bremersee.dccon.repository;
 
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
+import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.bremersee.data.ldaptive.AbstractLdaptiveErrorHandler;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.data.ldaptive.LdaptiveException;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.PasswordComplexity;
+import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
+import org.bremersee.dccon.repository.img.ImageScaler;
+import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
+import org.ldaptive.AttributeModification;
+import org.ldaptive.AttributeModificationType;
+import org.ldaptive.LdapAttribute;
+import org.ldaptive.LdapException;
+import org.ldaptive.ModifyRequest;
+import org.ldaptive.ResultCode;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.ldaptive.io.ByteArrayValueTranscoder;
+import org.ldaptive.io.StringValueTranscoder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -44,23 +76,56 @@ import org.springframework.util.StringUtils;
  */
 @Profile(&quot;ldap&quot;)
 @Component(&quot;domainUserRepository&quot;)
-<span class="nc" id="L47">@Slf4j</span>
+<span class="fc" id="L79">@Slf4j</span>
 public class DomainUserRepositoryImpl extends AbstractRepository implements DomainUserRepository {
+
+<span class="fc" id="L82">  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();</span>
+
+<span class="fc" id="L84">  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER</span>
+      = new ByteArrayValueTranscoder();
+
+<span class="fc" id="L87">  private static final ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();</span>
+
+  private static final String NO_EMAIL_AVATAR = &quot;classpath:mp.jpg&quot;;
+
+  private final DomainRepository domainRepository;
+
+  private final DomainGroupRepository domainGroupRepository;
 
   private LdaptiveEntryMapper&lt;DomainUser&gt; domainUserLdapMapper;
 
   /**
    * Instantiates a new domain user repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
+   * @param domainRepository the domain repository
+   * @param domainGroupRepository the domain group repository
    */
   public DomainUserRepositoryImpl(
-      DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
-<span class="nc" id="L61">    super(properties, ldapTemplate);</span>
-<span class="nc" id="L62">    domainUserLdapMapper = new DomainUserLdapMapper(properties);</span>
-<span class="nc" id="L63">  }</span>
+      final DomainControllerProperties properties,
+      final ObjectProvider&lt;LdaptiveTemplate&gt; ldapTemplateProvider,
+      final DomainRepository domainRepository,
+      final DomainGroupRepository domainGroupRepository) {
+<span class="fc" id="L110">    super(properties, ldapTemplateProvider.getIfAvailable());</span>
+<span class="fc" id="L111">    this.domainUserLdapMapper = new DomainUserLdapMapper(properties);</span>
+<span class="fc" id="L112">    this.domainRepository = domainRepository;</span>
+<span class="fc" id="L113">    this.domainGroupRepository = domainGroupRepository;</span>
+<span class="fc" id="L114">  }</span>
+
+  private Pattern getPasswordPattern() {
+<span class="fc" id="L117">    final PasswordInformation info = domainRepository.getPasswordInformation();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">    final int minLength = info.getMinimumPasswordLength() != null</span>
+<span class="pc" id="L119">        ? info.getMinimumPasswordLength()</span>
+        : 7;
+    final String regex;
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">    if (PasswordComplexity.OFF == info.getPasswordComplexity()) {</span>
+<span class="nc" id="L123">      regex = DomainControllerProperties.getSimplePasswordRegex(minLength);</span>
+    } else {
+<span class="fc" id="L125">      regex = DomainControllerProperties.getComplexPasswordRegex(minLength);</span>
+    }
+<span class="fc" id="L127">    return Pattern.compile(regex);</span>
+  }
 
   /**
    * Sets domain user ldap mapper.
@@ -69,138 +134,326 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    */
   @SuppressWarnings(&quot;unused&quot;)
   public void setDomainUserLdapMapper(
-      LdaptiveEntryMapper&lt;DomainUser&gt; domainUserLdapMapper) {
-<span class="nc bnc" id="L73" title="All 2 branches missed.">    if (domainUserLdapMapper != null) {</span>
-<span class="nc" id="L74">      this.domainUserLdapMapper = domainUserLdapMapper;</span>
+      final LdaptiveEntryMapper&lt;DomainUser&gt; domainUserLdapMapper) {
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">    if (domainUserLdapMapper != null) {</span>
+<span class="fc" id="L139">      this.domainUserLdapMapper = domainUserLdapMapper;</span>
     }
-<span class="nc" id="L76">  }</span>
+<span class="fc" id="L141">  }</span>
 
   @Override
-  public Stream&lt;DomainUser&gt; findAll() {
-<span class="nc" id="L80">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L81">        getProperties().getUserBaseDn(),</span>
-<span class="nc" id="L82">        new SearchFilter(getProperties().getUserFindAllFilter()));</span>
-<span class="nc" id="L83">    searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());</span>
-<span class="nc" id="L84">    searchRequest.setBinaryAttributes(&quot;jpegPhoto&quot;);</span>
-<span class="nc" id="L85">    return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);</span>
+  public Stream&lt;DomainUser&gt; findAll(final String query) {
+<span class="fc" id="L145">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L146">        getProperties().getUserBaseDn(),</span>
+<span class="fc" id="L147">        new SearchFilter(getProperties().getUserFindAllFilter()));</span>
+<span class="fc" id="L148">    searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());</span>
+<span class="fc" id="L149">    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);</span>
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">    if (query == null || query.trim().length() == 0) {</span>
+<span class="fc" id="L151">      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);</span>
+    } else {
+<span class="fc" id="L153">      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper)</span>
+<span class="fc" id="L154">          .filter(domainUser -&gt; isQueryResult(domainUser, query.trim().toLowerCase()));</span>
+    }
+  }
+
+  /**
+   * Is query result boolean.
+   *
+   * @param domainUser the domain user
+   * @param query the query
+   * @return the boolean
+   */
+  static boolean isQueryResult(final DomainUser domainUser, final String query) {
+<span class="pc bpc" id="L166" title="3 of 6 branches missed.">    return query != null &amp;&amp; query.length() &gt; 2 &amp;&amp; domainUser != null</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        &amp;&amp; (contains(domainUser.getDisplayName(), query)</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        || contains(domainUser.getUserName(), query)</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        || contains(domainUser.getEmail(), query)</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        || contains(domainUser.getMobile(), query)</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">        || contains(domainUser.getTelephoneNumber(), query)</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        || contains(domainUser.getDescription(), query)</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">        || contains(domainUser.getFirstName(), query)</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        || contains(domainUser.getLastName(), query)</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        || contains(domainUser.getGroups(), query));</span>
   }
 
   @Override
-  public Optional&lt;DomainUser&gt; findOne(@NotNull String userName) {
-<span class="nc" id="L90">    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());</span>
-<span class="nc" id="L91">    searchFilter.setParameter(0, userName);</span>
-<span class="nc" id="L92">    final SearchRequest searchRequest = new SearchRequest(</span>
-<span class="nc" id="L93">        getProperties().getUserBaseDn(),</span>
+  public Optional&lt;DomainUser&gt; findOne(final String userName) {
+<span class="fc" id="L180">    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());</span>
+<span class="fc" id="L181">    searchFilter.setParameter(0, userName);</span>
+<span class="fc" id="L182">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L183">        getProperties().getUserBaseDn(),</span>
         searchFilter);
-<span class="nc" id="L95">    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());</span>
-<span class="nc" id="L96">    searchRequest.setBinaryAttributes(&quot;jpegPhoto&quot;);</span>
-<span class="nc" id="L97">    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);</span>
+<span class="fc" id="L185">    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());</span>
+<span class="fc" id="L186">    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);</span>
+<span class="fc" id="L187">    searchRequest.setSizeLimit(1L);</span>
+<span class="fc" id="L188">    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);</span>
   }
 
   @Override
-  public boolean exists(@NotNull String userName) {
-<span class="nc" id="L102">    return getLdapTemplate()</span>
-<span class="nc" id="L103">        .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);</span>
+  public Optional&lt;byte[]&gt; findAvatar(
+      final String userName,
+      final AvatarDefault avatarDefault,
+      final Integer size) {
+
+<span class="pc bpc" id="L197" title="3 of 6 branches missed.">    final int avatarSize = size == null || size &lt; 1 || size &gt; 2048 ? 80 : size;</span>
+<span class="fc" id="L198">    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());</span>
+<span class="fc" id="L199">    searchFilter.setParameter(0, userName);</span>
+<span class="fc" id="L200">    final SearchRequest searchRequest = new SearchRequest(</span>
+<span class="fc" id="L201">        getProperties().getUserBaseDn(),</span>
+        searchFilter);
+<span class="fc" id="L203">    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());</span>
+<span class="fc" id="L204">    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);</span>
+<span class="fc" id="L205">    searchRequest.setReturnAttributes(DomainUserLdapConstants.MAIL);</span>
+<span class="fc" id="L206">    searchRequest.setSizeLimit(1L);</span>
+
+<span class="fc" id="L208">    return getLdapTemplate().findOne(searchRequest)</span>
+<span class="fc" id="L209">        .map(ldapEntry -&gt; {</span>
+<span class="fc" id="L210">          final byte[] avatar = LdaptiveEntryMapper.getAttributeValue(</span>
+              ldapEntry, DomainUserLdapConstants.JPEG_PHOTO, BYTE_ARRAY_VALUE_TRANSCODER, null);
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">          if (avatar != null &amp;&amp; avatar.length &gt; 0) {</span>
+            try {
+<span class="fc" id="L214">              final BufferedImage img = ImageIO.read(new ByteArrayInputStream(avatar));</span>
+<span class="fc" id="L215">              final BufferedImage scaledImg = ImageScaler</span>
+<span class="fc" id="L216">                  .scaleImage(img, new Dimension(avatarSize, avatarSize));</span>
+<span class="fc" id="L217">              final ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L218">              ImageIO.write(scaledImg, &quot;JPG&quot;, out);</span>
+<span class="fc" id="L219">              return out.toByteArray();</span>
+
+<span class="nc" id="L221">            } catch (IOException e) {</span>
+<span class="nc" id="L222">              log.error(&quot;msg=[Creating image from ldap attribute {} failed.]&quot;,</span>
+                  DomainUserLdapConstants.JPEG_PHOTO, e);
+            }
+          }
+<span class="fc" id="L226">          final String mail = LdaptiveEntryMapper</span>
+<span class="fc" id="L227">              .getAttributeValue(ldapEntry, &quot;mail&quot;, STRING_VALUE_TRANSCODER, null);</span>
+<span class="fc" id="L228">          return findAvatar(mail, getProperties().getGravatarUrl(), avatarDefault, avatarSize);</span>
+        });
   }
 
-  @Override
-  public DomainUser save(@NotNull DomainUser domainUser) {
-<span class="nc bnc" id="L108" title="All 2 branches missed.">    if (!exists(domainUser.getUserName())) {</span>
-<span class="nc" id="L109">      kinit();</span>
-<span class="nc" id="L110">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L111">      sudo(commands);</span>
-<span class="nc" id="L112">      commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L113">      commands.add(&quot;user&quot;);</span>
-<span class="nc" id="L114">      commands.add(&quot;create&quot;);</span>
-<span class="nc" id="L115">      commands.add(domainUser.getUserName());</span>
-<span class="nc bnc" id="L116" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getPassword())) {</span>
-<span class="nc" id="L117">        commands.add(&quot;'&quot; + domainUser.getPassword() + &quot;'&quot;);</span>
-      } else {
-<span class="nc" id="L119">        commands.add(&quot;--random-password&quot;);</span>
+  /**
+   * Find avatar byte [ ].
+   *
+   * @param mail the mail
+   * @param avatarUrlTemplate the avatar url template
+   * @param avatarDefault the avatar default
+   * @param avatarSize the avatar size
+   * @return the byte [ ]
+   */
+  static byte[] findAvatar(
+      final String mail,
+      final String avatarUrlTemplate,
+      final AvatarDefault avatarDefault,
+      final int avatarSize) {
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">    if (StringUtils.hasText(mail)) {</span>
+<span class="fc" id="L248">      final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L249">      final String hex = new String(Hex.encode(md5));</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">      final String defaultAvatar = avatarDefault != null</span>
+<span class="pc" id="L251">          ? avatarDefault.toString()</span>
+<span class="pc" id="L252">          : AvatarDefault.NOT_FOUND.toString();</span>
+<span class="fc" id="L253">      final String url = avatarUrlTemplate</span>
+<span class="fc" id="L254">          .replace(&quot;{hash}&quot;, hex)</span>
+<span class="fc" id="L255">          .replace(&quot;{default}&quot;, defaultAvatar)</span>
+<span class="fc" id="L256">          .replace(&quot;{size}&quot;, String.valueOf(avatarSize));</span>
+      try {
+<span class="fc" id="L258">        return IOUtils.toByteArray(new URL(url));</span>
+<span class="fc" id="L259">      } catch (Exception e) {</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (AvatarDefault.NOT_FOUND.toString().equalsIgnoreCase(defaultAvatar)) {</span>
+<span class="fc" id="L261">          return null;</span>
+        }
+<span class="nc" id="L263">        log.error(&quot;msg=[Getting avatar failed. This should not happen.] url=[{}]&quot;,</span>
+            url, e);
       }
-<span class="nc" id="L121">      commands.add(&quot;--use-username-as-cn&quot;);</span>
-<span class="nc" id="L122">      auth(commands);</span>
-
-<span class="nc" id="L124">      CommandExecutor.exec(</span>
-          commands,
-          null,
-<span class="nc" id="L127">          getProperties().getSambaToolExecDir(),</span>
-          (CommandExecutorResponseValidator) response -&gt; {
-<span class="nc" id="L129">            final String err = response.stderrToOneLine();</span>
-<span class="nc bnc" id="L130" title="All 4 branches missed.">            if (err.startsWith(&quot;ERROR:&quot;) &amp;&amp; err.contains(&quot;check_password_restrictions&quot;)) {</span>
-<span class="nc" id="L131">              throw ServiceException.badRequest(</span>
-                  &quot;msg=[The password does not meet the complexity criteria!] userName=[&quot;
-<span class="nc" id="L133">                      + domainUser.getUserName() + &quot;]&quot;,</span>
-                  &quot;check_password_restrictions&quot;);
-            }
-<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (!exists(domainUser.getUserName())) {</span>
-<span class="nc" id="L137">              throw ServiceException.internalServerError(&quot;msg=[Saving user failed.] userName=[&quot;</span>
-<span class="nc" id="L138">                  + domainUser.getUserName() + &quot;] &quot;</span>
-<span class="nc" id="L139">                  + CommandExecutorResponse.toExceptionMessage(response),</span>
-                  &quot;org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e&quot;);
-            }
-<span class="nc" id="L142">          });</span>
+<span class="pc bfc" id="L266" title="All 2 branches covered.">    } else if (AvatarDefault.NOT_FOUND == avatarDefault) {</span>
+<span class="fc" id="L267">      return null;</span>
     }
-<span class="nc" id="L144">    return getLdapTemplate().save(domainUser, domainUserLdapMapper);</span>
+    try {
+<span class="fc" id="L270">      final BufferedImage img = ImageIO</span>
+<span class="fc" id="L271">          .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());</span>
+<span class="fc" id="L272">      final BufferedImage scaledImg = ImageScaler</span>
+<span class="fc" id="L273">          .scaleImage(img, new Dimension(avatarSize, avatarSize));</span>
+<span class="fc" id="L274">      final ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L275">      ImageIO.write(scaledImg, &quot;JPG&quot;, out);</span>
+<span class="fc" id="L276">      return out.toByteArray();</span>
+
+<span class="nc" id="L278">    } catch (IOException e) {</span>
+<span class="nc" id="L279">      final ServiceException se = ServiceException.internalServerError(</span>
+          &quot;Getting default avatar for no email failed.&quot;,
+          &quot;org.bremersee:dc-con-app:1ec0dda8-7358-4e1c-a8f2-f4bd64e439f0&quot;,
+          e);
+<span class="nc" id="L283">      log.error(&quot;msg=[{}]&quot;, se.getMessage(), se);</span>
+<span class="nc" id="L284">      throw se;</span>
+    }
+
   }
 
   @Override
-  public void savePassword(@NotNull String userName, @NotNull String newPassword) {
-<span class="nc" id="L149">    kinit();</span>
-<span class="nc" id="L150">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L151">    sudo(commands);</span>
-<span class="nc" id="L152">    commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L153">    commands.add(&quot;user&quot;);</span>
-<span class="nc" id="L154">    commands.add(&quot;setpassword&quot;);</span>
-<span class="nc" id="L155">    commands.add(userName);</span>
-<span class="nc" id="L156">    commands.add(&quot;--newpassword='&quot; + newPassword + &quot;'&quot;); // works</span>
-<span class="nc" id="L157">    auth(commands);</span>
-<span class="nc" id="L158">    CommandExecutor.exec(</span>
+  public boolean exists(final String userName) {
+<span class="fc" id="L291">    return getLdapTemplate()</span>
+<span class="fc" id="L292">        .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);</span>
+  }
+
+  /**
+   * Add user.
+   *
+   * @param domainUser the domain user
+   */
+  void doAdd(final DomainUser domainUser) {
+    // Maybe I can add an user directly:
+    // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
+<span class="nc" id="L303">    kinit();</span>
+<span class="nc" id="L304">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L305">    sudo(commands);</span>
+<span class="nc" id="L306">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L307">    commands.add(&quot;user&quot;);</span>
+<span class="nc" id="L308">    commands.add(&quot;create&quot;);</span>
+<span class="nc" id="L309">    commands.add(domainUser.getUserName());</span>
+<span class="nc" id="L310">    commands.add(&quot;--random-password&quot;);</span>
+<span class="nc" id="L311">    commands.add(&quot;--use-username-as-cn&quot;);</span>
+<span class="nc" id="L312">    auth(commands);</span>
+
+<span class="nc" id="L314">    CommandExecutor.exec(</span>
         commands,
         null,
-<span class="nc" id="L161">        getProperties().getSambaToolExecDir(),</span>
+<span class="nc" id="L317">        getProperties().getSambaToolExecDir(),</span>
         (CommandExecutorResponseValidator) response -&gt; {
-<span class="nc" id="L163">          final String err = response.stderrToOneLine();</span>
-<span class="nc bnc" id="L164" title="All 4 branches missed.">          if (err.startsWith(&quot;ERROR:&quot;) &amp;&amp; err.contains(&quot;check_password_restrictions&quot;)) {</span>
-<span class="nc" id="L165">            throw ServiceException.badRequest(</span>
-                &quot;msg=[The password does not meet the complexity criteria!] userName=[&quot;
-                    + userName + &quot;]&quot;,
-                &quot;check_password_restrictions&quot;);
-<span class="nc bnc" id="L169" title="All 2 branches missed.">          } else if (StringUtils.hasText(err)) {</span>
-<span class="nc" id="L170">            throw ServiceException.internalServerError(</span>
-                &quot;msg=[Setting new password failed.] userName=[&quot; + userName + &quot;] &quot;
-<span class="nc" id="L172">                    + CommandExecutorResponse.toExceptionMessage(response),</span>
-                &quot;org.bremersee:dc-con-app:abc34c93-920e-4600-b5b4-3ce215a9fdeb&quot;);
+<span class="nc bnc" id="L319" title="All 2 branches missed.">          if (!exists(domainUser.getUserName())) {</span>
+<span class="nc" id="L320">            throw ServiceException.internalServerError(&quot;msg=[Saving user failed.] userName=[&quot;</span>
+<span class="nc" id="L321">                    + domainUser.getUserName() + &quot;] &quot;</span>
+<span class="nc" id="L322">                    + CommandExecutorResponse.toExceptionMessage(response),</span>
+                &quot;org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e&quot;);
           }
-<span class="nc" id="L175">        });</span>
-<span class="nc" id="L176">  }</span>
+<span class="nc" id="L325">        });</span>
+<span class="nc" id="L326">  }</span>
 
   @Override
-  public boolean delete(@NotNull String userName) {
-
-<span class="nc bnc" id="L181" title="All 2 branches missed.">    if (exists(userName)) {</span>
-<span class="nc" id="L182">      kinit();</span>
-<span class="nc" id="L183">      final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L184">      sudo(commands);</span>
-<span class="nc" id="L185">      commands.add(getProperties().getSambaToolBinary());</span>
-<span class="nc" id="L186">      commands.add(&quot;user&quot;);</span>
-<span class="nc" id="L187">      commands.add(&quot;delete&quot;);</span>
-<span class="nc" id="L188">      commands.add(userName);</span>
-<span class="nc" id="L189">      auth(commands);</span>
-<span class="nc" id="L190">      CommandExecutor.exec(</span>
-          commands,
-          null,
-<span class="nc" id="L193">          getProperties().getSambaToolExecDir(),</span>
-          (CommandExecutorResponseValidator) response -&gt; {
-<span class="nc bnc" id="L195" title="All 2 branches missed.">            if (exists(userName)) {</span>
-<span class="nc" id="L196">              throw ServiceException.internalServerError(</span>
-                  &quot;msg=[Deleting user failed.] userName=[&quot; + userName + &quot;] &quot;
-<span class="nc" id="L198">                      + CommandExecutorResponse.toExceptionMessage(response));</span>
-            }
-<span class="nc" id="L200">          });</span>
-<span class="nc" id="L201">      return true;</span>
+  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">    if (!exists(domainUser.getUserName())) {</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">      if (StringUtils.hasText(domainUser.getPassword())</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">          &amp;&amp; !getPasswordPattern().matcher(domainUser.getPassword()).matches()) {</span>
+<span class="fc" id="L333">        throw ServiceException.badRequest(</span>
+            &quot;msg=[The password does not meet the complexity criteria!] userName=[&quot;
+<span class="fc" id="L335">                + domainUser.getUserName() + &quot;]&quot;,</span>
+            &quot;check_password_restrictions&quot;);
+      }
+<span class="fc" id="L338">      doAdd(domainUser);</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">      if (StringUtils.hasText(domainUser.getPassword())) {</span>
+<span class="fc" id="L340">        savePassword(domainUser.getUserName(), domainUser.getPassword());</span>
+      }
     }
-<span class="nc" id="L203">    return false;</span>
+
+<span class="fc" id="L344">    DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);</span>
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">    if (Boolean.TRUE.equals(updateGroups)) {</span>
+<span class="fc" id="L346">      final Set&lt;String&gt; oldGroups = new HashSet&lt;&gt;(updatedDomainUser.getGroups());</span>
+<span class="fc" id="L347">      final Set&lt;String&gt; newGroups = new HashSet&lt;&gt;(domainUser.getGroups());</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">      for (final String newGroup : newGroups) {</span>
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">        if (!oldGroups.remove(newGroup)) {</span>
+<span class="nc" id="L350">          domainGroupRepository.findOne(newGroup).ifPresent(group -&gt; {</span>
+<span class="nc" id="L351">            group.getMembers().add(domainUser.getUserName());</span>
+<span class="nc" id="L352">            domainGroupRepository.save(group);</span>
+<span class="nc" id="L353">          });</span>
+        }
+<span class="fc" id="L355">      }</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">      for (final String oldGroup : oldGroups) {</span>
+<span class="nc" id="L357">        domainGroupRepository.findOne(oldGroup).ifPresent(group -&gt; {</span>
+<span class="nc" id="L358">          group.getMembers().remove(domainUser.getUserName());</span>
+<span class="nc" id="L359">          domainGroupRepository.save(group);</span>
+<span class="nc" id="L360">        });</span>
+<span class="nc" id="L361">      }</span>
+<span class="fc" id="L362">      updatedDomainUser = updatedDomainUser.toBuilder()</span>
+<span class="fc" id="L363">          .groups(new ArrayList&lt;&gt;(newGroups))</span>
+<span class="fc" id="L364">          .build();</span>
+<span class="fc" id="L365">    } else {</span>
+<span class="nc" id="L366">      updatedDomainUser = updatedDomainUser.toBuilder()</span>
+<span class="nc" id="L367">          .groups(new ArrayList&lt;&gt;(domainUser.getGroups()))</span>
+<span class="nc" id="L368">          .build();</span>
+    }
+<span class="fc" id="L370">    updatedDomainUser.getGroups().sort(String::compareToIgnoreCase);</span>
+<span class="fc" id="L371">    return updatedDomainUser;</span>
   }
+
+  @Override
+  public void savePassword(final String userName, final String newPassword) {
+<span class="fc" id="L376">    final String quotedPassword = &quot;\&quot;&quot; + newPassword + &quot;\&quot;&quot;;</span>
+<span class="fc" id="L377">    final char[] unicodePwd = quotedPassword.toCharArray();</span>
+<span class="fc" id="L378">    final byte[] pwdArray = new byte[unicodePwd.length * 2];</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">    for (int i = 0; i &lt; unicodePwd.length; i++) {</span>
+<span class="fc" id="L380">      pwdArray[i * 2 + 1] = (byte) (unicodePwd[i] &gt;&gt;&gt; 8);</span>
+<span class="fc" id="L381">      pwdArray[i * 2] = (byte) (unicodePwd[i] &amp; 0xff);</span>
+    }
+<span class="fc" id="L383">    final LdapAttribute ldapAttribute = new LdapAttribute(true);</span>
+<span class="fc" id="L384">    ldapAttribute.setName(&quot;unicodePwd&quot;);</span>
+<span class="fc" id="L385">    ldapAttribute.addBinaryValue(pwdArray);</span>
+<span class="fc" id="L386">    final AttributeModification attributeModification = new AttributeModification();</span>
+<span class="fc" id="L387">    attributeModification.setAttributeModificationType(AttributeModificationType.REPLACE);</span>
+<span class="fc" id="L388">    attributeModification.setAttribute(ldapAttribute);</span>
+<span class="fc" id="L389">    final String dn = LdaptiveEntryMapper.createDn(</span>
+<span class="fc" id="L390">        getProperties().getUserRdn(),</span>
+        userName,
+<span class="fc" id="L392">        getProperties().getUserBaseDn());</span>
+<span class="fc" id="L393">    final ModifyRequest modifyRequest = new ModifyRequest();</span>
+<span class="fc" id="L394">    modifyRequest.setDn(dn);</span>
+<span class="fc" id="L395">    modifyRequest.setAttributeModifications(attributeModification);</span>
+<span class="fc" id="L396">    getLdapTemplate()</span>
+<span class="fc" id="L397">        .clone(new AbstractLdaptiveErrorHandler() {</span>
+          @Override
+          public LdaptiveException map(final LdapException ldapException) {
+            final HttpStatus httpStatus;
+            final String errorCode;
+<span class="nc bnc" id="L402" title="All 2 branches missed.">            if (ldapException.getResultCode() == ResultCode.CONSTRAINT_VIOLATION</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">                &amp;&amp; ldapException.getMessage().contains(&quot;check_password_restrictions&quot;)) {</span>
+<span class="nc" id="L404">              httpStatus = HttpStatus.BAD_REQUEST;</span>
+<span class="nc" id="L405">              errorCode = &quot;check_password_restrictions&quot;;</span>
+            } else {
+<span class="nc bnc" id="L407" title="All 2 branches missed.">              httpStatus = ldapException.getResultCode() == ResultCode.NO_SUCH_OBJECT</span>
+                  ? HttpStatus.NOT_FOUND
+                  : HttpStatus.INTERNAL_SERVER_ERROR;
+<span class="nc" id="L410">              errorCode = &quot;org.bremersee.dc-con-app:a70939fb-2c94-412f-80c0-00a7d5dcf4a6&quot;;</span>
+            }
+<span class="nc" id="L412">            return LdaptiveException.builder()</span>
+<span class="nc" id="L413">                .httpStatus(httpStatus.value())</span>
+<span class="nc" id="L414">                .errorCode(errorCode)</span>
+<span class="nc" id="L415">                .cause(ldapException)</span>
+<span class="nc" id="L416">                .build();</span>
+          }
+        })
+<span class="fc" id="L419">        .modify(modifyRequest);</span>
+<span class="fc" id="L420">  }</span>
+
+  @Override
+  public boolean delete(final String userName) {
+
+<span class="fc bfc" id="L425" title="All 2 branches covered.">    if (exists(userName)) {</span>
+<span class="fc" id="L426">      doDelete(userName);</span>
+<span class="fc" id="L427">      return true;</span>
+    }
+<span class="fc" id="L429">    return false;</span>
+  }
+
+  /**
+   * Delete user.
+   *
+   * @param userName the user name
+   */
+  void doDelete(final String userName) {
+<span class="nc" id="L438">    kinit();</span>
+<span class="nc" id="L439">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L440">    sudo(commands);</span>
+<span class="nc" id="L441">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L442">    commands.add(&quot;user&quot;);</span>
+<span class="nc" id="L443">    commands.add(&quot;delete&quot;);</span>
+<span class="nc" id="L444">    commands.add(userName);</span>
+<span class="nc" id="L445">    auth(commands);</span>
+<span class="nc" id="L446">    CommandExecutor.exec(</span>
+        commands,
+        null,
+<span class="nc" id="L449">        getProperties().getSambaToolExecDir(),</span>
+        (CommandExecutorResponseValidator) response -&gt; {
+<span class="nc bnc" id="L451" title="All 2 branches missed.">          if (exists(userName)) {</span>
+<span class="nc" id="L452">            throw ServiceException.internalServerError(</span>
+                &quot;msg=[Deleting user failed.] userName=[&quot; + userName + &quot;] &quot;
+<span class="nc" id="L454">                    + CommandExecutorResponse.toExceptionMessage(response));</span>
+          }
+<span class="nc" id="L456">        });</span>
+<span class="nc" id="L457">  }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

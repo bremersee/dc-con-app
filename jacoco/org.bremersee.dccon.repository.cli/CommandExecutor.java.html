@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository.cli;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -24,14 +25,13 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.exception.ServiceException;
-import org.springframework.http.HttpStatus;
 
 /**
  * The command executor.
  *
  * @author Christian Bremer
  */
-<span class="nc" id="L34">@Slf4j</span>
+<span class="fc" id="L34">@Slf4j</span>
 public abstract class CommandExecutor {
 
   private CommandExecutor() {
@@ -41,7 +41,7 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param dir      the dir
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings(&quot;UnusedReturnValue&quot;)
@@ -56,8 +56,8 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param env      the env
-   * @param dir      the dir
+   * @param env the env
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings(&quot;WeakerAccess&quot;)
@@ -72,10 +72,10 @@ public abstract class CommandExecutor {
   /**
    * Exec command executor.
    *
-   * @param &lt;T&gt;            the type parameter
-   * @param commands       the commands
-   * @param env            the env
-   * @param dir            the dir
+   * @param &lt;T&gt; the type parameter
+   * @param commands the commands
+   * @param env the env
+   * @param dir the dir
    * @param responseParser the response parser
    * @return the command executor response
    */
@@ -86,39 +86,40 @@ public abstract class CommandExecutor {
       final CommandExecutorResponseParser&lt;T&gt; responseParser) {
 
     try {
-<span class="nc" id="L89">      ProcessBuilder pb = new ProcessBuilder(commands);</span>
-<span class="nc bnc" id="L90" title="All 4 branches missed.">      if (dir != null &amp;&amp; dir.trim().length() &gt; 0) {</span>
-<span class="nc" id="L91">        pb.directory(new File(dir));</span>
+<span class="fc" id="L89">      ProcessBuilder pb = new ProcessBuilder(commands);</span>
+<span class="pc bpc" id="L90" title="2 of 4 branches missed.">      if (dir != null &amp;&amp; dir.trim().length() &gt; 0) {</span>
+<span class="fc" id="L91">        pb.directory(new File(dir));</span>
       }
-<span class="nc bnc" id="L93" title="All 4 branches missed.">      if (env != null &amp;&amp; !env.isEmpty()) {</span>
+<span class="pc bpc" id="L93" title="1 of 4 branches missed.">      if (env != null &amp;&amp; !env.isEmpty()) {</span>
 <span class="nc" id="L94">        pb.environment().putAll(env);</span>
       }
 
-<span class="nc bnc" id="L97" title="All 2 branches missed.">      if (log.isTraceEnabled()) {</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">      if (log.isTraceEnabled()) {</span>
 <span class="nc" id="L98">        log.trace(&quot;msg=[Running external program.] commands=[{}]&quot;, commands);</span>
       }
-<span class="nc" id="L100">      final Process p = pb.start();</span>
-<span class="nc" id="L101">      final StringWriter out = new StringWriter();</span>
-<span class="nc" id="L102">      final StringWriter err = new StringWriter();</span>
-<span class="nc" id="L103">      IOUtils.copy(p.getInputStream(), out, StandardCharsets.UTF_8);</span>
-<span class="nc" id="L104">      IOUtils.copy(p.getErrorStream(), err, StandardCharsets.UTF_8);</span>
-<span class="nc" id="L105">      p.waitFor();</span>
-<span class="nc" id="L106">      final String output = out.toString();</span>
-<span class="nc" id="L107">      final String error = err.toString();</span>
-<span class="nc bnc" id="L108" title="All 2 branches missed.">      if (log.isTraceEnabled()) {</span>
+<span class="fc" id="L100">      final Process p = pb.start();</span>
+<span class="fc" id="L101">      final StringWriter out = new StringWriter();</span>
+<span class="fc" id="L102">      final StringWriter err = new StringWriter();</span>
+<span class="fc" id="L103">      IOUtils.copy(p.getInputStream(), out, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L104">      IOUtils.copy(p.getErrorStream(), err, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L105">      p.waitFor();</span>
+<span class="fc" id="L106">      final String output = out.toString();</span>
+<span class="fc" id="L107">      final String error = err.toString();</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">      if (log.isTraceEnabled()) {</span>
 <span class="nc" id="L109">        log.trace(&quot;msg=[Program output]\n{}&quot;, output);</span>
 <span class="nc" id="L110">        log.trace(&quot;msg=[Program error output]\n{}&quot;, error);</span>
       }
-<span class="nc" id="L112">      return responseParser.parse(new CommandExecutorResponse(output, error));</span>
+<span class="fc" id="L112">      return responseParser.parse(new CommandExecutorResponse(output, error));</span>
 
-<span class="nc" id="L114">    } catch (final Exception e) {</span>
-<span class="nc" id="L115">      throw new ServiceException(</span>
-<span class="nc" id="L116">          HttpStatus.INTERNAL_SERVER_ERROR.value(),</span>
-          &quot;Running commands &quot; + commands + &quot; failed.&quot;,
+<span class="fc" id="L114">    } catch (IOException | InterruptedException e) {</span>
+<span class="fc" id="L115">      final ServiceException se = ServiceException.internalServerError(</span>
+          &quot;Running commands failed.&quot;,
           &quot;org.bremersee:dc-con-app:6fa0f473-6204-4f75-9130-a1049910d8fd&quot;,
           e);
+<span class="fc" id="L119">      log.error(&quot;Executing commands [{}] failed.&quot;, commands, se);</span>
+<span class="fc" id="L120">      throw se;</span>
     }
   }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

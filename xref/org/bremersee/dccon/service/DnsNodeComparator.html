@@ -59,7 +59,7 @@
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>      <strong class="jxr_keyword">final</strong> String[] sa2 = s2.split(Pattern.quote(<span class="jxr_string">"."</span>));
 <a class="jxr_linenumber" name="L52" href="#L52">52</a>      <strong class="jxr_keyword">if</strong> (sa1.length == sa2.length) {
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>        <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; sa1.length; i++) {
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>          <strong class="jxr_keyword">int</strong> result = format(sa1[i], 3).compareTo(format(sa2[i], 3));
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          <strong class="jxr_keyword">int</strong> result = format(sa1[i], 3).compareToIgnoreCase(format(sa2[i], 3));
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>          <strong class="jxr_keyword">if</strong> (result != 0) {
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>            <strong class="jxr_keyword">return</strong> isAsc() ? result : -1 * result;
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>          }
@@ -73,6 +73,6 @@
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>

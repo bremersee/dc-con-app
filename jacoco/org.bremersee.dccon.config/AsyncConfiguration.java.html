@@ -16,12 +16,10 @@
 
 package org.bremersee.dccon.config;
 
-import java.util.concurrent.Executor;
+import org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * The async and scheduling configuration.
@@ -31,12 +29,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableAsync
 @EnableScheduling
-<span class="fc" id="L34">public class AsyncConfiguration implements AsyncConfigurer {</span>
+<span class="fc" id="L32">public class AsyncConfiguration { // implements AsyncConfigurer {</span>
 
+  MessageSourceAutoConfiguration h;
+
+  /*
   @Override
   public Executor getAsyncExecutor() {
-<span class="nc" id="L38">    return new ThreadPoolTaskExecutor();</span>
+    return new ThreadPoolTaskExecutor(); // This is to simple, throws Thread pool not initialized.
   }
+  */
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

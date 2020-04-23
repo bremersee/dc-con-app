@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service</a> &gt; <span class="el_source">EmailServiceImpl.java</span></div><h1>EmailServiceImpl.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.MailInlineAttachment;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.MessageSource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.mail.javamail.MimeMessagePreparator;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+import org.thymeleaf.TemplateEngine;
+
+/**
+ * The email service implementation.
+ *
+ * @author Christian Bremer
+ */
+@Component(&quot;emailService&quot;)
+@ConditionalOnProperty(name = &quot;spring.mail.host&quot;)
+<span class="nc" id="L46">@Slf4j</span>
+public class EmailServiceImpl extends AbstractEmailService {
+
+  private ResourceLoader resourceLoader;
+
+  private MessageSource messageSource;
+
+  private JavaMailSender javaMailSender;
+
+  /**
+   * Instantiates a new email service.
+   *
+   * @param properties the properties
+   * @param userRepository the user repository
+   * @param templateEngine the template engine
+   * @param resourceLoader the resource loader
+   * @param messageSource the message source
+   * @param javaMailSenderProvider the java mail sender provider
+   */
+  public EmailServiceImpl(
+      DomainControllerProperties properties,
+      DomainUserRepository userRepository,
+      TemplateEngine templateEngine,
+      ResourceLoader resourceLoader,
+      MessageSource messageSource,
+      ObjectProvider&lt;JavaMailSender&gt; javaMailSenderProvider) {
+<span class="nc" id="L72">    super(properties, userRepository, templateEngine);</span>
+<span class="nc" id="L73">    this.resourceLoader = resourceLoader;</span>
+<span class="nc" id="L74">    this.messageSource = messageSource;</span>
+<span class="nc" id="L75">    this.javaMailSender = javaMailSenderProvider.getIfAvailable();</span>
+<span class="nc" id="L76">    Assert.notNull(this.javaMailSender, &quot;Java mail sender must be present.&quot;);</span>
+<span class="nc" id="L77">  }</span>
+
+  @Override
+  void doSendEmailWithCredentials(
+      final DomainUser domainUser,
+      final Locale locale,
+      final String mailText) {
+
+<span class="nc" id="L85">    final List&lt;MailInlineAttachment&gt; inlineAttachments = getProperties()</span>
+<span class="nc" id="L86">        .getMailWithCredentials()</span>
+<span class="nc" id="L87">        .getInlineAttachments();</span>
+
+<span class="nc" id="L89">    final MimeMessagePreparator preparator = mimeMessage -&gt; {</span>
+<span class="nc" id="L90">      MimeMessageHelper helper = new MimeMessageHelper(</span>
+<span class="nc" id="L91">          mimeMessage, true, StandardCharsets.UTF_8.name());</span>
+<span class="nc" id="L92">      helper.setFrom(getProperties().getMailWithCredentials().getSender());</span>
+<span class="nc" id="L93">      helper.setTo(domainUser.getEmail());</span>
+<span class="nc" id="L94">      helper.setSubject(Objects.requireNonNull(messageSource.getMessage(</span>
+          &quot;mail-with-credentials.subject&quot;,
+<span class="nc" id="L96">          new Object[]{domainUser.getDisplayName()},</span>
+          &quot;Welcome&quot;,
+          locale)));
+<span class="nc" id="L99">      helper.setText(mailText, true);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">      for (MailInlineAttachment attachment : inlineAttachments) {</span>
+<span class="nc" id="L102">        helper.addInline(attachment.getContentId(),</span>
+<span class="nc" id="L103">            resourceLoader.getResource(attachment.getLocation()),</span>
+<span class="nc" id="L104">            attachment.getMimeType());</span>
+<span class="nc" id="L105">      }</span>
+<span class="nc" id="L106">    };</span>
+<span class="nc" id="L107">    javaMailSender.send(preparator);</span>
+<span class="nc" id="L108">  }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

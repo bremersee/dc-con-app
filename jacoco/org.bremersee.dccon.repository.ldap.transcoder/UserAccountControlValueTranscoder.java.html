@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository.ldap.transcoder;
 
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.io.AbstractStringValueTranscoder;
 import org.springframework.util.StringUtils;
@@ -25,8 +26,8 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-<span class="fc" id="L28">@Slf4j</span>
-<span class="fc" id="L29">public class UserAccountControlValueTranscoder extends AbstractStringValueTranscoder&lt;Integer&gt; {</span>
+<span class="fc" id="L29">@Slf4j</span>
+<span class="fc" id="L30">public class UserAccountControlValueTranscoder extends AbstractStringValueTranscoder&lt;Integer&gt; {</span>
 
   /**
    * The bit map value of a disabled account.
@@ -46,28 +47,28 @@ import org.springframework.util.StringUtils;
   /**
    * Gets user account control value.
    *
-   * @param enabled       the enabled
+   * @param enabled the enabled
    * @param existingValue the existing value
    * @return the user account control value
    */
   public static int getUserAccountControlValue(Boolean enabled, Integer existingValue) {
-<span class="fc bfc" id="L54" title="All 2 branches covered.">    int value = existingValue != null ? existingValue : 0;</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">    if ((value &amp; NORMAL_ACCOUNT) != NORMAL_ACCOUNT) {</span>
-<span class="fc" id="L56">      value = value + NORMAL_ACCOUNT;</span>
+<span class="fc" id="L55">    int value = Optional.ofNullable(existingValue).orElse(0);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">    if ((value &amp; NORMAL_ACCOUNT) != NORMAL_ACCOUNT) {</span>
+<span class="fc" id="L57">      value = value + NORMAL_ACCOUNT;</span>
     }
-<span class="fc bfc" id="L58" title="All 2 branches covered.">    if ((value &amp; DONT_EXPIRE_PASSWORD) != DONT_EXPIRE_PASSWORD) {</span>
-<span class="fc" id="L59">      value = value + DONT_EXPIRE_PASSWORD;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">    if ((value &amp; DONT_EXPIRE_PASSWORD) != DONT_EXPIRE_PASSWORD) {</span>
+<span class="fc" id="L60">      value = value + DONT_EXPIRE_PASSWORD;</span>
     }
-<span class="fc bfc" id="L61" title="All 2 branches covered.">    if (Boolean.FALSE.equals(enabled)) {</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">      if ((value &amp; ACCOUNTDISABLE) != ACCOUNTDISABLE) {</span>
-<span class="fc" id="L63">        value = value + ACCOUNTDISABLE;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">    if (Boolean.FALSE.equals(enabled)) {</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">      if ((value &amp; ACCOUNTDISABLE) != ACCOUNTDISABLE) {</span>
+<span class="fc" id="L64">        value = value + ACCOUNTDISABLE;</span>
       }
     } else {
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">      if ((value &amp; ACCOUNTDISABLE) == ACCOUNTDISABLE) {</span>
-<span class="nc" id="L67">        value = value - ACCOUNTDISABLE;</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">      if ((value &amp; ACCOUNTDISABLE) == ACCOUNTDISABLE) {</span>
+<span class="nc" id="L68">        value = value - ACCOUNTDISABLE;</span>
       }
     }
-<span class="fc" id="L70">    return value;</span>
+<span class="fc" id="L71">    return value;</span>
   }
 
   /**
@@ -77,27 +78,27 @@ import org.springframework.util.StringUtils;
    * @return the boolean
    */
   public static boolean isUserAccountEnabled(Integer userAccountControlValue) {
-<span class="fc bfc" id="L80" title="All 2 branches covered.">    return userAccountControlValue != null</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        &amp;&amp; ((userAccountControlValue &amp; ACCOUNTDISABLE) != ACCOUNTDISABLE);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    return userAccountControlValue != null</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        &amp;&amp; ((userAccountControlValue &amp; ACCOUNTDISABLE) != ACCOUNTDISABLE);</span>
   }
 
   @Override
   public Integer decodeStringValue(String value) {
-<span class="fc bfc" id="L86" title="All 2 branches covered.">    return StringUtils.hasText(value)</span>
-<span class="fc" id="L87">        ? Integer.parseInt(value)</span>
-<span class="fc" id="L88">        : getUserAccountControlValue(true, 0);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">    return StringUtils.hasText(value)</span>
+<span class="fc" id="L88">        ? Integer.parseInt(value)</span>
+<span class="fc" id="L89">        : getUserAccountControlValue(true, 0);</span>
   }
 
   @Override
   public String encodeStringValue(Integer value) {
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">    return value != null</span>
-<span class="pc" id="L94">        ? String.valueOf(value)</span>
-<span class="nc" id="L95">        : String.valueOf(getUserAccountControlValue(true, 0));</span>
+<span class="fc" id="L94">    return Optional.ofNullable(value)</span>
+<span class="fc" id="L95">        .map(String::valueOf)</span>
+<span class="pc" id="L96">        .orElseGet(() -&gt; String.valueOf(getUserAccountControlValue(true, 0)));</span>
   }
 
   @Override
   public Class&lt;Integer&gt; getType() {
-<span class="fc" id="L100">    return Integer.class;</span>
+<span class="fc" id="L101">    return Integer.class;</span>
   }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

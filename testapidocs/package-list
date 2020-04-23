@@ -1,6 +1,7 @@
-org.bremersee.dccon
+org.bremersee.dccon.controller
 org.bremersee.dccon.repository
 org.bremersee.dccon.repository.cli
+org.bremersee.dccon.repository.img
 org.bremersee.dccon.repository.ldap
 org.bremersee.dccon.repository.ldap.transcoder
 org.bremersee.dccon.service

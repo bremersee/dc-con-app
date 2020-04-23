@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainRepositoryImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.repository</a> &gt; <span class="el_source">DomainRepositoryImpl.java</span></div><h1>DomainRepositoryImpl.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.PasswordInformationParser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * The domain repository implementation.
+ *
+ * @author Christian Bremer
+ */
+@Profile(&quot;cli&quot;)
+@Component(&quot;domainRepository&quot;)
+<span class="fc" id="L38">@Slf4j</span>
+public class DomainRepositoryImpl extends AbstractRepository implements DomainRepository {
+
+  private PasswordInformationParser passwordInformationParser;
+
+  /**
+   * Instantiates a domain repository.
+   *
+   * @param properties the properties
+   */
+  public DomainRepositoryImpl(final DomainControllerProperties properties) {
+<span class="fc" id="L49">    super(properties, null);</span>
+<span class="fc" id="L50">    this.passwordInformationParser = PasswordInformationParser.defaultParser();</span>
+<span class="fc" id="L51">  }</span>
+
+  /**
+   * Sets password information parser.
+   *
+   * @param passwordInformationParser the password information parser
+   */
+  @Autowired(required = false)
+  public void setPasswordInformationParser(
+      final PasswordInformationParser passwordInformationParser) {
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">    if (passwordInformationParser != null) {</span>
+<span class="fc" id="L62">      this.passwordInformationParser = passwordInformationParser;</span>
+    }
+<span class="fc" id="L64">  }</span>
+
+  @Cacheable(cacheNames = &quot;password-information&quot;)
+  @Override
+  public PasswordInformation getPasswordInformation() {
+<span class="nc" id="L69">    kinit();</span>
+<span class="nc" id="L70">    final List&lt;String&gt; commands = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L71">    sudo(commands);</span>
+<span class="nc" id="L72">    commands.add(getProperties().getSambaToolBinary());</span>
+<span class="nc" id="L73">    commands.add(&quot;domain&quot;);</span>
+<span class="nc" id="L74">    commands.add(&quot;passwordsettings&quot;);</span>
+<span class="nc" id="L75">    commands.add(&quot;show&quot;);</span>
+<span class="nc" id="L76">    auth(commands);</span>
+<span class="nc" id="L77">    return CommandExecutor.exec(</span>
+        commands,
+        null,
+<span class="nc" id="L80">        getProperties().getSambaToolExecDir(),</span>
+        passwordInformationParser);
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

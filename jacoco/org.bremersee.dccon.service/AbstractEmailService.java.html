@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractEmailService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dc-con-app</a> &gt; <a href="index.source.html" class="el_package">org.bremersee.dccon.service</a> &gt; <span class="el_source">AbstractEmailService.java</span></div><h1>AbstractEmailService.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.bremersee.dccon.service;
+
+import java.util.Locale;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.common.model.TwoLetterLanguageCode;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.repository.DomainUserRepository;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.util.StringUtils;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+/**
+ * The abstract email service.
+ *
+ * @author Christian Bremer
+ */
+<span class="fc" id="L38">@Slf4j</span>
+public abstract class AbstractEmailService implements EmailService {
+
+<span class="nc" id="L41">  @Getter(AccessLevel.PACKAGE)</span>
+  private DomainControllerProperties properties;
+
+<span class="nc" id="L44">  @Getter(AccessLevel.PACKAGE)</span>
+  private DomainUserRepository userRepository;
+
+<span class="nc" id="L47">  @Getter(AccessLevel.PACKAGE)</span>
+  private TemplateEngine templateEngine;
+
+  /**
+   * Instantiates a new abstract email service.
+   *
+   * @param properties the properties
+   * @param userRepository the user repository
+   * @param templateEngine the template engine
+   */
+  public AbstractEmailService(
+      DomainControllerProperties properties,
+      DomainUserRepository userRepository,
+<span class="fc" id="L60">      TemplateEngine templateEngine) {</span>
+<span class="fc" id="L61">    this.properties = properties;</span>
+<span class="fc" id="L62">    this.userRepository = userRepository;</span>
+<span class="fc" id="L63">    this.templateEngine = templateEngine;</span>
+<span class="fc" id="L64">  }</span>
+
+  @Async
+  @Override
+  public void sendEmailWithCredentials(
+      final String userName,
+      final String clearPassword,
+      final TwoLetterLanguageCode language) {
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">    if (!StringUtils.hasText(clearPassword)) {</span>
+<span class="nc" id="L74">      log.debug(&quot;No clear password is present; sending no email with credentials.&quot;);</span>
+<span class="nc" id="L75">      return;</span>
+    }
+<span class="nc bnc" id="L77" title="All 2 branches missed.">    final Locale locale = language != null ? language.toLocale() : Locale.ENGLISH;</span>
+<span class="nc" id="L78">    userRepository.findOne(userName).ifPresent(domainUser -&gt; {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">      if (StringUtils.hasText(domainUser.getEmail())) {</span>
+<span class="nc" id="L80">        domainUser.setPassword(clearPassword);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (!StringUtils.hasText(domainUser.getDisplayName())) {</span>
+<span class="nc" id="L82">          domainUser.setDescription(domainUser.getUserName());</span>
+        }
+<span class="nc" id="L84">        final Context ctx = new Context(locale);</span>
+<span class="nc" id="L85">        ctx.setVariable(&quot;user&quot;, domainUser);</span>
+<span class="nc" id="L86">        ctx.setVariable(&quot;props&quot;, properties);</span>
+<span class="nc" id="L87">        ctx.setVariable(&quot;lang&quot;, locale.getLanguage());</span>
+<span class="nc" id="L88">        final String mailText = templateEngine.process(</span>
+<span class="nc" id="L89">            properties.getMailWithCredentials().getTemplateBasename(),</span>
+            ctx);
+<span class="nc" id="L91">        doSendEmailWithCredentials(domainUser, locale, mailText);</span>
+      }
+<span class="nc" id="L93">    });</span>
+<span class="nc" id="L94">  }</span>
+
+  /**
+   * Do send email with credentials.
+   *
+   * @param domainUser the domain user
+   * @param locale the locale
+   * @param mailText the mail text
+   */
+  abstract void doSendEmailWithCredentials(
+      @NotNull DomainUser domainUser,
+      @NotNull Locale locale,
+      @NotNull String mailText);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

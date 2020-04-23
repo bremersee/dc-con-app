@@ -35,6 +35,7 @@ import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
 import org.bremersee.dccon.repository.DnsZoneRepository;
+import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -45,7 +46,7 @@ import org.springframework.util.StringUtils;
  * @author Christian Bremer
  */
 @Component(&quot;nameServerService&quot;)
-<span class="fc" id="L48">@Slf4j</span>
+<span class="fc" id="L49">@Slf4j</span>
 public class NameServerServiceImpl implements NameServerService {
 
   private final DhcpRepository dhcpRepository;
@@ -65,8 +66,8 @@ public class NameServerServiceImpl implements NameServerService {
   /**
    * Instantiates a new name server service.
    *
-   * @param properties        the properties
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    * @param dnsNodeRepository the dns node repository
    */
@@ -74,98 +75,102 @@ public class NameServerServiceImpl implements NameServerService {
       final DomainControllerProperties properties,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepository dnsZoneRepository,
-<span class="fc" id="L77">      final DnsNodeRepository dnsNodeRepository) {</span>
-<span class="fc" id="L78">    this.dhcpRepository = dhcpRepository;</span>
-<span class="fc" id="L79">    this.dnsZoneRepository = dnsZoneRepository;</span>
-<span class="fc" id="L80">    this.dnsNodeRepository = dnsNodeRepository;</span>
+<span class="fc" id="L78">      final DnsNodeRepository dnsNodeRepository) {</span>
+<span class="fc" id="L79">    this.dhcpRepository = dhcpRepository;</span>
+<span class="fc" id="L80">    this.dnsZoneRepository = dnsZoneRepository;</span>
+<span class="fc" id="L81">    this.dnsNodeRepository = dnsNodeRepository;</span>
 
-<span class="fc" id="L82">    this.dnsNodeComparator = new DnsNodeComparator();</span>
-<span class="fc" id="L83">    this.dnsZoneComparator = new DnsZoneComparator(this.dnsZoneRepository);</span>
+<span class="fc" id="L83">    this.dnsNodeComparator = new DnsNodeComparator();</span>
+<span class="fc" id="L84">    this.dnsZoneComparator = new DnsZoneComparator(this.dnsZoneRepository);</span>
 
-<span class="fc" id="L85">    this.patternMac = Pattern.compile(properties.getMacRegex());</span>
-<span class="fc" id="L86">    this.patternIp4 = Pattern.compile(properties.getIp4Regex());</span>
-<span class="fc" id="L87">  }</span>
+<span class="fc" id="L86">    this.patternMac = Pattern.compile(properties.getMacRegex());</span>
+<span class="fc" id="L87">    this.patternIp4 = Pattern.compile(properties.getIp4Regex());</span>
+<span class="fc" id="L88">  }</span>
 
   @Override
   public List&lt;DnsNode&gt; query(final String query, final UnknownFilter unknownFilter) {
-<span class="nc" id="L91">    log.info(&quot;msg=[Query dns nodes.] query=[{}] unknownFilter=[{}]&quot;, query, unknownFilter);</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">    if (!StringUtils.hasText(query)) {</span>
-<span class="nc" id="L93">      return Collections.emptyList();</span>
+<span class="fc" id="L92">    log.info(&quot;msg=[Query dns nodes.] query=[{}] unknownFilter=[{}]&quot;, query, unknownFilter);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">    if (!StringUtils.hasText(query)) {</span>
+<span class="nc" id="L94">      return Collections.emptyList();</span>
     }
-<span class="nc" id="L95">    final Set&lt;String&gt; ips = new HashSet&lt;&gt;();</span>
-<span class="nc bnc" id="L96" title="All 2 branches missed.">    if (patternMac.matcher(query.toUpperCase()).matches()) {</span>
-<span class="nc" id="L97">      findIpByMac(query).ifPresent(ips::add);</span>
-<span class="nc bnc" id="L98" title="All 2 branches missed.">    } else if (patternIp4.matcher(query).matches()) {</span>
-<span class="nc" id="L99">      ips.add(query);</span>
+<span class="fc" id="L96">    final Set&lt;String&gt; ips = new HashSet&lt;&gt;();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">    if (patternMac.matcher(query.toUpperCase()).matches()) {</span>
+<span class="nc" id="L98">      findIpByMac(query).ifPresent(ips::add);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">    } else if (patternIp4.matcher(query).matches()) {</span>
+<span class="nc" id="L100">      ips.add(query);</span>
     }
-<span class="nc bnc" id="L101" title="All 2 branches missed.">    if (!ips.isEmpty()) {</span>
-<span class="nc" id="L102">      return dnsNodeRepository.findByIps(ips, unknownFilter);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">    if (!ips.isEmpty()) {</span>
+<span class="nc" id="L103">      return dnsNodeRepository.findByIps(ips, unknownFilter);</span>
     }
-<span class="nc" id="L104">    return dnsNodeRepository.findByHostName(query, unknownFilter)</span>
-<span class="nc" id="L105">        .map(Collections::singletonList)</span>
-<span class="nc" id="L106">        .orElseGet(Collections::emptyList);</span>
+<span class="fc" id="L105">    return dnsNodeRepository.findByHostName(query, unknownFilter)</span>
+<span class="fc" id="L106">        .map(Collections::singletonList)</span>
+<span class="fc" id="L107">        .orElseGet(Collections::emptyList);</span>
   }
 
   private Optional&lt;String&gt; findIpByMac(String mac) {
-<span class="nc" id="L110">    final String normalizedMac = mac.replace(&quot;-&quot;, &quot;:&quot;).trim();</span>
-<span class="nc" id="L111">    return dhcpRepository.findActiveByIp().values().stream()</span>
-<span class="nc" id="L112">        .filter(dhcpLease -&gt; normalizedMac.equalsIgnoreCase(dhcpLease.getMac()))</span>
-<span class="nc" id="L113">        .map(DhcpLease::getIp)</span>
-<span class="nc" id="L114">        .findFirst();</span>
+<span class="nc" id="L111">    final String normalizedMac = mac.replace(&quot;-&quot;, &quot;:&quot;).trim();</span>
+<span class="nc" id="L112">    return dhcpRepository.findActiveByIp().values().stream()</span>
+<span class="nc" id="L113">        .filter(dhcpLease -&gt; normalizedMac.equalsIgnoreCase(dhcpLease.getMac()))</span>
+<span class="nc" id="L114">        .map(DhcpLease::getIp)</span>
+<span class="nc" id="L115">        .findFirst();</span>
   }
 
   @Override
   public List&lt;DhcpLease&gt; getDhcpLeases(final Boolean all, final String sort) {
     final List&lt;DhcpLease&gt; leases;
-<span class="nc bnc" id="L120" title="All 2 branches missed.">    if (Boolean.TRUE.equals(all)) {</span>
-<span class="nc" id="L121">      leases = dhcpRepository.findAll();</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">    if (Boolean.TRUE.equals(all)) {</span>
+<span class="nc" id="L122">      leases = dhcpRepository.findAll();</span>
     } else {
-<span class="nc" id="L123">      leases = new ArrayList&lt;&gt;(dhcpRepository.findActiveByIp().values());</span>
+<span class="fc" id="L124">      leases = new ArrayList&lt;&gt;(dhcpRepository.findActiveByIp().values());</span>
     }
-<span class="nc bnc" id="L125" title="All 2 branches missed.">    final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;</span>
-<span class="nc" id="L126">    leases.sort(ComparatorBuilder.builder()</span>
-<span class="nc" id="L127">        .fromWellKnownText(sortOrder)</span>
-<span class="nc" id="L128">        .build());</span>
-<span class="nc" id="L129">    return leases;</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">    final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;</span>
+<span class="fc" id="L127">    leases.sort(ComparatorBuilder.builder()</span>
+<span class="fc" id="L128">        .fromWellKnownText(sortOrder)</span>
+<span class="fc" id="L129">        .build());</span>
+<span class="fc" id="L130">    return leases;</span>
   }
 
   @Override
   public List&lt;DnsZone&gt; getDnsZones() {
-<span class="nc" id="L134">    return dnsZoneRepository.findAll()</span>
-<span class="nc" id="L135">        .sorted(dnsZoneComparator)</span>
-<span class="nc" id="L136">        .collect(Collectors.toList());</span>
+<span class="fc" id="L135">    return dnsZoneRepository.findAll()</span>
+<span class="fc" id="L136">        .sorted(dnsZoneComparator)</span>
+<span class="fc" id="L137">        .collect(Collectors.toList());</span>
   }
 
   @Override
   public DnsZone addDnsZone(DnsZone dnsZone) {
-<span class="nc" id="L141">    return dnsZoneRepository.save(dnsZone.getName());</span>
+<span class="fc" id="L142">    return dnsZoneRepository.save(dnsZone.getName());</span>
   }
 
   @Override
   public Boolean deleteDnsZone(String zoneName) {
-<span class="nc" id="L146">    return dnsZoneRepository.delete(zoneName);</span>
+<span class="fc" id="L147">    final boolean success = dnsZoneRepository.delete(zoneName);</span>
+<span class="pc bpc" id="L148" title="1 of 4 branches missed.">    if (success &amp;&amp; (dnsNodeRepository instanceof MockRepository)) {</span>
+<span class="fc" id="L149">      dnsNodeRepository.deleteAll(zoneName);</span>
+    }
+<span class="fc" id="L151">    return success;</span>
   }
 
 
   @Override
-  public List&lt;DnsNode&gt; getDnsNodes(String zoneName, UnknownFilter unknownFilter) {
-<span class="nc bnc" id="L152" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L153">      throw ServiceException.notFoundWithErrorCode(</span>
-<span class="nc" id="L154">          DnsZone.class.getSimpleName(),</span>
+  public List&lt;DnsNode&gt; getDnsNodes(String zoneName, UnknownFilter unknownFilter, String query) {
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L158">      throw ServiceException.notFoundWithErrorCode(</span>
+<span class="nc" id="L159">          DnsZone.class.getSimpleName(),</span>
           zoneName,
           &quot;org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c&quot;);
     }
-<span class="nc" id="L158">    return dnsNodeRepository.findAll(zoneName, unknownFilter)</span>
-<span class="nc" id="L159">        .sorted(dnsNodeComparator)</span>
-<span class="nc" id="L160">        .collect(Collectors.toList());</span>
+<span class="fc" id="L163">    return dnsNodeRepository.findAll(zoneName, unknownFilter, query)</span>
+<span class="fc" id="L164">        .sorted(dnsNodeComparator)</span>
+<span class="fc" id="L165">        .collect(Collectors.toList());</span>
   }
 
   @Override
   public Optional&lt;DnsNode&gt; save(String zoneName, DnsNode dnsNode) {
-<span class="nc bnc" id="L165" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L166">      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L171">      throw ServiceException.notFound(DnsZone.class.getSimpleName(), zoneName);</span>
     }
-<span class="nc" id="L168">    return dnsNodeRepository.save(zoneName, dnsNode);</span>
+<span class="fc" id="L173">    return dnsNodeRepository.save(zoneName, dnsNode);</span>
   }
 
   @Override
@@ -173,47 +178,47 @@ public class NameServerServiceImpl implements NameServerService {
       String zoneName,
       String nodeName,
       UnknownFilter unknownFilter) {
-<span class="nc bnc" id="L176" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L177">      throw ServiceException.notFoundWithErrorCode(</span>
-<span class="nc" id="L178">          DnsZone.class.getSimpleName(),</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L182">      throw ServiceException.notFoundWithErrorCode(</span>
+<span class="nc" id="L183">          DnsZone.class.getSimpleName(),</span>
           zoneName,
           &quot;org.bremersee:dc-con-app:97333c5a-b7e7-46a4-9034-055675d4a604&quot;);
     }
-<span class="nc" id="L182">    return dnsNodeRepository.findOne(zoneName, nodeName, unknownFilter);</span>
+<span class="fc" id="L187">    return dnsNodeRepository.findOne(zoneName, nodeName, unknownFilter);</span>
   }
 
   @Override
   public Boolean deleteDnsNode(@NotNull String zoneName, @NotNull String nodeName) {
-<span class="nc bnc" id="L187" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L188">      throw ServiceException.notFoundWithErrorCode(</span>
-<span class="nc" id="L189">          DnsZone.class.getSimpleName(),</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L193">      throw ServiceException.notFoundWithErrorCode(</span>
+<span class="nc" id="L194">          DnsZone.class.getSimpleName(),</span>
           zoneName,
           &quot;org.bremersee:dc-con-app:02b09711-952e-4c05-bcef-2d1ac949b330&quot;);
     }
-<span class="nc" id="L193">    return dnsNodeRepository.delete(zoneName, nodeName);</span>
+<span class="fc" id="L198">    return dnsNodeRepository.delete(zoneName, nodeName);</span>
   }
 
   @Override
   public void deleteAllDnsNodes(@NotNull String zoneName) {
-<span class="nc bnc" id="L198" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L199">      throw ServiceException.notFoundWithErrorCode(</span>
-<span class="nc" id="L200">          DnsZone.class.getSimpleName(),</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L204">      throw ServiceException.notFoundWithErrorCode(</span>
+<span class="nc" id="L205">          DnsZone.class.getSimpleName(),</span>
           zoneName,
           &quot;org.bremersee:dc-con-app:4a24a3db-7d81-4542-ac1d-68e898fed494&quot;);
     }
-<span class="nc" id="L204">    dnsNodeRepository.deleteAll(zoneName);</span>
-<span class="nc" id="L205">  }</span>
+<span class="fc" id="L209">    dnsNodeRepository.deleteAll(zoneName);</span>
+<span class="fc" id="L210">  }</span>
 
   @Override
   public void deleteAllDnsNodes(@NotNull String zoneName, List&lt;String&gt; nodeNames) {
-<span class="nc bnc" id="L209" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
-<span class="nc" id="L210">      throw ServiceException.notFoundWithErrorCode(</span>
-<span class="nc" id="L211">          DnsZone.class.getSimpleName(),</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">    if (!dnsZoneRepository.exists(zoneName)) {</span>
+<span class="nc" id="L215">      throw ServiceException.notFoundWithErrorCode(</span>
+<span class="nc" id="L216">          DnsZone.class.getSimpleName(),</span>
           zoneName,
           &quot;org.bremersee:dc-con-app:937cdb01-5c89-46be-aae4-747e360b903e&quot;);
     }
-<span class="nc" id="L215">    dnsNodeRepository.deleteAll(zoneName, nodeNames);</span>
-<span class="nc" id="L216">  }</span>
+<span class="nc" id="L220">    dnsNodeRepository.deleteAll(zoneName, nodeNames);</span>
+<span class="nc" id="L221">  }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

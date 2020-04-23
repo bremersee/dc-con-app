@@ -16,13 +16,20 @@
 
 package org.bremersee.dccon.repository;
 
+import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,49 +39,81 @@ import org.springframework.stereotype.Component;
  */
 @Profile(&quot;!ldap&quot;)
 @Component
-<span class="fc" id="L35">@Slf4j</span>
-<span class="fc" id="L36">public class DnsZoneRepositoryMock implements DnsZoneRepository {</span>
+<span class="fc" id="L42">@Slf4j</span>
+public class DnsZoneRepositoryMock implements DnsZoneRepository {
+
+  private static final String DISTINGUISHED_NAME_TEMPLATE = &quot;DC=%s,&quot;
+      + &quot;CN=MicrosoftDNS,DC=DomainDnsZones,DC=samdom,DC=example,DC=org&quot;;
+
+<span class="fc" id="L48">  private final Map&lt;String, DnsZone&gt; repo = new ConcurrentHashMap&lt;&gt;();</span>
+
+<span class="fc" id="L50">  @Getter(AccessLevel.PACKAGE)</span>
+  private final DomainControllerProperties properties;
+
+  /**
+   * Instantiates a new dns zone repository mock.
+   *
+   * @param properties the properties
+   */
+  public DnsZoneRepositoryMock(
+<span class="fc" id="L59">      DomainControllerProperties properties) {</span>
+<span class="fc" id="L60">    this.properties = properties;</span>
+<span class="fc" id="L61">  }</span>
 
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
-<span class="fc" id="L43">    log.warn(&quot;\n&quot;</span>
+<span class="fc" id="L68">    log.warn(&quot;\n&quot;</span>
         + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n&quot;
         + &quot;!! MOCK is running:  DnsZoneRepository                                              !!\n&quot;
         + &quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&quot;
     );
-<span class="fc" id="L48">  }</span>
+<span class="fc" id="L73">  }</span>
 
   @Override
   public boolean isDnsReverseZone(String dnsZoneName) {
-<span class="nc" id="L52">    return false;</span>
+<span class="fc" id="L77">    return getProperties().isReverseZone(dnsZoneName);</span>
   }
 
   @Override
   public Stream&lt;DnsZone&gt; findAll() {
-<span class="nc" id="L57">    return Stream.empty();</span>
+<span class="fc" id="L82">    return repo.values().stream()</span>
+<span class="fc" id="L83">        .map(this::build);</span>
   }
 
   @Override
   public boolean exists(@NotNull String zoneName) {
-<span class="nc" id="L62">    return false;</span>
+<span class="fc" id="L88">    return repo.containsKey(zoneName.toLowerCase());</span>
   }
 
   @Override
   public Optional&lt;DnsZone&gt; findOne(@NotNull String zoneName) {
-<span class="nc" id="L67">    return Optional.empty();</span>
+<span class="nc" id="L93">    return Optional.ofNullable(build(repo.get(zoneName.toLowerCase())));</span>
   }
 
   @Override
   public DnsZone save(@NotNull String zoneName) {
-<span class="nc" id="L72">    return DnsZone.builder().name(zoneName).build();</span>
+<span class="fc" id="L98">    return build(repo.computeIfAbsent(zoneName.toLowerCase(), key -&gt; DnsZone.builder()</span>
+<span class="fc" id="L99">        .created(OffsetDateTime.now())</span>
+<span class="fc" id="L100">        .modified(OffsetDateTime.now())</span>
+<span class="fc" id="L101">        .name(zoneName)</span>
+<span class="fc" id="L102">        .build()));</span>
   }
 
   @Override
   public boolean delete(@NotNull String zoneName) {
-<span class="nc" id="L77">    return false;</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    return repo.remove(zoneName.toLowerCase()) != null;</span>
   }
+
+  private DnsZone build(DnsZone dnsZone) {
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">    return dnsZone == null ? null : dnsZone.toBuilder()</span>
+<span class="fc" id="L112">        .defaultZone(dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()))</span>
+<span class="fc" id="L113">        .reverseZone(getProperties().isReverseZone(dnsZone.getName()))</span>
+<span class="fc" id="L114">        .distinguishedName(String.format(DISTINGUISHED_NAME_TEMPLATE, dnsZone.getName()))</span>
+<span class="fc" id="L115">        .build();</span>
+  }
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

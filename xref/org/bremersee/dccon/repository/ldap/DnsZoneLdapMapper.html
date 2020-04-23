@@ -83,18 +83,21 @@
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>      }
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>      mapCommonAttributes(ldapEntry, dnsZone);
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>      dnsZone.setName(getAttributeValue(ldapEntry, <span class="jxr_string">"name"</span>, STRING_VALUE_TRANSCODER, <strong class="jxr_keyword">null</strong>));
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>    }
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>    @Override
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>    <strong class="jxr_keyword">public</strong> AttributeModification[] mapAndComputeModifications(
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>        <strong class="jxr_keyword">final</strong> DnsZone source,
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>        <strong class="jxr_keyword">final</strong> LdapEntry destination) {
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> AttributeModification[0];
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>    }
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>  
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>  }
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>      dnsZone.setDefaultZone(dnsZone.getName() != <strong class="jxr_keyword">null</strong>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>          &amp;&amp; dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()));
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>      dnsZone.setReverseZone(getProperties().isReverseZone(dnsZone.getName()));
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>    }
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>    @Override
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>    <strong class="jxr_keyword">public</strong> AttributeModification[] mapAndComputeModifications(
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>        <strong class="jxr_keyword">final</strong> DnsZone source,
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>        <strong class="jxr_keyword">final</strong> LdapEntry destination) {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> AttributeModification[0];
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>    }
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2019 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2020 <a href="http://bremersee.org">bremersee.org</a>. All rights reserved.</div>
 </body>
 </html>
