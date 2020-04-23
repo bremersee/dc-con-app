@@ -21,8 +21,8 @@ bremersee:
       include-handler: true
       include-path: true
   domain-controller:
-    company-name: example.org
-    company-url: http://example.org
+    company-name: ${COMPANY_NAME:example.org}
+    company-url: ${COMPANY_URL:http://example.org}
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}
@@ -76,15 +76,30 @@ management:
         allowed-headers: "*"
         allowed-methods: "*"
         allowed-origins: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
 
 server:
-  port: ${SERVER_PORT:8090}
+  forward-headers-strategy: native
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
+    port-header: x-forwarded-port
+    accesslog:
+      enabled: false
 
 logging:
   level:
-    ROOT: info
-    org.bremersee: debug
-    org.springframework: info
+    ROOT: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework: ${LOG_LEVEL_SPRING:INFO}
+    org.bremersee: ${LOG_LEVEL_BREMERSEE:DEBUG}
 
 eureka:
   client:
@@ -113,6 +128,14 @@ bremersee:
           password: "user"
           authorities:
             - "ROLE_LOCAL_USER"
+      actuator:
+        roles:
+          - "ROLE_ACTUATOR"
+          - "ROLE_ACTUATOR_ADMIN"
+          - "ROLE_ADMIN"
+        admin-roles:
+          - "ROLE_ACTUATOR_ADMIN"
+          - "ROLE_ADMIN"
 
 ---
 
@@ -184,12 +207,13 @@ spring:
 
 logging:
   file:
+    name: /var/log/dc-con/dc-con.log
     max-history: 25
-    path: /var/log/dc-con
 
 server:
   tomcat:
     accesslog:
       enabled: true
       directory: /var/log/dc-con
+      prefix: access_log
 

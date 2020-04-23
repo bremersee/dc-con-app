@@ -25,11 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
@@ -41,6 +41,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.util.Assert;
 
@@ -49,15 +51,37 @@ import org.springframework.util.Assert;
  *
  * @author Christian Bremer
  */
+@ConditionalOnWebApplication
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
   /**
+   * The swagger security configuration.
+   */
+  @ConditionalOnWebApplication
+  @Order(53)
+  @Configuration
+  static class Swagger extends WebSecurityConfigurerAdapter {
+
+    @Override
+    public void configure(WebSecurity web) {
+      web.ignoring().antMatchers(
+          "/v2/api-docs",
+          "/v2/api-docs/**");
+    }
+  }
+
+
+  /**
    * The resource server security configuration.
    */
-  @Profile("!basic-auth")
+  @ConditionalOnWebApplication
+  @ConditionalOnProperty(
+      prefix = "bremersee.security.authentication",
+      name = "enable-jwt-support",
+      havingValue = "true")
   @Order(51)
   @Configuration
   @Slf4j
@@ -89,70 +113,25 @@ public class SecurityConfiguration {
       log.info("Authorizing requests to /api/** with OAuth2.");
       http
           .requestMatcher(new NegatedRequestMatcher(EndpointRequest.toAnyEndpoint()))
-          .csrf().disable()
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
-          // .antMatchers("/public-api/**").permitAll()
-          .anyRequest()
-          .authenticated();
-      http
-          .oauth2ResourceServer()
-          .jwt()
-          .jwtAuthenticationConverter(jwtConverter);
-    }
-  }
-
-  /**
-   * The type resource server with basic auth.
-   */
-  @Profile("basic-auth")
-  @Order(51)
-  @Configuration
-  @Slf4j
-  @EnableConfigurationProperties(AuthenticationProperties.class)
-  static class ResourceServerBasicAuth extends WebSecurityConfigurerAdapter {
-
-    private final AuthenticationProperties properties;
-
-    /**
-     * Instantiates a new resource server for basic auth.
-     *
-     * @param properties the authentication properties
-     */
-    public ResourceServerBasicAuth(AuthenticationProperties properties) {
-      this.properties = properties;
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      log.info("Authorizing requests to /api/** with basic auth.");
-      http
-          .requestMatcher(new NegatedRequestMatcher(EndpointRequest.toAnyEndpoint()))
-          .csrf().disable()
-          .formLogin().disable()
-          .httpBasic().realmName("dc-con")
+          .anyRequest().authenticated()
           .and()
-          .sessionManagement()
-          .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-          .and()
-          .antMatcher("/api/**")
-          .authorizeRequests()
-          .antMatchers(HttpMethod.OPTIONS).permitAll()
-          .anyRequest()
-          .authenticated();
-    }
-
-    @Bean
-    @Override
-    public UserDetailsService userDetailsService() {
-      return new InMemoryUserDetailsManager(properties.buildBasicAuthUserDetails());
+          .oauth2ResourceServer((rs) -> rs
+              .jwt()
+              .jwtAuthenticationConverter(jwtConverter).and())
+          .csrf().disable();
     }
   }
 
   /**
    * The actuator security configuration.
    */
-  @Profile("!basic-auth")
+  @ConditionalOnWebApplication
+  @ConditionalOnProperty(
+      prefix = "bremersee.security.authentication",
+      name = "enable-jwt-support",
+      havingValue = "true")
   @Order(52)
   @Configuration
   @Slf4j
@@ -185,80 +164,81 @@ public class SecurityConfiguration {
       log.info("Authorizing requests to /actuator/** with password flow auth.");
       http
           .requestMatcher(EndpointRequest.toAnyEndpoint())
+          .authorizeRequests()
+          .antMatchers(HttpMethod.OPTIONS).permitAll()
+          .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
+          .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
+          .requestMatchers(new AndRequestMatcher(
+              EndpointRequest.toAnyEndpoint(),
+              new AntPathRequestMatcher("/**", "GET")))
+          .access(properties.getActuator().buildAccessExpression(properties::ensureRolePrefix))
+          .anyRequest()
+          .access(properties.getActuator().buildAdminAccessExpression(properties::ensureRolePrefix))
+          .and()
           .csrf().disable()
           .authenticationProvider(passwordFlowAuthenticationManager)
           .httpBasic()
           .realmName("actuator")
           .and()
-          .requestMatcher(EndpointRequest.toAnyEndpoint())
-          .authorizeRequests()
-          .antMatchers(HttpMethod.OPTIONS).permitAll()
-          .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
-          .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
-          .anyRequest()
-          .access(properties.getActuator().buildAccessExpression())
-          .and()
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
   }
 
   /**
-   * The actuator security configuration for basic auth.
+   * The in-memory security configuration with basic auth.
    */
-  @Profile("basic-auth")
-  @Order(52)
+  @ConditionalOnWebApplication
+  @ConditionalOnProperty(
+      prefix = "bremersee.security.authentication",
+      name = "enable-jwt-support",
+      havingValue = "false", matchIfMissing = true)
+  @Order(51)
   @Configuration
   @Slf4j
   @EnableConfigurationProperties(AuthenticationProperties.class)
-  static class ActuatorBasicAuth extends WebSecurityConfigurerAdapter {
+  static class InMemorySecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final AuthenticationProperties properties;
 
     /**
-     * Instantiates a new actuator security configuration for basic auth.
+     * Instantiates a new in-memory security configuration with basic auth.
      *
-     * @param properties the properties
+     * @param properties the authentication properties
      */
-    @Autowired
-    public ActuatorBasicAuth(final AuthenticationProperties properties) {
+    public InMemorySecurityConfiguration(AuthenticationProperties properties) {
       this.properties = properties;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      log.info("Authorizing requests to /actuator/** with basic auth.");
+      log.info("Authorizing requests to /api/** with basic auth.");
       http
-          .requestMatcher(EndpointRequest.toAnyEndpoint())
-          .csrf().disable()
-          .httpBasic()
-          .realmName("actuator")
-          .and()
-          .requestMatcher(EndpointRequest.toAnyEndpoint())
           .authorizeRequests()
           .antMatchers(HttpMethod.OPTIONS).permitAll()
           .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
           .requestMatchers(EndpointRequest.to(InfoEndpoint.class)).permitAll()
+          .requestMatchers(new AndRequestMatcher(
+              EndpointRequest.toAnyEndpoint(),
+              new AntPathRequestMatcher("/**", "GET")))
+          .access(properties.getActuator().buildAccessExpression(properties::ensureRolePrefix))
+          .requestMatchers(EndpointRequest.toAnyEndpoint())
+          .access(properties.getActuator().buildAdminAccessExpression(properties::ensureRolePrefix))
           .anyRequest()
-          .access(properties.getActuator().buildAccessExpression())
+          .authenticated()
+          .and()
+          .csrf().disable()
+          .userDetailsService(userDetailsService())
+          .formLogin().disable()
+          .httpBasic().realmName("dc-con")
           .and()
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
-  }
-
-  /**
-   * The swagger security configuration.
-   */
-  @Order(53)
-  @Configuration
-  static class Swagger extends WebSecurityConfigurerAdapter {
 
     @Override
-    public void configure(WebSecurity web) {
-      web.ignoring().antMatchers(
-          "/v2/api-docs",
-          "/v2/api-docs/**");
+    protected UserDetailsService userDetailsService() {
+      return new InMemoryUserDetailsManager(properties.buildBasicAuthUserDetails());
     }
   }
 

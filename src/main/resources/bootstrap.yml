@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ${APPLICATION_NAME:dc-con}
+    name: ${APPLICATION_NAME:dc-con-app}
   profiles:
     active: ${ACTIVE_PROFILES:basic-auth}
   cloud:

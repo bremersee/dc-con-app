@@ -5,6 +5,13 @@ pipeline {
     DOCKER_IMAGE='bremersee/dc-con-app'
     DEV_TAG='snapshot'
     PROD_TAG='latest'
+    DEPLOY_SNAPSHOT=false
+    DEPLOY_RELEASE=true
+    PUSH_SNAPSHOT=false
+    PUSH_RELEASE=true
+    DEPLOY_DEMO=false
+    SNAPSHOT_SITE=true
+    RELEASE_SITE=true
   }
   stages {
     stage('Test') {
@@ -43,7 +50,10 @@ pipeline {
         maven 'm3'
       }
       when {
-        branch 'develop'
+        allOf {
+          branch 'develop'
+          environment name: 'DEPLOY_SNAPSHOT', value: 'true'
+        }
       }
       steps {
         sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
@@ -54,22 +64,33 @@ pipeline {
         label 'maven'
       }
       when {
-        branch 'master'
+        allOf {
+          branch 'master'
+          environment name: 'DEPLOY_RELEASE', value: 'true'
+        }
       }
       tools {
         jdk 'jdk8'
         maven 'm3'
       }
       steps {
+        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic deploy'
+      }
+      /*
+      steps {
         sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
+      */
     }
     stage('Push snapshot') {
       agent {
         label 'maven'
       }
       when {
-        branch 'develop'
+        allOf {
+          branch 'develop'
+          environment name: 'PUSH_SNAPSHOT', value: 'true'
+        }
       }
       tools {
         jdk 'jdk8'
@@ -88,7 +109,10 @@ pipeline {
         label 'maven'
       }
       when {
-        branch 'master'
+        allOf {
+          branch 'master'
+          environment name: 'PUSH_RELEASE', value: 'true'
+        }
       }
       tools {
         jdk 'jdk8'
@@ -107,7 +131,11 @@ pipeline {
         label 'dev-swarm'
       }
       when {
-        branch 'develop'
+        allOf {
+          branch 'develop'
+          environment name: 'PUSH_SNAPSHOT', value: 'true'
+          environment name: 'DEPLOY_DEMO', value: 'true'
+        }
       }
       steps {
         sh '''
@@ -117,7 +145,7 @@ pipeline {
           else
             echo "Creating service ${SERVICE_NAME} with docker image ${DOCKER_IMAGE}:${DEV_TAG}."
             chmod 755 docker-swarm/service.sh
-            docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "default,demo"
+            docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "swarm,dev,demo"
           fi
         '''
       }
@@ -130,7 +158,10 @@ pipeline {
         CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
       }
       when {
-        branch 'develop'
+        allOf {
+          branch 'develop'
+          environment name: 'SNAPSHOT_SITE', value: 'true'
+        }
       }
       tools {
         jdk 'jdk8'
@@ -153,7 +184,10 @@ pipeline {
         CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
       }
       when {
-        branch 'master'
+        allOf {
+          branch 'master'
+          environment name: 'RELEASE_SITE', value: 'true'
+        }
       }
       tools {
         jdk 'jdk8'
