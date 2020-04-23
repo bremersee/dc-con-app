@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.repository.cli;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.format.DateTimeFormatter;
@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -45,8 +44,8 @@ class DhcpLeaseListParserTest {
     CommandExecutorResponse response = new CommandExecutorResponse(null, null);
     List<DhcpLease> expected = Collections.emptyList();
     List<DhcpLease> actual = parser.parse(response);
-    Assert.assertNotNull(actual);
-    Assert.assertEquals(expected, actual);
+    assertNotNull(actual);
+    assertEquals(expected, actual);
 
   }
 
