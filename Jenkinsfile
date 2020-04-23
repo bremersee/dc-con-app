@@ -5,7 +5,7 @@ pipeline {
     DOCKER_IMAGE='bremersee/dc-con-app'
     DEV_TAG='snapshot'
     PROD_TAG='latest'
-    DEPLOY_SNAPSHOT=false
+    DEPLOY_SNAPSHOT=true
     DEPLOY_RELEASE=true
     PUSH_SNAPSHOT=true
     PUSH_RELEASE=true

@@ -135,7 +135,6 @@ public class SecurityConfiguration {
     }
   }
 
-
   /**
    * The resource server security configuration.
    */
