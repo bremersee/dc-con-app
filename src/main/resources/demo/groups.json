@@ -1,0 +1,292 @@
+[
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Enterprise Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Enterprise Read-only Domain Controllers",
+    "description": "Members of this group are Read-Only Domain Controllers in the enterprise",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-498",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Domain Admins,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Domain Admins",
+    "description": "Designated administrators of the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-512",
+      "systemEntity": true
+    },
+    "members": [
+      "Administrator"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Domain Users,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Domain Users",
+    "description": "All domain users",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-513",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Domain Guests,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Domain Guests",
+    "description": "All domain guests",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-514",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Domain Computers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Domain Computers",
+    "description": "All workstations and servers joined to the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-515",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Domain Controllers",
+    "description": "All domain controllers in the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-516",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Cert Publishers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Cert Publishers",
+    "description": "Members of this group are permitted to publish certificates to the directory",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-517",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Schema Admins,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Schema Admins",
+    "description": "Designated administrators of the schema",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-518",
+      "systemEntity": true
+    },
+    "members": [
+      "Administrator"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Enterprise Admins,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Enterprise Admins",
+    "description": "Designated administrators of the enterprise",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-519",
+      "systemEntity": true
+    },
+    "members": [
+      "Administrator"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Group Policy Creator Owners,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Group Policy Creator Owners",
+    "description": "Members in this group can modify group policy for the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-520",
+      "systemEntity": true
+    },
+    "members": [
+      "Administrator"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Read-only Domain Controllers",
+    "description": "Members of this group are Read-Only Domain Controllers in the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-521",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=RAS and IAS Servers,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "RAS and IAS Servers",
+    "description": "Servers in this group can access remote access properties of users",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-553",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Allowed RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Allowed RODC Password Replication Group",
+    "description": "Members in this group can have their passwords replicated to all read-only domain controllers in the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-571",
+      "systemEntity": true
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=Denied RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "name": "Denied RODC Password Replication Group",
+    "description": "Members in this group cannot have their passwords replicated to any read-only domain controllers in the domain",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-572",
+      "systemEntity": true
+    },
+    "members": [
+      "Cert Publishers",
+      "Domain Admins",
+      "Domain Controllers",
+      "Enterprise Admins",
+      "Group Policy Creator Owners",
+      "krbtgt",
+      "Read-only Domain Controllers",
+      "Schema Admins"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=DnsAdmins,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:33Z",
+    "modified": "2018-05-20T15:53:02Z",
+    "name": "DnsAdmins",
+    "description": "DNS Administrators Group",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1102",
+      "systemEntity": false
+    },
+    "members": [
+      "dhcpduser"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=DnsUpdateProxy,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:33Z",
+    "modified": "2018-05-20T15:00:33Z",
+    "name": "DnsUpdateProxy",
+    "description": "DNS clients who are permitted to perform dynamic updates on behalf of some other clients (such as DHCP servers).",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1103",
+      "systemEntity": false
+    },
+    "members": []
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=The Blooms,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-21T17:45:44Z",
+    "modified": "2019-10-06T09:47:05Z",
+    "name": "The Blooms",
+    "description": "Group of Molly and Leopold Bloom",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1108",
+      "systemEntity": false
+    },
+    "members": [
+      "demo-admin",
+      "demo-user"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=The Buddenbrooks,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-21T17:45:48Z",
+    "modified": "2018-09-24T17:27:48Z",
+    "name": "The Buddenbrooks",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1109",
+      "systemEntity": false
+    },
+    "members": [
+      "johann",
+      "elisabeth",
+      "klara"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=women,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-21T17:45:52Z",
+    "modified": "2018-09-24T17:27:49Z",
+    "name": "women",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1110",
+      "systemEntity": false
+    },
+    "members": [
+      "klara",
+      "demo-user",
+      "elisabeth"
+    ]
+  },
+  {
+    "_type": "DomainGroup",
+    "distinguishedName": "CN=men,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-21T17:45:59Z",
+    "modified": "2019-02-12T15:56:35Z",
+    "name": "men",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1111",
+      "systemEntity": false
+    },
+    "members": [
+      "demo-admin",
+      "johann"
+    ]
+  }
+]

@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -49,7 +50,7 @@ abstract class AbstractRepository {
   /**
    * Instantiates a new abstract repository.
    *
-   * @param properties   the properties
+   * @param properties the properties
    * @param ldapTemplate the ldap template
    */
   AbstractRepository(
@@ -79,7 +80,7 @@ abstract class AbstractRepository {
    *
    * @param commands the commands
    */
-  void sudo(List<String> commands) {
+  void sudo(final List<String> commands) {
     if (properties.isUsingSudo()) {
       commands.add(properties.getSudoBinary());
     }
@@ -91,9 +92,29 @@ abstract class AbstractRepository {
    *
    * @param commands the commands
    */
-  void auth(List<String> commands) {
+  void auth(final List<String> commands) {
     commands.add(USE_KERBEROS);
     commands.add(YES);
+  }
+
+  /**
+   * Checks whether the given value contains the given query.
+   *
+   * @param value the value
+   * @param query the query
+   * @return {@code true} if the value contains the query, otherwise {@code false}
+   */
+  static boolean contains(final Object value, final String query) {
+    if (value instanceof Collection) {
+      //noinspection rawtypes
+      for (Object item : (Collection) value) {
+        if (contains(item, query)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return value != null && value.toString().toLowerCase().contains(query);
   }
 
 }

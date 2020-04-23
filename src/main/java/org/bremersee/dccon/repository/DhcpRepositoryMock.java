@@ -16,13 +16,26 @@
 
 package org.bremersee.dccon.repository;
 
-import java.util.Collections;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.PostConstruct;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.exception.ServiceException;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,31 +48,83 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DhcpRepositoryMock implements DhcpRepository {
 
+  private static final String DHCP_LOCATION = "classpath:demo/dhcp.json";
+
+  private final ResourceLoader resourceLoader = new DefaultResourceLoader();
+
+  private final ObjectMapper objectMapper;
+
+  /**
+   * Instantiates a new dhcp repository mock.
+   *
+   * @param objectMapperBuilder the object mapper builder
+   */
+  public DhcpRepositoryMock(Jackson2ObjectMapperBuilder objectMapperBuilder) {
+    this.objectMapper = objectMapperBuilder.build();
+  }
+
   /**
    * Init.
    */
-  @PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void init() {
     log.warn("\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
         + "!! MOCK is running:  DhcpRepository                                                 !!\n"
         + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     );
+    findAll();
   }
 
+  @Cacheable(cacheNames = "dhcp-leases-by-ip")
   @Override
   public Map<String, DhcpLease> findActiveByIp() {
-    return Collections.emptyMap();
+    return findActiveMap(true);
   }
 
+  @Cacheable(cacheNames = "dhcp-leases-by-name")
   @Override
   public Map<String, DhcpLease> findActiveByHostName() {
-    return Collections.emptyMap();
+    return findActiveMap(false);
   }
 
   @Override
   public List<DhcpLease> findAll() {
-    return Collections.emptyList();
+    try {
+      return Arrays
+          .stream(objectMapper.readValue(
+              resourceLoader.getResource(DHCP_LOCATION).getInputStream(), DhcpLease[].class))
+          .map(dhcpLease -> dhcpLease.toBuilder()
+              .begin(toNow(dhcpLease.getBegin()))
+              .end(toNow(dhcpLease.getEnd()))
+              .build())
+          .collect(Collectors.toList());
+    } catch (IOException e) {
+      throw ServiceException.internalServerError("Loading demo data failed.", e);
+    }
+  }
+
+  private OffsetDateTime toNow(OffsetDateTime time) {
+    if (time == null) {
+      return null;
+    }
+    long millisToAdd = System.currentTimeMillis() - time.toInstant().toEpochMilli();
+    return time.plus(millisToAdd, ChronoUnit.MILLIS);
+  }
+
+  private Map<String, DhcpLease> findActiveMap(final boolean ip) {
+    final List<DhcpLease> leases = findAll();
+    leases.sort(ComparatorBuilder.builder()
+        .fromWellKnownText("begin,desc")
+        .build());
+    final Map<String, DhcpLease> leaseMap = new HashMap<>();
+    for (final DhcpLease lease : leases) {
+      final String key = ip
+          ? lease.getIp()
+          : lease.getHostname().toUpperCase();
+      leaseMap.putIfAbsent(key, lease);
+    }
+    return leaseMap;
   }
 
 }

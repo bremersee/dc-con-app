@@ -19,7 +19,9 @@ package org.bremersee.dccon.repository;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -33,9 +35,10 @@ public interface DomainUserRepository {
   /**
    * Find all users.
    *
+   * @param query the query
    * @return the users
    */
-  Stream<DomainUser> findAll();
+  Stream<DomainUser> findAll(@Nullable String query);
 
   /**
    * Find user by name.
@@ -44,6 +47,19 @@ public interface DomainUserRepository {
    * @return the user
    */
   Optional<DomainUser> findOne(@NotNull String userName);
+
+  /**
+   * Find avatar.
+   *
+   * @param userName the user name
+   * @param avatarDefault the avatar default
+   * @param size the size
+   * @return the avatar
+   */
+  Optional<byte[]> findAvatar(
+      @NotNull String userName,
+      @Nullable AvatarDefault avatarDefault,
+      @Nullable Integer size);
 
   /**
    * Check whether user exists or not.
@@ -57,14 +73,16 @@ public interface DomainUserRepository {
    * Save domain user.
    *
    * @param domainUser the domain user
+   * @param updateGroups specifies whether the groups should also be updated or not (default is
+   *     false)
    * @return the domain user
    */
-  DomainUser save(@NotNull DomainUser domainUser);
+  DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups);
 
   /**
    * Save password.
    *
-   * @param userName    the user name
+   * @param userName the user name
    * @param newPassword the new password
    */
   void savePassword(@NotNull String userName, @NotNull String newPassword);

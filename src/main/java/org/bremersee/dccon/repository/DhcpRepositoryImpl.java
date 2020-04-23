@@ -48,7 +48,7 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    *
    * @param properties the domain controller properties
    */
-  public DhcpRepositoryImpl(DomainControllerProperties properties) {
+  public DhcpRepositoryImpl(final DomainControllerProperties properties) {
     super(properties, null);
     parser = DhcpLeaseParser.defaultParser();
   }
@@ -59,8 +59,10 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    * @param parser the dhcp lease parser
    */
   @Autowired(required = false)
-  public void setParser(DhcpLeaseParser parser) {
-    this.parser = parser;
+  public void setParser(final DhcpLeaseParser parser) {
+    if (parser != null) {
+      this.parser = parser;
+    }
   }
 
   @Override
@@ -69,16 +71,24 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
   }
 
   @Cacheable(cacheNames = "dhcp-leases-by-ip")
+  @Override
   public Map<String, DhcpLease> findActiveByIp() {
     return findActiveMap(true);
   }
 
   @Cacheable(cacheNames = "dhcp-leases-by-name")
+  @Override
   public Map<String, DhcpLease> findActiveByHostName() {
     return findActiveMap(false);
   }
 
-  private Map<String, DhcpLease> findActiveMap(boolean ip) {
+  /**
+   * Find active dhcp leases and put them into a map.
+   *
+   * @param ip specifies whether the key of the map is the ip or the host name (upper case)
+   * @return the map with the dhcp leases
+   */
+  Map<String, DhcpLease> findActiveMap(final boolean ip) {
     final List<DhcpLease> leases = find(false);
     leases.sort(ComparatorBuilder.builder()
         .fromWellKnownText("begin,desc")
@@ -93,7 +103,13 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
     return leaseMap;
   }
 
-  private List<DhcpLease> find(final boolean all) {
+  /**
+   * Find dhcp leases.
+   *
+   * @param all specifies whether to return all leases or only active ones
+   * @return the dhcp leases
+   */
+  List<DhcpLease> find(final boolean all) {
     final List<String> commands = new ArrayList<>();
     sudo(commands);
     commands.add(getProperties().getDhcpLeaseListBinary());

@@ -16,19 +16,21 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -45,25 +47,27 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   private final DomainUserRepository domainUserRepository;
 
-  private DomainUserValidator domainUserValidator;
+  private final EmailService emailService;
 
-  private List<AvatarService> avatarServices;
+  private DomainUserValidator domainUserValidator;
 
   /**
    * Instantiates a new domain user service.
    *
-   * @param properties            the properties
-   * @param domainUserRepository  the domain user repository
+   * @param properties the properties
+   * @param domainUserRepository the domain user repository
+   * @param emailService the email service
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
       final DomainControllerProperties properties,
       final DomainUserRepository domainUserRepository,
+      EmailService emailService,
       final DomainGroupRepository domainGroupRepository) {
     this.domainUserRepository = domainUserRepository;
+    this.emailService = emailService;
     this.domainUserValidator = DomainUserValidator.defaultValidator(
         properties, domainGroupRepository, domainUserRepository);
-    this.avatarServices = Collections.emptyList();
   }
 
   /**
@@ -78,22 +82,19 @@ public class DomainUserServiceImpl implements DomainUserService {
     }
   }
 
-  /**
-   * Sets avatar services.
-   *
-   * @param avatarServices the avatar services
-   */
-  @Autowired(required = false)
-  public void setAvatarServices(List<AvatarService> avatarServices) {
-    if (avatarServices != null) {
-      this.avatarServices = avatarServices;
+  @Override
+  public void resetData() {
+    if (domainUserRepository instanceof MockRepository) {
+      ((MockRepository) domainUserRepository).resetData();
+    } else {
+      throw new UnsupportedOperationException("Reset data is not available.");
     }
   }
 
   @Override
-  public List<DomainUser> getUsers(final String sort) {
+  public List<DomainUser> getUsers(final String sort, final String query) {
     final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;
-    return domainUserRepository.findAll()
+    return domainUserRepository.findAll(query)
         .sorted(ComparatorBuilder.builder()
             .fromWellKnownText(sortOrder)
             .build())
@@ -101,10 +102,19 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public DomainUser addUser(@NotNull @Valid DomainUser domainUser) {
+  public DomainUser addUser(
+      final DomainUser domainUser,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
     domainUserValidator.doAddValidation(domainUser);
-    findUserAvatar(domainUser, false);
-    return domainUserRepository.save(domainUser);
+    final DomainUser addedDomainUser = domainUserRepository.save(domainUser, true);
+    if (Boolean.TRUE.equals(sendEmail)) {
+      emailService.sendEmailWithCredentials(
+          addedDomainUser.getUserName(),
+          domainUser.getPassword(),
+          language);
+    }
+    return addedDomainUser;
   }
 
   @Override
@@ -115,25 +125,10 @@ public class DomainUserServiceImpl implements DomainUserService {
   @Override
   public Optional<byte[]> getUserAvatar(
       final String userName,
-      final Boolean returnDefault) {
-    return domainUserRepository.findOne(userName)
-        .map(domainUser -> findUserAvatar(domainUser, Boolean.TRUE.equals(returnDefault)));
-  }
+      final AvatarDefault avatarDefault,
+      final Integer size) {
 
-  private byte[] findUserAvatar(
-      final DomainUser domainUser,
-      final boolean returnDefault) {
-
-    if (domainUser.getAvatar() == null) {
-      for (AvatarService avatarService : avatarServices) {
-        byte[] avatar = avatarService.findAvatar(domainUser, returnDefault);
-        if (avatar != null) {
-          domainUser.setAvatar(avatar);
-          break;
-        }
-      }
-    }
-    return domainUser.getAvatar();
+    return domainUserRepository.findAvatar(userName, avatarDefault, size);
   }
 
   @Override
@@ -148,14 +143,23 @@ public class DomainUserServiceImpl implements DomainUserService {
             domainUser.setGroups(oldDomainUser.getGroups());
           }
           domainUserValidator.doUpdateValidation(userName, domainUser);
-          findUserAvatar(domainUser, false);
-          return domainUserRepository.save(domainUser);
+          return domainUserRepository.save(domainUser, updateGroups);
         });
   }
 
   @Override
-  public void updateUserPassword(@NotNull String userName, @NotNull @Valid Password newPassword) {
+  public void updateUserPassword(
+      final String userName,
+      final Password newPassword,
+      final Boolean sendEmail,
+      final TwoLetterLanguageCode language) {
     domainUserRepository.savePassword(userName, newPassword.getValue());
+    if (Boolean.TRUE.equals(sendEmail)) {
+      emailService.sendEmailWithCredentials(
+          userName,
+          newPassword.getValue(),
+          language);
+    }
   }
 
   @Override

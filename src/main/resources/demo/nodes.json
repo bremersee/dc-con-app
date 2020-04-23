@@ -1,0 +1,938 @@
+[
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:23:51Z",
+    "modified": "2018-09-04T16:23:51Z",
+    "name": "gw-26a-e0",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.1",
+        "version": 5,
+        "serial": 7069,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T15:00:34Z",
+    "modified": "2019-11-27T12:53:30Z",
+    "name": "dc",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.2",
+        "version": 5,
+        "serial": 93605,
+        "ttlSeconds": 900,
+        "timeStamp": "1601-01-01T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-10-17T14:35:40Z",
+    "modified": "2018-10-17T14:35:40Z",
+    "name": "dc2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.3",
+        "version": 5,
+        "serial": 7907,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-10-17T14:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T15:00:34Z",
+    "modified": "2019-11-27T12:53:31Z",
+    "name": "DomainDnsZones",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.2",
+        "version": 5,
+        "serial": 93607,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-10-17T15:00:00Z"
+      },
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.3",
+        "version": 5,
+        "serial": 93607,
+        "ttlSeconds": 900,
+        "timeStamp": "1601-01-01T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-29T12:26:41Z",
+    "modified": "2019-10-23T16:36:06Z",
+    "name": "GPSMAP276Cx",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.206",
+        "version": 5,
+        "serial": 73638,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-10-23T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-09-29T09:38:26Z",
+    "modified": "2019-10-31T19:55:30Z",
+    "name": "Galaxy-A80",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.149",
+        "version": 5,
+        "serial": 86835,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-10-31T19:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-10-31T18:56:15Z",
+    "modified": "2019-12-09T08:07:25Z",
+    "name": "Galaxy-S10",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.170",
+        "version": 5,
+        "serial": 96786,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-09T08:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-30T12:44:01Z",
+    "modified": "2019-12-07T07:55:04Z",
+    "name": "Galaxy-S9",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.177",
+        "version": 5,
+        "serial": 96191,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-07T07:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-31T21:27:09Z",
+    "modified": "2019-12-05T16:16:43Z",
+    "name": "GearSport-E94B",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.166",
+        "version": 5,
+        "serial": 95813,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-05T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-10-11T07:06:51Z",
+    "modified": "2019-11-03T09:20:01Z",
+    "name": "android-5ec62cbfd890164",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.186",
+        "version": 5,
+        "serial": 87559,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-11-03T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-28T12:09:33Z",
+    "modified": "2019-12-08T10:18:31Z",
+    "name": "android-cd3613d13062cd6b",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.111",
+        "version": 5,
+        "serial": 96488,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-08T10:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-10-11T06:45:53Z",
+    "modified": "2019-10-11T06:45:53Z",
+    "name": "android-f749ff3a8e82684",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.186",
+        "version": 5,
+        "serial": 52765,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-10-11T06:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T16:33:52Z",
+    "modified": "2019-12-10T09:29:57Z",
+    "name": "ap-26-e1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.144",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-02-12T18:38:18Z",
+    "modified": "2019-12-10T09:20:01Z",
+    "name": "ap-26a-e0",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.124",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-10T13:22:06Z",
+    "modified": "2019-12-10T09:28:06Z",
+    "name": "ap-26a-e2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.141",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T16:33:49Z",
+    "modified": "2019-12-10T09:27:15Z",
+    "name": "ap-26a-e3",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.181",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-26T16:38:17Z",
+    "modified": "2019-12-10T09:20:58Z",
+    "name": "ap-island",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.143",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-10T13:43:15Z",
+    "modified": "2019-12-10T09:27:53Z",
+    "name": "ap-tractor-port",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.139",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-21T09:36:58Z",
+    "modified": "2019-12-10T03:33:43Z",
+    "name": "barsch",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.217",
+        "version": 5,
+        "serial": 96988,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T03:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-16T18:55:56Z",
+    "modified": "2019-09-26T16:54:13Z",
+    "name": "bitterling",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.197",
+        "version": 5,
+        "serial": 50052,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-09-26T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-21T17:24:06Z",
+    "modified": "2018-05-21T17:37:26Z",
+    "name": "data",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.15",
+        "version": 5,
+        "serial": 14,
+        "ttlSeconds": 3600,
+        "timeStamp": "2018-05-21T17:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:38:19Z",
+    "modified": "2019-01-23T00:38:19Z",
+    "name": "dev-manager-1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.41",
+        "version": 5,
+        "serial": 23334,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:50:19Z",
+    "modified": "2019-01-23T00:50:19Z",
+    "name": "dev-manager-2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.42",
+        "version": 5,
+        "serial": 23339,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:50:29Z",
+    "modified": "2019-01-23T00:50:29Z",
+    "name": "dev-manager-3",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.43",
+        "version": 5,
+        "serial": 23340,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-02-02T06:17:26Z",
+    "modified": "2019-02-02T06:17:26Z",
+    "name": "dev-swarm",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.40",
+        "version": 5,
+        "serial": 24313,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-02-02T06:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:50:52Z",
+    "modified": "2019-01-23T00:50:52Z",
+    "name": "dev-worker-1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.44",
+        "version": 5,
+        "serial": 23341,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:50:59Z",
+    "modified": "2019-01-23T00:50:59Z",
+    "name": "dev-worker-2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.45",
+        "version": 5,
+        "serial": 23342,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:51:05Z",
+    "modified": "2019-01-23T00:51:05Z",
+    "name": "dev-worker-3",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.46",
+        "version": 5,
+        "serial": 23343,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-10-17T17:32:57Z",
+    "modified": "2019-12-10T09:26:17Z",
+    "name": "dhcp-192-168-1-100",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.100",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-10-11T19:22:44Z",
+    "modified": "2019-12-10T09:28:44Z",
+    "name": "dhcp-192-168-1-188",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.188",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-09-27T19:21:53Z",
+    "modified": "2019-11-20T21:12:26Z",
+    "name": "dhcp-192-168-1-195",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.195",
+        "version": 5,
+        "serial": 90743,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-11-20T21:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-09-03T21:21:08Z",
+    "modified": "2019-12-03T21:30:05Z",
+    "name": "forelle",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.114",
+        "version": 5,
+        "serial": 95529,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-03T21:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T12:31:58Z",
+    "modified": "2019-01-23T12:31:58Z",
+    "name": "ha1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.21",
+        "version": 5,
+        "serial": 23363,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T12:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T12:32:09Z",
+    "modified": "2019-01-23T12:32:09Z",
+    "name": "ha2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.22",
+        "version": 5,
+        "serial": 23364,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T12:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T17:55:47Z",
+    "modified": "2019-01-23T17:55:47Z",
+    "name": "haproxy",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.20",
+        "version": 5,
+        "serial": 23373,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T17:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:25:32Z",
+    "modified": "2018-09-04T16:25:32Z",
+    "name": "jenkins",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.10",
+        "version": 5,
+        "serial": 7070,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-25T12:41:30Z",
+    "modified": "2019-01-25T12:41:30Z",
+    "name": "letsencrypt",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.14",
+        "version": 5,
+        "serial": 23547,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-25T12:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-04-16T17:05:51Z",
+    "modified": "2019-12-10T09:30:04Z",
+    "name": "mac-023",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.183",
+        "version": 5,
+        "serial": 97056,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-09T10:10:14Z",
+    "modified": "2018-09-09T10:10:14Z",
+    "name": "nextcloud",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.55",
+        "version": 5,
+        "serial": 7076,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-09T10:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:30:31Z",
+    "modified": "2018-09-04T16:30:31Z",
+    "name": "sip-26-e1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.25",
+        "version": 5,
+        "serial": 7073,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:29:02Z",
+    "modified": "2018-09-04T16:29:02Z",
+    "name": "sip-26a-e1",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.24",
+        "version": 5,
+        "serial": 7072,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-16T22:55:40Z",
+    "modified": "2019-08-16T22:55:40Z",
+    "name": "sip-26a-e2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.26",
+        "version": 5,
+        "serial": 42753,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-08-16T22:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T16:36:32Z",
+    "modified": "2019-12-10T09:28:45Z",
+    "name": "sw-26a-e0",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.142",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-16T23:24:48Z",
+    "modified": "2019-12-10T09:30:02Z",
+    "name": "sw-26a-e3",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.173",
+        "version": 5,
+        "serial": 97056,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-10-03T13:35:02Z",
+    "modified": "2018-10-07T10:14:20Z",
+    "name": "sw-unused-01",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.186",
+        "version": 5,
+        "serial": 7102,
+        "ttlSeconds": 3600,
+        "timeStamp": "2018-10-07T10:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:21:39Z",
+    "modified": "2018-09-04T16:21:39Z",
+    "name": "tk-26a-e0",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.8",
+        "version": 5,
+        "serial": 7068,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-08-28T16:33:37Z",
+    "modified": "2019-12-10T09:16:22Z",
+    "name": "ukelei",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.134",
+        "version": 5,
+        "serial": 97055,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T14:54:18Z",
+    "modified": "2018-09-04T14:54:18Z",
+    "name": "unifi",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.9",
+        "version": 5,
+        "serial": 7067,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T14:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T18:50:01Z",
+    "modified": "2018-05-20T18:50:01Z",
+    "name": "vdr",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.13",
+        "version": 5,
+        "serial": 8,
+        "ttlSeconds": 3600,
+        "timeStamp": "2018-05-20T18:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-26T23:29:56Z",
+    "modified": "2018-05-26T23:29:56Z",
+    "name": "vmhost",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.7",
+        "version": 5,
+        "serial": 575,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-05-26T23:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-09-10T17:16:30Z",
+    "modified": "2019-09-10T17:16:30Z",
+    "name": "vmhost1",
+    "records": [
+      {
+        "recordType": "CNAME",
+        "recordValue": "vmhost.samdom.example.org",
+        "version": 5,
+        "serial": 47516,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-09-10T17:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-10-11T19:01:26Z",
+    "modified": "2018-10-12T16:27:08Z",
+    "name": "vmhost2",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.6",
+        "version": 5,
+        "serial": 7528,
+        "ttlSeconds": 3600,
+        "timeStamp": "+35703-02-26T20:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-01-23T00:47:54Z",
+    "modified": "2019-01-23T00:47:54Z",
+    "name": "vmhost3",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.23",
+        "version": 5,
+        "serial": 23336,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-01-23T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-09-03T21:38:58Z",
+    "modified": "2019-11-10T16:04:54Z",
+    "name": "xander",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.199",
+        "version": 5,
+        "serial": 88463,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-11-10T16:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2019-02-24T13:22:22Z",
+    "modified": "2019-02-24T13:22:22Z",
+    "name": "yavdr",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.17",
+        "version": 5,
+        "serial": 26554,
+        "ttlSeconds": 900,
+        "timeStamp": "2019-02-24T13:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-05-20T16:21:32Z",
+    "modified": "2019-12-10T02:00:22Z",
+    "name": "zander",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.222",
+        "version": 5,
+        "serial": 96969,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-12-10T02:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-14T17:23:47Z",
+    "modified": "2019-10-31T07:58:01Z",
+    "name": "zander-deb9",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.185",
+        "version": 5,
+        "serial": 86800,
+        "ttlSeconds": 3600,
+        "timeStamp": "2019-10-31T07:00:00Z"
+      }
+    ]
+  },
+  {
+    "_type": "DnsNode",
+    "created": "2018-09-04T16:34:18Z",
+    "modified": "2018-09-04T16:34:18Z",
+    "name": "zoneminder",
+    "records": [
+      {
+        "recordType": "A",
+        "recordValue": "192.168.1.11",
+        "version": 5,
+        "serial": 7074,
+        "ttlSeconds": 900,
+        "timeStamp": "2018-09-04T16:00:00Z"
+      }
+    ]
+  }
+]

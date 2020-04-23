@@ -35,6 +35,7 @@ import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
 import org.bremersee.dccon.repository.DnsZoneRepository;
+import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -65,8 +66,8 @@ public class NameServerServiceImpl implements NameServerService {
   /**
    * Instantiates a new name server service.
    *
-   * @param properties        the properties
-   * @param dhcpRepository    the dhcp repository
+   * @param properties the properties
+   * @param dhcpRepository the dhcp repository
    * @param dnsZoneRepository the dns zone repository
    * @param dnsNodeRepository the dns node repository
    */
@@ -143,19 +144,23 @@ public class NameServerServiceImpl implements NameServerService {
 
   @Override
   public Boolean deleteDnsZone(String zoneName) {
-    return dnsZoneRepository.delete(zoneName);
+    final boolean success = dnsZoneRepository.delete(zoneName);
+    if (success && (dnsNodeRepository instanceof MockRepository)) {
+      dnsNodeRepository.deleteAll(zoneName);
+    }
+    return success;
   }
 
 
   @Override
-  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter) {
+  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter, String query) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
           zoneName,
           "org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c");
     }
-    return dnsNodeRepository.findAll(zoneName, unknownFilter)
+    return dnsNodeRepository.findAll(zoneName, unknownFilter, query)
         .sorted(dnsNodeComparator)
         .collect(Collectors.toList());
   }

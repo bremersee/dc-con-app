@@ -15,7 +15,7 @@
  */
 
 /**
- * LDAP attribute staff.
+ * LDAP transcoder staff.
  *
  * @author Christian Bremer
  */

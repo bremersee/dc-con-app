@@ -51,7 +51,7 @@ public class DnsNodeComparator extends AbstractDnsComparator<DnsNode> {
     final String[] sa2 = s2.split(Pattern.quote("."));
     if (sa1.length == sa2.length) {
       for (int i = 0; i < sa1.length; i++) {
-        int result = format(sa1[i], 3).compareTo(format(sa2[i], 3));
+        int result = format(sa1[i], 3).compareToIgnoreCase(format(sa2[i], 3));
         if (result != 0) {
           return isAsc() ? result : -1 * result;
         }

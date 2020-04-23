@@ -23,7 +23,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.CommonAttributes;
-import org.bremersee.dccon.repository.ldap.transcoder.WhenTimeValueTranscoder;
+import org.bremersee.dccon.repository.ldap.transcoder.GeneralizedTimeToOffsetDateTimeValueTranscoder;
 import org.ldaptive.LdapEntry;
 
 /**
@@ -37,8 +37,8 @@ abstract class AbstractLdapMapper {
 
   static final String WHEN_CHANGED = "whenChanged";
 
-  private static final WhenTimeValueTranscoder WHEN_TIME_VALUE_TRANSCODER
-      = new WhenTimeValueTranscoder();
+  private static final GeneralizedTimeToOffsetDateTimeValueTranscoder WHEN_TIME_VALUE_TRANSCODER
+      = new GeneralizedTimeToOffsetDateTimeValueTranscoder();
 
   @Getter(AccessLevel.PROTECTED)
   private DomainControllerProperties properties;
@@ -55,9 +55,9 @@ abstract class AbstractLdapMapper {
   /**
    * Create distinguished name.
    *
-   * @param rdn      the rdn
+   * @param rdn the rdn
    * @param rdnValue the rdn value
-   * @param baseDn   the base dn
+   * @param baseDn the base dn
    * @return the string
    */
   String createDn(
@@ -70,7 +70,7 @@ abstract class AbstractLdapMapper {
   /**
    * Map common attributes.
    *
-   * @param source      the source
+   * @param source the source
    * @param destination the destination
    */
   void mapCommonAttributes(final LdapEntry source, final CommonAttributes destination) {

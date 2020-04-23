@@ -1,0 +1,223 @@
+[
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=Administrator,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2019-11-29T23:30:39Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-500",
+      "systemEntity": true
+    },
+    "userName": "Administrator",
+    "enabled": true,
+    "firstName": "Super",
+    "lastName": "User",
+    "displayName": "Domain Administrator",
+    "email": "root@example.org",
+    "description": "Built-in account for administering the computer/domain",
+    "lastLogon": "2019-12-02T15:57:24.955Z",
+    "logonCount": 2744,
+    "passwordLastSet": "2018-08-01T13:45:03.179Z",
+    "groups": [
+      "Administrators",
+      "Domain Admins",
+      "Enterprise Admins",
+      "Group Policy Creator Owners",
+      "Schema Admins"
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=Guest,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-11-09T08:36:37Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-501",
+      "systemEntity": true
+    },
+    "userName": "Guest",
+    "enabled": true,
+    "firstName": "Gustave",
+    "lastName": "Convive",
+    "displayName": "Gustave Convive",
+    "email": "guest@example.org",
+    "description": "Built-in account for guest access to the computer/domain",
+    "logonCount": 0,
+    "passwordLastSet": "2018-11-08T21:03:37.628Z",
+    "groups": []
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=krbtgt,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-05-20T15:00:30Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-502",
+      "systemEntity": true
+    },
+    "userName": "krbtgt",
+    "enabled": false,
+    "description": "Key Distribution Center Service Account",
+    "logonCount": 0,
+    "passwordLastSet": "2018-05-20T15:00:30.247Z",
+    "groups": [
+      "Denied RODC Password Replication Group"
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=dns-dc,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:00:30Z",
+    "modified": "2018-08-01T14:04:50Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1101",
+      "systemEntity": false
+    },
+    "userName": "dns-dc",
+    "enabled": true,
+    "description": "DNS Service Account for dc",
+    "logonCount": 0,
+    "passwordLastSet": "2018-05-20T15:00:30.346Z",
+    "groups": []
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=dhcpduser,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-20T15:52:52Z",
+    "modified": "2019-12-04T05:40:52Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1104",
+      "systemEntity": false
+    },
+    "userName": "dhcpduser",
+    "enabled": true,
+    "description": "Unprivileged user for TSIG-GSSAPI DNS updates via ISC DHCP server",
+    "lastLogon": "2019-12-04T06:26:50.828Z",
+    "logonCount": 4280,
+    "passwordLastSet": "2018-05-20T15:52:52.48Z",
+    "groups": [
+      "DnsAdmins"
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=demo-admin,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-05-21T17:41:41Z",
+    "modified": "2019-11-30T02:37:48Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1107",
+      "systemEntity": false
+    },
+    "userName": "demo-admin",
+    "enabled": true,
+    "firstName": "Leopold",
+    "lastName": "Bloom",
+    "displayName": "Leopold Bloom",
+    "email": "leopold.bloom@example.org",
+    "telephoneNumber": "00123456789123",
+    "mobile": "00123456789124",
+    "homeDirectory": "\\\\data\\users\\demo-admin",
+    "unixHomeDirectory": "/home/demo-admin",
+    "loginShell": "/bin/bash",
+    "lastLogon": "2019-12-04T09:49:16.595Z",
+    "logonCount": 13350,
+    "password": "admin4Demo",
+    "passwordLastSet": "2018-05-21T17:41:41.551Z",
+    "groups": [
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=demo-user,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-09-09T18:42:20Z",
+    "modified": "2019-09-14T09:44:34Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1119",
+      "systemEntity": false
+    },
+    "userName": "demo-user",
+    "enabled": true,
+    "firstName": "Molly",
+    "lastName": "Bloom",
+    "displayName": "Molly Bloom",
+    "email": "molly.bloom@example.org",
+    "telephoneNumber": "00123456789125",
+    "mobile": "00123456789126",
+    "unixHomeDirectory": "/home/demo-user",
+    "loginShell": "/bin/bash",
+    "lastLogon": "2019-09-12T20:44:50.784Z",
+    "logonCount": 8,
+    "password": "user4Demo",
+    "passwordLastSet": "2019-09-14T09:44:34.638Z",
+    "groups": [
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=johann,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-09-09T20:24:13Z",
+    "modified": "2019-11-27T10:32:21Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1120",
+      "systemEntity": false
+    },
+    "userName": "johann",
+    "enabled": true,
+    "firstName": "Johann",
+    "lastName": "Buddenbrook",
+    "displayName": "Johann Buddenbrook",
+    "email": "johann.buddenbrook@example.org",
+    "homeDirectory": "\\\\data\\users\\johann",
+    "unixHomeDirectory": "/home/johann",
+    "loginShell": "/bin/bash",
+    "lastLogon": "2019-11-27T16:45:28.163Z",
+    "logonCount": 223,
+    "passwordLastSet": "2019-11-27T10:32:09.123Z",
+    "groups": [
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=elisabeth,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-09-10T14:55:32Z",
+    "modified": "2019-09-04T08:37:31Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1121",
+      "systemEntity": false
+    },
+    "userName": "elisabeth",
+    "enabled": true,
+    "firstName": "Elisabeth",
+    "lastName": "Buddenbrook",
+    "displayName": "Elisabeth Buddenbrook",
+    "email": "elisabeth.buddenbrook@example.org",
+    "unixHomeDirectory": "/home/elisabeth",
+    "loginShell": "/bin/bash",
+    "logonCount": 0,
+    "passwordLastSet": "2019-05-15T13:59:14.997Z",
+    "groups": [
+    ]
+  },
+  {
+    "_type": "DomainUser",
+    "distinguishedName": "CN=klara,CN=Users,DC=samdom,DC=example,DC=org",
+    "created": "2018-09-10T22:35:57Z",
+    "modified": "2019-10-17T21:05:25Z",
+    "sid": {
+      "value": "S-1-5-21-2180863883-316980774-2664318651-1122",
+      "systemEntity": false
+    },
+    "userName": "klara",
+    "enabled": true,
+    "firstName": "Klara",
+    "lastName": "Buddenbrook",
+    "displayName": "Klara Buddenbrook",
+    "email": "klara.buddenbrook@example.org",
+    "unixHomeDirectory": "/home/klara",
+    "loginShell": "/bin/bash",
+    "logonCount": 0,
+    "passwordLastSet": "2018-09-10T22:35:57.285Z",
+    "groups": [
+    ]
+  }
+]

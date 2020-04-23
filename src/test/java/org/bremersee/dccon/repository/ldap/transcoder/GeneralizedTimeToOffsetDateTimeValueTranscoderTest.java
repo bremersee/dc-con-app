@@ -1,28 +1,29 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Month;
 import java.time.OffsetDateTime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
- * The when time value transcoder test.
+ * The generalized time value transcoder test.
  *
  * @author Christian Bremer
  */
-public class WhenTimeValueTranscoderTest {
+class GeneralizedTimeToOffsetDateTimeValueTranscoderTest {
 
-  private static final WhenTimeValueTranscoder transcoder = new WhenTimeValueTranscoder();
+  private static final GeneralizedTimeToOffsetDateTimeValueTranscoder transcoder
+      = new GeneralizedTimeToOffsetDateTimeValueTranscoder();
 
-  private static final String ldapValue = "20191226154554";
+  private static final String ldapValue = "20191226154554.000Z";
 
   /**
    * Decode and encode.
    */
   @Test
-  public void decodeAndEncode() {
+  void decodeAndEncode() {
     OffsetDateTime dateTime = transcoder.decodeStringValue(ldapValue);
     assertNotNull(dateTime);
     assertEquals(2019, dateTime.getYear());
@@ -39,7 +40,7 @@ public class WhenTimeValueTranscoderTest {
    * Gets type.
    */
   @Test
-  public void getType() {
+  void getType() {
     assertEquals(OffsetDateTime.class, transcoder.getType());
   }
 }

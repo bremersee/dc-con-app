@@ -1,10 +1,27 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Base64;
@@ -13,7 +30,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -23,7 +40,7 @@ import org.ldaptive.LdapEntry;
  *
  * @author Christian Bremer
  */
-public class DnsNodeLdapMapperTest {
+class DnsNodeLdapMapperTest {
 
   private DnsNodeLdapMapper getMapper(UnknownFilter unknownFilter) {
     final DomainControllerProperties properties = new DomainControllerProperties();
@@ -36,10 +53,18 @@ public class DnsNodeLdapMapperTest {
   }
 
   /**
+   * Gets object classes.
+   */
+  @Test
+  void getObjectClasses() {
+    assertArrayEquals(new String[0], getMapper(UnknownFilter.ALL).getObjectClasses());
+  }
+
+  /**
    * Test distinguished name.
    */
   @Test
-  public void mapDn() {
+  void mapDn() {
     String dn = getMapper(UnknownFilter.NO_UNKNOWN)
         .mapDn(DnsNode.builder().name("proxy").build());
     assertEquals("dc=proxy,dc=eixe,dc=bremersee,dc=org", dn);
@@ -53,9 +78,13 @@ public class DnsNodeLdapMapperTest {
    * Map ldap entry.
    */
   @Test
-  public void map() {
+  void map() {
     DnsNode actual = getMapper(UnknownFilter.ALL).map(null);
     assertNull(actual);
+
+    DnsNode dnsNode = DnsNode.builder().build();
+    getMapper(UnknownFilter.ALL).map(null, dnsNode);
+    assertEquals(DnsNode.builder().build(), dnsNode);
 
     final LdapAttribute nodeName = new LdapAttribute("name", "proxy");
     // A : 192.168.1.41
@@ -134,7 +163,7 @@ public class DnsNodeLdapMapperTest {
    * Map and compute modifications.
    */
   @Test
-  public void mapAndComputeModifications() {
+  void mapAndComputeModifications() {
     final DnsNodeLdapMapper mapper = getMapper(UnknownFilter.ALL);
 
     final LdapAttribute nodeName = new LdapAttribute("name", "proxy");

@@ -1,6 +1,8 @@
 spring:
   application:
-    name: dc-con
+    name: ${APPLICATION_NAME:dc-con-app}
+  profiles:
+    active: ${ACTIVE_PROFILES:basic-auth}
   cloud:
     config:
       enabled: ${CONFIG_CLIENT_ENABLED:false}

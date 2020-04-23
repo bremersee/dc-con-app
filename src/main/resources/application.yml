@@ -1,52 +1,53 @@
 bremersee:
-  access:
-    ip-addresses:
-      - "127.0.0.1/32"
-      - "::1"
+  ldaptive:
+    enabled: false
   security:
-    oauth2:
+    cors:
+      allow-all: true
+    authentication:
+      enable-jwt-support: ${JWT_SUPPORT:false}
       password-flow:
-        client-id: omnia
-        client-secret: changeit
-        token-endpoint: https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token
+        client-id: ${OPENID_CLIENT_ID:omnia}
+        client-secret: ${OPENID_CLIENT_SECRET:changeit}
+        token-endpoint: ${OPENID_TOKEN_ENDPOINT:https://openid.dev.bremersee.org/auth/realms/omnia/protocol/openid-connect/token}
   exception-mapping:
     api-paths:
       - /api/**
+    default-exception-mapping-config:
+      include-stack-trace: true
+      include-cause: true
+      include-application-name: true
+      include-exception-class-name: true
+      include-handler: true
+      include-path: true
   domain-controller:
+    company-name: ${COMPANY_NAME:example.org}
+    company-url: ${COMPANY_URL:http://example.org}
     group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}
     dns-zone-base-dn: ${LDAP_ZONE_DN:CN=MicrosoftDNS,DC=DomainDnsZones,DC=example,DC=org}
     dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
-
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED:false}
-#    register-with-eureka: true
-#    prefer-same-zone-eureka: true
-#    service-url:
-#      defaultZone: ${EUREKA_CLIENT_DEFAULT_ZONE:http://192.168.1.16:8761/eureka/}
-#  instance:
-#    health-check-url-path: /actuator/health
-#    home-page-url-path: /actuator/info
-
-logging:
-  level:
-    ROOT: info
-    org.bremersee: debug
-    org.springframework: info
-#    org.springframework.security.oauth2: debug
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-server:
-  port: ${SERVER_PORT:8090}
+    mail-with-credentials:
+      sender: ${spring.mail.username:no-reply@example.org}
+      login-url: http://localhost:4200/change-password
+  thymeleaf:
+    resolvers:
+      - prefix: "classpath:mail/"
+        suffix: ".html"
+        resolvable-patterns:
+          - "*"
+        template-mode: HTML
+  messages:
+    default-locale: en
+    fallback-to-system-locale: false
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
   jackson:
     date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
     default-property-inclusion: non_null
@@ -62,14 +63,105 @@ spring:
   zipkin:
     enabled: ${ZIPKIN_ENABLED:false}
     base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: https://keycloak.example.org/auth/realms/omnia/protocol/openid-connect/certs
   cache:
     jcache:
       config: classpath:ehcache.xml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      cors:
+        allowed-headers: "*"
+        allowed-methods: "*"
+        allowed-origins: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
+
+server:
+  forward-headers-strategy: native
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
+    port-header: x-forwarded-port
+    accesslog:
+      enabled: false
+
+logging:
+  level:
+    ROOT: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework: ${LOG_LEVEL_SPRING:INFO}
+    org.bremersee: ${LOG_LEVEL_BREMERSEE:DEBUG}
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:false}
+
+---
+
+spring:
+  profiles: basic-auth
+
+bremersee:
+  security:
+    authentication:
+      enable-jwt-support: false
+      basic-auth-users:
+        - name: "admin"
+          password: "admin"
+          authorities:
+            - "ROLE_LOCAL_USER"
+            - "ROLE_ADMIN"
+        - name: "actuator"
+          password: "actuator"
+          authorities:
+            - "ROLE_ACTUATOR"
+        - name: "user"
+          password: "user"
+          authorities:
+            - "ROLE_LOCAL_USER"
+      actuator:
+        roles:
+          - "ROLE_ACTUATOR"
+          - "ROLE_ACTUATOR_ADMIN"
+          - "ROLE_ADMIN"
+        admin-roles:
+          - "ROLE_ACTUATOR_ADMIN"
+          - "ROLE_ADMIN"
+
+---
+
+spring:
+  profiles: test
+
+bremersee:
+  security:
+    authentication:
+      actuator:
+        ip-addresses:
+          - "8.8.8.0"
+      basic-auth-users:
+        - name: "admin"
+          password: "admin"
+          authorities:
+            - "ROLE_LOCAL_USER"
+            - "ROLE_ADMIN"
+        - name: "actuator"
+          password: "actuator"
+          authorities:
+            - "ROLE_ACTUATOR"
+        - name: "user"
+          password: "user"
+          authorities:
+            - "ROLE_LOCAL_USER"
 
 ---
 
@@ -78,6 +170,7 @@ spring:
 
 bremersee:
   ldaptive:
+    enabled: true
     ldap-url: ${LDAP_URL:ldaps://example.org:636}
     use-ssl: ${LDAP_SSL:true}
     use-start-tls: ${LDAP_START_TLS:false}
@@ -113,8 +206,8 @@ spring:
   profiles: debian9
 
 logging:
-  path: /var/log/dc-con
   file:
+    name: /var/log/dc-con/dc-con.log
     max-history: 25
 
 server:
@@ -122,49 +215,5 @@ server:
     accesslog:
       enabled: true
       directory: /var/log/dc-con
+      prefix: access_log
 
----
-
-spring:
-  profiles: basic-auth
-
----
-
-spring:
-  profiles: test
-
-bremersee:
-  access:
-    ip-addresses:
-      - "8.8.8.0"
-    basic-auth-users:
-      - name: "admin"
-        password: "admin"
-        authorities:
-          - "ROLE_LOCAL_USER"
-          - "ROLE_ADMIN"
-      - name: "actuator"
-        password: "actuator"
-        authorities:
-          - "ROLE_ACTUATOR"
-      - name: "user"
-        password: "user"
-        authorities:
-          - "ROLE_LOCAL_USER"
-
----
-
-spring:
-  profiles: ide
-
-bremersee:
-  access:
-    ip-addresses:
-      - "8.8.8.0"
-
-logging:
-  level:
-    ROOT: info
-    org.bremersee: debug
-    org.springframework: info
-    org.springframework.security: debug

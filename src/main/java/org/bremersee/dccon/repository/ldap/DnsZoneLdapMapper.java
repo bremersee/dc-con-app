@@ -75,6 +75,9 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     }
     mapCommonAttributes(ldapEntry, dnsZone);
     dnsZone.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
+    dnsZone.setDefaultZone(dnsZone.getName() != null
+        && dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()));
+    dnsZone.setReverseZone(getProperties().isReverseZone(dnsZone.getName()));
   }
 
   @Override

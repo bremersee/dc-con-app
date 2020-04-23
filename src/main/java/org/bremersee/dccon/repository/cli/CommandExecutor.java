@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository.cli;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.exception.ServiceException;
-import org.springframework.http.HttpStatus;
 
 /**
  * The command executor.
@@ -41,7 +41,7 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param dir      the dir
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings("UnusedReturnValue")
@@ -56,8 +56,8 @@ public abstract class CommandExecutor {
    * Exec command executor.
    *
    * @param commands the commands
-   * @param env      the env
-   * @param dir      the dir
+   * @param env the env
+   * @param dir the dir
    * @return the command executor response
    */
   @SuppressWarnings("WeakerAccess")
@@ -72,10 +72,10 @@ public abstract class CommandExecutor {
   /**
    * Exec command executor.
    *
-   * @param <T>            the type parameter
-   * @param commands       the commands
-   * @param env            the env
-   * @param dir            the dir
+   * @param <T> the type parameter
+   * @param commands the commands
+   * @param env the env
+   * @param dir the dir
    * @param responseParser the response parser
    * @return the command executor response
    */
@@ -111,12 +111,13 @@ public abstract class CommandExecutor {
       }
       return responseParser.parse(new CommandExecutorResponse(output, error));
 
-    } catch (final Exception e) {
-      throw new ServiceException(
-          HttpStatus.INTERNAL_SERVER_ERROR.value(),
-          "Running commands " + commands + " failed.",
+    } catch (IOException | InterruptedException e) {
+      final ServiceException se = ServiceException.internalServerError(
+          "Running commands failed.",
           "org.bremersee:dc-con-app:6fa0f473-6204-4f75-9130-a1049910d8fd",
           e);
+      log.error("Executing commands [{}] failed.", commands, se);
+      throw se;
     }
   }
 

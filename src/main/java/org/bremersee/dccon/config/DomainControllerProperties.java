@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -45,11 +46,26 @@ public class DomainControllerProperties implements Serializable {
 
   private static final long serialVersionUID = 2L;
 
+  private static final String MIN_LENGTH_PLACEHOLDER = "{{MIN_LENGTH}}";
+
+  private static final String SIMPLE_PASSWORD_REGEX = "^(?=.{" + MIN_LENGTH_PLACEHOLDER
+      + ",75}$).*";
+
+  private static final String COMPLEX_PASSWORD_REGEX = "(?=^.{" + MIN_LENGTH_PLACEHOLDER + ",75}$)"
+      + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
+      + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
+
+
+  private String personalName = "Anna Livia";
+
+  private String companyName = "example.org";
+
+  private String companyUrl = "http://example.org";
+
+
   private String groupBaseDn;
 
   private String groupRdn = "cn";
-
-  private String groupMemberAttr = "member";
 
   private String groupFindAllFilter = "(objectClass=group)";
 
@@ -64,8 +80,6 @@ public class DomainControllerProperties implements Serializable {
 
   private String userRdn = "cn";
 
-  private String userGroupAttr = "memberOf";
-
   private String userFindAllFilter = "(objectClass=user)";
 
   private SearchScope userFindAllSearchScope = SearchScope.ONELEVEL;
@@ -73,6 +87,11 @@ public class DomainControllerProperties implements Serializable {
   private String userFindOneFilter = "(&(objectClass=user)(sAMAccountName={0}))";
 
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
+
+
+  private String defaultSidPrefix = "S-1-5-21-";
+
+  private int maxSystemSidSuffix = 999;
 
 
   private String dnsZoneBaseDn;
@@ -88,7 +107,7 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope dnsZoneFindOneSearchScope = SearchScope.SUBTREE;
 
 
-  private String defaultZone = "example.org";
+  private String defaultZone = "samdom.example.org";
 
   private String dnsNodeBaseDn;
 
@@ -129,7 +148,7 @@ public class DomainControllerProperties implements Serializable {
   private String dhcpLeaseListExecDir = "/tmp";
 
 
-  private String nameServerHost = "ns.example.org";
+  private String nameServerHost = "ns.samdom.example.org";
 
   private String reverseZoneSuffixIp4 = ".in-addr.arpa";
 
@@ -145,21 +164,10 @@ public class DomainControllerProperties implements Serializable {
   private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
 
 
-  private String gravatarUrl = "https://www.gravatar.com/avatar/{}?d=404";
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}";
 
-  /**
-   * Possible values.
-   * <ul>
-   * <li>mp: (mystery-person) a simple, cartoon-style silhouetted outline of a person
-   * <li>identicon: a geometric pattern based on an email hash
-   * <li>monsterid: a generated 'monster' with different colors, faces, etc
-   * <li>wavatar: generated faces with differing features and backgrounds
-   * <li>retro: awesome generated, 8-bit arcade-style pixelated faces
-   * <li>robohash: a generated robot with different colors, faces, etc
-   * <li>blank: a transparent PNG image (border added to HTML below for demonstration purposes)
-   * </ul>
-   */
-  private String gravatarUrlForDefault = "https://www.gravatar.com/avatar/{}?d=retro";
+
+  private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();
 
 
   /**
@@ -193,6 +201,17 @@ public class DomainControllerProperties implements Serializable {
   }
 
   /**
+   * Determines whether the given zone is a reverse zone or not.
+   *
+   * @param zoneName the zone name
+   * @return {@code true} if the zone is a reverse zone, otherwise {@code false}
+   */
+  public boolean isReverseZone(final String zoneName) {
+    return zoneName != null && getReverseZoneSuffixList().stream()
+        .anyMatch(suffix -> zoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+  }
+
+  /**
    * Build dns node base dn string.
    *
    * @param zoneName the zone name
@@ -202,4 +221,62 @@ public class DomainControllerProperties implements Serializable {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }
 
+  /**
+   * Gets simple password regex.
+   *
+   * @param minLength the min length
+   * @return the simple password regex
+   */
+  public static String getSimplePasswordRegex(int minLength) {
+    return SIMPLE_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));
+  }
+
+  /**
+   * Gets complex password regex.
+   *
+   * @param minLength the min length
+   * @return the complex password regex
+   */
+  public static String getComplexPasswordRegex(int minLength) {
+    return COMPLEX_PASSWORD_REGEX.replace(MIN_LENGTH_PLACEHOLDER, String.valueOf(minLength));
+  }
+
+  /**
+   * The mail with credentials properties.
+   *
+   * @author Christian Bremer
+   */
+  @Getter
+  @Setter
+  @ToString
+  @EqualsAndHashCode
+  @NoArgsConstructor
+  @SuppressWarnings("WeakerAccess")
+  public static class MailWithCredentialsProperties {
+
+    private String sender = "no-reply@example.org";
+
+    private String templateBasename = "personal-mail-with-credentials";
+
+    private String loginUrl = "http://localhost:4200/change-password";
+
+    private List<MailInlineAttachment> inlineAttachments = new ArrayList<>();
+  }
+
+  /**
+   * The mail inline attachment.
+   */
+  @Getter
+  @Setter
+  @ToString
+  @EqualsAndHashCode
+  @NoArgsConstructor
+  public static class MailInlineAttachment {
+
+    private String contentId;
+
+    private String location;
+
+    private String mimeType;
+  }
 }

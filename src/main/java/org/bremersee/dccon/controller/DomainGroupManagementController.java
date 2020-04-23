@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,48 +36,60 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   private final DomainGroupService domainGroupService;
 
+  private final DomainUserService domainUserService;
+
   /**
    * Instantiates a new domain group management controller.
    *
    * @param domainGroupService the domain group service
+   * @param domainUserService the domain user service
    */
   public DomainGroupManagementController(
-      final DomainGroupService domainGroupService) {
+      final DomainGroupService domainGroupService,
+      final DomainUserService domainUserService) {
     this.domainGroupService = domainGroupService;
+    this.domainUserService = domainUserService;
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DomainGroup>> getGroups(String sort) {
-    return ResponseEntity.ok(domainGroupService.getGroups(sort));
+  public ResponseEntity<List<DomainGroup>> getGroups(String sort, String query) {
+    return ResponseEntity.ok(domainGroupService.getGroups(sort, query));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainGroup> addGroup(
       @Valid DomainGroup group) {
     return ResponseEntity.ok(domainGroupService.addGroup(group));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<DomainGroup> getGroupByName(String groupName) {
-    return ResponseEntity.of(domainGroupService.getGroupByName(groupName));
+  public ResponseEntity<DomainGroup> getGroup(String groupName) {
+    return ResponseEntity.of(domainGroupService.getGroup(groupName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<DomainGroup> updateGroup(String groupName, @Valid DomainGroup domainGroup) {
     return ResponseEntity.of(domainGroupService.updateGroup(groupName, domainGroup));
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LOCAL_USER')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Boolean> groupExists(String groupName) {
     return ResponseEntity.ok(domainGroupService.groupExists(groupName));
   }
 
-  @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<Boolean> isGroupNameInUse(String groupName) {
+    return ResponseEntity.ok(domainUserService.userExists(groupName)
+        || domainGroupService.groupExists(groupName));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
   public ResponseEntity<Boolean> deleteGroup(String groupName) {
     return ResponseEntity.ok(domainGroupService.deleteGroup(groupName));

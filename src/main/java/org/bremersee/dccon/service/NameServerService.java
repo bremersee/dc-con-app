@@ -38,7 +38,7 @@ public interface NameServerService {
   /**
    * Query dns nodes.
    *
-   * @param query         the query, can be a host name, an IP or a MAC address
+   * @param query the query, can be a host name, an IP or a MAC address
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return found dns nodes
    */
@@ -47,8 +47,8 @@ public interface NameServerService {
   /**
    * Get dhcp leases.
    *
-   * @param all  if {@code true}, expired leases will also be returned, otherwise only active ones
-   *             (default is {@code false})
+   * @param all if {@code true}, expired leases will also be returned, otherwise only active
+   *     ones (default is {@code false})
    * @param sort the sort order (default is {@link DhcpLease#SORT_ORDER_BEGIN_HOSTNAME})
    * @return the dhcp leases
    */
@@ -81,17 +81,21 @@ public interface NameServerService {
   /**
    * Gets dns nodes.
    *
-   * @param zoneName      the zone name
+   * @param zoneName the zone name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @param query the query
    * @return the dns nodes
    */
-  List<DnsNode> getDnsNodes(@NotNull String zoneName, @Nullable UnknownFilter unknownFilter);
+  List<DnsNode> getDnsNodes(
+      @NotNull String zoneName,
+      @Nullable UnknownFilter unknownFilter,
+      @Nullable String query);
 
   /**
    * Save dns node.
    *
    * @param zoneName the zone name
-   * @param dnsNode  the dns node
+   * @param dnsNode the dns node
    * @return the dns node
    */
   Optional<DnsNode> save(
@@ -101,8 +105,8 @@ public interface NameServerService {
   /**
    * Get dns node.
    *
-   * @param zoneName      the zone name
-   * @param nodeName      the node name
+   * @param zoneName the zone name
+   * @param nodeName the node name
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns node
    */
@@ -134,7 +138,7 @@ public interface NameServerService {
   /**
    * Delete all dns nodes.
    *
-   * @param zoneName  the zone name
+   * @param zoneName the zone name
    * @param nodeNames the node names
    */
   void deleteAllDnsNodes(

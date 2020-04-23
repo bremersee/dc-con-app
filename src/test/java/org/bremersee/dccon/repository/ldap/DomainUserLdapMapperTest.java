@@ -1,26 +1,38 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.repository.ldap;
 
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValuesAsList;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.ByteArrayValueTranscoder;
 import org.ldaptive.io.IntegerValueTranscoder;
 import org.ldaptive.io.StringValueTranscoder;
 
@@ -29,29 +41,36 @@ import org.ldaptive.io.StringValueTranscoder;
  *
  * @author Christian Bremer
  */
-public class DomainUserLdapMapperTest {
+class DomainUserLdapMapperTest {
 
   private static DomainUserLdapMapper mapper;
 
   /**
    * Init.
    */
-  @BeforeClass
-  public static void init() {
+  @BeforeAll
+  static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
     properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
     properties.setUserRdn("cn");
     properties.setUserBaseDn("cn=Users,dc=example,dc=org");
-    properties.setUserGroupAttr("memberOf");
     mapper = new DomainUserLdapMapper(properties);
+  }
+
+  /**
+   * Gets object classes.
+   */
+  @Test
+  void getObjectClasses() {
+    assertArrayEquals(new String[0], mapper.getObjectClasses());
   }
 
   /**
    * Map distinguished name.
    */
   @Test
-  public void mapDn() {
+  void mapDn() {
     DomainUser domainUser = new DomainUser();
     domainUser.setUserName("somename");
     String dn = mapper.mapDn(domainUser);
@@ -63,15 +82,21 @@ public class DomainUserLdapMapperTest {
    * Map ldap entry.
    */
   @Test
-  public void map() {
+  void map() {
+    assertNull(mapper.map(null));
+
+    DomainUser destination = DomainUser.builder().build();
+    mapper.map(null, destination);
+    assertEquals(DomainUser.builder().build(), destination);
+
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034"));
+        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135"));
+        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
 
-    DomainUser destination = mapper.map(source);
+    destination = mapper.map(source);
     assertNotNull(destination);
     assertEquals("cn=somename,cn=Users,dc=example,dc=org", destination.getDistinguishedName());
     assertEquals(destination.getCreated(), destination.getCreated());
@@ -96,9 +121,8 @@ public class DomainUserLdapMapperTest {
    * Map and compute modifications.
    */
   @Test
-  public void mapAndComputeModifications() {
+  void mapAndComputeModifications() {
     DomainUser source = new DomainUser();
-    source.setAvatar("picture".getBytes(StandardCharsets.UTF_8));
     source.setCreated(OffsetDateTime.now());
     source.setDisplayName("Anna Livia Plurabelle");
     source.setEmail("anna@example.org");
@@ -119,9 +143,6 @@ public class DomainUserLdapMapperTest {
     mapper.mapAndComputeModifications(source, destination);
 
     StringValueTranscoder svt = new StringValueTranscoder();
-    assertArrayEquals(
-        source.getAvatar(),
-        getAttributeValue(destination, "jpegPhoto", new ByteArrayValueTranscoder(), null));
     assertEquals(
         source.getDisplayName(),
         getAttributeValue(destination, "displayName", svt, null));
@@ -162,9 +183,10 @@ public class DomainUserLdapMapperTest {
         source.getUserName(),
         getAttributeValue(destination, "sAMAccountName", svt, null));
 
-    List<String> groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
-    assertEquals(1, groupDns.size());
-    assertEquals("cn=joyce,cn=Users,dc=example,dc=org", groupDns.get(0));
+    // Groups must be set in group entity.
+    // List<String> groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
+    // assertEquals(1, groupDns.size());
+    // assertEquals("cn=joyce,cn=Users,dc=example,dc=org", groupDns.get(0));
 
     IntegerValueTranscoder ivt = new IntegerValueTranscoder();
     assertEquals(
@@ -175,11 +197,11 @@ public class DomainUserLdapMapperTest {
     source.setGroups(new ArrayList<>());
 
     AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-    assertEquals(2, modifications.length);
+    assertEquals(1, modifications.length);
     assertEquals(
         66050,
         (long) getAttributeValue(destination, "userAccountControl", ivt, null));
-    groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
-    Assert.assertTrue(groupDns.isEmpty());
+    // groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
+    // Assert.assertTrue(groupDns.isEmpty());
   }
 }

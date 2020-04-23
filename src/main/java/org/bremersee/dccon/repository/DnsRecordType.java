@@ -31,7 +31,6 @@ import org.ldaptive.io.Hex;
  *
  * @author Christian Bremer
  */
-@SuppressWarnings("unused")
 public enum DnsRecordType {
 
   /**
@@ -558,7 +557,7 @@ public enum DnsRecordType {
   /**
    * Map data from active directory to dns record.
    *
-   * @param data              the data
+   * @param data the data
    * @param dnsRecordSupplier the dns record supplier
    * @return the dns record
    */

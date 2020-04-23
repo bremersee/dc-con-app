@@ -1,21 +1,21 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
- * The active directory time value transcoder test.
+ * The file time value transcoder test.
  *
  * @author Christian Bremer
  */
-public class ActiveDirectoryTimeValueTranscoderTest {
+class FileTimeToOffsetDateTimeValueTranscoderTest {
 
-  private static final ActiveDirectoryTimeValueTranscoder trancoder
-      = new ActiveDirectoryTimeValueTranscoder();
+  private static final FileTimeToOffsetDateTimeValueTranscoder trancoder
+      = new FileTimeToOffsetDateTimeValueTranscoder();
 
   private static final OffsetDateTime dateTime = OffsetDateTime.parse(
       "2019-12-31T23:59:50Z",
@@ -27,7 +27,7 @@ public class ActiveDirectoryTimeValueTranscoderTest {
    * Decode string value.
    */
   @Test
-  public void decodeStringValue() {
+  void decodeStringValue() {
     assertNull(trancoder.decodeStringValue(null));
     assertNull(trancoder.decodeStringValue(""));
     assertNull(trancoder.decodeStringValue("0"));
@@ -39,7 +39,7 @@ public class ActiveDirectoryTimeValueTranscoderTest {
    * Encode string value.
    */
   @Test
-  public void encodeStringValue() {
+  void encodeStringValue() {
     assertNull(trancoder.encodeStringValue(null));
     final String actual = trancoder.encodeStringValue(dateTime);
     assertEquals(ldapValue, actual);
@@ -49,7 +49,7 @@ public class ActiveDirectoryTimeValueTranscoderTest {
    * Gets type.
    */
   @Test
-  public void getType() {
+  void getType() {
     assertEquals(OffsetDateTime.class, trancoder.getType());
   }
 }

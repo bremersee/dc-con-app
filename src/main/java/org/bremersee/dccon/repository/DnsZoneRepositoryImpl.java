@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
@@ -38,6 +37,7 @@ import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -58,13 +58,13 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   /**
    * Instantiates a new dns zone repository.
    *
-   * @param properties   the properties
-   * @param ldapTemplate the ldap template
+   * @param properties the properties
+   * @param ldapTemplateProvider the ldap template provider
    */
   public DnsZoneRepositoryImpl(
-      DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate) {
-    super(properties, ldapTemplate);
+      final DomainControllerProperties properties,
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+    super(properties, ldapTemplateProvider.getIfAvailable());
     this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
     this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()
         .map(Pattern::compile).collect(Collectors.toList());
@@ -76,7 +76,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
    * @param dnsZoneLdapMapper the dns zone ldap mapper
    */
   @SuppressWarnings("unused")
-  public void setDnsZoneLdapMapper(LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
+  public void setDnsZoneLdapMapper(final LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
     if (dnsZoneLdapMapper != null) {
       this.dnsZoneLdapMapper = dnsZoneLdapMapper;
     }
@@ -101,8 +101,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
   @Override
   public boolean isDnsReverseZone(final String dnsZoneName) {
-    return dnsZoneName != null && getProperties().getReverseZoneSuffixList().stream()
-        .anyMatch(suffix -> dnsZoneName.toLowerCase().endsWith(suffix.toLowerCase()));
+    return getProperties().isReverseZone(dnsZoneName);
   }
 
   @Override
@@ -116,13 +115,13 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   @Override
-  public boolean exists(@NotNull String zoneName) {
+  public boolean exists(final String zoneName) {
     return isNonExcludedDnsZone(zoneName)
         && getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
   }
 
   @Override
-  public Optional<DnsZone> findOne(@NotNull String zoneName) {
+  public Optional<DnsZone> findOne(final String zoneName) {
     final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsZoneFindOneFilter());
     searchFilter.setParameter(0, zoneName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -135,38 +134,57 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
   }
 
   @Override
-  public DnsZone save(@NotNull final String zoneName) {
+  public DnsZone save(final String zoneName) {
     if (isExcludedDnsZone(zoneName)) {
       throw ServiceException.badRequest(
           "Zone name is not allowed.",
           "org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9");
     }
     return findOne(zoneName)
-        .orElseGet(() -> execDnsZoneCmd(
-            "zonecreate",
-            zoneName, response -> findOne(zoneName)
-                .orElseThrow(() -> ServiceException.internalServerError(
-                    "msg=[Saving dns zone failed.] "
-                        + CommandExecutorResponse.toExceptionMessage(response),
-                    "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0"))));
+        .orElseGet(() -> doSave(zoneName));
+  }
+
+  /**
+   * Save dns zone.
+   *
+   * @param zoneName the zone name
+   * @return the dns zone
+   */
+  DnsZone doSave(final String zoneName) {
+    return execDnsZoneCmd(
+        "zonecreate",
+        zoneName, response -> findOne(zoneName)
+            .orElseThrow(() -> ServiceException.internalServerError(
+                "msg=[Saving dns zone failed.] "
+                    + CommandExecutorResponse.toExceptionMessage(response),
+                "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0")));
   }
 
   @Override
-  public boolean delete(@NotNull String zoneName) {
+  public boolean delete(final String zoneName) {
     if (exists(zoneName)) {
-      execDnsZoneCmd(
-          "zonedelete",
-          zoneName,
-          (CommandExecutorResponseValidator) response -> {
-            if (exists(zoneName)) {
-              throw ServiceException.internalServerError(
-                  "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
-                  "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
-            }
-          });
+      doDelete(zoneName);
       return true;
     }
     return false;
+  }
+
+  /**
+   * Delete dns zone.
+   *
+   * @param zoneName the zone name
+   */
+  void doDelete(final String zoneName) {
+    execDnsZoneCmd(
+        "zonedelete",
+        zoneName,
+        (CommandExecutorResponseValidator) response -> {
+          if (exists(zoneName)) {
+            throw ServiceException.internalServerError(
+                "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
+                "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
+          }
+        });
   }
 
   private <T> T execDnsZoneCmd(

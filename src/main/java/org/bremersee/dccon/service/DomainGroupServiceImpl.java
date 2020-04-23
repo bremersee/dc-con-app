@@ -48,8 +48,8 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   /**
    * Instantiates a new domain group service.
    *
-   * @param properties            the properties
-   * @param domainUserRepository  the domain user repository
+   * @param properties the properties
+   * @param domainUserRepository the domain user repository
    * @param domainGroupRepository the domain group repository
    */
   public DomainGroupServiceImpl(
@@ -75,9 +75,9 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public List<DomainGroup> getGroups(String sort) {
+  public List<DomainGroup> getGroups(String sort, String query) {
     final String sortOrder = StringUtils.hasText(sort) ? sort : DomainGroup.DEFAULT_SORT_ORDER;
-    return domainGroupRepository.findAll()
+    return domainGroupRepository.findAll(query)
         .sorted(ComparatorBuilder.builder()
             .fromWellKnownText(sortOrder)
             .build())
@@ -91,7 +91,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public Optional<DomainGroup> getGroupByName(@NotNull String groupName) {
+  public Optional<DomainGroup> getGroup(@NotNull String groupName) {
     return domainGroupRepository.findOne(groupName);
   }
 

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.bremersee.common.model.TwoLetterLanguageCode;
+import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
 import org.springframework.lang.Nullable;
@@ -34,31 +36,31 @@ import org.springframework.validation.annotation.Validated;
 public interface DomainUserService {
 
   /**
+   * Reset data. This method is only available in a non productive environment.
+   */
+  void resetData();
+
+  /**
    * Get domain users.
    *
    * @param sort the sort order
+   * @param query the query
    * @return the users
    */
-  List<DomainUser> getUsers(@Nullable String sort);
-
-  /**
-   * Gets user avatar.
-   *
-   * @param userName      the user name
-   * @param returnDefault the return default flag
-   * @return the user avatar
-   */
-  Optional<byte[]> getUserAvatar(
-      @NotNull String userName,
-      Boolean returnDefault);
+  List<DomainUser> getUsers(@Nullable String sort, @Nullable String query);
 
   /**
    * Add domain user.
    *
    * @param domainUser the domain user
+   * @param sendEmail specifies whether to send an email or not (default is {@code false})
+   * @param language the language of the email
    * @return the domain user
    */
-  DomainUser addUser(@NotNull @Valid DomainUser domainUser);
+  DomainUser addUser(
+      @NotNull @Valid DomainUser domainUser,
+      @Nullable Boolean sendEmail,
+      @Nullable TwoLetterLanguageCode language);
 
   /**
    * Get domain user.
@@ -71,10 +73,10 @@ public interface DomainUserService {
   /**
    * Update domain user.
    *
-   * @param userName     the user name
+   * @param userName the user name
    * @param updateGroups specifies whether the groups should also be updated or not (default is
-   *                     false)
-   * @param domainUser   the domain user
+   *     false)
+   * @param domainUser the domain user
    * @return the domain user
    */
   Optional<DomainUser> updateUser(
@@ -85,12 +87,29 @@ public interface DomainUserService {
   /**
    * Update user password.
    *
-   * @param userName    the user name
+   * @param userName the user name
    * @param newPassword the new password
+   * @param sendEmail specifies whether to send an email or not (default is {@code false})
+   * @param language the language of the email
    */
   void updateUserPassword(
       @NotNull String userName,
-      @NotNull @Valid Password newPassword);
+      @NotNull @Valid Password newPassword,
+      @Nullable Boolean sendEmail,
+      @Nullable TwoLetterLanguageCode language);
+
+  /**
+   * Gets user avatar.
+   *
+   * @param userName the user name
+   * @param avatarDefault the avatar default
+   * @param size the size
+   * @return the user avatar
+   */
+  Optional<byte[]> getUserAvatar(
+      @NotNull String userName,
+      @Nullable AvatarDefault avatarDefault,
+      @Nullable Integer size);
 
   /**
    * Check whether user exists or not.

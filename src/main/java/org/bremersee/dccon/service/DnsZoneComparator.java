@@ -43,6 +43,11 @@ public class DnsZoneComparator extends AbstractDnsComparator<DnsZone> {
 
   @Override
   public int compare(DnsZone o1, DnsZone o2) {
+    if (o1 != null && Boolean.TRUE.equals(o1.getDefaultZone())) {
+      return -1;
+    } else if (o2 != null && Boolean.TRUE.equals(o2.getDefaultZone())) {
+      return 1;
+    }
     final String s1 = o1 != null && o1.getName() != null ? o1.getName() : "";
     final String s2 = o2 != null && o2.getName() != null ? o2.getName() : "";
     log.debug("msg=[Comparing zones.] zone1=[{}] zone2=[{}]", s1, s2);

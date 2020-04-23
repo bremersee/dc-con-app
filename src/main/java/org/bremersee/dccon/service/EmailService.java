@@ -17,26 +17,26 @@
 package org.bremersee.dccon.service;
 
 import javax.validation.constraints.NotNull;
-import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.springframework.lang.Nullable;
-import org.springframework.validation.annotation.Validated;
 
 /**
- * The avatar service interface.
+ * The email service.
  *
  * @author Christian Bremer
  */
-@Validated
-public interface AvatarService {
+public interface EmailService {
 
   /**
-   * Find avatar.
+   * Send email with credentials.
    *
-   * @param domainUser    the domain user
-   * @param returnDefault the return default flag
-   * @return the avatar bytes or {@code null} if there is no avatar
+   * @param userName the user name
+   * @param clearPassword the clear password
+   * @param language the language
    */
-  @Nullable
-  byte[] findAvatar(@NotNull DomainUser domainUser, Boolean returnDefault);
+  void sendEmailWithCredentials(
+      @NotNull String userName,
+      @Nullable String clearPassword,
+      @Nullable TwoLetterLanguageCode language);
 
 }

@@ -1,15 +1,33 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Month;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -19,29 +37,36 @@ import org.ldaptive.LdapEntry;
  *
  * @author Christian Bremer
  */
-public class DomainGroupLdapMapperTest {
+class DomainGroupLdapMapperTest {
 
   private static DomainGroupLdapMapper mapper;
 
   /**
    * Init.
    */
-  @BeforeClass
-  public static void init() {
+  @BeforeAll
+  static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
     properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
-    properties.setGroupMemberAttr("member");
     properties.setUserRdn("cn");
     properties.setUserBaseDn("cn=Users,dc=example,dc=org");
     mapper = new DomainGroupLdapMapper(properties);
   }
 
   /**
+   * Gets object classes.
+   */
+  @Test
+  void getObjectClasses() {
+    assertArrayEquals(new String[0], mapper.getObjectClasses());
+  }
+
+  /**
    * Map distinguished name.
    */
   @Test
-  public void mapDn() {
+  void mapDn() {
     DomainGroup domainGroup = new DomainGroup();
     domainGroup.setName("somename");
     String dn = mapper.mapDn(domainGroup);
@@ -53,19 +78,25 @@ public class DomainGroupLdapMapperTest {
    * Map ldap entry.
    */
   @Test
-  public void map() {
+  void map() {
+    assertNull(mapper.map(null));
+
+    DomainGroup destination = DomainGroup.builder().build();
+    mapper.map(null, destination);
+    assertEquals(DomainGroup.builder().build(), destination);
+
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034"));
+        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
     source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135"));
+        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
     source.addAttribute(new LdapAttribute("name", "somename"));
     source.addAttribute(new LdapAttribute("member",
         "cn=member1,cn=Users,dc=example,dc=org",
         "cn=member2,cn=Users,dc=example,dc=org"));
 
-    DomainGroup destination = mapper.map(source);
+    destination = mapper.map(source);
     assertNotNull(destination);
     assertEquals("cn=somename,cn=Users,dc=example,dc=org", destination.getDistinguishedName());
     assertEquals(destination.getCreated(), destination.getCreated());
@@ -94,7 +125,7 @@ public class DomainGroupLdapMapperTest {
    * Map and compute modifications.
    */
   @Test
-  public void mapAndComputeModifications() {
+  void mapAndComputeModifications() {
     DomainGroup source = new DomainGroup();
     source.setName("somename");
     source.getMembers().add("member1");

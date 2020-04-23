@@ -94,7 +94,8 @@ public class DnsRecordValueTranscoder extends AbstractBinaryValueTranscoder<DnsR
     } catch (final IOException e) {
 
       final ServiceException se = ServiceException.internalServerError(
-          "Decoding dns record value failed.", e);
+          "Decoding dns record value failed.",
+          "org.bremersee:dc-con-app:d62e15c8-5410-4608-b663-20a716908102", e);
       log.error("msg=[Decoding dns record value failed.]", se);
       throw se;
     }

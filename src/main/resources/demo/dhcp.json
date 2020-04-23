@@ -1,0 +1,114 @@
+[
+  {
+    "mac": "aa:bb:cc:dd:ee:1a",
+    "ip": "192.168.1.100",
+    "hostname": "dhcp-192-168-1-100",
+    "begin": "2019-12-10T14:11:30Z",
+    "end": "2019-12-10T14:41:30Z",
+    "manufacturer": "Super Micro Computer, Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:1b",
+    "ip": "192.168.1.124",
+    "hostname": "ap-26a-e0",
+    "begin": "2019-12-10T14:20:14Z",
+    "end": "2019-12-10T14:50:14Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:1c",
+    "ip": "192.168.1.134",
+    "hostname": "ukelei",
+    "begin": "2019-12-10T14:06:29Z",
+    "end": "2019-12-10T14:36:29Z",
+    "manufacturer": "Apple, Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:1d",
+    "ip": "192.168.1.136",
+    "hostname": "mac-023",
+    "begin": "2019-12-10T14:15:46Z",
+    "end": "2019-12-10T14:45:46Z",
+    "manufacturer": "GOOD WAY IND. CO., LTD."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:1e",
+    "ip": "192.168.1.139",
+    "hostname": "ap-tractor-port",
+    "begin": "2019-12-10T14:12:58Z",
+    "end": "2019-12-10T14:42:58Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:1f",
+    "ip": "192.168.1.141",
+    "hostname": "ap-26a-e2",
+    "begin": "2019-12-10T14:13:11Z",
+    "end": "2019-12-10T14:43:11Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2a",
+    "ip": "192.168.1.142",
+    "hostname": "sw-26a-e0",
+    "begin": "2019-12-10T14:13:50Z",
+    "end": "2019-12-10T14:43:50Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2b",
+    "ip": "192.168.1.143",
+    "hostname": "ap-island",
+    "begin": "2019-12-10T14:06:03Z",
+    "end": "2019-12-10T14:36:03Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2c",
+    "ip": "192.168.1.144",
+    "hostname": "ap-26-e1",
+    "begin": "2019-12-10T14:15:11Z",
+    "end": "2019-12-10T14:45:11Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2d",
+    "ip": "192.168.1.173",
+    "hostname": "sw-26a-e3",
+    "begin": "2019-12-10T14:17:09Z",
+    "end": "2019-12-10T14:47:09Z",
+    "manufacturer": "Allnet GmbH"
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2e",
+    "ip": "192.168.1.181",
+    "hostname": "ap-26a-e3",
+    "begin": "2019-12-10T14:12:20Z",
+    "end": "2019-12-10T14:42:20Z",
+    "manufacturer": "Ubiquiti Networks Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:2f",
+    "ip": "192.168.1.183",
+    "hostname": "mac-023",
+    "begin": "2019-12-10T14:15:48Z",
+    "end": "2019-12-10T14:45:48Z",
+    "manufacturer": "Apple, Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:3a",
+    "ip": "192.168.1.188",
+    "hostname": "dhcp-192-168-1-188",
+    "begin": "2019-12-10T14:13:51Z",
+    "end": "2019-12-10T14:43:51Z",
+    "manufacturer": "Super Micro Computer, Inc."
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:3b",
+    "ip": "192.168.1.217",
+    "hostname": "barsch",
+    "begin": "2019-12-10T14:11:20Z",
+    "end": "2019-12-10T14:41:20Z",
+    "manufacturer": "MICRO-STAR INT'L CO.,LTD."
+  }
+]

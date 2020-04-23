@@ -31,7 +31,7 @@ public interface DnsNodeLdapMapperProvider {
   /**
    * Gets dns node ldap mapper.
    *
-   * @param dnsZoneName   the dns zone name
+   * @param dnsZoneName the dns zone name
    * @param unknownFilter the unknown filter
    * @return the dns node ldap mapper
    */
