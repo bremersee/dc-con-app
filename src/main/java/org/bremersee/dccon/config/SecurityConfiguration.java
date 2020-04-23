@@ -17,11 +17,13 @@
 package org.bremersee.dccon.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.security.authentication.AccessTokenRetriever;
 import org.bremersee.security.authentication.AuthenticationProperties;
 import org.bremersee.security.authentication.JsonPathJwtConverter;
 import org.bremersee.security.authentication.PasswordFlowAuthenticationManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.info.InfoEndpoint;
@@ -29,10 +31,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -40,11 +45,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * The security configuration.
@@ -55,7 +65,59 @@ import org.springframework.util.Assert;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableConfigurationProperties(AuthenticationProperties.class)
+@Slf4j
 public class SecurityConfiguration {
+
+  private AuthenticationProperties properties;
+
+  /**
+   * Instantiates a new security configuration.
+   *
+   * @param properties the properties
+   */
+  public SecurityConfiguration(
+      AuthenticationProperties properties) {
+    this.properties = properties;
+  }
+
+  /**
+   * Password flow authentication manager for the actuator endpoints that uses a different jwk uri
+   * as the resource server.
+   *
+   * @param jwkUriSet the jwk uri set
+   * @param jwsAlgorithm the jws algorithm
+   * @param issuerUri the issuer uri
+   * @param jwtAuthenticationConverter the jwt authentication converter
+   * @param accessTokenRetriever the access token retriever
+   * @return the password flow authentication manager
+   */
+  @ConditionalOnProperty(
+      prefix = "bremersee.security.authentication.actuator.jwt",
+      name = "jwk-set-uri")
+  @Bean
+  public PasswordFlowAuthenticationManager passwordFlowAuthenticationManager(
+      @Value("${bremersee.security.authentication.actuator.jwt.jwk-set-uri}")
+          String jwkUriSet,
+      @Value("${bremersee.security.authentication.actuator.jwt.jws-algorithm:RS256}")
+          String jwsAlgorithm,
+      @Value("${bremersee.security.authentication.actuator.jwt.issuer-uri:}")
+          String issuerUri,
+      ObjectProvider<Converter<Jwt, ? extends AbstractAuthenticationToken>> jwtAuthenticationConverter,
+      ObjectProvider<AccessTokenRetriever<String>> accessTokenRetriever) {
+
+    log.info("Creating password flow authentication manager with jwk uri {}", jwkUriSet);
+    NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkUriSet)
+        .jwsAlgorithm(SignatureAlgorithm.from(jwsAlgorithm)).build();
+    if (StringUtils.hasText(issuerUri)) {
+      nimbusJwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
+    }
+    return new PasswordFlowAuthenticationManager(
+        properties,
+        nimbusJwtDecoder,
+        jwtAuthenticationConverter.getIfAvailable(),
+        accessTokenRetriever.getIfAvailable());
+  }
 
   /**
    * The swagger security configuration.
