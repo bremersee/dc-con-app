@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
@@ -106,7 +107,7 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
   @Slf4j
   class Default implements DhcpLeaseParser {
 
-    private BiFunction<String, String, String> unknownHostConverter;
+    private final BiFunction<String, String, String> unknownHostConverter;
 
     /**
      * Instantiates a new default parser.
@@ -126,11 +127,8 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
      */
     Default(
         BiFunction<String, String, String> unknownHostConverter) {
-      if (unknownHostConverter == null) {
-        this.unknownHostConverter = (mac, ip) -> "dhcp-" + ip.replace(".", "-");
-      } else {
-        this.unknownHostConverter = unknownHostConverter;
-      }
+      this.unknownHostConverter = Objects.requireNonNullElseGet(unknownHostConverter,
+          () -> (mac, ip) -> "dhcp-" + ip.replace(".", "-"));
     }
 
     @Override

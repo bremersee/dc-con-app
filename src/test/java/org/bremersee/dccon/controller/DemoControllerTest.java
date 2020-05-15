@@ -17,10 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-    "bremersee.security.authentication.enable-jwt-support=false"
-})
-@ActiveProfiles({"basic-auth"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles({"in-memory"})
 @TestInstance(Lifecycle.PER_CLASS) // allows us to use @BeforeAll with a non-static method
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DemoControllerTest {

@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>1.1.4</version>
+    <version>2.0.2</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>2.1.1-SNAPSHOT</version>
+  <version>2.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -25,12 +25,11 @@
 
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>2.1.0</dc-con-api-spring.version>
-    <common-base.version>1.4.6</common-base.version>
-    <comparator.version>2.0.10</comparator.version>
+    <dc-con-api-spring.version>2.2.0-SNAPSHOT</dc-con-api-spring.version>
+    <common-base.version>2.1.1</common-base.version>
+    <comparator.version>2.1.0</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
-    <springfox.version>2.9.2</springfox.version>
 
     <!--suppress UnresolvedMavenProperty -->
     <debBaseName>
@@ -78,6 +77,20 @@
       <version>${dc-con-api-spring.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>common-base-actuator-starter</artifactId>
+      <version>${common-base.version}</version>
+    </dependency>
+    <!--
+      JMX-Bean Management for Spring Boot Admin Server:
+      1) Only for servlet based applications
+      2) Set spring.jmx.enabled=true
+    -->
+    <dependency>
+      <groupId>org.jolokia</groupId>
+      <artifactId>jolokia-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.bremersee</groupId>
       <artifactId>common-base-web-starter</artifactId>
@@ -131,18 +144,6 @@
       <version>${commons-io.version}</version>
     </dependency>
 
-    <!-- Swagger -->
-    <dependency>
-      <groupId>io.swagger</groupId>
-      <artifactId>swagger-annotations</artifactId>
-      <version>${swagger-annotations.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger2</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-
     <!-- Config client -->
     <dependency>
       <groupId>org.springframework.cloud</groupId>
@@ -155,25 +156,6 @@
     <dependency>
       <groupId>org.springframework.retry</groupId>
       <artifactId>spring-retry</artifactId>
-    </dependency>
-
-    <!-- Actuator -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.micrometer</groupId>
-      <artifactId>micrometer-registry-prometheus</artifactId>
-    </dependency>
-    <!--
-      JMX-Bean Management for Spring Boot Admin Server:
-      1) Only for servlet based applications
-      2) Set spring.jmx.enabled=true
-    -->
-    <dependency>
-      <groupId>org.jolokia</groupId>
-      <artifactId>jolokia-core</artifactId>
     </dependency>
 
     <!-- Sleuth and Zipkin -->
@@ -194,6 +176,18 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+
+    <!-- OpenAPI -->
+    <!--
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-core</artifactId>
+    </dependency>
+    -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
     </dependency>
 
     <dependency>

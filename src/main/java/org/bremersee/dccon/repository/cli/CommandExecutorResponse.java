@@ -46,9 +46,9 @@ public class CommandExecutorResponse implements Serializable {
     return response == null ? "" : response.toOneLine();
   }
 
-  private String stdout;
+  private final String stdout;
 
-  private String stderr;
+  private final String stderr;
 
   /**
    * Check whether stdout has text or not.

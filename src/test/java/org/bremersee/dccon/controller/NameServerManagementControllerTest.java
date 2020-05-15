@@ -22,10 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-    "bremersee.security.authentication.enable-jwt-support=false"
-})
-@ActiveProfiles({"basic-auth"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles({"in-memory"})
 class NameServerManagementControllerTest {
 
   private static final String user = "admin";

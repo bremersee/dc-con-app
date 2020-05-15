@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.config;
 
-import org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -29,15 +28,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class AsyncConfiguration { // implements AsyncConfigurer {
-
-  MessageSourceAutoConfiguration h;
-
-  /*
-  @Override
-  public Executor getAsyncExecutor() {
-    return new ThreadPoolTaskExecutor(); // This is to simple, throws Thread pool not initialized.
-  }
-  */
+public class AsyncConfiguration {
 
 }

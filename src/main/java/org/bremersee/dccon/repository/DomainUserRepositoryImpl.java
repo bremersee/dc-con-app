@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
 
-  private static ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
+  private static final ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
       = new ByteArrayValueTranscoder();
 
   private static final ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();

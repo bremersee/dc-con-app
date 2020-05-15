@@ -1,17 +1,18 @@
 pipeline {
   agent none
   environment {
-    SERVICE_NAME='dc-con-app'
-    DOCKER_IMAGE='bremersee/dc-con-app'
-    DEV_TAG='snapshot'
-    PROD_TAG='latest'
-    DEPLOY_SNAPSHOT=false
-    DEPLOY_RELEASE=true
-    PUSH_SNAPSHOT=false
-    PUSH_RELEASE=true
-    DEPLOY_DEMO=false
-    SNAPSHOT_SITE=false
-    RELEASE_SITE=true
+    SERVICE_NAME = 'dc-con-app'
+    DOCKER_IMAGE = 'bremersee/dc-con-app'
+    DEV_TAG = 'snapshot'
+    PROD_TAG = 'latest'
+    DEPLOY_RELEASE = true
+    INSTALL_SNAPSHOT = true
+    INSTALL_RELEASE = true
+    PUSH_SNAPSHOT = true
+    PUSH_RELEASE = true
+    DEPLOY_DEMO = true
+    SNAPSHOT_SITE = true
+    RELEASE_SITE = true
   }
   stages {
     stage('Test') {
@@ -19,7 +20,7 @@ pipeline {
         label 'maven'
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       when {
@@ -41,24 +42,6 @@ pipeline {
         }
       }
     }
-    stage('Deploy snapshot') {
-      agent {
-        label 'maven'
-      }
-      tools {
-        jdk 'jdk8'
-        maven 'm3'
-      }
-      when {
-        allOf {
-          branch 'develop'
-          environment name: 'DEPLOY_SNAPSHOT', value: 'true'
-        }
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
-      }
-    }
     stage('Deploy release') {
       agent {
         label 'maven'
@@ -70,7 +53,7 @@ pipeline {
         }
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {
@@ -81,6 +64,42 @@ pipeline {
         sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
       }
       */
+    }
+    stage('Install snapshot') {
+      agent {
+        label 'maven'
+      }
+      tools {
+        jdk 'jdk11'
+        maven 'm3'
+      }
+      when {
+        allOf {
+          branch 'develop'
+          environment name: 'INSTALL_SNAPSHOT', value: 'true'
+        }
+      }
+      steps {
+        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
+      }
+    }
+    stage('Install release') {
+      agent {
+        label 'maven'
+      }
+      tools {
+        jdk 'jdk11'
+        maven 'm3'
+      }
+      when {
+        allOf {
+          branch 'master'
+          environment name: 'INSTALL_RELEASE', value: 'true'
+        }
+      }
+      steps {
+        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
+      }
     }
     stage('Push snapshot') {
       agent {
@@ -93,7 +112,7 @@ pipeline {
         }
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {
@@ -115,7 +134,7 @@ pipeline {
         }
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {
@@ -145,7 +164,7 @@ pipeline {
           else
             echo "Creating service ${SERVICE_NAME} with docker image ${DOCKER_IMAGE}:${DEV_TAG}."
             chmod 755 docker-swarm/service.sh
-            docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "swarm,dev,demo"
+            docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "demo"
           fi
         '''
       }
@@ -164,7 +183,7 @@ pipeline {
         }
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {
@@ -190,7 +209,7 @@ pipeline {
         }
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {
@@ -210,7 +229,7 @@ pipeline {
         branch 'feature/*'
       }
       tools {
-        jdk 'jdk8'
+        jdk 'jdk11'
         maven 'm3'
       }
       steps {

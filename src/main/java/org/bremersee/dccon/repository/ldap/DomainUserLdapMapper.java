@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,17 +63,17 @@ public class DomainUserLdapMapper extends AbstractLdapMapper implements
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
 
-  private static IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
+  private static final IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
 
-  private static FileTimeToOffsetDateTimeValueTranscoder AD_TIME_VALUE_TRANSCODER
+  private static final FileTimeToOffsetDateTimeValueTranscoder AD_TIME_VALUE_TRANSCODER
       = new FileTimeToOffsetDateTimeValueTranscoder();
 
-  private static UserAccountControlValueTranscoder USER_ACCOUNT_CONTROL_VALUE_TRANSCODER
+  private static final UserAccountControlValueTranscoder USER_ACCOUNT_CONTROL_VALUE_TRANSCODER
       = new UserAccountControlValueTranscoder();
 
-  private UserGroupValueTranscoder userGroupValueTranscoder;
+  private final UserGroupValueTranscoder userGroupValueTranscoder;
 
-  private SidValueTranscoder sidValueTranscoder;
+  private final SidValueTranscoder sidValueTranscoder;
 
   /**
    * Instantiates a new domain user ldap mapper.

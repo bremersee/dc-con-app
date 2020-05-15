@@ -22,7 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "bremersee.security.authentication.enable-jwt-support=false"
 })
-@ActiveProfiles({"basic-auth"})
+@ActiveProfiles({"in-memory"})
 class DomainUserManagementControllerTest {
 
   private static final String user = "admin";
