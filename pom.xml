@@ -26,7 +26,7 @@
     <start-class>org.bremersee.dccon.Application</start-class>
 
     <dc-con-api-spring.version>2.2.0-SNAPSHOT</dc-con-api-spring.version>
-    <common-base.version>2.1.1</common-base.version>
+    <common-base.version>2.1.2</common-base.version>
     <comparator.version>2.1.0</comparator.version>
 
     <commons-io.version>2.5</commons-io.version>
