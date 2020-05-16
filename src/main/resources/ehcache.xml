@@ -42,4 +42,14 @@
     </resources>
   </cache>
 
+  <cache alias="jwt">
+    <expiry>
+      <ttl unit="minutes">15</ttl>
+    </expiry>
+    <resources>
+      <heap unit="entries">10</heap>
+      <offheap unit="MB">1</offheap>
+    </resources>
+  </cache>
+
 </config>
