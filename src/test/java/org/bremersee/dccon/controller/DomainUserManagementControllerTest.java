@@ -13,12 +13,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.util.LinkedMultiValueMap;
 
+/**
+ * The type Domain user management controller test.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "bremersee.security.authentication.enable-jwt-support=false"
 })
@@ -29,9 +36,15 @@ class DomainUserManagementControllerTest {
 
   private static final String pass = "admin";
 
+  /**
+   * The Rest template.
+   */
   @Autowired
   TestRestTemplate restTemplate;
 
+  /**
+   * Sets up.
+   */
   @BeforeEach
   void setUp() {
     ResponseEntity<Void> response = restTemplate
@@ -40,6 +53,9 @@ class DomainUserManagementControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
+  /**
+   * Gets users.
+   */
   @Test
   void getUsers() {
     ResponseEntity<DomainUser[]> response = restTemplate
@@ -51,6 +67,9 @@ class DomainUserManagementControllerTest {
     assertTrue(actual.length > 0);
   }
 
+  /**
+   * Add user.
+   */
   @Test
   void addUser() {
     DomainUser source = DomainUser.builder()
@@ -67,6 +86,9 @@ class DomainUserManagementControllerTest {
     assertEquals(source.getDescription(), actual.getDescription());
   }
 
+  /**
+   * Gets user.
+   */
   @Test
   void getUser() {
     DomainUser expected = findFirst();
@@ -79,6 +101,9 @@ class DomainUserManagementControllerTest {
     assertEquals(expected.getUserName(), actual.getUserName());
   }
 
+  /**
+   * Gets user avatar.
+   */
   @Test
   void getUserAvatar() {
     DomainUser expected = findFirst();
@@ -88,6 +113,9 @@ class DomainUserManagementControllerTest {
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
+  /**
+   * Update user.
+   */
   @Test
   void updateUser() {
     DomainUser expected = findFirst().toBuilder()
@@ -106,6 +134,9 @@ class DomainUserManagementControllerTest {
     assertEquals(expected.getDescription(), actual.getDescription());
   }
 
+  /**
+   * Update user password.
+   */
   @Test
   void updateUserPassword() {
     String userName = findFirst().getUserName();
@@ -119,6 +150,9 @@ class DomainUserManagementControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
+  /**
+   * Update user password and expect forbidden.
+   */
   @Test
   void updateUserPasswordAndExpectForbidden() {
     String userName = findFirst().getUserName();
@@ -135,6 +169,48 @@ class DomainUserManagementControllerTest {
     assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
   }
 
+  /**
+   * Update and remove user avatar.
+   */
+  @Test
+  void updateAndRemoveUserAvatar() {
+    LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("avatar", new ClassPathResource("avatar.jpeg"));
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+    HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+    String userName = findFirst().getUserName();
+    ResponseEntity<Void> response = restTemplate
+        .withBasicAuth(user, pass)
+        .exchange("/api/users/{name}/avatar",
+            HttpMethod.POST,
+            entity,
+            Void.class,
+            userName);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ResponseEntity<byte[]> avatarResponse = restTemplate
+        .withBasicAuth(user, pass)
+        .getForEntity("/api/users/{name}/avatar", byte[].class, userName);
+    byte[] actualBytes = avatarResponse.getBody();
+    assertNotNull(actualBytes);
+
+    restTemplate
+        .withBasicAuth(user, pass)
+        .delete("/api/users/{name}/avatar", userName);
+
+    avatarResponse = restTemplate
+        .withBasicAuth(user, pass)
+        .getForEntity("/api/users/{name}/avatar", byte[].class, userName);
+    assertEquals(HttpStatus.NOT_FOUND, avatarResponse.getStatusCode());
+  }
+
+  /**
+   * User exists.
+   */
   @Test
   void userExists() {
     DomainUser expected = findFirst();
@@ -155,6 +231,9 @@ class DomainUserManagementControllerTest {
     assertFalse(actual);
   }
 
+  /**
+   * Is user name in use.
+   */
   @Test
   void isUserNameInUse() {
     DomainUser expected = findFirst();
@@ -175,6 +254,9 @@ class DomainUserManagementControllerTest {
     assertFalse(actual);
   }
 
+  /**
+   * Delete user.
+   */
   @Test
   void deleteUser() {
     DomainUser expected = findFirst();

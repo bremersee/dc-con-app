@@ -117,6 +117,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
   @Override
   public void resetData() {
+    avatarRepo.clear();
     DomainUser[] users;
     DomainGroup[] groups;
     try {

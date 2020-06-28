@@ -29,9 +29,6 @@
     <common-base.version>2.1.5-SNAPSHOT</common-base.version>
     <comparator.version>2.1.0</comparator.version>
 
-    <commons-io.version>2.7</commons-io.version>
-    <springdoc.version>1.3.9</springdoc.version> <!-- Overwrites parent -->
-
     <!--suppress UnresolvedMavenProperty -->
     <debBaseName>
       dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all
@@ -142,7 +139,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>${commons-io.version}</version>
     </dependency>
 
     <!-- Config client -->
