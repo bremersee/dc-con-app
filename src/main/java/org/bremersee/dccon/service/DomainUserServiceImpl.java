@@ -16,11 +16,10 @@
 
 package org.bremersee.dccon.service;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.comparator.ComparatorBuilder;
@@ -62,7 +61,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   public DomainUserServiceImpl(
       final DomainControllerProperties properties,
       final DomainUserRepository domainUserRepository,
-      EmailService emailService,
+      final EmailService emailService,
       final DomainGroupRepository domainGroupRepository) {
     this.domainUserRepository = domainUserRepository;
     this.emailService = emailService;
@@ -118,7 +117,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public Optional<DomainUser> getUser(@NotNull String userName) {
+  public Optional<DomainUser> getUser(final String userName) {
     return domainUserRepository.findOne(userName);
   }
 
@@ -133,9 +132,9 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   @Override
   public Optional<DomainUser> updateUser(
-      @NotNull String userName,
-      Boolean updateGroups,
-      @NotNull @Valid DomainUser domainUser) {
+      final String userName,
+      final Boolean updateGroups,
+      final DomainUser domainUser) {
 
     return domainUserRepository.findOne(userName)
         .map(oldDomainUser -> {
@@ -163,12 +162,24 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public Boolean userExists(@NotNull String userName) {
+  public void updateUserAvatar(
+      final String userName,
+      final InputStream avatar) {
+    domainUserRepository.saveAvatar(userName, avatar);
+  }
+
+  @Override
+  public void removeUserAvatar(final String userName) {
+    domainUserRepository.removeAvatar(userName);
+  }
+
+  @Override
+  public Boolean userExists(final String userName) {
     return domainUserRepository.exists(userName);
   }
 
   @Override
-  public Boolean deleteUser(@NotNull String userName) {
+  public Boolean deleteUser(final String userName) {
     return domainUserRepository.delete(userName);
   }
 

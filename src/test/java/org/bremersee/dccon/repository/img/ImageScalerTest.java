@@ -46,7 +46,7 @@ class ImageScalerTest {
   void scaleToSmallerImage() throws IOException {
     BufferedImage original = ImageIO
         .read(RESOURCE_LOADER.getResource(IMAGE_LOCATION).getInputStream());
-    BufferedImage actual = ImageScaler.scaleImage(original, new Dimension(20, 20));
+    BufferedImage actual = ImageUtils.scaleImage(original, new Dimension(20, 20));
     assertNotNull(actual);
     assertTrue(actual.getHeight() < original.getHeight());
     assertTrue(actual.getWidth() < original.getWidth());
@@ -61,7 +61,7 @@ class ImageScalerTest {
   void scaleToBiggerImage() throws IOException {
     BufferedImage original = ImageIO
         .read(RESOURCE_LOADER.getResource(IMAGE_LOCATION).getInputStream());
-    BufferedImage actual = ImageScaler.scaleImage(original, new Dimension(5000, 5000));
+    BufferedImage actual = ImageUtils.scaleImage(original, new Dimension(5000, 5000));
     assertNotNull(actual);
     assertFalse(actual.getHeight() < original.getHeight());
     assertFalse(actual.getWidth() < original.getWidth());

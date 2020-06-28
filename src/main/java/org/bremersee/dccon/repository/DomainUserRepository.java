@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
@@ -60,6 +61,21 @@ public interface DomainUserRepository {
       @NotNull String userName,
       @Nullable AvatarDefault avatarDefault,
       @Nullable Integer size);
+
+  /**
+   * Save avatar.
+   *
+   * @param userName the user name
+   * @param avatar the avatar
+   */
+  void saveAvatar(@NotNull String userName, @NotNull InputStream avatar);
+
+  /**
+   * Remove avatar.
+   *
+   * @param userName the user name
+   */
+  void removeAvatar(@NotNull String userName);
 
   /**
    * Check whether user exists or not.

@@ -18,9 +18,9 @@ package org.bremersee.dccon.repository;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
-import org.bremersee.dccon.repository.img.ImageScaler;
+import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
@@ -78,6 +78,8 @@ import org.springframework.util.StringUtils;
 @Component("domainUserRepository")
 @Slf4j
 public class DomainUserRepositoryImpl extends AbstractRepository implements DomainUserRepository {
+
+  static final int MAX_AVATAR_SIZE = 2048;
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
 
@@ -194,7 +196,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       final AvatarDefault avatarDefault,
       final Integer size) {
 
-    final int avatarSize = size == null || size < 1 || size > 2048 ? 80 : size;
+    final int avatarSize = size == null || size < 1 || size > MAX_AVATAR_SIZE ? 80 : size;
     final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
     searchFilter.setParameter(0, userName);
     final SearchRequest searchRequest = new SearchRequest(
@@ -207,36 +209,38 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
     return getLdapTemplate().findOne(searchRequest)
         .map(ldapEntry -> {
-          final byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
+          byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
               ldapEntry, DomainUserLdapConstants.JPEG_PHOTO, BYTE_ARRAY_VALUE_TRANSCODER, null);
           if (avatar != null && avatar.length > 0) {
             try {
-              final BufferedImage img = ImageIO.read(new ByteArrayInputStream(avatar));
-              final BufferedImage scaledImg = ImageScaler
+              final BufferedImage img = ImageUtils.toSquareImage(avatar);
+              final BufferedImage scaledImg = ImageUtils
                   .scaleImage(img, new Dimension(avatarSize, avatarSize));
               final ByteArrayOutputStream out = new ByteArrayOutputStream();
               ImageIO.write(scaledImg, "JPG", out);
-              return out.toByteArray();
+              avatar = out.toByteArray();
 
             } catch (IOException e) {
               log.error("msg=[Creating image from ldap attribute {} failed.]",
                   DomainUserLdapConstants.JPEG_PHOTO, e);
             }
+          } else {
+            final String mail = LdaptiveEntryMapper
+                .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
+            avatar = findAvatar(mail, getProperties().getGravatarUrl(), avatarDefault, avatarSize);
           }
-          final String mail = LdaptiveEntryMapper
-              .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
-          return findAvatar(mail, getProperties().getGravatarUrl(), avatarDefault, avatarSize);
+          return avatar;
         });
   }
 
   /**
-   * Find avatar byte [ ].
+   * Find avatar.
    *
    * @param mail the mail
    * @param avatarUrlTemplate the avatar url template
    * @param avatarDefault the avatar default
    * @param avatarSize the avatar size
-   * @return the byte [ ]
+   * @return the avatar byte array
    */
   static byte[] findAvatar(
       final String mail,
@@ -269,7 +273,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     try {
       final BufferedImage img = ImageIO
           .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());
-      final BufferedImage scaledImg = ImageScaler
+      final BufferedImage scaledImg = ImageUtils
           .scaleImage(img, new Dimension(avatarSize, avatarSize));
       final ByteArrayOutputStream out = new ByteArrayOutputStream();
       ImageIO.write(scaledImg, "JPG", out);
@@ -284,6 +288,56 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       throw se;
     }
 
+  }
+
+  @Override
+  public void removeAvatar(final String userName) {
+    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
+    modifyAvatar(userName, ldapAttribute, AttributeModificationType.REMOVE);
+  }
+
+  @Override
+  public void saveAvatar(final String userName, final InputStream avatar) {
+
+    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
+    try (InputStream in = avatar) {
+      BufferedImage img = ImageIO.read(in);
+      int width = img.getWidth();
+      int height = img.getHeight();
+      int max = Math.max(width, height);
+      if (max > MAX_AVATAR_SIZE) {
+        float factor = Integer.valueOf(MAX_AVATAR_SIZE).floatValue() / max;
+        width = Math.min(Math.round(factor * width), MAX_AVATAR_SIZE);
+        height = Math.min(Math.round(factor * height), MAX_AVATAR_SIZE);
+        img = ImageUtils.scaleImage(img, new Dimension(width, height));
+      }
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      ImageIO.write(img, "jpg", out);
+      ldapAttribute.addBinaryValue(out.toByteArray());
+    } catch (IOException e) {
+      throw ServiceException.internalServerError("Saving avatar failed.", e);
+    }
+    modifyAvatar(userName, ldapAttribute, AttributeModificationType.REPLACE);
+  }
+
+  private void modifyAvatar(
+      String userName,
+      LdapAttribute ldapAttribute,
+      AttributeModificationType modificationType) {
+
+    final AttributeModification attributeModification = new AttributeModification();
+    attributeModification.setAttributeModificationType(modificationType);
+    attributeModification.setAttribute(ldapAttribute);
+    final String dn = LdaptiveEntryMapper.createDn(
+        getProperties().getUserRdn(),
+        userName,
+        getProperties().getUserBaseDn());
+    final ModifyRequest modifyRequest = new ModifyRequest();
+    modifyRequest.setDn(dn);
+    modifyRequest.setAttributeModifications(attributeModification);
+    getLdapTemplate().modify(modifyRequest);
   }
 
   @Override

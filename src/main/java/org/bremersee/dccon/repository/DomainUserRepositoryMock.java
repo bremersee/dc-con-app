@@ -20,7 +20,11 @@ import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPa
 import static org.bremersee.dccon.repository.DomainUserRepositoryImpl.isQueryResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -31,12 +35,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.exception.ServiceException;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -64,6 +70,8 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
   private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
   private final Map<String, DomainUser> repo = new ConcurrentHashMap<>();
+
+  private final Map<String, byte[]> avatarRepo = new ConcurrentHashMap<>();
 
   private Pattern passwordPattern = Pattern.compile(getComplexPasswordRegex(7));
 
@@ -167,12 +175,40 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
     final int avatarSize = size == null || size < 1 || size > 2048 ? 80 : size;
     return findOne(userName)
-        .flatMap(domainUser -> Optional.ofNullable(
+        .map(domainUser -> avatarRepo.getOrDefault(
+            domainUser.getUserName(),
             DomainUserRepositoryImpl.findAvatar(
                 domainUser.getEmail(),
                 new DomainControllerProperties().getGravatarUrl(),
                 avatarDefault,
                 avatarSize)));
+  }
+
+  @Override
+  public void saveAvatar(final String userName, final InputStream avatar) {
+
+    try (InputStream in = avatar) {
+      BufferedImage img = ImageIO.read(in);
+      int width = img.getWidth();
+      int height = img.getHeight();
+      int max = Math.max(width, height);
+      if (max > DomainUserRepositoryImpl.MAX_AVATAR_SIZE) {
+        float factor = Integer.valueOf(DomainUserRepositoryImpl.MAX_AVATAR_SIZE).floatValue() / max;
+        width = Math.min(Math.round(factor * width), DomainUserRepositoryImpl.MAX_AVATAR_SIZE);
+        height = Math.min(Math.round(factor * height), DomainUserRepositoryImpl.MAX_AVATAR_SIZE);
+        img = ImageUtils.scaleImage(img, new Dimension(width, height));
+      }
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      ImageIO.write(img, "jpg", out);
+      avatarRepo.put(userName, out.toByteArray());
+    } catch (IOException e) {
+      throw ServiceException.internalServerError("Saving avatar failed.", e);
+    }
+  }
+
+  @Override
+  public void removeAvatar(final String userName) {
+    avatarRepo.remove(userName);
   }
 
   @Override

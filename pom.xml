@@ -29,7 +29,7 @@
     <common-base.version>2.1.5-SNAPSHOT</common-base.version>
     <comparator.version>2.1.0</comparator.version>
 
-    <commons-io.version>2.5</commons-io.version>
+    <commons-io.version>2.7</commons-io.version>
     <springdoc.version>1.3.9</springdoc.version> <!-- Overwrites parent -->
 
     <!--suppress UnresolvedMavenProperty -->

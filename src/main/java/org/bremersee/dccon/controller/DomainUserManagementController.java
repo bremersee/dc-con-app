@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller;
 
 import static org.bremersee.security.core.AuthorityConstants.ADMIN_ROLE_NAME;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -32,12 +33,15 @@ import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * The domain user management controller.
@@ -124,9 +128,9 @@ public class DomainUserManagementController implements DomainUserManagementApi {
       @Valid final Password newPassword) {
 
     final boolean sendEmail;
-    if (!isAdmin()) {
+    if (isNotAdmin()) {
       sendEmail = Boolean.FALSE;
-      if (!isUser(userName)) {
+      if (isNotUser(userName)) {
         throw ServiceException.forbidden();
       } else if (!authenticationService.passwordMatches(userName, newPassword.getPreviousValue())) {
         throw ServiceException.badRequest(
@@ -139,6 +143,41 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     domainUserService.updateUserPassword(userName, newPassword, sendEmail, language);
     return ResponseEntity.ok().build();
   }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<Void> updateUserAvatar(
+      final String userName,
+      final MultipartFile avatar) {
+
+    if (isNotAdmin() && isNotUser(userName)) {
+      throw ServiceException.forbidden();
+    }
+    if (!StringUtils.hasText(avatar.getContentType())) {
+      throw ServiceException.badRequest("Multipart of avatar needs a content type.");
+    }
+    if (!MediaType.valueOf("image/*").includes(MediaType.valueOf(avatar.getContentType()))) {
+      throw ServiceException.badRequest(
+          "Multipart of avatar must be an image (ContentType: image/*)");
+    }
+    try {
+      domainUserService.updateUserAvatar(userName, avatar.getInputStream());
+    } catch (IOException e) {
+      throw ServiceException.internalServerError("Saving avatar failed.", e);
+    }
+    return ResponseEntity.ok().build();
+  }
+
+  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  @Override
+  public ResponseEntity<Void> removeUserAvatar(final String userName) {
+    if (isNotAdmin() && isNotUser(userName)) {
+      throw ServiceException.forbidden();
+    }
+    domainUserService.removeUserAvatar(userName);
+    return ResponseEntity.ok().build();
+  }
+
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
@@ -159,21 +198,21 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     return ResponseEntity.ok(domainUserService.deleteUser(userName));
   }
 
-  private boolean isAdmin() {
+  private boolean isNotAdmin() {
     return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
         .map(Authentication::getAuthorities)
         .map(authorities -> authorities.stream()
             .map(GrantedAuthority::getAuthority)
-            .anyMatch(roleName -> ADMIN_ROLE_NAME
+            .noneMatch(roleName -> ADMIN_ROLE_NAME
                 .equalsIgnoreCase(roleName) || "ROLE_DC_CON_ADMIN".equalsIgnoreCase(roleName)))
-        .orElse(false);
+        .orElse(true);
   }
 
-  private boolean isUser(String userName) {
+  private boolean isNotUser(String userName) {
     return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
         .map(Authentication::getName)
-        .map(name -> name.equalsIgnoreCase(userName))
-        .orElse(false);
+        .map(name -> !name.equalsIgnoreCase(userName))
+        .orElse(true);
   }
 
 }

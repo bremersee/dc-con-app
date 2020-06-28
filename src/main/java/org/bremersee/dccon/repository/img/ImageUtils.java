@@ -20,13 +20,52 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 /**
- * The image scaler.
+ * The image utilities.
  *
  * @author Christian Bremer
  */
-public class ImageScaler {
+public class ImageUtils {
+
+  /**
+   * To square image.
+   *
+   * @param img the img
+   * @return the buffered image
+   * @throws IOException the io exception
+   */
+  public static BufferedImage toSquareImage(byte[] img) throws IOException {
+    return toSquareImage(ImageIO.read(new ByteArrayInputStream(img)));
+  }
+
+  /**
+   * To square image.
+   *
+   * @param img the img
+   * @return the buffered image
+   */
+  public static BufferedImage toSquareImage(BufferedImage img) {
+    int width = img.getWidth();
+    int height = img.getHeight();
+    int size = Math.min(width, height);
+    BufferedImage squareImg;
+    if (width != height) {
+      if (width > height) {
+        int a = (width - height) / 2;
+        squareImg = img.getSubimage(a, 0, size, size);
+      } else {
+        int a = (height - width) / 2;
+        squareImg = img.getSubimage(0, a, size, size);
+      }
+    } else {
+      squareImg = img;
+    }
+    return squareImg;
+  }
 
   /**
    * Scale image.

@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.service;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -71,6 +72,19 @@ public interface DomainUserService {
   Optional<DomainUser> getUser(@NotNull String userName);
 
   /**
+   * Gets user avatar.
+   *
+   * @param userName the user name
+   * @param avatarDefault the avatar default
+   * @param size the size
+   * @return the user avatar
+   */
+  Optional<byte[]> getUserAvatar(
+      @NotNull String userName,
+      @Nullable AvatarDefault avatarDefault,
+      @Nullable Integer size);
+
+  /**
    * Update domain user.
    *
    * @param userName the user name
@@ -99,17 +113,19 @@ public interface DomainUserService {
       @Nullable TwoLetterLanguageCode language);
 
   /**
-   * Gets user avatar.
+   * Update user avatar.
    *
    * @param userName the user name
-   * @param avatarDefault the avatar default
-   * @param size the size
-   * @return the user avatar
+   * @param avatar the avatar
    */
-  Optional<byte[]> getUserAvatar(
-      @NotNull String userName,
-      @Nullable AvatarDefault avatarDefault,
-      @Nullable Integer size);
+  void updateUserAvatar(@NotNull String userName, @NotNull InputStream avatar);
+
+  /**
+   * Remove user avatar.
+   *
+   * @param userName the user name
+   */
+  void removeUserAvatar(@NotNull String userName);
 
   /**
    * Check whether user exists or not.
