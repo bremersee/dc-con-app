@@ -50,6 +50,7 @@ bremersee:
       - ant-pattern: "/swagger-ui.html"
         access-mode: permit_all
     any-access-mode: authenticated
+    frame-options-mode: sameorigin
 
 eureka:
   client:
