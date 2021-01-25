@@ -50,8 +50,8 @@ import org.bremersee.dccon.repository.ldap.transcoder.UserAccountControlValueTra
 import org.bremersee.dccon.repository.ldap.transcoder.UserGroupValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.IntegerValueTranscoder;
-import org.ldaptive.io.StringValueTranscoder;
+import org.ldaptive.transcode.IntegerValueTranscoder;
+import org.ldaptive.transcode.StringValueTranscoder;
 
 /**
  * The domain user ldap mapper.

@@ -317,7 +317,7 @@ class DnsNodeRepositoryImplTest {
         .build();
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(node0));
     dnsNodeRepository.delete("example.org", node0);
-    verify(ldaptiveTemplate).delete(any(), any());
+    verify(ldaptiveTemplate).remove(any(), any());
   }
 
   /**
@@ -329,7 +329,7 @@ class DnsNodeRepositoryImplTest {
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(node0));
     dnsNodeRepository.delete("example.org", "node0");
     verify(ldaptiveTemplate).findOne(any(), any());
-    verify(ldaptiveTemplate).delete(any(), any());
+    verify(ldaptiveTemplate).remove(any(), any());
   }
 
   /**
@@ -341,7 +341,7 @@ class DnsNodeRepositoryImplTest {
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DnsNode>>) invocationOnMock -> Stream.of(node0));
     dnsNodeRepository.deleteAll("example.org");
-    verify(ldaptiveTemplate).delete(any(), any());
+    verify(ldaptiveTemplate).remove(any(), any());
   }
 
   /**
@@ -352,7 +352,7 @@ class DnsNodeRepositoryImplTest {
     DnsNode node0 = DnsNode.builder().name("node0").build();
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(node0));
     dnsNodeRepository.deleteAll("example.org", Collections.singletonList("node0"));
-    verify(ldaptiveTemplate).delete(any(), any());
+    verify(ldaptiveTemplate).remove(any(), any());
   }
 
   /**

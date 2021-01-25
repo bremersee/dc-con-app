@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +34,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * The domain group management controller test.
+ *
+ * @author Christian Bremer
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 class DomainGroupManagementControllerTest {
@@ -26,9 +47,15 @@ class DomainGroupManagementControllerTest {
 
   private static final String pass = "admin";
 
+  /**
+   * The rest template.
+   */
   @Autowired
   TestRestTemplate restTemplate;
 
+  /**
+   * Sets up.
+   */
   @BeforeEach
   void setUp() {
     ResponseEntity<Void> response = restTemplate
@@ -37,6 +64,9 @@ class DomainGroupManagementControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
+  /**
+   * Gets groups.
+   */
   @Test
   void getGroups() {
     ResponseEntity<DomainGroup[]> response = restTemplate
@@ -48,6 +78,9 @@ class DomainGroupManagementControllerTest {
     assertTrue(actual.length > 0);
   }
 
+  /**
+   * Add group.
+   */
   @Test
   void addGroup() {
     DomainGroup source = DomainGroup.builder()
@@ -64,6 +97,9 @@ class DomainGroupManagementControllerTest {
     assertEquals(source.getDescription(), actual.getDescription());
   }
 
+  /**
+   * Gets group.
+   */
   @Test
   void getGroup() {
     DomainGroup expected = findFirst();
@@ -76,6 +112,9 @@ class DomainGroupManagementControllerTest {
     assertEquals(expected, actual);
   }
 
+  /**
+   * Update group.
+   */
   @Test
   void updateGroup() {
     DomainGroup expected = findFirst().toBuilder()
@@ -94,6 +133,9 @@ class DomainGroupManagementControllerTest {
     assertEquals(expected.getDescription(), actual.getDescription());
   }
 
+  /**
+   * Group exists.
+   */
   @Test
   void groupExists() {
     DomainGroup expected = findFirst();
@@ -114,6 +156,9 @@ class DomainGroupManagementControllerTest {
     assertFalse(actual);
   }
 
+  /**
+   * Is group name in use.
+   */
   @Test
   void isGroupNameInUse() {
     DomainGroup expected = findFirst();
@@ -134,6 +179,9 @@ class DomainGroupManagementControllerTest {
     assertFalse(actual);
   }
 
+  /**
+   * Delete group.
+   */
   @Test
   void deleteGroup() {
     DomainGroup expected = findFirst();

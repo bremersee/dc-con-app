@@ -19,8 +19,8 @@ package org.bremersee.dccon.repository.ldap.transcoder;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import org.ldaptive.io.AbstractStringValueTranscoder;
-import org.ldaptive.io.GeneralizedTimeValueTranscoder;
+import org.ldaptive.transcode.AbstractStringValueTranscoder;
+import org.ldaptive.transcode.GeneralizedTimeValueTranscoder;
 import org.springframework.util.StringUtils;
 
 /**

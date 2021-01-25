@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.repository.DnsRecordType;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.io.AbstractBinaryValueTranscoder;
+import org.ldaptive.transcode.AbstractBinaryValueTranscoder;
 
 /**
  * The dns record value transcoder.

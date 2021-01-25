@@ -31,7 +31,7 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchFilter;
+import org.ldaptive.FilterTemplate;
 import org.ldaptive.SearchRequest;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
@@ -77,11 +77,12 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
 
   @Override
   public Stream<DomainGroup> findAll(final String query) {
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getGroupBaseDn(),
-        new SearchFilter(getProperties().getGroupFindAllFilter()));
-    searchRequest.setSearchScope(getProperties().getGroupFindAllSearchScope());
-    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getGroupBaseDn())
+        .filter(getProperties().getGroupFindAllFilter())
+        .scope(getProperties().getGroupFindAllSearchScope())
+        .binaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES)
+        .build();
     if (query == null || query.trim().length() == 0) {
       return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
     } else {
@@ -106,13 +107,15 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
 
   @Override
   public Optional<DomainGroup> findOne(final String groupName) {
-    final SearchFilter searchFilter = new SearchFilter(getProperties().getGroupFindOneFilter());
-    searchFilter.setParameter(0, groupName);
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getGroupBaseDn(),
-        searchFilter);
-    searchRequest.setSearchScope(getProperties().getGroupFindOneSearchScope());
-    searchRequest.setBinaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES);
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getGroupBaseDn())
+        .filter(FilterTemplate.builder()
+            .filter(getProperties().getGroupFindOneFilter())
+            .parameters(groupName)
+            .build())
+        .scope(getProperties().getGroupFindOneSearchScope())
+        .binaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES)
+        .build();
     return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);
   }
 

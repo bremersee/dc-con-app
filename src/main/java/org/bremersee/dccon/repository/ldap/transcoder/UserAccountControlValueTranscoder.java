@@ -18,7 +18,7 @@ package org.bremersee.dccon.repository.ldap.transcoder;
 
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.ldaptive.io.AbstractStringValueTranscoder;
+import org.ldaptive.transcode.AbstractStringValueTranscoder;
 import org.springframework.util.StringUtils;
 
 /**

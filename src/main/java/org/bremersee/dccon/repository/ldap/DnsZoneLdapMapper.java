@@ -23,7 +23,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.StringValueTranscoder;
+import org.ldaptive.transcode.StringValueTranscoder;
 
 /**
  * The dns zone ldap mapper.

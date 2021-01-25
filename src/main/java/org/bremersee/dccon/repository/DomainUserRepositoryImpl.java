@@ -50,15 +50,15 @@ import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.AttributeModification;
-import org.ldaptive.AttributeModificationType;
+import org.ldaptive.AttributeModification.Type;
+import org.ldaptive.FilterTemplate;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapException;
 import org.ldaptive.ModifyRequest;
 import org.ldaptive.ResultCode;
-import org.ldaptive.SearchFilter;
 import org.ldaptive.SearchRequest;
-import org.ldaptive.io.ByteArrayValueTranscoder;
-import org.ldaptive.io.StringValueTranscoder;
+import org.ldaptive.transcode.ByteArrayValueTranscoder;
+import org.ldaptive.transcode.StringValueTranscoder;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -144,11 +144,12 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   @Override
   public Stream<DomainUser> findAll(final String query) {
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getUserBaseDn(),
-        new SearchFilter(getProperties().getUserFindAllFilter()));
-    searchRequest.setSearchScope(getProperties().getUserFindAllSearchScope());
-    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getUserBaseDn())
+        .filter(getProperties().getUserFindAllFilter())
+        .scope(getProperties().getUserFindAllSearchScope())
+        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
+        .build();
     if (query == null || query.trim().length() == 0) {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
     } else {
@@ -179,14 +180,16 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   @Override
   public Optional<DomainUser> findOne(final String userName) {
-    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
-    searchFilter.setParameter(0, userName);
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getUserBaseDn(),
-        searchFilter);
-    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
-    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
-    searchRequest.setSizeLimit(1L);
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getUserBaseDn())
+        .filter(FilterTemplate.builder()
+            .filter(getProperties().getUserFindOneFilter())
+            .parameters(userName)
+            .build())
+        .scope(getProperties().getUserFindOneSearchScope())
+        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
+        .sizeLimit(1)
+        .build();
     return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
   }
 
@@ -197,16 +200,17 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       final Integer size) {
 
     final int avatarSize = size == null || size < 1 || size > MAX_AVATAR_SIZE ? 80 : size;
-    final SearchFilter searchFilter = new SearchFilter(getProperties().getUserFindOneFilter());
-    searchFilter.setParameter(0, userName);
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getUserBaseDn(),
-        searchFilter);
-    searchRequest.setSearchScope(getProperties().getUserFindOneSearchScope());
-    searchRequest.setBinaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES);
-    searchRequest.setReturnAttributes(DomainUserLdapConstants.MAIL);
-    searchRequest.setSizeLimit(1L);
-
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getUserBaseDn())
+        .filter(FilterTemplate.builder()
+            .filter(getProperties().getUserFindOneFilter())
+            .parameters(userName)
+            .build())
+        .scope(getProperties().getUserFindOneSearchScope())
+        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
+        .returnAttributes(DomainUserLdapConstants.JPEG_PHOTO)
+        .sizeLimit(1)
+        .build();
     return getLdapTemplate().findOne(searchRequest)
         .map(ldapEntry -> {
           byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
@@ -292,16 +296,18 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
   @Override
   public void removeAvatar(final String userName) {
-    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    final LdapAttribute ldapAttribute = new LdapAttribute();
     ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
-    modifyAvatar(userName, ldapAttribute, AttributeModificationType.REMOVE);
+    ldapAttribute.setBinary(true);
+    modifyAvatar(userName, ldapAttribute, Type.DELETE);
   }
 
   @Override
   public void saveAvatar(final String userName, final InputStream avatar) {
 
-    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    final LdapAttribute ldapAttribute = new LdapAttribute();
     ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
+    ldapAttribute.setBinary(true);
     try (InputStream in = avatar) {
       BufferedImage img = ImageIO.read(in);
       int width = img.getWidth();
@@ -315,28 +321,27 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       }
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       ImageIO.write(img, "jpg", out);
-      ldapAttribute.addBinaryValue(out.toByteArray());
+      ldapAttribute.addBinaryValues(out.toByteArray());
     } catch (IOException e) {
       throw ServiceException.internalServerError("Saving avatar failed.", e);
     }
-    modifyAvatar(userName, ldapAttribute, AttributeModificationType.REPLACE);
+    modifyAvatar(userName, ldapAttribute, AttributeModification.Type.REPLACE);
   }
 
   private void modifyAvatar(
       String userName,
       LdapAttribute ldapAttribute,
-      AttributeModificationType modificationType) {
+      AttributeModification.Type modificationType) {
 
-    final AttributeModification attributeModification = new AttributeModification();
-    attributeModification.setAttributeModificationType(modificationType);
-    attributeModification.setAttribute(ldapAttribute);
-    final String dn = LdaptiveEntryMapper.createDn(
+    AttributeModification attributeModification = new AttributeModification(modificationType, ldapAttribute);
+    String dn = LdaptiveEntryMapper.createDn(
         getProperties().getUserRdn(),
         userName,
         getProperties().getUserBaseDn());
-    final ModifyRequest modifyRequest = new ModifyRequest();
-    modifyRequest.setDn(dn);
-    modifyRequest.setAttributeModifications(attributeModification);
+    ModifyRequest modifyRequest = ModifyRequest.builder()
+        .dn(dn)
+        .modificiations(attributeModification)
+        .build();
     getLdapTemplate().modify(modifyRequest);
   }
 
@@ -434,19 +439,19 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       pwdArray[i * 2 + 1] = (byte) (unicodePwd[i] >>> 8);
       pwdArray[i * 2] = (byte) (unicodePwd[i] & 0xff);
     }
-    final LdapAttribute ldapAttribute = new LdapAttribute(true);
+    final LdapAttribute ldapAttribute = new LdapAttribute();
     ldapAttribute.setName("unicodePwd");
-    ldapAttribute.addBinaryValue(pwdArray);
-    final AttributeModification attributeModification = new AttributeModification();
-    attributeModification.setAttributeModificationType(AttributeModificationType.REPLACE);
-    attributeModification.setAttribute(ldapAttribute);
+    ldapAttribute.setBinary(true);
+    ldapAttribute.addBinaryValues(pwdArray);
+    final AttributeModification attributeModification = new AttributeModification(Type.REPLACE, ldapAttribute);
     final String dn = LdaptiveEntryMapper.createDn(
         getProperties().getUserRdn(),
         userName,
         getProperties().getUserBaseDn());
-    final ModifyRequest modifyRequest = new ModifyRequest();
-    modifyRequest.setDn(dn);
-    modifyRequest.setAttributeModifications(attributeModification);
+    final ModifyRequest modifyRequest = ModifyRequest.builder()
+        .dn(dn)
+        .modificiations(attributeModification)
+        .build();
     getLdapTemplate()
         .clone(new AbstractLdaptiveErrorHandler() {
           @Override

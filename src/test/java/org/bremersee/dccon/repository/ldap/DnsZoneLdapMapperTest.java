@@ -80,11 +80,11 @@ class DnsZoneLdapMapperTest {
 
     LdapEntry ldapEntry = new LdapEntry();
     ldapEntry.setDn("dc=example.org,cn=zones,dc=example,dc=org");
-    ldapEntry.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
-    ldapEntry.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
-    ldapEntry.addAttribute(new LdapAttribute("name", "example.org"));
+    ldapEntry.addAttributes(
+        new LdapAttribute(AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"),
+        new LdapAttribute(AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"),
+        new LdapAttribute("name", "example.org")
+    );
 
     dnsZone = mapper.map(ldapEntry);
     assertNotNull(dnsZone);

@@ -87,14 +87,14 @@ class DomainGroupLdapMapperTest {
 
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
-    source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"));
-    source.addAttribute(new LdapAttribute(
-        AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"));
-    source.addAttribute(new LdapAttribute("name", "somename"));
-    source.addAttribute(new LdapAttribute("member",
-        "cn=member1,cn=Users,dc=example,dc=org",
-        "cn=member2,cn=Users,dc=example,dc=org"));
+    source.addAttributes(
+        new LdapAttribute(AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"),
+        new LdapAttribute(AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"),
+        new LdapAttribute("name", "somename"),
+        new LdapAttribute(
+            "member",
+            "cn=member1,cn=Users,dc=example,dc=org", "cn=member2,cn=Users,dc=example,dc=org")
+    );
 
     destination = mapper.map(source);
     assertNotNull(destination);

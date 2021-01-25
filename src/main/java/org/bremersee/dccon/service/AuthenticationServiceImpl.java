@@ -78,6 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     if (!StringUtils.hasText(userName) || !StringUtils.hasText(clearPassword)) {
       return false;
     }
+    // TODO use bind?
     final String baseDn = baseDnProvider.apply(userName);
     try {
       final ConnectionConfig connectionConfig = LdaptiveConnectionConfigFactory.defaultFactory()
@@ -88,7 +89,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
           domainControllerProperties.getUserRdn(),
           userName,
           domainControllerProperties.getUserBaseDn());
-      final SearchRequest searchRequest = SearchRequest.newObjectScopeSearchRequest(dn);
+      final SearchRequest searchRequest = SearchRequest.objectScopeSearchRequest(dn);
       final LdaptiveTemplate ldaptiveTemplate = new LdaptiveTemplate(connectionFactory);
       return ldaptiveTemplate.findOne(searchRequest).isPresent();
 

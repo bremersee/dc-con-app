@@ -97,12 +97,13 @@ class DnsNodeLdapMapperTest {
     final byte[] recordAttrValue2 = Base64.getDecoder().decode(
         "GQAFAAXwAAB5HwAAAAADhAAAAADy4TcAFwQCbGIEZWl4ZQlicmVtZXJzZWUDb3JnAA==");
 
-    final LdapAttribute recordAttr = new LdapAttribute(true);
+    final LdapAttribute recordAttr = new LdapAttribute();
     recordAttr.setName("dnsRecord");
+    recordAttr.setBinary(true);
     recordAttr.addBinaryValues(Arrays.asList(recordAttrValue0, recordAttrValue1, recordAttrValue2));
 
     final LdapEntry source = new LdapEntry();
-    source.addAttribute(nodeName);
+    source.addAttributes(nodeName);
 
     actual = getMapper(UnknownFilter.NO_UNKNOWN).map(source);
     assertNull(actual);
@@ -114,7 +115,7 @@ class DnsNodeLdapMapperTest {
     assertNotNull(actual);
     assertEquals("proxy", actual.getName());
 
-    source.addAttribute(recordAttr);
+    source.addAttributes(recordAttr);
 
     actual = getMapper(UnknownFilter.NO_UNKNOWN).map(source);
     assertNotNull(actual);
@@ -176,13 +177,13 @@ class DnsNodeLdapMapperTest {
     // CNAME : lb.eixe.bremersee.org
     final byte[] recordAttrValue2 = Base64.getDecoder().decode(
         "GQAFAAXwAAB5HwAAAAADhAAAAADy4TcAFwQCbGIEZWl4ZQlicmVtZXJzZWUDb3JnAA==");
-    final LdapAttribute recordAttr = new LdapAttribute(true);
+    final LdapAttribute recordAttr = new LdapAttribute();
     recordAttr.setName("dnsRecord");
+    recordAttr.setBinary(true);
     recordAttr.addBinaryValues(Arrays.asList(recordAttrValue0, recordAttrValue1, recordAttrValue2));
 
     final LdapEntry destination = new LdapEntry();
-    destination.addAttribute(nodeName);
-    destination.addAttribute(recordAttr);
+    destination.addAttributes(nodeName, recordAttr);
 
     assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
         .contains(recordAttrValue0));

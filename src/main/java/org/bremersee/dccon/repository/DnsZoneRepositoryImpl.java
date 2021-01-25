@@ -35,7 +35,7 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchFilter;
+import org.ldaptive.FilterTemplate;
 import org.ldaptive.SearchRequest;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
@@ -106,10 +106,11 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
   @Override
   public Stream<DnsZone> findAll() {
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getDnsZoneBaseDn(),
-        new SearchFilter(getProperties().getDnsZoneFindAllFilter()));
-    searchRequest.setSearchScope(getProperties().getDnsZoneFindAllSearchScope());
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getDnsZoneBaseDn())
+        .filter(getProperties().getDnsZoneFindAllFilter())
+        .scope(getProperties().getDnsZoneFindAllSearchScope())
+        .build();
     return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper)
         .filter(this::isNonExcludedDnsZone);
   }
@@ -122,12 +123,14 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
   @Override
   public Optional<DnsZone> findOne(final String zoneName) {
-    final SearchFilter searchFilter = new SearchFilter(getProperties().getDnsZoneFindOneFilter());
-    searchFilter.setParameter(0, zoneName);
-    final SearchRequest searchRequest = new SearchRequest(
-        getProperties().getDnsZoneBaseDn(),
-        searchFilter);
-    searchRequest.setSearchScope(getProperties().getDnsZoneFindOneSearchScope());
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getDnsZoneBaseDn())
+        .filter(FilterTemplate.builder()
+            .filter(getProperties().getDnsZoneFindOneFilter())
+            .parameters(zoneName)
+            .build())
+        .scope(getProperties().getDnsZoneFindOneSearchScope())
+        .build();
     return getLdapTemplate()
         .findOne(searchRequest, dnsZoneLdapMapper)
         .filter(this::isNonExcludedDnsZone);

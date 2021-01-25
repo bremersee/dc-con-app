@@ -6,12 +6,12 @@ pipeline {
     DEV_TAG = 'snapshot'
     PROD_TAG = 'latest'
     DEPLOY_RELEASE = true
-    INSTALL_SNAPSHOT = true
+    INSTALL_SNAPSHOT = false
     INSTALL_RELEASE = true
-    PUSH_SNAPSHOT = true
+    PUSH_SNAPSHOT = false
     PUSH_RELEASE = true
     DEPLOY_DEMO = false
-    SNAPSHOT_SITE = true
+    SNAPSHOT_SITE = false
     RELEASE_SITE = true
   }
   options {

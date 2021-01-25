@@ -19,8 +19,8 @@ package org.bremersee.dccon.repository.ldap.transcoder;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import org.ldaptive.ad.io.FileTimeValueTranscoder;
-import org.ldaptive.io.AbstractStringValueTranscoder;
+import org.ldaptive.ad.transcode.FileTimeValueTranscoder;
+import org.ldaptive.transcode.AbstractStringValueTranscoder;
 
 /**
  * The file time value transcoder.

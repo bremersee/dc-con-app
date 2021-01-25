@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,6 +33,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * The demo controller test.
+ *
+ * @author Christian Bremer
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 @TestInstance(Lifecycle.PER_CLASS) // allows us to use @BeforeAll with a non-static method
@@ -27,9 +48,15 @@ class DemoControllerTest {
 
   private static final String pass = "admin";
 
+  /**
+   * The rest template.
+   */
   @Autowired
   TestRestTemplate restTemplate;
 
+  /**
+   * Reset data.
+   */
   @Order(1)
   @Test
   void resetData() {
@@ -39,6 +66,9 @@ class DemoControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
+  /**
+   * Reset data and expect.
+   */
   @Order(2)
   @Test
   void resetDataAndExpect() {
@@ -47,6 +77,9 @@ class DemoControllerTest {
     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
 
+  /**
+   * Throw error.
+   */
   @Order(3)
   @Test
   void throwError() {

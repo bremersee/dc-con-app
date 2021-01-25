@@ -34,7 +34,7 @@ import org.bremersee.dccon.repository.ldap.transcoder.GroupMemberValueTranscoder
 import org.bremersee.dccon.repository.ldap.transcoder.SidValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.StringValueTranscoder;
+import org.ldaptive.transcode.StringValueTranscoder;
 
 /**
  * The domain group ldap mapper.

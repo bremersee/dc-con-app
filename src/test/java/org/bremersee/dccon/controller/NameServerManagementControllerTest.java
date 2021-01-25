@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.bremersee.dccon.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +38,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * The name server management controller test.
+ *
+ * @author Christian Bremer
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 class NameServerManagementControllerTest {
@@ -30,12 +51,21 @@ class NameServerManagementControllerTest {
 
   private static final String pass = "admin";
 
+  /**
+   * The Properties.
+   */
   @Autowired
   DomainControllerProperties properties;
 
+  /**
+   * The Rest template.
+   */
   @Autowired
   TestRestTemplate restTemplate;
 
+  /**
+   * Sets up.
+   */
   @BeforeEach
   void setUp() {
     ResponseEntity<Void> response = restTemplate
@@ -44,6 +74,9 @@ class NameServerManagementControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
+  /**
+   * Query.
+   */
   @Test
   void query() {
     DnsNode expected = DnsNode.builder()
@@ -74,6 +107,9 @@ class NameServerManagementControllerTest {
     assertTrue(result.length > 0);
   }
 
+  /**
+   * Gets dhcp leases.
+   */
   @Test
   void getDhcpLeases() {
     ResponseEntity<DhcpLease[]> response = restTemplate
@@ -85,6 +121,9 @@ class NameServerManagementControllerTest {
     assertTrue(actual.length > 0);
   }
 
+  /**
+   * Gets dns zones.
+   */
   @Test
   void getDnsZones() {
     ResponseEntity<DnsZone[]> response = restTemplate
@@ -96,6 +135,9 @@ class NameServerManagementControllerTest {
     assertTrue(actual.length > 0);
   }
 
+  /**
+   * Add dns zone and delete.
+   */
   @Test
   void addDnsZoneAndDelete() {
     DnsZone expected = DnsZone.builder().name("newtestzone").build();
@@ -132,6 +174,9 @@ class NameServerManagementControllerTest {
     assertFalse(deleted);
   }
 
+  /**
+   * Gets dns nodes.
+   */
   @Test
   void getDnsNodes() {
     ResponseEntity<DnsNode[]> response = restTemplate
@@ -145,6 +190,9 @@ class NameServerManagementControllerTest {
     assertTrue(actual.length > 0);
   }
 
+  /**
+   * Save dns node and delete.
+   */
   @Test
   void saveDnsNodeAndDelete() {
     DnsNode expected = DnsNode.builder()
@@ -191,6 +239,9 @@ class NameServerManagementControllerTest {
     assertFalse(deleted);
   }
 
+  /**
+   * Save and get dns node.
+   */
   @Test
   void saveAndGetDnsNode() {
     DnsNode expected = DnsNode.builder()
@@ -222,6 +273,9 @@ class NameServerManagementControllerTest {
     assertEquals(expected.getName(), actual.getName());
   }
 
+  /**
+   * Delete all dns nodes.
+   */
   @Test
   void deleteAllDnsNodes() {
     ResponseEntity<String> response = restTemplate

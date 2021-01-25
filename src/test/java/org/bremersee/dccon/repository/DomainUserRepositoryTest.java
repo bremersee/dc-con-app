@@ -185,7 +185,7 @@ class DomainUserRepositoryTest {
   @Test
   void findAvatarFromGravatar() {
     LdapEntry ldapEntry = new LdapEntry();
-    ldapEntry.addAttribute(new LdapAttribute("mail", "someone@example.org"));
+    ldapEntry.addAttributes(new LdapAttribute("mail", "someone@example.org"));
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(ldapEntry));
     Optional<byte[]> actual = userRepository.findAvatar("somebody", AvatarDefault.ROBOHASH, 20);
     assertTrue(actual.isPresent());
@@ -202,7 +202,7 @@ class DomainUserRepositoryTest {
     ResourceLoader resourceLoader = new DefaultResourceLoader();
     byte[] expected = IOUtils.toByteArray(resourceLoader.getResource(location).getInputStream());
     LdapEntry ldapEntry = new LdapEntry();
-    ldapEntry.addAttribute(new LdapAttribute(
+    ldapEntry.addAttributes(new LdapAttribute(
         DomainUserLdapConstants.JPEG_PHOTO,
         expected));
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(ldapEntry));

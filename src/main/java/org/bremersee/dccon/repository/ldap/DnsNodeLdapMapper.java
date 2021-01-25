@@ -30,7 +30,7 @@ import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordValueTranscoder;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.io.StringValueTranscoder;
+import org.ldaptive.transcode.StringValueTranscoder;
 
 /**
  * The dns node ldap mapper.

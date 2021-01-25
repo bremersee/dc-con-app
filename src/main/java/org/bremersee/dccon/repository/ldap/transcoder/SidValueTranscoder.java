@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.Sid;
 import org.ldaptive.ad.SecurityIdentifier;
-import org.ldaptive.io.AbstractBinaryValueTranscoder;
+import org.ldaptive.transcode.AbstractBinaryValueTranscoder;
 
 /**
  * The SID value transcoder.
