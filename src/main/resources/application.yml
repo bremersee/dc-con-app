@@ -56,6 +56,8 @@ eureka:
     enabled: false
 
 spring:
+  application:
+    name: ${APPLICATION_NAME:dc-con-app}
   sleuth:
     enabled: ${SLEUTH_ENABLED:false}
     sampler:
@@ -94,6 +96,18 @@ logging:
     com.netflix.eureka.registry: warn
     com.netflix.discovery.shared.resolver: warn
     org.springframework.cloud.configclient: warn
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: jwt
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://openid.bremersee.org/auth/realms/omnis/protocol/openid-connect/certs
 
 ---
 

@@ -58,7 +58,7 @@ class NameServerManagementControllerTest {
   DomainControllerProperties properties;
 
   /**
-   * The Rest template.
+   * The rest template.
    */
   @Autowired
   TestRestTemplate restTemplate;

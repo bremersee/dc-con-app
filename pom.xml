@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.3</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,7 +26,7 @@
     <start-class>org.bremersee.dccon.Application</start-class>
 
     <dc-con-api-spring.version>2.2.0</dc-con-api-spring.version>
-    <common-base.version>2.3.0</common-base.version>
+    <common-base.version>2.3.1-SNAPSHOT</common-base.version>
     <comparator.version>2.2.0</comparator.version>
 
     <!--suppress UnresolvedMavenProperty -->
