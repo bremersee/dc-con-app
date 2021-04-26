@@ -29,7 +29,7 @@
     <common-base.version>1.4.6</common-base.version>
     <comparator.version>2.0.10</comparator.version>
 
-    <commons-io.version>2.5</commons-io.version>
+    <commons-io.version>2.7</commons-io.version>
     <springfox.version>2.9.2</springfox.version>
 
     <!--suppress UnresolvedMavenProperty -->
