@@ -340,7 +340,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn());
     ModifyRequest modifyRequest = ModifyRequest.builder()
         .dn(dn)
-        .modificiations(attributeModification)
+        .modifications(attributeModification)
         .build();
     getLdapTemplate().modify(modifyRequest);
   }
@@ -450,7 +450,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         getProperties().getUserBaseDn());
     final ModifyRequest modifyRequest = ModifyRequest.builder()
         .dn(dn)
-        .modificiations(attributeModification)
+        .modifications(attributeModification)
         .build();
     getLdapTemplate()
         .clone(new AbstractLdaptiveErrorHandler() {

@@ -68,6 +68,9 @@ spring:
   cache:
     jcache:
       config: classpath:ehcache.xml
+  cloud:
+    config:
+      enabled: ${CONFIG_CLIENT_ENABLED:false}
 
 management:
   endpoints:
