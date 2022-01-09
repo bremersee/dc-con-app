@@ -19,6 +19,7 @@ bremersee:
     name-server-host: ${NAME_SERVER_HOST:ns.example.org}
     dns-zone-base-dn: ${LDAP_ZONE_DN:CN=MicrosoftDNS,DC=DomainDnsZones,DC=example,DC=org}
     dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
+    default-zone: ${DEFAULT_ZONE:samdom.example.org}
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@example.org}
       login-url: http://localhost:4200/change-password
