@@ -16,10 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -40,7 +37,6 @@ import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.ObjectProvider;
 
@@ -58,7 +54,7 @@ class DomainGroupRepositoryImplTest {
   private static ObjectProvider<LdaptiveTemplate> ldapTemplateProvider(LdaptiveTemplate template) {
     //noinspection unchecked
     ObjectProvider<LdaptiveTemplate> provider = mock(ObjectProvider.class);
-    Mockito.when(provider.getIfAvailable()).thenReturn(template);
+    when(provider.getIfAvailable()).thenReturn(template);
     return provider;
   }
 
@@ -103,10 +99,9 @@ class DomainGroupRepositoryImplTest {
         .build();
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DomainGroup>>) invocationOnMock -> Stream.of(group0, group1));
-    assertTrue(groupRepository.findAll(null)
-        .anyMatch(group -> group0.getName().equals(group.getName())));
-    assertTrue(groupRepository.findAll(null)
-        .anyMatch(group -> group1.getName().equals(group.getName())));
+    assertThat(groupRepository.findAll(null))
+        .map(DomainGroup::getName)
+        .containsExactlyInAnyOrder(group0.getName(), group1.getName());
   }
 
   /**
@@ -123,10 +118,10 @@ class DomainGroupRepositoryImplTest {
         .build();
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DomainGroup>>) invocationOnMock -> Stream.of(group0, group1));
-    assertFalse(groupRepository.findAll("member0")
-        .anyMatch(group -> group0.getName().equals(group.getName())));
-    assertTrue(groupRepository.findAll("member0")
-        .anyMatch(group -> group1.getName().equals(group.getName())));
+    assertThat(groupRepository.findAll("member0"))
+        .map(DomainGroup::getName)
+        .contains(group1.getName())
+        .doesNotContain(group0.getName());
   }
 
   /**
@@ -139,9 +134,10 @@ class DomainGroupRepositoryImplTest {
         .build();
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(expected));
     Optional<DomainGroup> actual = groupRepository.findOne(expected.getName());
-    assertNotNull(actual);
-    assertTrue(actual.isPresent());
-    assertEquals(expected.getName(), actual.get().getName());
+    assertThat(actual)
+        .isPresent()
+        .map(DomainGroup::getName)
+        .hasValue(expected.getName());
   }
 
   /**
@@ -150,7 +146,8 @@ class DomainGroupRepositoryImplTest {
   @Test
   void exists() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(groupRepository.exists("name"));
+    assertThat(groupRepository.exists("name"))
+        .isTrue();
   }
 
   /**
@@ -165,8 +162,9 @@ class DomainGroupRepositoryImplTest {
     when(ldaptiveTemplate.save(any(), any())).thenReturn(expected);
     DomainGroup actual = groupRepository.save(expected);
     verify(groupRepository).doAdd(any());
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    assertThat(actual)
+        .extracting(DomainGroup::getName)
+        .isEqualTo(expected.getName());
   }
 
   /**
@@ -175,7 +173,8 @@ class DomainGroupRepositoryImplTest {
   @Test
   void deleteAndExpectTrue() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(groupRepository.delete("group0"));
+    assertThat(groupRepository.delete("group0"))
+        .isTrue();
     verify(groupRepository).doDelete(anyString());
   }
 
@@ -185,7 +184,8 @@ class DomainGroupRepositoryImplTest {
   @Test
   void deleteAndExpectFalse() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(false);
-    assertFalse(groupRepository.delete("group0"));
+    assertThat(groupRepository.delete("group0"))
+        .isFalse();
     verify(groupRepository, never()).doDelete(anyString());
   }
 }

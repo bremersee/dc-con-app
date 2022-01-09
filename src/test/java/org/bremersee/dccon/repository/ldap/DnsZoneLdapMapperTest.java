@@ -16,25 +16,25 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Month;
+import java.time.OffsetDateTime;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 
 /**
  * The dns zone ldap mapper test.
- *
- * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DnsZoneLdapMapperTest {
 
   private static DnsZoneLdapMapper mapper;
@@ -55,28 +55,32 @@ class DnsZoneLdapMapperTest {
    */
   @Test
   void getObjectClasses() {
-    assertArrayEquals(new String[0], mapper.getObjectClasses());
+    assertThat(mapper.getObjectClasses())
+        .isEmpty();
   }
 
   /**
-   * Map distinguished name.
+   * Map dn.
    */
   @Test
   void mapDn() {
-    assertEquals("dc=example.org,cn=zones,dc=example,dc=org",
-        mapper.mapDn(DnsZone.builder().name("example.org").build()));
+    assertThat(mapper.mapDn(DnsZone.builder().name("example.org").build()))
+        .isEqualTo("dc=example.org,cn=zones,dc=example,dc=org");
   }
 
   /**
    * Map.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void map() {
-    assertNull(mapper.map(null));
+  void map(SoftAssertions softly) {
+    softly.assertThat(mapper.map(null)).isNull();
 
     DnsZone dnsZone = DnsZone.builder().build();
     mapper.map(null, dnsZone);
-    assertEquals(DnsZone.builder().build(), dnsZone);
+    softly.assertThat(dnsZone)
+        .isEqualTo(DnsZone.builder().build());
 
     LdapEntry ldapEntry = new LdapEntry();
     ldapEntry.setDn("dc=example.org,cn=zones,dc=example,dc=org");
@@ -87,25 +91,60 @@ class DnsZoneLdapMapperTest {
     );
 
     dnsZone = mapper.map(ldapEntry);
-    assertNotNull(dnsZone);
-    assertEquals(
-        "dc=example.org,cn=zones,dc=example,dc=org",
-        dnsZone.getDistinguishedName());
-    assertEquals("example.org", dnsZone.getName());
-
-    assertEquals(2017, dnsZone.getCreated().getYear());
-    assertEquals(Month.MAY, dnsZone.getCreated().getMonth());
-    assertEquals(20, dnsZone.getCreated().getDayOfMonth());
-    assertEquals(15, dnsZone.getCreated().getHour());
-    assertEquals(0, dnsZone.getCreated().getMinute());
-    assertEquals(34, dnsZone.getCreated().getSecond());
-
-    assertEquals(2018, dnsZone.getModified().getYear());
-    assertEquals(Month.JUNE, dnsZone.getModified().getMonth());
-    assertEquals(21, dnsZone.getModified().getDayOfMonth());
-    assertEquals(16, dnsZone.getModified().getHour());
-    assertEquals(1, dnsZone.getModified().getMinute());
-    assertEquals(35, dnsZone.getModified().getSecond());
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getDistinguishedName)
+        .isEqualTo("dc=example.org,cn=zones,dc=example,dc=org");
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getName)
+        .isEqualTo("example.org");
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2017);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.MAY);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(20);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(15);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(0);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getCreated)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(34);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2018);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.JUNE);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(21);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(16);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(1);
+    softly.assertThat(dnsZone)
+        .extracting(DnsZone::getModified)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(35);
   }
 
   /**
@@ -116,8 +155,8 @@ class DnsZoneLdapMapperTest {
     // A dns zone ldap entry cannot be changed
     AttributeModification[] modifications = mapper.mapAndComputeModifications(
         new DnsZone(), new LdapEntry());
-    assertNotNull(modifications);
-    assertEquals(0, modifications.length);
+    assertThat(modifications)
+        .hasSize(0);
   }
 
 }

@@ -16,20 +16,20 @@
 
 package org.bremersee.dccon.repository.ldap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -41,6 +41,7 @@ import org.ldaptive.transcode.StringValueTranscoder;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DomainUserLdapMapperTest {
 
   private static DomainUserLdapMapper mapper;
@@ -63,7 +64,8 @@ class DomainUserLdapMapperTest {
    */
   @Test
   void getObjectClasses() {
-    assertArrayEquals(new String[0], mapper.getObjectClasses());
+    assertThat(mapper.getObjectClasses())
+        .isEmpty();
   }
 
   /**
@@ -74,20 +76,23 @@ class DomainUserLdapMapperTest {
     DomainUser domainUser = new DomainUser();
     domainUser.setUserName("somename");
     String dn = mapper.mapDn(domainUser);
-    assertNotNull(dn);
-    assertEquals("cn=somename,cn=Users,dc=example,dc=org", dn);
+    assertThat(dn)
+        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
   }
 
   /**
    * Map ldap entry.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void map() {
-    assertNull(mapper.map(null));
+  void map(SoftAssertions softly) {
+    softly.assertThat(mapper.map(null)).isNull();
 
     DomainUser destination = DomainUser.builder().build();
     mapper.map(null, destination);
-    assertEquals(DomainUser.builder().build(), destination);
+    softly.assertThat(destination)
+        .isEqualTo(DomainUser.builder().build());
 
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
@@ -97,31 +102,67 @@ class DomainUserLdapMapperTest {
     );
 
     destination = mapper.map(source);
-    assertNotNull(destination);
-    assertEquals("cn=somename,cn=Users,dc=example,dc=org", destination.getDistinguishedName());
-    assertEquals(destination.getCreated(), destination.getCreated());
+    softly.assertThat(destination)
+        .extracting(DomainUser::getDistinguishedName)
+        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2017);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.MAY);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(20);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(15);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(0);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getCreated)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(34);
 
-    assertEquals(2017, destination.getCreated().getYear());
-    assertEquals(Month.MAY, destination.getCreated().getMonth());
-    assertEquals(20, destination.getCreated().getDayOfMonth());
-    assertEquals(15, destination.getCreated().getHour());
-    assertEquals(0, destination.getCreated().getMinute());
-    assertEquals(34, destination.getCreated().getSecond());
-
-    assertEquals(2018, destination.getModified().getYear());
-    assertEquals(Month.JUNE, destination.getModified().getMonth());
-    assertEquals(21, destination.getModified().getDayOfMonth());
-    assertEquals(16, destination.getModified().getHour());
-    assertEquals(1, destination.getModified().getMinute());
-    assertEquals(35, destination.getModified().getSecond());
-
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2018);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.JUNE);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(21);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(16);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(1);
+    softly.assertThat(destination)
+        .extracting(DomainUser::getModified)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(35);
   }
 
   /**
    * Map and compute modifications.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void mapAndComputeModifications() {
+  void mapAndComputeModifications(SoftAssertions softly) {
     DomainUser source = new DomainUser();
     source.setCreated(OffsetDateTime.now());
     source.setDisplayName("Anna Livia Plurabelle");
@@ -143,45 +184,32 @@ class DomainUserLdapMapperTest {
     mapper.mapAndComputeModifications(source, destination);
 
     StringValueTranscoder svt = new StringValueTranscoder();
-    assertEquals(
-        source.getDisplayName(),
-        getAttributeValue(destination, "displayName", svt, null));
-    assertEquals(
-        source.getDisplayName(),
-        getAttributeValue(destination, "gecos", svt, null));
-    assertEquals(
-        source.getEmail(),
-        getAttributeValue(destination, "mail", svt, null));
-    assertEquals(
-        source.getFirstName(),
-        getAttributeValue(destination, "givenName", svt, null));
-    assertEquals(
-        source.getHomeDirectory(),
-        getAttributeValue(destination, "homeDirectory", svt, null));
-    assertEquals(
-        source.getLastName(),
-        getAttributeValue(destination, "sn", svt, null));
-    assertEquals(
-        source.getLoginShell(),
-        getAttributeValue(destination, "loginShell", svt, null));
-    assertEquals(
-        source.getMobile(),
-        getAttributeValue(destination, "mobile", svt, null));
-    assertEquals(
-        source.getTelephoneNumber(),
-        getAttributeValue(destination, "telephoneNumber", svt, null));
-    assertEquals(
-        source.getUnixHomeDirectory(),
-        getAttributeValue(destination, "unixHomeDirectory", svt, null));
-    assertEquals(
-        source.getUserName(),
-        getAttributeValue(destination, "name", svt, null));
-    assertEquals(
-        source.getUserName(),
-        getAttributeValue(destination, "uid", svt, null));
-    assertEquals(
-        source.getUserName(),
-        getAttributeValue(destination, "sAMAccountName", svt, null));
+    softly.assertThat(getAttributeValue(destination, "displayName", svt, null))
+        .isEqualTo(source.getDisplayName());
+    softly.assertThat(getAttributeValue(destination, "gecos", svt, null))
+        .isEqualTo(source.getDisplayName());
+    softly.assertThat(getAttributeValue(destination, "mail", svt, null))
+        .isEqualTo(source.getEmail());
+    softly.assertThat(getAttributeValue(destination, "givenName", svt, null))
+        .isEqualTo(source.getFirstName());
+    softly.assertThat(getAttributeValue(destination, "homeDirectory", svt, null))
+        .isEqualTo(source.getHomeDirectory());
+    softly.assertThat(getAttributeValue(destination, "sn", svt, null))
+        .isEqualTo(source.getLastName());
+    softly.assertThat(getAttributeValue(destination, "loginShell", svt, null))
+        .isEqualTo(source.getLoginShell());
+    softly.assertThat(getAttributeValue(destination, "mobile", svt, null))
+        .isEqualTo(source.getMobile());
+    softly.assertThat(getAttributeValue(destination, "telephoneNumber", svt, null))
+        .isEqualTo(source.getTelephoneNumber());
+    softly.assertThat(getAttributeValue(destination, "unixHomeDirectory", svt, null))
+        .isEqualTo(source.getUnixHomeDirectory());
+    softly.assertThat(getAttributeValue(destination, "name", svt, null))
+        .isEqualTo(source.getUserName());
+    softly.assertThat(getAttributeValue(destination, "uid", svt, null))
+        .isEqualTo(source.getUserName());
+    softly.assertThat(getAttributeValue(destination, "sAMAccountName", svt, null))
+        .isEqualTo(source.getUserName());
 
     // Groups must be set in group entity.
     // List<String> groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
@@ -189,19 +217,16 @@ class DomainUserLdapMapperTest {
     // assertEquals("cn=joyce,cn=Users,dc=example,dc=org", groupDns.get(0));
 
     IntegerValueTranscoder ivt = new IntegerValueTranscoder();
-    assertEquals(
-        66048,
-        (long) getAttributeValue(destination, "userAccountControl", ivt, null));
+    softly.assertThat(getAttributeValue(destination, "userAccountControl", ivt, null))
+        .isEqualTo(66048);
 
     source.setEnabled(false);
     source.setGroups(new ArrayList<>());
 
     AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-    assertEquals(1, modifications.length);
-    assertEquals(
-        66050,
-        (long) getAttributeValue(destination, "userAccountControl", ivt, null));
-    // groupDns = getAttributeValuesAsList(destination, "memberOf", svt);
-    // Assert.assertTrue(groupDns.isEmpty());
+    softly.assertThat(modifications)
+        .hasSize(1);
+    softly.assertThat(getAttributeValue(destination, "userAccountControl", ivt, null))
+        .isEqualTo(66050);
   }
 }

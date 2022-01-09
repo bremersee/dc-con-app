@@ -16,13 +16,15 @@
 
 package org.bremersee.dccon.repository.img;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 
@@ -31,6 +33,7 @@ import org.springframework.core.io.ResourceLoader;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class ImageScalerTest {
 
   private static final String IMAGE_LOCATION = "classpath:mp.jpg";
@@ -40,30 +43,38 @@ class ImageScalerTest {
   /**
    * Scale to smaller image.
    *
+   * @param softly the soft assertions
    * @throws IOException the io exception
    */
   @Test
-  void scaleToSmallerImage() throws IOException {
+  void scaleToSmallerImage(SoftAssertions softly) throws IOException {
     BufferedImage original = ImageIO
         .read(RESOURCE_LOADER.getResource(IMAGE_LOCATION).getInputStream());
     BufferedImage actual = ImageUtils.scaleImage(original, new Dimension(20, 20));
-    assertNotNull(actual);
-    assertTrue(actual.getHeight() < original.getHeight());
-    assertTrue(actual.getWidth() < original.getWidth());
+    softly.assertThat(actual)
+        .extracting(BufferedImage::getHeight, InstanceOfAssertFactories.INTEGER)
+        .isLessThan(original.getHeight());
+    softly.assertThat(actual)
+        .extracting(BufferedImage::getWidth, InstanceOfAssertFactories.INTEGER)
+        .isLessThan(original.getWidth());
   }
 
   /**
    * Scale to bigger image.
    *
+   * @param softly the soft assertions
    * @throws IOException the io exception
    */
   @Test
-  void scaleToBiggerImage() throws IOException {
+  void scaleToBiggerImage(SoftAssertions softly) throws IOException {
     BufferedImage original = ImageIO
         .read(RESOURCE_LOADER.getResource(IMAGE_LOCATION).getInputStream());
     BufferedImage actual = ImageUtils.scaleImage(original, new Dimension(5000, 5000));
-    assertNotNull(actual);
-    assertFalse(actual.getHeight() < original.getHeight());
-    assertFalse(actual.getWidth() < original.getWidth());
+    softly.assertThat(actual)
+        .extracting(BufferedImage::getHeight, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(original.getHeight());
+    softly.assertThat(actual)
+        .extracting(BufferedImage::getWidth, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(original.getWidth());
   }
 }

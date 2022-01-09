@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+DEBIAN_NAME="dc-con"
+APP_NAME=$DEBIAN_NAME
+
+if [ -e /etc/systemd/system/$DEBIAN_NAME.service ]; then
+  /bin/systemctl stop $DEBIAN_NAME.service
+  /bin/systemctl disable $DEBIAN_NAME.service
+fi
+
+if [ -e /var/lib/$DEBIAN_NAME/$APP_NAME.conf ]; then
+  cp /var/lib/$DEBIAN_NAME/$APP_NAME.conf /var/lib/$DEBIAN_NAME/$APP_NAME.conf.user
+fi
+if [ -e /var/lib/$DEBIAN_NAME/application.yml ]; then
+  cp /var/lib/$DEBIAN_NAME/application.yml /var/lib/$DEBIAN_NAME/application.yml.user
+fi
+
+exit 0

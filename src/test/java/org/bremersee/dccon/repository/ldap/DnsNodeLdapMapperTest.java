@@ -16,21 +16,20 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.iterable;
 
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashSet;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -40,6 +39,7 @@ import org.ldaptive.LdapEntry;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DnsNodeLdapMapperTest {
 
   private DnsNodeLdapMapper getMapper(UnknownFilter unknownFilter) {
@@ -57,114 +57,146 @@ class DnsNodeLdapMapperTest {
    */
   @Test
   void getObjectClasses() {
-    assertArrayEquals(new String[0], getMapper(UnknownFilter.ALL).getObjectClasses());
+    assertThat(getMapper(UnknownFilter.ALL).getObjectClasses())
+        .isEmpty();
   }
 
   /**
    * Test distinguished name.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void mapDn() {
+  void mapDn(SoftAssertions softly) {
     String dn = getMapper(UnknownFilter.NO_UNKNOWN)
         .mapDn(DnsNode.builder().name("proxy").build());
-    assertEquals("dc=proxy,dc=eixe,dc=bremersee,dc=org", dn);
+    softly.assertThat(dn)
+        .isEqualTo("dc=proxy,dc=eixe,dc=bremersee,dc=org");
 
     dn = getMapper(null)
-        .mapDn(DnsNode.builder().name("proxy").build());
-    assertEquals("dc=proxy,dc=eixe,dc=bremersee,dc=org", dn);
+        .mapDn(DnsNode.builder().name("ns0").build());
+    softly.assertThat(dn)
+        .isEqualTo("dc=ns0,dc=eixe,dc=bremersee,dc=org");
   }
 
   /**
    * Map ldap entry.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void map() {
+  void map(SoftAssertions softly) {
     DnsNode actual = getMapper(UnknownFilter.ALL).map(null);
-    assertNull(actual);
+    softly.assertThat(actual)
+        .isNull();
 
     DnsNode dnsNode = DnsNode.builder().build();
     getMapper(UnknownFilter.ALL).map(null, dnsNode);
-    assertEquals(DnsNode.builder().build(), dnsNode);
+    softly.assertThat(dnsNode)
+        .isEqualTo(DnsNode.builder().build());
 
-    final LdapAttribute nodeName = new LdapAttribute("name", "proxy");
-    // A : 192.168.1.41
-    final byte[] recordAttrValue0 = Base64.getDecoder().decode(
-        "BAABAAXwAAAmWwAAAAADhAAAAAD46jcAwKgBKQ==");
-    // UNKNOWN
-    final byte[] recordAttrValue1 = Base64.getDecoder().decode(
-        "CAAAAAUAAACSWgAAAAAAAAAAAAAAAAAA0iISorCx1AE=");
-    // CNAME : lb.eixe.bremersee.org
-    final byte[] recordAttrValue2 = Base64.getDecoder().decode(
-        "GQAFAAXwAAB5HwAAAAADhAAAAADy4TcAFwQCbGIEZWl4ZQlicmVtZXJzZWUDb3JnAA==");
+    LdapAttribute nodeName = new LdapAttribute("name", "proxy");
 
-    final LdapAttribute recordAttr = new LdapAttribute();
-    recordAttr.setName("dnsRecord");
-    recordAttr.setBinary(true);
-    recordAttr.addBinaryValues(Arrays.asList(recordAttrValue0, recordAttrValue1, recordAttrValue2));
-
-    final LdapEntry source = new LdapEntry();
+    LdapEntry source = new LdapEntry();
     source.addAttributes(nodeName);
 
     actual = getMapper(UnknownFilter.NO_UNKNOWN).map(source);
-    assertNull(actual);
-
-    actual = getMapper(UnknownFilter.UNKNOWN).map(source);
-    assertNull(actual);
+    softly.assertThat(actual)
+        .isNull();
 
     actual = getMapper(UnknownFilter.ALL).map(source);
-    assertNotNull(actual);
-    assertEquals("proxy", actual.getName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo("proxy");
 
+    // A : 192.168.1.41
+    byte[] recordAttrValue0 = Base64.getDecoder().decode(
+        "BAABAAXwAAAmWwAAAAADhAAAAAD46jcAwKgBKQ==");
+    // UNKNOWN
+    byte[] recordAttrValue1 = Base64.getDecoder().decode(
+        "CAAAAAUAAACSWgAAAAAAAAAAAAAAAAAA0iISorCx1AE=");
+    // CNAME : lb.eixe.bremersee.org
+    byte[] recordAttrValue2 = Base64.getDecoder().decode(
+        "GQAFAAXwAAB5HwAAAAADhAAAAADy4TcAFwQCbGIEZWl4ZQlicmVtZXJzZWUDb3JnAA==");
+    LdapAttribute recordAttr = new LdapAttribute();
+    recordAttr.setName("dnsRecord");
+    recordAttr.setBinary(true);
+    recordAttr.addBinaryValues(Arrays.asList(recordAttrValue0, recordAttrValue1, recordAttrValue2));
     source.addAttributes(recordAttr);
 
     actual = getMapper(UnknownFilter.NO_UNKNOWN).map(source);
-    assertNotNull(actual);
-    assertEquals("proxy", actual.getName());
-    assertTrue(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("A")
-        .recordValue("192.168.1.41")
-        .build()));
-    assertTrue(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("CNAME")
-        .recordValue("lb.eixe.bremersee.org")
-        .build()));
-    assertFalse(actual.getRecords().stream()
-        .anyMatch(record -> record.getRecordType().equalsIgnoreCase("unknown")));
+    softly.assertThat(actual)
+        .extracting(DnsNode::getName)
+        .isEqualTo("proxy");
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .contains(
+            DnsRecord.builder()
+                .recordType("A")
+                .recordValue("192.168.1.41")
+                .build(),
+            DnsRecord.builder()
+                .recordType("CNAME")
+                .recordValue("lb.eixe.bremersee.org")
+                .build());
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .map(DnsRecord::getRecordType)
+        .map(String::toLowerCase)
+        .doesNotContain("unknown");
 
     actual = getMapper(UnknownFilter.UNKNOWN).map(source);
-    assertNotNull(actual);
-    assertEquals("proxy", actual.getName());
-    assertFalse(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("A")
-        .recordValue("192.168.1.41")
-        .build()));
-    assertFalse(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("CNAME")
-        .recordValue("lb.eixe.bremersee.org")
-        .build()));
-    assertTrue(actual.getRecords().stream()
-        .anyMatch(record -> record.getRecordType().equalsIgnoreCase("unknown")));
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo("proxy");
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .doesNotContain(
+            DnsRecord.builder()
+                .recordType("A")
+                .recordValue("192.168.1.41")
+                .build(),
+            DnsRecord.builder()
+                .recordType("CNAME")
+                .recordValue("lb.eixe.bremersee.org")
+                .build());
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .map(DnsRecord::getRecordType)
+        .map(String::toLowerCase)
+        .contains("unknown");
 
     actual = getMapper(UnknownFilter.ALL).map(source);
-    assertNotNull(actual);
-    assertEquals("proxy", actual.getName());
-    assertTrue(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("A")
-        .recordValue("192.168.1.41")
-        .build()));
-    assertTrue(actual.getRecords().contains(DnsRecord.builder()
-        .recordType("CNAME")
-        .recordValue("lb.eixe.bremersee.org")
-        .build()));
-    assertTrue(actual.getRecords().stream()
-        .anyMatch(record -> record.getRecordType().equalsIgnoreCase("unknown")));
+    softly.assertThat(actual)
+        .extracting(DnsNode::getName)
+        .isEqualTo("proxy");
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .contains(
+            DnsRecord.builder()
+                .recordType("A")
+                .recordValue("192.168.1.41")
+                .build(),
+            DnsRecord.builder()
+                .recordType("CNAME")
+                .recordValue("lb.eixe.bremersee.org")
+                .build());
+    softly.assertThat(actual)
+        .extracting(DnsNode::getRecords, iterable(DnsRecord.class))
+        .map(DnsRecord::getRecordType)
+        .map(String::toLowerCase)
+        .contains("unknown");
   }
 
   /**
    * Map and compute modifications.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void mapAndComputeModifications() {
+  void mapAndComputeModifications(SoftAssertions softly) {
     final DnsNodeLdapMapper mapper = getMapper(UnknownFilter.ALL);
 
     final LdapAttribute nodeName = new LdapAttribute("name", "proxy");
@@ -184,13 +216,8 @@ class DnsNodeLdapMapperTest {
 
     final LdapEntry destination = new LdapEntry();
     destination.addAttributes(nodeName, recordAttr);
-
-    assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue0));
-    assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue1));
-    assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue2));
+    softly.assertThat(destination.getAttribute("dnsRecord").getBinaryValues())
+        .contains(recordAttrValue0, recordAttrValue1, recordAttrValue2);
 
     final DnsRecord record0 = DnsRecord.builder()
         .recordType("A")
@@ -208,20 +235,18 @@ class DnsNodeLdapMapperTest {
         .records(records)
         .build();
 
-    AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-    assertNotNull(modifications);
-    assertEquals("proxy", destination.getAttribute("name").getStringValue());
-    assertTrue(modifications.length > 0);
-    assertEquals(2, destination.getAttribute("dnsRecord").getBinaryValues().size());
-
+    AttributeModification[] modifications = mapper
+        .mapAndComputeModifications(source, destination);
+    softly.assertThat(modifications)
+        .hasSizeGreaterThan(0);
+    softly.assertThat(destination)
+        .extracting(dest -> dest.getAttribute("name"))
+        .extracting(LdapAttribute::getStringValue)
+        .isEqualTo("proxy");
     // record 0 and 2 must still be present
-    assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue0));
-    assertTrue(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue2));
-
     // record 1 must be removed
-    assertFalse(destination.getAttribute("dnsRecord").getBinaryValues()
-        .contains(recordAttrValue1));
+    softly.assertThat(destination.getAttribute("dnsRecord").getBinaryValues())
+        .containsExactlyInAnyOrder(recordAttrValue0, recordAttrValue2)
+        .doesNotContain(recordAttrValue1);
   }
 }

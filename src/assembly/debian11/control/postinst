@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+DEBIAN_NAME="dc-con"
+APP_NAME=$DEBIAN_NAME
+USER_NAME="dc-con"
+GROUP_NAME=$USER_NAME
+SUDO_FILE=/etc/sudoers
+SUDO_ENTRY="$USER_NAME ALL = NOPASSWD: /usr/bin/samba-tool, /usr/bin/kinit, /usr/sbin/dhcp-lease-list"
+
+/usr/bin/getent passwd $USER_NAME
+if [ ! $? -eq 0 ]; then
+  /usr/sbin/adduser --system --home /var/lib/$DEBIAN_NAME --shell /bin/false --no-create-home --group --disabled-login $USER_NAME
+fi
+
+/bin/mkdir -p /var/lib/$DEBIAN_NAME
+/bin/chown -R $USER_NAME:$GROUP_NAME /var/lib/$DEBIAN_NAME
+/bin/chmod 750 /var/lib/$DEBIAN_NAME
+
+/bin/mkdir -p /var/log/$DEBIAN_NAME
+/bin/chown -R $USER_NAME:$GROUP_NAME /var/log/$DEBIAN_NAME
+/bin/chmod u+rwx /var/log/$DEBIAN_NAME
+
+if [ ! -e /etc/systemd/system/$DEBIAN_NAME.service ]; then
+  ln -s /lib/systemd/system/$DEBIAN_NAME.service /etc/systemd/system/$DEBIAN_NAME.service
+fi
+
+grep -q "$SUDO_ENTRY" "$SUDO_FILE"
+if [ $? -eq 1 ]; then
+  echo -e "$SUDO_ENTRY" >> "$SUDO_FILE"
+fi
+
+/bin/systemctl enable $DEBIAN_NAME.service
+if [ -e /var/lib/$DEBIAN_NAME/$APP_NAME.conf.user ] && [ -e /var/lib/$DEBIAN_NAME/application.yml.user ]; then
+  if [ -e /var/lib/$DEBIAN_NAME/$APP_NAME.conf.user ]; then
+    cp /var/lib/$DEBIAN_NAME/$APP_NAME.conf /var/lib/$DEBIAN_NAME/$APP_NAME.conf.package
+    cp /var/lib/$DEBIAN_NAME/$APP_NAME.conf.user /var/lib/$DEBIAN_NAME/$APP_NAME.conf
+    rm -f /var/lib/$DEBIAN_NAME/$APP_NAME.conf.user
+  fi
+  if [ -e /var/lib/$DEBIAN_NAME/application.yml.user ]; then
+    cp /var/lib/$DEBIAN_NAME/application.yml /var/lib/$DEBIAN_NAME/application.yml.package
+    cp /var/lib/$DEBIAN_NAME/application.yml.user /var/lib/$DEBIAN_NAME/application.yml
+    rm -f /var/lib/$DEBIAN_NAME/application.yml.user
+  fi
+  /bin/systemctl start $DEBIAN_NAME.service
+fi
+
+exit 0

@@ -16,18 +16,18 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Month;
+import java.time.OffsetDateTime;
+import java.util.List;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -37,6 +37,7 @@ import org.ldaptive.LdapEntry;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DomainGroupLdapMapperTest {
 
   private static DomainGroupLdapMapper mapper;
@@ -59,7 +60,8 @@ class DomainGroupLdapMapperTest {
    */
   @Test
   void getObjectClasses() {
-    assertArrayEquals(new String[0], mapper.getObjectClasses());
+    assertThat(mapper.getObjectClasses())
+        .isEmpty();
   }
 
   /**
@@ -70,20 +72,23 @@ class DomainGroupLdapMapperTest {
     DomainGroup domainGroup = new DomainGroup();
     domainGroup.setName("somename");
     String dn = mapper.mapDn(domainGroup);
-    assertNotNull(dn);
-    assertEquals("cn=somename,cn=Users,dc=example,dc=org", dn);
+    assertThat(dn)
+        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
   }
 
   /**
    * Map ldap entry.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void map() {
-    assertNull(mapper.map(null));
+  void map(SoftAssertions softly) {
+    softly.assertThat(mapper.map(null)).isNull();
 
     DomainGroup destination = DomainGroup.builder().build();
     mapper.map(null, destination);
-    assertEquals(DomainGroup.builder().build(), destination);
+    softly.assertThat(destination)
+        .isEqualTo(DomainGroup.builder().build());
 
     LdapEntry source = new LdapEntry();
     source.setDn("cn=somename,cn=Users,dc=example,dc=org");
@@ -97,35 +102,75 @@ class DomainGroupLdapMapperTest {
     );
 
     destination = mapper.map(source);
-    assertNotNull(destination);
-    assertEquals("cn=somename,cn=Users,dc=example,dc=org", destination.getDistinguishedName());
-    assertEquals(destination.getCreated(), destination.getCreated());
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getDistinguishedName)
+        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
 
-    assertEquals(2017, destination.getCreated().getYear());
-    assertEquals(Month.MAY, destination.getCreated().getMonth());
-    assertEquals(20, destination.getCreated().getDayOfMonth());
-    assertEquals(15, destination.getCreated().getHour());
-    assertEquals(0, destination.getCreated().getMinute());
-    assertEquals(34, destination.getCreated().getSecond());
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2017);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.MAY);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(20);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(15);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(0);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getCreated)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(34);
 
-    assertEquals(2018, destination.getModified().getYear());
-    assertEquals(Month.JUNE, destination.getModified().getMonth());
-    assertEquals(21, destination.getModified().getDayOfMonth());
-    assertEquals(16, destination.getModified().getHour());
-    assertEquals(1, destination.getModified().getMinute());
-    assertEquals(35, destination.getModified().getSecond());
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getYear)
+        .isEqualTo(2018);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getMonth)
+        .isEqualTo(Month.JUNE);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getDayOfMonth)
+        .isEqualTo(21);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getHour)
+        .isEqualTo(16);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getMinute)
+        .isEqualTo(1);
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getModified)
+        .extracting(OffsetDateTime::getSecond)
+        .isEqualTo(35);
 
-    assertEquals("somename", destination.getName());
-    assertTrue(destination.getMembers().contains("member1"));
-    assertTrue(destination.getMembers().contains("member2"));
-    assertFalse(destination.getMembers().contains("member3"));
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getName)
+        .isEqualTo("somename");
+    softly.assertThat(destination)
+        .extracting(DomainGroup::getMembers)
+        .isEqualTo(List.of("member1", "member2"));
   }
 
   /**
    * Map and compute modifications.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void mapAndComputeModifications() {
+  void mapAndComputeModifications(SoftAssertions softly) {
     DomainGroup source = new DomainGroup();
     source.setName("somename");
     source.getMembers().add("member1");
@@ -133,24 +178,21 @@ class DomainGroupLdapMapperTest {
 
     LdapEntry destination = new LdapEntry();
     AttributeModification[] modifications = mapper.mapAndComputeModifications(source, destination);
-    assertNotNull(modifications);
-    assertEquals(3, modifications.length); // plus 'sAMAccountName'
-    assertEquals("somename", destination.getAttribute("name").getStringValue());
-    assertEquals("somename", destination.getAttribute("sAMAccountName").getStringValue());
-    assertTrue(destination.getAttribute("member").getStringValues()
-        .contains("cn=member1,cn=Users,dc=example,dc=org"));
-    assertTrue(destination.getAttribute("member").getStringValues()
-        .contains("cn=member2,cn=Users,dc=example,dc=org"));
-    assertFalse(destination.getAttribute("member").getStringValues()
-        .contains("cn=member3,cn=Users,dc=example,dc=org"));
+    softly.assertThat(modifications)
+        .hasSize(3); // plus 'sAMAccountName'
+    softly.assertThat(destination.getAttribute("name").getStringValue())
+        .isEqualTo("somename");
+    softly.assertThat(destination.getAttribute("sAMAccountName").getStringValue())
+        .isEqualTo("somename");
+    softly.assertThat(destination.getAttribute("member").getStringValues())
+        .containsExactlyInAnyOrder(
+            "cn=member1,cn=Users,dc=example,dc=org",
+            "cn=member2,cn=Users,dc=example,dc=org");
 
     source.getMembers().remove(0);
     mapper.mapAndComputeModifications(source, destination);
-    assertFalse(destination.getAttribute("member").getStringValues()
-        .contains("cn=member1,cn=Users,dc=example,dc=org"));
-    assertTrue(destination.getAttribute("member").getStringValues()
-        .contains("cn=member2,cn=Users,dc=example,dc=org"));
-    assertFalse(destination.getAttribute("member").getStringValues()
-        .contains("cn=member3,cn=Users,dc=example,dc=org"));
+    softly.assertThat(destination.getAttribute("member").getStringValues())
+        .containsExactlyInAnyOrder(
+            "cn=member2,cn=Users,dc=example,dc=org");
   }
 }

@@ -16,9 +16,11 @@
 
 package org.bremersee.dccon.repository.cli;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
@@ -44,9 +46,8 @@ class DhcpLeaseListParserTest {
     CommandExecutorResponse response = new CommandExecutorResponse(null, null);
     List<DhcpLease> expected = Collections.emptyList();
     List<DhcpLease> actual = parser.parse(response);
-    assertNotNull(actual);
-    assertEquals(expected, actual);
-
+    assertThat(actual)
+        .isEqualTo(expected);
   }
 
   /**
@@ -72,32 +73,40 @@ class DhcpLeaseListParserTest {
     log.info("Test parsing dhcp leases response:\n{}{}", line0, line1);
     CommandExecutorResponse response = new CommandExecutorResponse(line0 + line1, null);
     List<DhcpLease> leases = parser.parse(response);
-    assertNotNull(leases);
-    assertEquals(2, leases.size());
-
-    DhcpLease lease = leases.get(0);
-    assertEquals("b8:xx:xx:xx:xx:xx", lease.getMac());
-    assertEquals("192.168.1.109", lease.getIp());
-    assertEquals("ukelei", lease.getHostname());
-    assertEquals(
-        "2019-08-18 11:20:33",
-        lease.getBegin().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    assertEquals(
-        "2019-08-18 11:50:33",
-        lease.getEnd().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    assertEquals("Apple, Inc.", lease.getManufacturer());
-
-    lease = leases.get(1);
-    assertEquals("ac:xx:xx:xx:xx:yy", lease.getMac());
-    assertEquals("192.168.1.188", lease.getIp());
-    assertEquals("dhcp-192-168-1-188", lease.getHostname());
-    assertEquals(
-        "2019-08-18 11:25:48",
-        lease.getBegin().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    assertEquals(
-        "2019-08-18 11:55:48",
-        lease.getEnd().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    assertEquals("Super Micro Computer, Inc.", lease.getManufacturer());
+    assertThat(leases)
+        .containsExactlyInAnyOrder(
+            DhcpLease.builder()
+                .mac("b8:xx:xx:xx:xx:xx")
+                .ip("192.168.1.109")
+                .hostname("ukelei")
+                .begin(OffsetDateTime.of(
+                    LocalDateTime.parse(
+                        "2019-08-18 11:20:33",
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    ZoneOffset.UTC))
+                .end(OffsetDateTime.of(
+                    LocalDateTime.parse(
+                        "2019-08-18 11:50:33",
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    ZoneOffset.UTC))
+                .manufacturer("Apple, Inc.")
+                .build(),
+            DhcpLease.builder()
+                .mac("ac:xx:xx:xx:xx:yy")
+                .ip("192.168.1.188")
+                .hostname("dhcp-192-168-1-188")
+                .begin(OffsetDateTime.of(
+                    LocalDateTime.parse(
+                        "2019-08-18 11:25:48",
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    ZoneOffset.UTC))
+                .end(OffsetDateTime.of(
+                    LocalDateTime.parse(
+                        "2019-08-18 11:55:48",
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    ZoneOffset.UTC))
+                .manufacturer("Super Micro Computer, Inc.")
+                .build());
   }
 
 }

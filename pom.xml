@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>2.3.0</version>
+    <version>2.3.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,8 +26,8 @@
     <start-class>org.bremersee.dccon.Application</start-class>
 
     <dc-con-api-spring.version>2.3.0-SNAPSHOT</dc-con-api-spring.version>
-    <common-base.version>2.4.0-SNAPSHOT</common-base.version>
-    <comparator.version>2.4.0</comparator.version>
+    <common-base.version>2.3.3</common-base.version>
+    <comparator.version>2.4.1</comparator.version>
 
     <!--suppress UnresolvedMavenProperty -->
     <debBaseName>
@@ -37,6 +37,32 @@
     <debChangesName>${debBaseName}.changes</debChangesName>
     <dockerfile.image>dc-con-app</dockerfile.image>
   </properties>
+
+  <developers>
+    <developer>
+      <id>bremersee</id>
+      <name>Christian Bremer</name>
+      <organization>bremersee.org</organization>
+      <organizationUrl>https://bremersee.org</organizationUrl>
+      <email>christian@bremersee.org</email>
+      <timezone>+1</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <organization>
+    <name>bremersee.org</name>
+    <url>https://bremersee.org</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
 
   <scm>
     <connection>scm:git:ssh://git@github.com:bremersee/dc-con-app.git</connection>
@@ -240,12 +266,12 @@
 
   <profiles>
     <profile>
-      <id>debian9</id>
+      <id>debian11</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <assembly-config>debian9.xml</assembly-config>
+        <assembly-config>debian11.xml</assembly-config>
       </properties>
       <build>
         <finalName>dc-con</finalName>
@@ -262,12 +288,12 @@
             <artifactId>maven-assembly-plugin</artifactId>
             <configuration>
               <descriptors>
-                <descriptor>${basedir}/src/assembly/debian9.xml</descriptor>
+                <descriptor>${basedir}/src/assembly/${assembly-config}</descriptor>
               </descriptors>
             </configuration>
             <executions>
               <execution>
-                <id>debian9-archive</id>
+                <id>debian11-archive</id>
                 <phase>package</phase>
                 <goals>
                   <goal>single</goal>
@@ -280,7 +306,7 @@
             <groupId>org.vafer</groupId>
             <executions>
               <execution>
-                <id>debian9-deb</id>
+                <id>debian11-deb</id>
                 <phase>package</phase>
                 <goals>
                   <goal>jdeb</goal>
@@ -289,10 +315,10 @@
                   <verbose>true</verbose>
                   <deb>${project.build.directory}/${debName}</deb>
                   <changesOut>${project.build.directory}/${debChangesName}</changesOut>
-                  <controlDir>${basedir}/src/assembly/debian9/control</controlDir>
+                  <controlDir>${basedir}/src/assembly/debian11/control</controlDir>
                   <dataSet>
                     <data>
-                      <src>${project.build.directory}/dc-con-debian9.tar.gz</src>
+                      <src>${project.build.directory}/dc-con-debian11.tar.gz</src>
                       <type>archive</type>
                       <mapper>
                         <type>perm</type>
@@ -309,7 +335,7 @@
     </profile>
 
     <profile>
-      <id>deploy-to-repo-ubuntu-bionic</id>
+      <id>deploy-to-repo-debian-bullseye</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -324,7 +350,7 @@
             <artifactId>wagon-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>upload-to-ubuntu-bionic</id>
+                <id>upload-to-debian-bullseye</id>
                 <phase>deploy</phase>
                 <goals>
                   <goal>upload-single</goal>
@@ -332,7 +358,7 @@
                 <configuration>
                   <serverId>bremersee-apt</serverId>
                   <fromFile>${project.build.directory}/${debName}</fromFile>
-                  <url>https://nexus.bremersee.org/repository/ubuntu-bionic</url>
+                  <url>https://nexus.bremersee.org/repository/debian-bullseye</url>
                 </configuration>
               </execution>
             </executions>
@@ -342,7 +368,7 @@
     </profile>
 
     <profile>
-      <id>apt-get-on-dc</id>
+      <id>apt-get-on-dc3</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -353,17 +379,17 @@
             <artifactId>wagon-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>install-on-dc</id>
+                <id>install-on-dc3</id>
                 <phase>deploy</phase>
                 <goals>
                   <goal>sshexec</goal>
                 </goals>
                 <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <serverId>bremersee-dpkg</serverId>
+                  <url>scp://dc3.eixe.bremersee.org/home/giacomo</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install dc-con</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install spring-config-server</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>
@@ -376,7 +402,7 @@
     </profile>
 
     <profile>
-      <id>apt-get-on-dc2</id>
+      <id>copy-to-and-install-on-dc3</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -387,64 +413,30 @@
             <artifactId>wagon-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>install-on-dc2</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>sshexec</goal>
-                </goals>
-                <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
-                  <commands>
-                    <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install dc-con</command>
-                  </commands>
-                  <displayCommandOutputs>true</displayCommandOutputs>
-                  <failOnError>false</failOnError>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>copy-to-and-install-on-dc</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>wagon-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-to-dc</id>
+                <id>copy-to-dc3</id>
                 <phase>deploy</phase>
                 <goals>
                   <goal>upload-single</goal>
                 </goals>
                 <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <serverId>bremersee-dpkg</serverId>
+                  <url>scp://dc3.eixe.bremersee.org/home/giacomo</url>
                   <fromFile>${project.build.directory}/${debName}</fromFile>
                   <toFile>dc-con.deb</toFile>
                 </configuration>
               </execution>
               <execution>
-                <id>dpkg-on-dc</id>
+                <id>dpkg-on-dc3</id>
                 <phase>deploy</phase>
                 <goals>
                   <goal>sshexec</goal>
                 </goals>
                 <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc.eixe.bremersee.org/home/bremersee</url>
+                  <serverId>bremersee-dpkg</serverId>
+                  <url>scp://dc3.eixe.bremersee.org/home/giacomo</url>
                   <commands>
-                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
-                    <command>rm /home/bremersee/dc-con.deb</command>
+                    <command>sudo -n /usr/bin/dpkg -i /home/giacomo/dc-con.deb</command>
+                    <command>rm /home/giacomo/dc-con.deb</command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>true</failOnError>
@@ -456,51 +448,5 @@
       </build>
     </profile>
 
-    <profile>
-      <id>copy-to-and-install-on-dc2</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>wagon-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-to-dc2</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>upload-single</goal>
-                </goals>
-                <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
-                  <fromFile>${project.build.directory}/${debName}</fromFile>
-                  <toFile>dc-con.deb</toFile>
-                </configuration>
-              </execution>
-              <execution>
-                <id>dpkg-on-dc2</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>sshexec</goal>
-                </goals>
-                <configuration>
-                  <serverId>bremersee-dc</serverId>
-                  <url>scp://dc2.eixe.bremersee.org/home/bremersee</url>
-                  <commands>
-                    <command>sudo -n /usr/bin/dpkg -i /home/bremersee/dc-con.deb</command>
-                    <command>rm /home/bremersee/dc-con.deb</command>
-                  </commands>
-                  <displayCommandOutputs>true</displayCommandOutputs>
-                  <failOnError>true</failOnError>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 </project>

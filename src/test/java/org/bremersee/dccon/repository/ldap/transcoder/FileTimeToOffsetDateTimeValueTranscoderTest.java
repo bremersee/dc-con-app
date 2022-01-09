@@ -1,17 +1,20 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The file time value transcoder test.
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class FileTimeToOffsetDateTimeValueTranscoderTest {
 
   private static final FileTimeToOffsetDateTimeValueTranscoder trancoder
@@ -25,24 +28,31 @@ class FileTimeToOffsetDateTimeValueTranscoderTest {
 
   /**
    * Decode string value.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeStringValue() {
-    assertNull(trancoder.decodeStringValue(null));
-    assertNull(trancoder.decodeStringValue(""));
-    assertNull(trancoder.decodeStringValue("0"));
-    final OffsetDateTime actual = trancoder.decodeStringValue(ldapValue);
-    assertEquals(dateTime, actual);
+  void decodeStringValue(SoftAssertions softly) {
+    softly.assertThat(trancoder.decodeStringValue(null)).isNull();
+    softly.assertThat(trancoder.decodeStringValue("")).isNull();
+    softly.assertThat(trancoder.decodeStringValue("0")).isNull();
+
+    OffsetDateTime actual = trancoder.decodeStringValue(ldapValue);
+    softly.assertThat(actual)
+        .isEqualTo(dateTime);
   }
 
   /**
    * Encode string value.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void encodeStringValue() {
-    assertNull(trancoder.encodeStringValue(null));
-    final String actual = trancoder.encodeStringValue(dateTime);
-    assertEquals(ldapValue, actual);
+  void encodeStringValue(SoftAssertions softly) {
+    softly.assertThat(trancoder.encodeStringValue(null)).isNull();
+    String actual = trancoder.encodeStringValue(dateTime);
+    softly.assertThat(actual)
+        .isEqualTo(ldapValue);
   }
 
   /**
@@ -50,6 +60,7 @@ class FileTimeToOffsetDateTimeValueTranscoderTest {
    */
   @Test
   void getType() {
-    assertEquals(OffsetDateTime.class, trancoder.getType());
+    assertThat(trancoder.getType())
+        .isEqualTo(OffsetDateTime.class);
   }
 }

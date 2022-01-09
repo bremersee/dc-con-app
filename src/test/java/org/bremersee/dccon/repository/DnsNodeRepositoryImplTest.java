@@ -16,12 +16,8 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,10 +30,10 @@ import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
@@ -50,6 +46,7 @@ import org.bremersee.exception.ServiceException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.ObjectProvider;
@@ -59,6 +56,7 @@ import org.springframework.beans.factory.ObjectProvider;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DnsNodeRepositoryImplTest {
 
   private static DomainControllerProperties properties;
@@ -168,8 +166,9 @@ class DnsNodeRepositoryImplTest {
         .thenAnswer((Answer<Stream<DnsNode>>) invocationOnMock -> Stream.of(node0));
     Stream<DnsNode> actual = dnsNodeRepository
         .findAll("example.org", UnknownFilter.ALL, null);
-    List<DnsNode> list = actual.collect(Collectors.toList());
-    assertTrue(list.stream().anyMatch(node -> node0.getName().equals(node.getName())));
+    assertThat(actual)
+        .map(DnsNode::getName)
+        .contains(node0.getName());
   }
 
   /**
@@ -188,8 +187,9 @@ class DnsNodeRepositoryImplTest {
         .thenAnswer((Answer<Stream<DnsNode>>) invocationOnMock -> Stream.of(node0));
     Stream<DnsNode> actual = dnsNodeRepository
         .findAll("example.org", UnknownFilter.ALL, "node0");
-    List<DnsNode> list = actual.collect(Collectors.toList());
-    assertTrue(list.stream().anyMatch(node -> node0.getName().equals(node.getName())));
+    assertThat(actual)
+        .map(DnsNode::getName)
+        .contains(node0.getName());
   }
 
   /**
@@ -208,8 +208,9 @@ class DnsNodeRepositoryImplTest {
         .thenAnswer((Answer<Stream<DnsNode>>) invocationOnMock -> Stream.of(node0));
     Stream<DnsNode> actual = dnsNodeRepository
         .findAll("example.org", UnknownFilter.ALL, "192.168.1.123");
-    List<DnsNode> list = actual.collect(Collectors.toList());
-    assertTrue(list.stream().anyMatch(node -> node0.getName().equals(node.getName())));
+    assertThat(actual)
+        .map(DnsNode::getName)
+        .contains(node0.getName());
   }
 
   /**
@@ -218,8 +219,9 @@ class DnsNodeRepositoryImplTest {
   @Test
   void exists() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(dnsNodeRepository
-        .exists("example.org", "node0", UnknownFilter.ALL));
+    boolean actual = dnsNodeRepository.exists("example.org", "node0", UnknownFilter.ALL);
+    assertThat(actual)
+        .isTrue();
   }
 
   /**
@@ -237,9 +239,9 @@ class DnsNodeRepositoryImplTest {
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(node0));
     Optional<DnsNode> actual = dnsNodeRepository
         .findOne("example.org", "node0", UnknownFilter.ALL);
-    assertNotNull(actual);
-    assertTrue(actual.isPresent());
-    assertEquals("node0", actual.get().getName());
+    assertThat(actual)
+        .map(DnsNode::getName)
+        .hasValue("node0");
   }
 
   /**
@@ -248,9 +250,8 @@ class DnsNodeRepositoryImplTest {
   @Test
   void saveAndExpectNodeNameIsNotAllowed() {
     DnsNode excluded = DnsNode.builder().name("_excluded.node0").build();
-    assertThrows(
-        ServiceException.class,
-        () -> dnsNodeRepository.save("example.org", excluded));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> dnsNodeRepository.save("example.org", excluded));
   }
 
   /**
@@ -288,8 +289,8 @@ class DnsNodeRepositoryImplTest {
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(expected));
 
     Optional<DnsNode> actual = dnsNodeRepository.save("example.org", input);
-    assertNotNull(actual);
-    assertTrue(actual.isPresent());
+    assertThat(actual)
+        .isPresent();
   }
 
   /**
@@ -298,9 +299,8 @@ class DnsNodeRepositoryImplTest {
   @Test
   void deleteAndExpectNodeNameIsNotAllowed() {
     DnsNode excluded = DnsNode.builder().name("_excluded.node0").build();
-    assertThrows(
-        ServiceException.class,
-        () -> dnsNodeRepository.delete("example.org", excluded));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> dnsNodeRepository.delete("example.org", excluded));
   }
 
   /**
@@ -357,9 +357,11 @@ class DnsNodeRepositoryImplTest {
 
   /**
    * Ip 4 matches dns zone.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void ip4MatchesDnsZone() {
+  void ip4MatchesDnsZone(SoftAssertions softly) {
     DomainControllerProperties properties = new DomainControllerProperties();
     DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(
         properties,
@@ -367,12 +369,18 @@ class DnsNodeRepositoryImplTest {
         dhcpRepository,
         dnsZoneRepository);
 
-    assertTrue(repository.ip4MatchesDnsZone(
-        "192.168.1.124",
-        "1.168.192" + properties.getReverseZoneSuffixIp4()));
-    assertFalse(repository.ip4MatchesDnsZone(
-        "192.168.11.124",
-        "1.168.192" + properties.getReverseZoneSuffixIp4()));
+    softly
+        .assertThat(repository
+            .ip4MatchesDnsZone(
+                "192.168.1.124",
+                "1.168.192" + properties.getReverseZoneSuffixIp4()))
+        .isTrue();
+    softly
+        .assertThat(repository
+            .ip4MatchesDnsZone(
+                "192.168.11.124",
+                "1.168.192" + properties.getReverseZoneSuffixIp4()))
+        .isFalse();
   }
 
   /**
@@ -390,10 +398,8 @@ class DnsNodeRepositoryImplTest {
     Optional<String> nodeName = repository.getDnsNodeNameByIp4(
         "192.168.1.124",
         "1.168.192" + properties.getReverseZoneSuffixIp4());
-    assertTrue(nodeName.isPresent());
-    assertEquals(
-        "124",
-        nodeName.get());
+    assertThat(nodeName)
+        .hasValue("124");
   }
 
   /**
@@ -411,17 +417,17 @@ class DnsNodeRepositoryImplTest {
     Optional<String> nodeName = repository.getDnsNodeNameByFqdn(
         "pluto.eixe.bremersee.org",
         "eixe.bremersee.org");
-    assertTrue(nodeName.isPresent());
-    assertEquals(
-        "pluto",
-        nodeName.get());
+    assertThat(nodeName)
+        .hasValue("pluto");
   }
 
   /**
    * Split ip 4.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void splitIp4() {
+  void splitIp4(SoftAssertions softly) {
     DomainControllerProperties properties = new DomainControllerProperties();
     DnsNodeRepositoryImpl repository = new DnsNodeRepositoryImpl(
         properties,
@@ -432,22 +438,19 @@ class DnsNodeRepositoryImplTest {
     String[] parts = repository.splitIp4(
         "192.168.1.123",
         "1.168.192" + properties.getReverseZoneSuffixIp4());
-    assertNotNull(parts);
-    assertEquals(2, parts.length);
-    assertEquals("192.168.1", parts[0]);
-    assertEquals("123", parts[1]);
+    softly.assertThat(parts)
+        .containsExactly("192.168.1", "123");
 
     parts = repository.splitIp4(
         "192.168.1.123",
         "168.192" + properties.getReverseZoneSuffixIp4());
-    assertNotNull(parts);
-    assertEquals(2, parts.length);
-    assertEquals("192.168", parts[0]);
-    assertEquals("1.123", parts[1]);
+    softly.assertThat(parts)
+        .containsExactly("192.168", "1.123");
 
     parts = repository.splitIp4(
         "192.168.11.123",
         "1.168.192" + properties.getReverseZoneSuffixIp4());
-    assertNull(parts);
+    softly.assertThat(parts)
+        .isNull();
   }
 }

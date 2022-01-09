@@ -33,18 +33,7 @@ import org.springframework.util.StringUtils;
 @ToString
 @EqualsAndHashCode
 @AllArgsConstructor
-@SuppressWarnings("WeakerAccess")
 public class CommandExecutorResponse implements Serializable {
-
-  /**
-   * Return {@link #toOneLine()} if response is not {@code null}.
-   *
-   * @param response the response (can be {@code null})
-   * @return the response in one line
-   */
-  public static String toExceptionMessage(CommandExecutorResponse response) {
-    return response == null ? "" : response.toOneLine();
-  }
 
   private final String stdout;
 
@@ -55,7 +44,6 @@ public class CommandExecutorResponse implements Serializable {
    *
    * @return {@code true} if stdout has text, otherwise {@code false}
    */
-  @SuppressWarnings("unused")
   public boolean stdoutHasText() {
     return hasText(stdout);
   }
@@ -65,7 +53,6 @@ public class CommandExecutorResponse implements Serializable {
    *
    * @return {@code true} if stderr has text, otherwise {@code false}
    */
-  @SuppressWarnings("unused")
   public boolean stderrHasText() {
     return hasText(stderr);
   }
@@ -129,6 +116,16 @@ public class CommandExecutorResponse implements Serializable {
    */
   public String stderrToOneLine() {
     return toOneLine(stderr);
+  }
+
+  /**
+   * Return {@link #toOneLine()} if response is not {@code null}.
+   *
+   * @param response the response (can be {@code null})
+   * @return the response in one line
+   */
+  public static String toExceptionMessage(CommandExecutorResponse response) {
+    return response == null ? "" : response.toOneLine();
   }
 
 }

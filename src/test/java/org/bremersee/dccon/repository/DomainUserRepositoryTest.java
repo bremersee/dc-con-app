@@ -16,11 +16,8 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -119,10 +116,9 @@ class DomainUserRepositoryTest {
         .build();
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DomainUser>>) invocationOnMock -> Stream.of(user0, user1));
-    assertTrue(userRepository.findAll(null)
-        .anyMatch(user -> user0.getUserName().equals(user.getUserName())));
-    assertTrue(userRepository.findAll(null)
-        .anyMatch(user -> user1.getUserName().equals(user.getUserName())));
+    assertThat(userRepository.findAll(null))
+        .map(DomainUser::getUserName)
+        .containsExactlyInAnyOrder(user0.getUserName(), user1.getUserName());
   }
 
   /**
@@ -139,10 +135,10 @@ class DomainUserRepositoryTest {
         .build();
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DomainUser>>) invocationOnMock -> Stream.of(user0, user1));
-    assertFalse(userRepository.findAll("group1")
-        .anyMatch(user -> user0.getUserName().equals(user.getUserName())));
-    assertTrue(userRepository.findAll("group1")
-        .anyMatch(user -> user1.getUserName().equals(user.getUserName())));
+    assertThat(userRepository.findAll("group1"))
+        .map(DomainUser::getUserName)
+        .contains(user1.getUserName())
+        .doesNotContain(user0.getUserName());
   }
 
   /**
@@ -155,9 +151,10 @@ class DomainUserRepositoryTest {
         .build();
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(expected));
     Optional<DomainUser> actual = userRepository.findOne(expected.getUserName());
-    assertNotNull(actual);
-    assertTrue(actual.isPresent());
-    assertEquals(expected.getUserName(), actual.get().getUserName());
+    assertThat(actual)
+        .isPresent()
+        .map(DomainUser::getUserName)
+        .hasValue(expected.getUserName());
   }
 
   /**
@@ -166,7 +163,8 @@ class DomainUserRepositoryTest {
   @Test
   void findAvatarAndExpectNotFound() {
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(new LdapEntry()));
-    assertFalse(userRepository.findAvatar("somebody", AvatarDefault.NOT_FOUND, 20).isPresent());
+    assertThat(userRepository.findAvatar("somebody", AvatarDefault.NOT_FOUND, 20))
+        .isEmpty();
   }
 
   /**
@@ -176,7 +174,8 @@ class DomainUserRepositoryTest {
   void findAvatarAndExpectNoEmailAvatar() {
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(new LdapEntry()));
     Optional<byte[]> actual = userRepository.findAvatar("somebody", AvatarDefault.ROBOHASH, 20);
-    assertTrue(actual.isPresent());
+    assertThat(actual)
+        .isPresent();
   }
 
   /**
@@ -188,7 +187,8 @@ class DomainUserRepositoryTest {
     ldapEntry.addAttributes(new LdapAttribute("mail", "someone@example.org"));
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(ldapEntry));
     Optional<byte[]> actual = userRepository.findAvatar("somebody", AvatarDefault.ROBOHASH, 20);
-    assertTrue(actual.isPresent());
+    assertThat(actual)
+        .isPresent();
   }
 
   /**
@@ -207,7 +207,8 @@ class DomainUserRepositoryTest {
         expected));
     when(ldaptiveTemplate.findOne(any())).thenReturn(Optional.of(ldapEntry));
     Optional<byte[]> actual = userRepository.findAvatar("somebody", AvatarDefault.ROBOHASH, 20);
-    assertTrue(actual.isPresent());
+    assertThat(actual)
+        .isPresent();
   }
 
   /**
@@ -216,7 +217,8 @@ class DomainUserRepositoryTest {
   @Test
   void exists() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(userRepository.exists("someone"));
+    assertThat(userRepository.exists("someone"))
+        .isTrue();
   }
 
   /**
@@ -229,9 +231,8 @@ class DomainUserRepositoryTest {
         .password("short")
         .build();
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(false);
-    assertThrows(
-        ServiceException.class,
-        () -> userRepository.save(expected, true));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> userRepository.save(expected, true));
   }
 
   /**
@@ -251,8 +252,10 @@ class DomainUserRepositoryTest {
     when(groupRepository.findOne(anyString())).thenReturn(Optional.of(group));
     when(groupRepository.save(any())).thenReturn(group);
     DomainUser actual = userRepository.save(expected, true);
-    assertNotNull(actual);
-    assertEquals(expected.getUserName(), actual.getUserName());
+    assertThat(actual)
+        .isNotNull()
+        .extracting(DomainUser::getUserName)
+        .isEqualTo(expected.getUserName());
   }
 
   /**
@@ -261,7 +264,8 @@ class DomainUserRepositoryTest {
   @Test
   void deleteAndExpectTrue() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(userRepository.delete("someone"));
+    assertThat(userRepository.delete("someone"))
+        .isTrue();
     verify(userRepository).doDelete(anyString());
   }
 
@@ -271,7 +275,8 @@ class DomainUserRepositoryTest {
   @Test
   void deleteAndExpectFalse() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(false);
-    assertFalse(userRepository.delete("someone"));
+    assertThat(userRepository.delete("someone"))
+        .isFalse();
     verify(userRepository, never()).doDelete(anyString());
   }
 }

@@ -188,7 +188,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: debian9
+      on-profile: debian
 
 logging:
   file:

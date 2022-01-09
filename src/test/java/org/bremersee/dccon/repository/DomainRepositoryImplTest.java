@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -55,6 +55,7 @@ class DomainRepositoryImplTest {
    */
   @Test
   void getPasswordInformation() {
-    assertEquals(model, repository.getPasswordInformation());
+    assertThat(repository.getPasswordInformation())
+        .isEqualTo(model);
   }
 }

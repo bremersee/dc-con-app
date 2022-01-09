@@ -1,0 +1,11 @@
+[Unit]
+Description=Domain Controller Connector
+After=syslog.target
+
+[Service]
+User=dc-con
+ExecStart=/var/lib/dc-con/dc-con.jar
+SuccessExitStatus=1 4 3
+
+[Install]
+WantedBy=multi-user.target

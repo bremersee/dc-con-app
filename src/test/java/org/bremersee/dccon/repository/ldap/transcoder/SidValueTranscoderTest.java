@@ -16,27 +16,30 @@
 
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.Sid;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The sid value transcoder test.
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class SidValueTranscoderTest {
 
   /**
    * Encode and decode binary value.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void encodeAndDecodeBinaryValue() {
+  void encodeAndDecodeBinaryValue(SoftAssertions softly) {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setMaxSystemSidSuffix(999);
     properties.setDefaultSidPrefix("S-1-5-21-");
@@ -44,27 +47,42 @@ class SidValueTranscoderTest {
 
     String expected = "S-1-5-21-2180863875-316980752-2664318681-500";
     byte[] bytes = transcoder.encodeBinaryValue(Sid.builder().value(expected).build());
-    assertNotNull(bytes);
+    softly.assertThat(bytes).isNotNull();
     Sid actual = transcoder.decodeBinaryValue(bytes);
-    assertNotNull(actual);
-    assertEquals(expected, actual.getValue());
-    assertTrue(actual.getSystemEntity());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(Sid::getValue)
+        .isEqualTo(expected);
+    softly.assertThat(actual)
+        .extracting(Sid::getSystemEntity)
+        .isEqualTo(Boolean.TRUE);
 
     expected = "S-1-5-21-2180863875-316980752-2664318683-1101";
     bytes = transcoder.encodeBinaryValue(Sid.builder().value(expected).build());
-    assertNotNull(bytes);
+    softly.assertThat(bytes).isNotNull();
     actual = transcoder.decodeBinaryValue(bytes);
-    assertNotNull(actual);
-    assertEquals(expected, actual.getValue());
-    assertFalse(actual.getSystemEntity());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(Sid::getValue)
+        .isEqualTo(expected);
+    softly.assertThat(actual)
+        .extracting(Sid::getSystemEntity)
+        .isEqualTo(Boolean.FALSE);
 
     expected = "S-1-5-22-2180863875-316980752-2664318683-1101";
     bytes = transcoder.encodeBinaryValue(Sid.builder().value(expected).build());
-    assertNotNull(bytes);
+    softly.assertThat(bytes).isNotNull();
     actual = transcoder.decodeBinaryValue(bytes);
-    assertNotNull(actual);
-    assertEquals(expected, actual.getValue());
-    assertTrue(actual.getSystemEntity());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(Sid::getValue)
+        .isEqualTo(expected);
+    softly.assertThat(actual)
+        .extracting(Sid::getSystemEntity)
+        .isEqualTo(Boolean.TRUE);
   }
 
   /**
@@ -72,6 +90,8 @@ class SidValueTranscoderTest {
    */
   @Test
   void getType() {
-    assertEquals(Sid.class, new SidValueTranscoder(new DomainControllerProperties()).getType());
+    Class<?> actual = new SidValueTranscoder(new DomainControllerProperties()).getType();
+    assertThat(actual)
+        .isEqualTo(Sid.class);
   }
 }

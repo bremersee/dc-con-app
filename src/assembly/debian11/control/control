@@ -1,0 +1,8 @@
+Package: dc-con
+Version: [[version]]
+Section: net
+Priority: optional
+Architecture: all
+Description: [[description]]
+Maintainer: bremersee@googlemail.com
+Depends: sudo, openjdk-17-jre-headless | openjdk-17-jre

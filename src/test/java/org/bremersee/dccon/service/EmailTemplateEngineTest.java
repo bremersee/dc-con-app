@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.service;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Locale;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -69,7 +69,8 @@ public class EmailTemplateEngineTest {
         domainControllerProperties.getMailWithCredentials().getTemplateBasename(),
         ctx);
     System.out.println("Mail text:\n" + mailText);
-    assertTrue(mailText.contains(expected));
+    assertThat(mailText)
+        .contains(expected);
   }
 
 }

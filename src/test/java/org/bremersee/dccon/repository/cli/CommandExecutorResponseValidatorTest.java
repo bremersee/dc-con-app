@@ -16,8 +16,7 @@
 
 package org.bremersee.dccon.repository.cli;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,8 +32,8 @@ class CommandExecutorResponseValidatorTest {
   @Test
   void parse() {
     final String stdout = "OK";
-    CommandExecutorResponseValidator validator = response -> assertEquals(
-        stdout, response.getStdout());
+    CommandExecutorResponseValidator validator = response -> Assertions
+        .assertThat(response.getStdout()).isEqualTo(stdout);
     validator.parse(new CommandExecutorResponse(stdout, null));
   }
 }

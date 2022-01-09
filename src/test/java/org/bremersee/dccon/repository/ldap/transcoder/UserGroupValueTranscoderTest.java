@@ -1,6 +1,6 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +32,8 @@ class UserGroupValueTranscoderTest {
   @Test
   void decodeStringValue() {
     String expected = "cn=anna,cn=Users,dc=example,dc=org";
-    assertEquals(expected, transcoder.encodeStringValue("anna"));
+    assertThat(transcoder.encodeStringValue("anna"))
+        .isEqualTo(expected);
   }
 
   /**
@@ -40,9 +41,8 @@ class UserGroupValueTranscoderTest {
    */
   @Test
   void encodeStringValue() {
-    assertEquals(
-        "anna",
-        transcoder.decodeStringValue("cn=anna,cn=Users,dc=example,dc=org"));
+    assertThat(transcoder.decodeStringValue("cn=anna,cn=Users,dc=example,dc=org"))
+        .isEqualTo("anna");
   }
 
   /**
@@ -50,6 +50,7 @@ class UserGroupValueTranscoderTest {
    */
   @Test
   void getType() {
-    assertEquals(String.class, transcoder.getType());
+    assertThat(transcoder.getType())
+        .isEqualTo(String.class);
   }
 }

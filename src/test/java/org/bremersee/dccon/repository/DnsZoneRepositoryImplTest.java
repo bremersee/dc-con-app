@@ -16,11 +16,8 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -34,6 +31,8 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
@@ -42,6 +41,7 @@ import org.bremersee.exception.ServiceException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.ObjectProvider;
@@ -51,6 +51,7 @@ import org.springframework.beans.factory.ObjectProvider;
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DnsZoneRepositoryImplTest {
 
   private static LdaptiveTemplate ldaptiveTemplate;
@@ -96,11 +97,17 @@ class DnsZoneRepositoryImplTest {
 
   /**
    * Is dns reverse zone.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void isDnsReverseZone() {
-    assertTrue(dnsZoneRepository.isDnsReverseZone("1.168.192.in-addr.arpa"));
-    assertFalse(dnsZoneRepository.isDnsReverseZone("example.org"));
+  void isDnsReverseZone(SoftAssertions softly) {
+    softly
+        .assertThat(dnsZoneRepository.isDnsReverseZone("1.168.192.in-addr.arpa"))
+        .isTrue();
+    softly
+        .assertThat(dnsZoneRepository.isDnsReverseZone("example.org"))
+        .isFalse();
   }
 
   /**
@@ -120,11 +127,9 @@ class DnsZoneRepositoryImplTest {
         .build();
     when(ldaptiveTemplate.findAll(any(), any()))
         .thenAnswer((Answer<Stream<DnsZone>>) invocationOnMock -> Stream.of(dnsZone0, dnsZone1));
-    assertEquals(2L, dnsZoneRepository.findAll()
-        .filter(zone -> zone.getName()
-            .equals("example.org") || zone.getName()
-            .equals("1.168.192.in-addr.arpa"))
-        .count());
+    assertThat(dnsZoneRepository.findAll())
+        .map(DnsZone::getName)
+        .containsExactlyInAnyOrder("example.org", "1.168.192.in-addr.arpa");
   }
 
   /**
@@ -134,7 +139,8 @@ class DnsZoneRepositoryImplTest {
   void exists() {
     DnsZone expected = DnsZone.builder().name("example.org").build();
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(dnsZoneRepository.exists(expected.getName()));
+    assertThat(dnsZoneRepository.exists(expected.getName()))
+        .isTrue();
   }
 
   /**
@@ -145,9 +151,9 @@ class DnsZoneRepositoryImplTest {
     DnsZone expected = DnsZone.builder().name("example.org").build();
     when(ldaptiveTemplate.findOne(any(), any())).thenReturn(Optional.of(expected));
     Optional<DnsZone> actual = dnsZoneRepository.findOne("example.org");
-    assertNotNull(actual);
-    assertTrue(actual.isPresent());
-    assertEquals(expected.getName(), actual.get().getName());
+    assertThat(actual)
+        .map(DnsZone::getName)
+        .hasValue(expected.getName());
   }
 
   /**
@@ -160,8 +166,10 @@ class DnsZoneRepositoryImplTest {
         .build();
     doReturn(expected).when(dnsZoneRepository).doSave(anyString());
     DnsZone actual = dnsZoneRepository.save("domain.org");
-    assertNotNull(actual);
-    assertEquals("domain.org", actual.getName());
+    assertThat(actual)
+        .isNotNull()
+        .extracting(DnsZone::getName)
+        .isEqualTo("domain.org");
   }
 
   /**
@@ -169,9 +177,8 @@ class DnsZoneRepositoryImplTest {
    */
   @Test
   void saveAndExpectServiceException() {
-    assertThrows(
-        ServiceException.class,
-        () -> dnsZoneRepository.save("_excluded.zone"));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> dnsZoneRepository.save("_excluded.zone"));
   }
 
   /**
@@ -180,7 +187,8 @@ class DnsZoneRepositoryImplTest {
   @Test
   void deleteAndExpectTrue() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(true);
-    assertTrue(dnsZoneRepository.delete("example.org"));
+    assertThat(dnsZoneRepository.delete("example.org"))
+        .isTrue();
     verify(dnsZoneRepository).doDelete(anyString());
   }
 
@@ -190,7 +198,8 @@ class DnsZoneRepositoryImplTest {
   @Test
   void deleteAndExpectFalse() {
     when(ldaptiveTemplate.exists(any(), any())).thenReturn(false);
-    assertFalse(dnsZoneRepository.delete("example.org"));
+    assertThat(dnsZoneRepository.delete("example.org"))
+        .isFalse();
     verify(dnsZoneRepository, never()).doDelete(anyString());
   }
 }

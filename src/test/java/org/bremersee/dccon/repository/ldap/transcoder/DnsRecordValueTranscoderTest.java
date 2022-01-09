@@ -1,21 +1,22 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.model.DnsRecord;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The dns record value transcoder test.
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class DnsRecordValueTranscoderTest {
 
   private static final DnsRecordValueTranscoder transcoder = new DnsRecordValueTranscoder();
@@ -61,78 +62,141 @@ class DnsRecordValueTranscoderTest {
 
   /**
    * Decode binary value record a.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeBinaryValueRecordA() {
+  void decodeBinaryValueRecordA(SoftAssertions softly) {
     DnsRecord actual = transcoder.decodeBinaryValue(Base64.getDecoder().decode(A_RECORD_BASE64));
-    assertNotNull(actual);
-    assertEquals(A_RECORD_TYPE, actual.getRecordType());
-    assertEquals(A_RECORD_VALUE, actual.getRecordValue());
-    assertEquals(A_RECORD_VERSION, actual.getVersion());
-    assertEquals(A_RECORD_SERIAL, actual.getSerial());
-    assertEquals(A_RECORD_TTL, actual.getTtlSeconds());
-    assertEquals(A_RECORD_TIME_STAMP, actual.getTimeStamp());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordType)
+        .isEqualTo(A_RECORD_TYPE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordValue)
+        .isEqualTo(A_RECORD_VALUE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getVersion)
+        .isEqualTo(A_RECORD_VERSION);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getSerial)
+        .isEqualTo(A_RECORD_SERIAL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTtlSeconds)
+        .isEqualTo(A_RECORD_TTL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTimeStamp)
+        .isEqualTo(A_RECORD_TIME_STAMP);
   }
 
   /**
    * Decode binary value record cname.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeBinaryValueRecordCname() {
+  void decodeBinaryValueRecordCname(SoftAssertions softly) {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(CNAME_RECORD_BASE64));
-    assertNotNull(actual);
-    assertEquals(CNAME_RECORD_TYPE, actual.getRecordType());
-    assertEquals(CNAME_RECORD_VALUE, actual.getRecordValue());
-    assertEquals(CNAME_RECORD_VERSION, actual.getVersion());
-    assertEquals(CNAME_RECORD_SERIAL, actual.getSerial());
-    assertEquals(CNAME_RECORD_TTL, actual.getTtlSeconds());
-    assertEquals(CNAME_RECORD_TIME_STAMP, actual.getTimeStamp());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordType)
+        .isEqualTo(CNAME_RECORD_TYPE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordValue)
+        .isEqualTo(CNAME_RECORD_VALUE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getVersion)
+        .isEqualTo(CNAME_RECORD_VERSION);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getSerial)
+        .isEqualTo(CNAME_RECORD_SERIAL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTtlSeconds)
+        .isEqualTo(CNAME_RECORD_TTL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTimeStamp)
+        .isEqualTo(CNAME_RECORD_TIME_STAMP);
   }
 
   /**
    * Decode binary value record ptr.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeBinaryValueRecordPtr() {
+  void decodeBinaryValueRecordPtr(SoftAssertions softly) {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(PTR_RECORD_BASE64));
-    assertNotNull(actual);
-    assertEquals(PTR_RECORD_TYPE, actual.getRecordType());
-    assertEquals(PTR_RECORD_VALUE, actual.getRecordValue());
-    assertEquals(PTR_RECORD_VERSION, actual.getVersion());
-    assertEquals(PTR_RECORD_SERIAL, actual.getSerial());
-    assertEquals(PTR_RECORD_TTL, actual.getTtlSeconds());
-    assertEquals(PTR_RECORD_TIME_STAMP, actual.getTimeStamp());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordType)
+        .isEqualTo(PTR_RECORD_TYPE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordValue)
+        .isEqualTo(PTR_RECORD_VALUE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getVersion)
+        .isEqualTo(PTR_RECORD_VERSION);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getSerial)
+        .isEqualTo(PTR_RECORD_SERIAL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTtlSeconds)
+        .isEqualTo(PTR_RECORD_TTL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTimeStamp)
+        .isEqualTo(PTR_RECORD_TIME_STAMP);
   }
 
   /**
    * Decode binary value record unknown.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeBinaryValueRecordUnknown() {
+  void decodeBinaryValueRecordUnknown(SoftAssertions softly) {
     DnsRecord actual = transcoder
         .decodeBinaryValue(Base64.getDecoder().decode(UNKNOWN_RECORD_BASE64));
-    assertNotNull(actual);
-    assertEquals(UNKNOWN_RECORD_TYPE, actual.getRecordType());
-    assertEquals(UNKNOWN_RECORD_VALUE, actual.getRecordValue());
-    assertEquals(UNKNOWN_RECORD_VERSION, actual.getVersion());
-    assertEquals(UNKNOWN_RECORD_SERIAL, actual.getSerial());
-    assertEquals(UNKNOWN_RECORD_TTL, actual.getTtlSeconds());
-    assertEquals(UNKNOWN_RECORD_TIME_STAMP, actual.getTimeStamp());
+    softly.assertThat(actual)
+        .isNotNull();
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordType)
+        .isEqualTo(UNKNOWN_RECORD_TYPE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getRecordValue)
+        .isEqualTo(UNKNOWN_RECORD_VALUE);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getVersion)
+        .isEqualTo(UNKNOWN_RECORD_VERSION);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getSerial)
+        .isEqualTo(UNKNOWN_RECORD_SERIAL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTtlSeconds)
+        .isEqualTo(UNKNOWN_RECORD_TTL);
+    softly.assertThat(actual)
+        .extracting(DnsRecord::getTimeStamp)
+        .isEqualTo(UNKNOWN_RECORD_TIME_STAMP);
   }
 
   /**
    * Encode binary value.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void encodeBinaryValue() {
+  void encodeBinaryValue(SoftAssertions softly) {
     DnsRecord dnsRecord = new DnsRecord();
-    assertNull(transcoder.encodeBinaryValue(dnsRecord));
+    softly.assertThat(transcoder.encodeBinaryValue(dnsRecord))
+        .isNull();
+
     dnsRecord.setRecordRawValue(Base64.getDecoder().decode(A_RECORD_BASE64));
-    assertArrayEquals(
-        Base64.getDecoder().decode(A_RECORD_BASE64),
-        transcoder.encodeBinaryValue(dnsRecord));
+    softly.assertThat(transcoder.encodeBinaryValue(dnsRecord))
+        .containsExactly(Base64.getDecoder().decode(A_RECORD_BASE64));
   }
 
   /**
@@ -140,6 +204,7 @@ class DnsRecordValueTranscoderTest {
    */
   @Test
   void getType() {
-    assertEquals(DnsRecord.class, transcoder.getType());
+    assertThat(transcoder.getType())
+        .isEqualTo(DnsRecord.class);
   }
 }

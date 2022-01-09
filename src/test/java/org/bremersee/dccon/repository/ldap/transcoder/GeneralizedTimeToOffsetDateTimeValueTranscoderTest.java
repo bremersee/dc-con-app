@@ -1,17 +1,20 @@
 package org.bremersee.dccon.repository.ldap.transcoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Month;
 import java.time.OffsetDateTime;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The generalized time value transcoder test.
  *
  * @author Christian Bremer
  */
+@ExtendWith(SoftAssertionsExtension.class)
 class GeneralizedTimeToOffsetDateTimeValueTranscoderTest {
 
   private static final GeneralizedTimeToOffsetDateTimeValueTranscoder transcoder
@@ -21,19 +24,28 @@ class GeneralizedTimeToOffsetDateTimeValueTranscoderTest {
 
   /**
    * Decode and encode.
+   *
+   * @param softly the soft assertions
    */
   @Test
-  void decodeAndEncode() {
+  void decodeAndEncode(SoftAssertions softly) {
     OffsetDateTime dateTime = transcoder.decodeStringValue(ldapValue);
-    assertNotNull(dateTime);
-    assertEquals(2019, dateTime.getYear());
-    assertEquals(Month.DECEMBER, dateTime.getMonth());
-    assertEquals(26, dateTime.getDayOfMonth());
-    assertEquals(15, dateTime.getHour());
-    assertEquals(45, dateTime.getMinute());
-    assertEquals(54, dateTime.getSecond());
-
-    assertEquals(ldapValue, transcoder.encodeStringValue(dateTime));
+    softly.assertThat(dateTime)
+        .isNotNull();
+    softly.assertThat(dateTime.getYear())
+        .isEqualTo(2019);
+    softly.assertThat(dateTime.getMonth())
+        .isEqualTo(Month.DECEMBER);
+    softly.assertThat(dateTime.getDayOfMonth())
+        .isEqualTo(26);
+    softly.assertThat(dateTime.getHour())
+        .isEqualTo(15);
+    softly.assertThat(dateTime.getMinute())
+        .isEqualTo(45);
+    softly.assertThat(dateTime.getSecond())
+        .isEqualTo(54);
+    softly.assertThat(transcoder.encodeStringValue(dateTime))
+        .isEqualTo(ldapValue);
   }
 
   /**
@@ -41,6 +53,7 @@ class GeneralizedTimeToOffsetDateTimeValueTranscoderTest {
    */
   @Test
   void getType() {
-    assertEquals(OffsetDateTime.class, transcoder.getType());
+    assertThat(transcoder.getType())
+        .isEqualTo(OffsetDateTime.class);
   }
 }

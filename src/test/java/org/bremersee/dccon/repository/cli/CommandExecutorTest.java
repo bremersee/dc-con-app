@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.repository.cli;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -35,10 +35,11 @@ class CommandExecutorTest {
    */
   @Test
   void exec() {
-    assertThrows(ServiceException.class, () -> CommandExecutor
-        .exec(
-            Collections.singletonList(UUID.randomUUID().toString()),
-            System.getProperty("java.io.tmpdir")));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> CommandExecutor
+            .exec(
+                Collections.singletonList(UUID.randomUUID().toString()),
+                System.getProperty("java.io.tmpdir")));
   }
 
   /**
@@ -46,11 +47,12 @@ class CommandExecutorTest {
    */
   @Test
   void execWithEnvironment() {
-    assertThrows(ServiceException.class, () -> CommandExecutor
-        .exec(
-            Collections.singletonList(UUID.randomUUID().toString()),
-            Collections.emptyMap(),
-            System.getProperty("java.io.tmpdir")));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> CommandExecutor
+            .exec(
+                Collections.singletonList(UUID.randomUUID().toString()),
+                Collections.emptyMap(),
+                System.getProperty("java.io.tmpdir")));
   }
 
   /**
@@ -58,13 +60,14 @@ class CommandExecutorTest {
    */
   @Test
   void execWithParser() {
-    assertThrows(ServiceException.class, () -> CommandExecutor
-        .exec(
-            Collections.singletonList(UUID.randomUUID().toString()),
-            Collections.emptyMap(),
-            System.getProperty("java.io.tmpdir"),
-            (CommandExecutorResponseValidator) response -> {
-              throw new AssertionError("Should never be called.");
-            }));
+    assertThatExceptionOfType(ServiceException.class)
+        .isThrownBy(() -> CommandExecutor
+            .exec(
+                Collections.singletonList(UUID.randomUUID().toString()),
+                Collections.emptyMap(),
+                System.getProperty("java.io.tmpdir"),
+                (CommandExecutorResponseValidator) response -> {
+                  throw new AssertionError("Should never be called.");
+                }));
   }
 }

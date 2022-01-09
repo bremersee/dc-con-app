@@ -16,9 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -77,8 +75,8 @@ class DhcpRepositoryImplTest {
   @Test
   void findAll() {
     List<DhcpLease> actual = repository.findAll();
-    assertNotNull(actual);
-    assertTrue(actual.stream().anyMatch(lease -> lease.getIp().equals("192.168.1.188")));
+    assertThat(actual)
+        .anyMatch(lease -> lease.getIp().equals("192.168.1.188"));
   }
 
   /**
@@ -87,9 +85,10 @@ class DhcpRepositoryImplTest {
   @Test
   void findActiveByIp() {
     Map<String, DhcpLease> actual = repository.findActiveByIp();
-    assertNotNull(actual);
-    assertNotNull(actual.get("192.168.1.109"));
-    assertEquals("ukelei", actual.get("192.168.1.109").getHostname());
+    assertThat(actual)
+        .extracting(map -> map.get("192.168.1.109"))
+        .extracting(DhcpLease::getHostname)
+        .isEqualTo("ukelei");
   }
 
   /**
@@ -98,9 +97,10 @@ class DhcpRepositoryImplTest {
   @Test
   void findActiveByHostName() {
     Map<String, DhcpLease> actual = repository.findActiveByHostName();
-    assertNotNull(actual);
-    assertNotNull(actual.get("UKELEI"));
-    assertEquals("192.168.1.109", actual.get("UKELEI").getIp());
+    assertThat(actual)
+        .extracting(map -> map.get("UKELEI"))
+        .extracting(DhcpLease::getIp)
+        .isEqualTo("192.168.1.109");
   }
 
 }

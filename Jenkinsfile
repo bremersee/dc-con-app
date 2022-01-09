@@ -1,17 +1,10 @@
 pipeline {
   agent none
   environment {
-    SERVICE_NAME = 'dc-con-app'
-    DOCKER_IMAGE = 'bremersee/dc-con-app'
-    DEV_TAG = 'snapshot'
-    PROD_TAG = 'latest'
-    DEPLOY_RELEASE = true
-    INSTALL_SNAPSHOT = false
-    INSTALL_RELEASE = true
-    PUSH_SNAPSHOT = false
-    PUSH_RELEASE = true
-    DEPLOY_DEMO = false
-    SNAPSHOT_SITE = false
+    DEPLOY_SNAPSHOT_ON_SERVER = true
+    DEPLOY_RELEASE_ON_SERVER = true
+    DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE = true
+    SNAPSHOT_SITE = true
     RELEASE_SITE = true
   }
   options {
@@ -45,73 +38,14 @@ pipeline {
         }
       }
     }
-    stage('Deploy release') {
-      agent {
-        label 'maven'
-      }
-      when {
-        allOf {
-          branch 'master'
-          environment name: 'DEPLOY_RELEASE', value: 'true'
-        }
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic deploy'
-      }
-      /*
-      steps {
-        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian9,deploy-to-repo-ubuntu-bionic,apt-get-on-dc,apt-get-on-dc2 deploy'
-      }
-      */
-    }
-    stage('Install snapshot') {
-      agent {
-        label 'maven'
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      when {
-        allOf {
-          branch 'develop'
-          environment name: 'INSTALL_SNAPSHOT', value: 'true'
-        }
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
-      }
-    }
-    stage('Install release') {
-      agent {
-        label 'maven'
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      when {
-        allOf {
-          branch 'master'
-          environment name: 'INSTALL_RELEASE', value: 'true'
-        }
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Pdebian9,copy-to-and-install-on-dc,copy-to-and-install-on-dc2 deploy'
-      }
-    }
-    stage('Push snapshot') {
+    stage('Deploy snapshot on servers') {
       agent {
         label 'maven'
       }
       when {
         allOf {
           branch 'develop'
-          environment name: 'PUSH_SNAPSHOT', value: 'true'
+          environment name: 'DEPLOY_SNAPSHOT_ON_SERVER', value: 'true'
         }
       }
       tools {
@@ -119,21 +53,17 @@ pipeline {
         maven 'm3'
       }
       steps {
-        sh '''
-          mvn -B -DskipTests -Ddockerfile.skip=false package dockerfile:push
-          mvn -B -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=snapshot package dockerfile:push
-          docker system prune -a -f
-        '''
+        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
       }
     }
-    stage('Push release') {
+    stage('Deploy release on servers') {
       agent {
         label 'maven'
       }
       when {
         allOf {
           branch 'master'
-          environment name: 'PUSH_RELEASE', value: 'true'
+          environment name: 'DEPLOY_RELEASE_ON_SERVER', value: 'true'
         }
       }
       tools {
@@ -141,35 +71,25 @@ pipeline {
         maven 'm3'
       }
       steps {
-        sh '''
-          mvn -B -DskipTests -Ddockerfile.skip=false package dockerfile:push
-          mvn -B -DskipTests -Ddockerfile.skip=false -Ddockerfile.tag=latest package dockerfile:push
-          docker system prune -a -f
-        '''
+        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
       }
     }
-    stage('Deploy demo on dev-swarm') {
+    stage('Deploy release on apt repository debian-bullseye') {
       agent {
-        label 'dev-swarm'
+        label 'maven'
       }
       when {
         allOf {
-          branch 'develop'
-          environment name: 'PUSH_SNAPSHOT', value: 'true'
-          environment name: 'DEPLOY_DEMO', value: 'true'
+          branch 'master'
+          environment name: 'DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE', value: 'true'
         }
       }
+      tools {
+        jdk 'jdk11'
+        maven 'm3'
+      }
       steps {
-        sh '''
-          if docker service ls | grep -q ${SERVICE_NAME}; then
-            echo "Updating service ${SERVICE_NAME} with docker image ${DOCKER_IMAGE}:${DEV_TAG}."
-            docker service update --image ${DOCKER_IMAGE}:${DEV_TAG} ${SERVICE_NAME}
-          else
-            echo "Creating service ${SERVICE_NAME} with docker image ${DOCKER_IMAGE}:${DEV_TAG}."
-            chmod 755 docker-swarm/service.sh
-            docker-swarm/service.sh "${DOCKER_IMAGE}:${DEV_TAG}" "demo"
-          fi
-        '''
+        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian11,deploy-to-repo-debian-bullseye clean deploy'
       }
     }
     stage('Deploy snapshot site') {

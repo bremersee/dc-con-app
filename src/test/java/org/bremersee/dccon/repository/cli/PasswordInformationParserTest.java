@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository.cli;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.ACCOUNT_LOCKOUT_DURATION;
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.ACCOUNT_LOCKOUT_THRESHOLD;
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.MAXIMUM_PASSWORD_AGE;
@@ -25,8 +26,6 @@ import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Defau
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.PASSWORD_HISTORY_LENGTH;
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.RESET_ACCOUNT_LOCKOUT_AFTER;
 import static org.bremersee.dccon.repository.cli.PasswordInformationParser.Default.STORE_PLAINTEXT_PASSWORD;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
@@ -49,8 +48,8 @@ class PasswordInformationParserTest {
     CommandExecutorResponse response = new CommandExecutorResponse(null, null);
     PasswordInformation expected = new PasswordInformation();
     PasswordInformation actual = parser.parse(response);
-    assertNotNull(actual);
-    assertEquals(expected, actual);
+    assertThat(actual)
+        .isEqualTo(expected);
   }
 
   /**
@@ -80,7 +79,7 @@ class PasswordInformationParserTest {
         .resetAccountLockoutAfter(67890)
         .build();
     PasswordInformation actual = parser.parse(response);
-    assertNotNull(actual);
-    assertEquals(expected, actual);
+    assertThat(actual)
+        .isEqualTo(expected);
   }
 }

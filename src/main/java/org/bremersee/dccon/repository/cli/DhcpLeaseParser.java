@@ -33,8 +33,7 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.springframework.util.StringUtils;
 
 /**
- * The dhcp lease list parser parses the response of the linux command line tool {@code
- * dhcp-lease-list}.
+ * The dhcp lease list parser parses the response of the linux command line tool {@code dhcp-lease-list}.
  *
  * <p>A response of {@code dhcp-lease-list} looks like this:
  * <pre>
@@ -93,10 +92,12 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
   /**
    * Default parser dhcp leases parser.
    *
-   * @param unknownHostConverter the unknown host converter
+   * <p>The unknown host converter converts the unknown host name {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into
+   * another host name. The parameters of the function are MAC and IP.
+   *
+   * @param unknownHostConverter the unknown host converter; first parameter is mac, second is ip
    * @return the dhcp leases parser
    */
-  @SuppressWarnings("unused")
   static DhcpLeaseParser defaultParser(BiFunction<String, String, String> unknownHostConverter) {
     return new Default(unknownHostConverter);
   }
@@ -119,9 +120,8 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
     /**
      * Instantiates a new default parser.
      *
-     * <p>The unknown host converter converts the unknown host name {@link
-     * DhcpLeaseParser#HOSTNAME_UNKNOWN} into another host name. The parameters of the function are
-     * MAC and IP.
+     * <p>The unknown host converter converts the unknown host name {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into
+     * another host name. The parameters of the function are MAC and IP.
      *
      * @param unknownHostConverter the unknown host converter
      */
