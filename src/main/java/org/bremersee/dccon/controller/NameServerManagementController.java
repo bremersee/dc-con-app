@@ -19,11 +19,14 @@ package org.bremersee.dccon.controller;
 import java.util.List;
 import javax.validation.Valid;
 import org.bremersee.dccon.api.NameServerManagementApi;
-import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.model.DhcpLeasePage;
 import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsNodePage;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZonePage;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.service.NameServerService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,24 +54,26 @@ public class NameServerManagementController implements NameServerManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DnsNode>> query(
+  public ResponseEntity<DnsNodePage> query(
+      Pageable pageable,
       final String query,
       final UnknownFilter unknownFilter) {
-    return ResponseEntity.ok(nameServerService.query(query, unknownFilter));
+    return ResponseEntity
+        .ok(new DnsNodePage(nameServerService.query(pageable, query, unknownFilter)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DhcpLease>> getDhcpLeases(
-      final Boolean all,
-      final String sort) {
-    return ResponseEntity.ok(nameServerService.getDhcpLeases(all, sort));
+  public ResponseEntity<DhcpLeasePage> getDhcpLeases(
+      Pageable pageable,
+      final Boolean all) {
+    return ResponseEntity.ok(new DhcpLeasePage(nameServerService.getDhcpLeases(pageable, all)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DnsZone>> getDnsZones() {
-    return ResponseEntity.ok(nameServerService.getDnsZones());
+  public ResponseEntity<DnsZonePage> getDnsZones(Pageable pageable, Boolean reverseOnly) {
+    return ResponseEntity.ok(new DnsZonePage(nameServerService.getDnsZones(pageable, reverseOnly)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
@@ -87,11 +92,13 @@ public class NameServerManagementController implements NameServerManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DnsNode>> getDnsNodes(
-      final String zoneName,
-      final UnknownFilter unknownFilter,
-      final String query) {
-    return ResponseEntity.ok(nameServerService.getDnsNodes(zoneName, unknownFilter, query));
+  public ResponseEntity<DnsNodePage> getDnsNodes(
+      String zoneName,
+      Pageable pageable,
+      String query,
+      UnknownFilter unknownFilter) {
+    return ResponseEntity.ok(new DnsNodePage(nameServerService
+        .getDnsNodes(zoneName, pageable, query, unknownFilter)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")

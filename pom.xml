@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>2.3.1</version>
+    <version>2.4.0-SNAPSHOT</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <artifactId>dc-con-app</artifactId>
-  <version>2.3.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
@@ -25,9 +25,8 @@
 
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <dc-con-api-spring.version>2.3.0-SNAPSHOT</dc-con-api-spring.version>
-    <common-base.version>2.3.3</common-base.version>
-    <comparator.version>2.4.1</comparator.version>
+    <dc-con-api-spring.version>3.0.0-SNAPSHOT</dc-con-api-spring.version>
+    <common-base.version>2.4.0-SNAPSHOT</common-base.version>
 
     <!--suppress UnresolvedMavenProperty -->
     <debBaseName>
@@ -139,11 +138,6 @@
       <groupId>org.bremersee</groupId>
       <artifactId>common-base-thymeleaf-starter</artifactId>
       <version>${common-base.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bremersee</groupId>
-      <artifactId>comparator</artifactId>
-      <version>${comparator.version}</version>
     </dependency>
 
     <dependency>

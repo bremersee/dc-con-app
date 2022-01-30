@@ -24,6 +24,8 @@ import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -42,7 +44,7 @@ public interface NameServerService {
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return found dns nodes
    */
-  List<DnsNode> query(@NotNull String query, @Nullable UnknownFilter unknownFilter);
+  Page<DnsNode> query(@NotNull Pageable pageable, @NotNull String query, @Nullable UnknownFilter unknownFilter);
 
   /**
    * Get dhcp leases.
@@ -52,14 +54,14 @@ public interface NameServerService {
    * @param sort the sort order (default is {@link DhcpLease#SORT_ORDER_BEGIN_HOSTNAME})
    * @return the dhcp leases
    */
-  List<DhcpLease> getDhcpLeases(@Nullable Boolean all, @Nullable String sort);
+  Page<DhcpLease> getDhcpLeases(@NotNull Pageable pageable, @Nullable Boolean all);
 
   /**
    * Get dns zones.
    *
    * @return the dns zones
    */
-  List<DnsZone> getDnsZones();
+  Page<DnsZone> getDnsZones(@NotNull Pageable pageable, @Nullable Boolean reverseOnly);
 
   /**
    * Add dns zone.
@@ -86,10 +88,11 @@ public interface NameServerService {
    * @param query the query
    * @return the dns nodes
    */
-  List<DnsNode> getDnsNodes(
+  Page<DnsNode> getDnsNodes(
       @NotNull String zoneName,
-      @Nullable UnknownFilter unknownFilter,
-      @Nullable String query);
+      @NotNull Pageable pageable,
+      @Nullable String query,
+      @Nullable UnknownFilter unknownFilter);
 
   /**
    * Save dns node.

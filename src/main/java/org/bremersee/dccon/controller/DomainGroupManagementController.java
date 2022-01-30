@@ -16,12 +16,13 @@
 
 package org.bremersee.dccon.controller;
 
-import java.util.List;
 import javax.validation.Valid;
 import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupPage;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,8 +54,8 @@ public class DomainGroupManagementController implements DomainGroupManagementApi
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DomainGroup>> getGroups(String sort, String query) {
-    return ResponseEntity.ok(domainGroupService.getGroups(sort, query));
+  public ResponseEntity<DomainGroupPage> getGroups(Pageable pageable, String query) {
+    return ResponseEntity.ok(new DomainGroupPage(domainGroupService.getGroups(pageable, query)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")

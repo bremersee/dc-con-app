@@ -19,18 +19,19 @@ package org.bremersee.dccon.controller;
 import static org.bremersee.security.core.AuthorityConstants.ADMIN_ROLE_NAME;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserPage;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.service.AuthenticationService;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.exception.ServiceException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -75,8 +76,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
-  public ResponseEntity<List<DomainUser>> getUsers(final String sort, String query) {
-    return ResponseEntity.ok(domainUserService.getUsers(sort, query));
+  public ResponseEntity<DomainUserPage> getUsers(Pageable pageable, String query) {
+    return ResponseEntity.ok(new DomainUserPage(domainUserService.getUsers(pageable, query)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")

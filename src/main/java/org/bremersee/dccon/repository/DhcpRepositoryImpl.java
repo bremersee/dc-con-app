@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -89,18 +90,11 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    * @return the map with the dhcp leases
    */
   Map<String, DhcpLease> findActiveMap(final boolean ip) {
-    final List<DhcpLease> leases = find(false);
-    leases.sort(ComparatorBuilder.builder()
-        .fromWellKnownText("begin,desc")
-        .build());
-    final Map<String, DhcpLease> leaseMap = new HashMap<>();
-    for (final DhcpLease lease : leases) {
-      final String key = ip
-          ? lease.getIp()
-          : lease.getHostname().toUpperCase();
-      leaseMap.putIfAbsent(key, lease);
-    }
-    return leaseMap;
+    return find(false).stream()
+        .collect(Collectors.toMap(
+            dhcpLease -> ip ? dhcpLease.getIp() : dhcpLease.getHostname().toUpperCase(),
+            dhcpLease -> dhcpLease,
+            (first, second) -> first.getBegin().isAfter(second.getBegin()) ? first : second));
   }
 
   /**

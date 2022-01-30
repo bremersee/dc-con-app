@@ -16,21 +16,22 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.List;
+import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
+
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.bremersee.dccon.service.validator.DomainGroupValidator;
+import org.bremersee.pagebuilder.PageBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * The domain group service.
@@ -75,13 +76,11 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public List<DomainGroup> getGroups(String sort, String query) {
-    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainGroup.DEFAULT_SORT_ORDER;
-    return domainGroupRepository.findAll(query)
-        .sorted(ComparatorBuilder.builder()
-            .fromWellKnownText(sortOrder)
-            .build())
-        .collect(Collectors.toList());
+  public Page<DomainGroup> getGroups(Pageable pageable, String query) {
+    return new PageBuilder<DomainGroup, DomainGroup>()
+        .sourceEntries(domainGroupRepository.findAll(query))
+        .pageable(applyDefaults(pageable, null, true, null))
+        .build();
   }
 
   @Override

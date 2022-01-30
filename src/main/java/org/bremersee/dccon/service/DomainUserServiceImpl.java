@@ -16,13 +16,12 @@
 
 package org.bremersee.dccon.service;
 
+import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
+
 import java.io.InputStream;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.common.model.TwoLetterLanguageCode;
-import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
@@ -31,9 +30,11 @@ import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
+import org.bremersee.pagebuilder.PageBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * The domain user service.
@@ -91,13 +92,11 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public List<DomainUser> getUsers(final String sort, final String query) {
-    final String sortOrder = StringUtils.hasText(sort) ? sort : DomainUser.DEFAULT_SORT_ORDER;
-    return domainUserRepository.findAll(query)
-        .sorted(ComparatorBuilder.builder()
-            .fromWellKnownText(sortOrder)
-            .build())
-        .collect(Collectors.toList());
+  public Page<DomainUser> getUsers(Pageable pageable, String query) {
+    return new PageBuilder<DomainUser, DomainUser>()
+        .sourceEntries(domainUserRepository.findAll(query))
+        .pageable(applyDefaults(pageable, null, true, null))
+        .build();
   }
 
   @Override

@@ -16,17 +16,17 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
@@ -37,8 +37,11 @@ import org.bremersee.dccon.repository.DnsNodeRepository;
 import org.bremersee.dccon.repository.DnsZoneRepository;
 import org.bremersee.dccon.repository.MockRepository;
 import org.bremersee.exception.ServiceException;
+import org.bremersee.pagebuilder.PageBuilder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * The name server service.
@@ -88,10 +91,10 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public List<DnsNode> query(final String query, final UnknownFilter unknownFilter) {
+  public Page<DnsNode> query(Pageable pageable, String query, UnknownFilter unknownFilter) {
     log.info("msg=[Query dns nodes.] query=[{}] unknownFilter=[{}]", query, unknownFilter);
-    if (!StringUtils.hasText(query)) {
-      return Collections.emptyList();
+    if (ObjectUtils.isEmpty(query)) {
+      return Page.empty();
     }
     final Set<String> ips = new HashSet<>();
     if (patternMac.matcher(query.toUpperCase()).matches()) {
@@ -99,12 +102,18 @@ public class NameServerServiceImpl implements NameServerService {
     } else if (patternIp4.matcher(query).matches()) {
       ips.add(query);
     }
-    if (!ips.isEmpty()) {
-      return dnsNodeRepository.findByIps(ips, unknownFilter);
+    List<DnsNode> dnsNodes;
+    if (ObjectUtils.isEmpty(ips)) {
+      dnsNodes = dnsNodeRepository.findByHostName(query, unknownFilter)
+          .map(Collections::singletonList)
+          .orElseGet(Collections::emptyList);
+    } else {
+      dnsNodes = dnsNodeRepository.findByIps(ips, unknownFilter);
     }
-    return dnsNodeRepository.findByHostName(query, unknownFilter)
-        .map(Collections::singletonList)
-        .orElseGet(Collections::emptyList);
+    return new PageBuilder<DnsNode, DnsNode>()
+        .sourceEntries(dnsNodes)
+        .pageable(SortMapper.applyDefaults(pageable, null, true, null))
+        .build();
   }
 
   private Optional<String> findIpByMac(String mac) {
@@ -116,25 +125,34 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public List<DhcpLease> getDhcpLeases(final Boolean all, final String sort) {
-    final List<DhcpLease> leases;
+  public Page<DhcpLease> getDhcpLeases(Pageable pageable, Boolean all) {
+    Collection<DhcpLease> leases;
     if (Boolean.TRUE.equals(all)) {
       leases = dhcpRepository.findAll();
     } else {
-      leases = new ArrayList<>(dhcpRepository.findActiveByIp().values());
+      leases = dhcpRepository.findActiveByIp().values();
     }
-    final String sortOrder = StringUtils.hasText(sort) ? sort : DhcpLease.SORT_ORDER_BEGIN_HOSTNAME;
-    leases.sort(ComparatorBuilder.builder()
-        .fromWellKnownText(sortOrder)
-        .build());
-    return leases;
+    return new PageBuilder<DhcpLease, DhcpLease>()
+        .sourceEntries(leases)
+        .pageable(SortMapper.applyDefaults(pageable, null, true, null))
+        .build();
   }
 
   @Override
-  public List<DnsZone> getDnsZones() {
-    return dnsZoneRepository.findAll()
-        .sorted(dnsZoneComparator)
-        .collect(Collectors.toList());
+  public Page<DnsZone> getDnsZones(Pageable pageable, Boolean reverseOnly) {
+    Predicate<DnsZone> filter;
+    if (ObjectUtils.isEmpty(reverseOnly)) {
+      filter = zone -> true;
+    } else if (Boolean.TRUE.equals(reverseOnly)) {
+      filter = DnsZone::getReverseZone;
+    } else {
+      filter = zone -> !Boolean.TRUE.equals(zone.getDefaultZone());
+    }
+    return new PageBuilder<DnsZone, DnsZone>()
+        .sourceEntries(dnsZoneRepository.findAll())
+        .sourceFilter(filter)
+        .pageable(pageable) // TODO dnsZoneComparator
+        .build();
   }
 
   @Override
@@ -153,16 +171,22 @@ public class NameServerServiceImpl implements NameServerService {
 
 
   @Override
-  public List<DnsNode> getDnsNodes(String zoneName, UnknownFilter unknownFilter, String query) {
+  public Page<DnsNode> getDnsNodes(
+      String zoneName,
+      Pageable pageable,
+      String query,
+      UnknownFilter unknownFilter) {
+
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
           zoneName,
           "org.bremersee:dc-con-app:e7466445-059f-4089-b69a-89bf08a9af1c");
     }
-    return dnsNodeRepository.findAll(zoneName, unknownFilter, query)
-        .sorted(dnsNodeComparator)
-        .collect(Collectors.toList());
+    return new PageBuilder<DnsNode, DnsNode>()
+        .sourceEntries(dnsNodeRepository.findAll(zoneName, unknownFilter, query))
+        .pageable(pageable) // TODO dnsNodeComparator
+        .build();
   }
 
   @Override

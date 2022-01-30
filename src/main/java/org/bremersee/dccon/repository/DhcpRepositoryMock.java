@@ -21,12 +21,10 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.exception.ServiceException;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -113,18 +111,11 @@ public class DhcpRepositoryMock implements DhcpRepository {
   }
 
   private Map<String, DhcpLease> findActiveMap(final boolean ip) {
-    final List<DhcpLease> leases = findAll();
-    leases.sort(ComparatorBuilder.builder()
-        .fromWellKnownText("begin,desc")
-        .build());
-    final Map<String, DhcpLease> leaseMap = new HashMap<>();
-    for (final DhcpLease lease : leases) {
-      final String key = ip
-          ? lease.getIp()
-          : lease.getHostname().toUpperCase();
-      leaseMap.putIfAbsent(key, lease);
-    }
-    return leaseMap;
+    return findAll().stream()
+        .collect(Collectors.toMap(
+            dhcpLease -> ip ? dhcpLease.getIp() : dhcpLease.getHostname().toUpperCase(),
+            dhcpLease -> dhcpLease,
+            (first, second) -> first.getBegin().isAfter(second.getBegin()) ? first : second));
   }
 
 }

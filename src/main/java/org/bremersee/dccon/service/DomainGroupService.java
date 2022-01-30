@@ -16,11 +16,12 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainGroup;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -35,11 +36,11 @@ public interface DomainGroupService {
   /**
    * Get groups.
    *
-   * @param sort the sort order
+   * @param pageable the pageable
    * @param query the query
    * @return the groups
    */
-  List<DomainGroup> getGroups(@Nullable String sort, @Nullable String query);
+  Page<DomainGroup> getGroups(@NotNull Pageable pageable, @Nullable String query);
 
   /**
    * Add domain group.

@@ -17,7 +17,6 @@
 package org.bremersee.dccon.service;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -25,6 +24,8 @@ import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -44,11 +45,11 @@ public interface DomainUserService {
   /**
    * Get domain users.
    *
-   * @param sort the sort order
+   * @param pageable the pageable
    * @param query the query
    * @return the users
    */
-  List<DomainUser> getUsers(@Nullable String sort, @Nullable String query);
+  Page<DomainUser> getUsers(@NotNull Pageable pageable, @Nullable String query);
 
   /**
    * Add domain user.
