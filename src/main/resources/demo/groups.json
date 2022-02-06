@@ -1,6 +1,6 @@
 [
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Enterprise Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -13,7 +13,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Domain Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -28,7 +28,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Domain Users,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -41,7 +41,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Domain Guests,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -54,7 +54,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Domain Computers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -67,7 +67,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -80,7 +80,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Cert Publishers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -93,7 +93,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Schema Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -108,7 +108,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Enterprise Admins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -123,7 +123,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Group Policy Creator Owners,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -138,7 +138,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Read-only Domain Controllers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -151,7 +151,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=RAS and IAS Servers,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -164,7 +164,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Allowed RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -177,7 +177,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=Denied RODC Password Replication Group,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:30Z",
     "modified": "2018-05-20T15:00:30Z",
@@ -199,7 +199,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=DnsAdmins,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:33Z",
     "modified": "2018-05-20T15:53:02Z",
@@ -214,7 +214,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=DnsUpdateProxy,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-20T15:00:33Z",
     "modified": "2018-05-20T15:00:33Z",
@@ -227,7 +227,7 @@
     "members": []
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=The Blooms,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:44Z",
     "modified": "2019-10-06T09:47:05Z",
@@ -243,7 +243,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=The Buddenbrooks,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:48Z",
     "modified": "2018-09-24T17:27:48Z",
@@ -259,7 +259,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=women,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:52Z",
     "modified": "2018-09-24T17:27:49Z",
@@ -275,7 +275,7 @@
     ]
   },
   {
-    "_type": "DomainGroup",
+    "_type": "org.bremersee.dccon.model.DomainGroup",
     "distinguishedName": "CN=men,CN=Users,DC=samdom,DC=example,DC=org",
     "created": "2018-05-21T17:45:59Z",
     "modified": "2019-02-12T15:56:35Z",

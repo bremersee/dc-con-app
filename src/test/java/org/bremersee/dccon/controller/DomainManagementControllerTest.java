@@ -16,12 +16,12 @@
 
 package org.bremersee.dccon.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -36,6 +36,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
+@ExtendWith(SoftAssertionsExtension.class)
 class DomainManagementControllerTest {
 
   private static final String user = "admin";
@@ -50,29 +51,45 @@ class DomainManagementControllerTest {
 
   /**
    * Gets password information.
+   *
+   * @param softly the softly
    */
   @Test
-  void getPasswordInformation() {
+  void getPasswordInformation(SoftAssertions softly) {
     ResponseEntity<PasswordInformation> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/domain/password-information", PasswordInformation.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Get password information and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     PasswordInformation actual = response.getBody();
-    assertNotNull(actual);
-    assertNotNull(actual.getMinimumPasswordLength());
+    softly.assertThat(actual)
+        .as("Get password information and expect, that is is not null")
+        .isNotNull()
+        .extracting(PasswordInformation::getMinimumPasswordLength)
+        .as("Get minimum length of password and expect, that is is not null")
+        .isNotNull();
   }
 
   /**
    * Gets random password.
+   *
+   * @param softly the softly
    */
   @Test
-  void getRandomPassword() {
+  void getRandomPassword(SoftAssertions softly) {
     ResponseEntity<Password> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/domain/random-password", Password.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Get random password and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     Password actual = response.getBody();
-    assertNotNull(actual);
-    assertNotNull(actual.getValue());
+    softly.assertThat(actual)
+        .as("Get random password and expect, that is is not null")
+        .isNotNull()
+        .extracting(Password::getValue)
+        .as("Get value of random password and expect, that is is not null")
+        .isNotNull();
   }
 }

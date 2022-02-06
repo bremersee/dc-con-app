@@ -16,20 +16,24 @@
 
 package org.bremersee.dccon.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.model.DhcpLeasePage;
 import org.bremersee.dccon.model.DnsNode;
+import org.bremersee.dccon.model.DnsNodePage;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZonePage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -45,6 +49,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
+@ExtendWith(SoftAssertionsExtension.class)
 class NameServerManagementControllerTest {
 
   private static final String user = "admin";
@@ -68,17 +73,18 @@ class NameServerManagementControllerTest {
    */
   @BeforeEach
   void setUp() {
-    ResponseEntity<Void> response = restTemplate
+    restTemplate
         .withBasicAuth(user, pass)
         .postForEntity("/api/reset", null, Void.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
   /**
    * Query.
    *
+   * @param softly the softly
+   */
   @Test
-  void query() {
+  void query(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -91,66 +97,92 @@ class NameServerManagementControllerTest {
             expected,
             DnsNode.class,
             properties.getDefaultZone());
-    assertEquals(HttpStatus.OK, addResponse.getStatusCode());
-    DnsNode actual = addResponse.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    softly.assertThat(addResponse.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
 
-    ResponseEntity<DnsNode[]> response = restTemplate
+    DnsNode actual = addResponse.getBody();
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo(expected.getName());
+
+    ResponseEntity<DnsNodePage> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/dns?q={query}",
-            DnsNode[].class,
+            DnsNodePage.class,
             "newtestnode");
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    DnsNode[] result = response.getBody();
-    assertNotNull(result);
-    assertTrue(result.length > 0);
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
+    DnsNodePage result = response.getBody();
+    softly.assertThat(result)
+        .isNotNull()
+        .extracting(DnsNodePage::getContent)
+        .extracting(List::size, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(0);
   }
-  */
 
   /**
    * Gets dhcp leases.
    *
+   * @param softly the softly
+   */
   @Test
-  void getDhcpLeases() {
-    ResponseEntity<DhcpLease[]> response = restTemplate
+  void getDhcpLeases(SoftAssertions softly) {
+    ResponseEntity<DhcpLeasePage> response = restTemplate
         .withBasicAuth(user, pass)
-        .getForEntity("/api/dns/dhcp-leases", DhcpLease[].class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    DhcpLease[] actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual.length > 0);
+        .getForEntity("/api/dns/dhcp-leases", DhcpLeasePage.class);
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
+    DhcpLeasePage actual = response.getBody();
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DhcpLeasePage::getContent)
+        .extracting(List::size, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(0);
   }
-  */
 
   /**
    * Gets dns zones.
    *
+   * @param softly the softly
+   */
   @Test
-  void getDnsZones() {
-    ResponseEntity<DnsZone[]> response = restTemplate
+  void getDnsZones(SoftAssertions softly) {
+    ResponseEntity<DnsZonePage> response = restTemplate
         .withBasicAuth(user, pass)
-        .getForEntity("/api/dns/zones", DnsZone[].class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    DnsZone[] actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual.length > 0);
+        .getForEntity("/api/dns/zones", DnsZonePage.class);
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
+    DnsZonePage actual = response.getBody();
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsZonePage::getContent)
+        .extracting(List::size, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(0);
   }
-  */
 
   /**
    * Add dns zone and delete.
+   *
+   * @param softly the softly
    */
   @Test
-  void addDnsZoneAndDelete() {
+  void addDnsZoneAndDelete(SoftAssertions softly) {
     DnsZone expected = DnsZone.builder().name("newtestzone").build();
     ResponseEntity<DnsZone> addResponse = restTemplate
         .withBasicAuth(user, pass)
         .postForEntity("/api/dns/zones", expected, DnsZone.class);
-    assertEquals(HttpStatus.OK, addResponse.getStatusCode());
+    softly.assertThat(addResponse.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     DnsZone actual = addResponse.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsZone::getName)
+        .isEqualTo(expected.getName());
 
     ResponseEntity<Boolean> response = restTemplate
         .withBasicAuth(user, pass)
@@ -159,10 +191,12 @@ class NameServerManagementControllerTest {
             null,
             Boolean.class,
             expected.getName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     Boolean deleted = response.getBody();
-    assertNotNull(deleted);
-    assertTrue(deleted);
+    softly.assertThat(deleted)
+        .isTrue();
 
     response = restTemplate
         .withBasicAuth(user, pass)
@@ -171,34 +205,44 @@ class NameServerManagementControllerTest {
             null,
             Boolean.class,
             UUID.randomUUID().toString());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     deleted = response.getBody();
-    assertNotNull(deleted);
-    assertFalse(deleted);
+    softly.assertThat(deleted)
+        .isFalse();
   }
 
   /**
    * Gets dns nodes.
    *
+   * @param softly the softly
+   */
   @Test
-  void getDnsNodes() {
-    ResponseEntity<DnsNode[]> response = restTemplate
+  void getDnsNodes(SoftAssertions softly) {
+    ResponseEntity<DnsNodePage> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/dns/zones/{zoneName}",
-            DnsNode[].class,
+            DnsNodePage.class,
             properties.getDefaultZone());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    DnsNode[] actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual.length > 0);
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
+    DnsNodePage actual = response.getBody();
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNodePage::getContent)
+        .extracting(List::size, InstanceOfAssertFactories.INTEGER)
+        .isGreaterThan(0);
   }
-  */
 
   /**
    * Save dns node and delete.
+   *
+   * @param softly the softly
    */
   @Test
-  void saveDnsNodeAndDelete() {
+  void saveDnsNodeAndDelete(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -211,10 +255,14 @@ class NameServerManagementControllerTest {
             expected,
             DnsNode.class,
             properties.getDefaultZone());
-    assertEquals(HttpStatus.OK, addResponse.getStatusCode());
+    softly.assertThat(addResponse.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     DnsNode actual = addResponse.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo(expected.getName());
 
     ResponseEntity<Boolean> response = restTemplate
         .withBasicAuth(user, pass)
@@ -224,10 +272,12 @@ class NameServerManagementControllerTest {
             Boolean.class,
             properties.getDefaultZone(),
             expected.getName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     Boolean deleted = response.getBody();
-    assertNotNull(deleted);
-    assertTrue(deleted);
+    softly.assertThat(deleted)
+        .isTrue();
 
     response = restTemplate
         .withBasicAuth(user, pass)
@@ -237,17 +287,21 @@ class NameServerManagementControllerTest {
             Boolean.class,
             properties.getDefaultZone(),
             UUID.randomUUID().toString());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     deleted = response.getBody();
-    assertNotNull(deleted);
-    assertFalse(deleted);
+    softly.assertThat(deleted)
+        .isFalse();
   }
 
   /**
    * Save and get dns node.
+   *
+   * @param softly the softly
    */
   @Test
-  void saveAndGetDnsNode() {
+  void saveAndGetDnsNode(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -260,10 +314,14 @@ class NameServerManagementControllerTest {
             expected,
             DnsNode.class,
             properties.getDefaultZone());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     DnsNode actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo(expected.getName());
 
     response = restTemplate
         .withBasicAuth(user, pass)
@@ -271,10 +329,14 @@ class NameServerManagementControllerTest {
             DnsNode.class,
             properties.getDefaultZone(),
             expected.getName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
+
     actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getName(), actual.getName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DnsNode::getName)
+        .isEqualTo(expected.getName());
   }
 
   /**
@@ -289,6 +351,7 @@ class NameServerManagementControllerTest {
             null,
             String.class,
             properties.getDefaultZone());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
   }
 }

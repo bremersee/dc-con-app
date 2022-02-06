@@ -1,6 +1,6 @@
 [
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:23:51Z",
     "modified": "2018-09-04T16:23:51Z",
     "name": "gw-26a-e0",
@@ -16,7 +16,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T15:00:34Z",
     "modified": "2019-11-27T12:53:30Z",
     "name": "dc",
@@ -32,7 +32,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-10-17T14:35:40Z",
     "modified": "2018-10-17T14:35:40Z",
     "name": "dc2",
@@ -48,7 +48,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T15:00:34Z",
     "modified": "2019-11-27T12:53:31Z",
     "name": "DomainDnsZones",
@@ -72,7 +72,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-29T12:26:41Z",
     "modified": "2019-10-23T16:36:06Z",
     "name": "GPSMAP276Cx",
@@ -88,7 +88,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-09-29T09:38:26Z",
     "modified": "2019-10-31T19:55:30Z",
     "name": "Galaxy-A80",
@@ -104,7 +104,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-10-31T18:56:15Z",
     "modified": "2019-12-09T08:07:25Z",
     "name": "Galaxy-S10",
@@ -120,7 +120,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-30T12:44:01Z",
     "modified": "2019-12-07T07:55:04Z",
     "name": "Galaxy-S9",
@@ -136,7 +136,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-31T21:27:09Z",
     "modified": "2019-12-05T16:16:43Z",
     "name": "GearSport-E94B",
@@ -152,7 +152,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-10-11T07:06:51Z",
     "modified": "2019-11-03T09:20:01Z",
     "name": "android-5ec62cbfd890164",
@@ -168,7 +168,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-28T12:09:33Z",
     "modified": "2019-12-08T10:18:31Z",
     "name": "android-cd3613d13062cd6b",
@@ -184,7 +184,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-10-11T06:45:53Z",
     "modified": "2019-10-11T06:45:53Z",
     "name": "android-f749ff3a8e82684",
@@ -200,7 +200,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T16:33:52Z",
     "modified": "2019-12-10T09:29:57Z",
     "name": "ap-26-e1",
@@ -216,7 +216,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-02-12T18:38:18Z",
     "modified": "2019-12-10T09:20:01Z",
     "name": "ap-26a-e0",
@@ -232,7 +232,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-10T13:22:06Z",
     "modified": "2019-12-10T09:28:06Z",
     "name": "ap-26a-e2",
@@ -248,7 +248,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T16:33:49Z",
     "modified": "2019-12-10T09:27:15Z",
     "name": "ap-26a-e3",
@@ -264,7 +264,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-26T16:38:17Z",
     "modified": "2019-12-10T09:20:58Z",
     "name": "ap-island",
@@ -280,7 +280,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-10T13:43:15Z",
     "modified": "2019-12-10T09:27:53Z",
     "name": "ap-tractor-port",
@@ -296,7 +296,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-21T09:36:58Z",
     "modified": "2019-12-10T03:33:43Z",
     "name": "barsch",
@@ -312,7 +312,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-16T18:55:56Z",
     "modified": "2019-09-26T16:54:13Z",
     "name": "bitterling",
@@ -328,7 +328,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-21T17:24:06Z",
     "modified": "2018-05-21T17:37:26Z",
     "name": "data",
@@ -344,7 +344,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:38:19Z",
     "modified": "2019-01-23T00:38:19Z",
     "name": "dev-manager-1",
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:50:19Z",
     "modified": "2019-01-23T00:50:19Z",
     "name": "dev-manager-2",
@@ -376,7 +376,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:50:29Z",
     "modified": "2019-01-23T00:50:29Z",
     "name": "dev-manager-3",
@@ -392,7 +392,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-02-02T06:17:26Z",
     "modified": "2019-02-02T06:17:26Z",
     "name": "dev-swarm",
@@ -408,7 +408,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:50:52Z",
     "modified": "2019-01-23T00:50:52Z",
     "name": "dev-worker-1",
@@ -424,7 +424,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:50:59Z",
     "modified": "2019-01-23T00:50:59Z",
     "name": "dev-worker-2",
@@ -440,7 +440,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:51:05Z",
     "modified": "2019-01-23T00:51:05Z",
     "name": "dev-worker-3",
@@ -456,7 +456,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-10-17T17:32:57Z",
     "modified": "2019-12-10T09:26:17Z",
     "name": "dhcp-192-168-1-100",
@@ -472,7 +472,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-10-11T19:22:44Z",
     "modified": "2019-12-10T09:28:44Z",
     "name": "dhcp-192-168-1-188",
@@ -488,7 +488,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-09-27T19:21:53Z",
     "modified": "2019-11-20T21:12:26Z",
     "name": "dhcp-192-168-1-195",
@@ -504,7 +504,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-09-03T21:21:08Z",
     "modified": "2019-12-03T21:30:05Z",
     "name": "forelle",
@@ -520,7 +520,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T12:31:58Z",
     "modified": "2019-01-23T12:31:58Z",
     "name": "ha1",
@@ -536,7 +536,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T12:32:09Z",
     "modified": "2019-01-23T12:32:09Z",
     "name": "ha2",
@@ -552,7 +552,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T17:55:47Z",
     "modified": "2019-01-23T17:55:47Z",
     "name": "haproxy",
@@ -568,7 +568,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:25:32Z",
     "modified": "2018-09-04T16:25:32Z",
     "name": "jenkins",
@@ -584,7 +584,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-25T12:41:30Z",
     "modified": "2019-01-25T12:41:30Z",
     "name": "letsencrypt",
@@ -600,7 +600,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-04-16T17:05:51Z",
     "modified": "2019-12-10T09:30:04Z",
     "name": "mac-023",
@@ -616,7 +616,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-09T10:10:14Z",
     "modified": "2018-09-09T10:10:14Z",
     "name": "nextcloud",
@@ -632,7 +632,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:30:31Z",
     "modified": "2018-09-04T16:30:31Z",
     "name": "sip-26-e1",
@@ -648,7 +648,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:29:02Z",
     "modified": "2018-09-04T16:29:02Z",
     "name": "sip-26a-e1",
@@ -664,7 +664,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-16T22:55:40Z",
     "modified": "2019-08-16T22:55:40Z",
     "name": "sip-26a-e2",
@@ -680,7 +680,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T16:36:32Z",
     "modified": "2019-12-10T09:28:45Z",
     "name": "sw-26a-e0",
@@ -696,7 +696,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-16T23:24:48Z",
     "modified": "2019-12-10T09:30:02Z",
     "name": "sw-26a-e3",
@@ -712,7 +712,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-10-03T13:35:02Z",
     "modified": "2018-10-07T10:14:20Z",
     "name": "sw-unused-01",
@@ -728,7 +728,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:21:39Z",
     "modified": "2018-09-04T16:21:39Z",
     "name": "tk-26a-e0",
@@ -744,7 +744,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-08-28T16:33:37Z",
     "modified": "2019-12-10T09:16:22Z",
     "name": "ukelei",
@@ -760,7 +760,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T14:54:18Z",
     "modified": "2018-09-04T14:54:18Z",
     "name": "unifi",
@@ -776,7 +776,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T18:50:01Z",
     "modified": "2018-05-20T18:50:01Z",
     "name": "vdr",
@@ -792,7 +792,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-26T23:29:56Z",
     "modified": "2018-05-26T23:29:56Z",
     "name": "vmhost",
@@ -808,7 +808,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-09-10T17:16:30Z",
     "modified": "2019-09-10T17:16:30Z",
     "name": "vmhost1",
@@ -824,7 +824,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-10-11T19:01:26Z",
     "modified": "2018-10-12T16:27:08Z",
     "name": "vmhost2",
@@ -840,7 +840,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-01-23T00:47:54Z",
     "modified": "2019-01-23T00:47:54Z",
     "name": "vmhost3",
@@ -856,7 +856,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-09-03T21:38:58Z",
     "modified": "2019-11-10T16:04:54Z",
     "name": "xander",
@@ -872,7 +872,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2019-02-24T13:22:22Z",
     "modified": "2019-02-24T13:22:22Z",
     "name": "yavdr",
@@ -888,7 +888,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-05-20T16:21:32Z",
     "modified": "2019-12-10T02:00:22Z",
     "name": "zander",
@@ -904,7 +904,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-14T17:23:47Z",
     "modified": "2019-10-31T07:58:01Z",
     "name": "zander-deb9",
@@ -920,7 +920,7 @@
     ]
   },
   {
-    "_type": "DnsNode",
+    "_type": "org.bremersee.dccon.model.DnsNode",
     "created": "2018-09-04T16:34:18Z",
     "modified": "2018-09-04T16:34:18Z",
     "name": "zoneminder",

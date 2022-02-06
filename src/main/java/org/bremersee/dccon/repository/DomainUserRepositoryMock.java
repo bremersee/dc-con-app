@@ -145,6 +145,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
     return groupRepository.findAll(null)
         .filter(domainGroup -> domainGroup.getMembers().contains(userName))
         .map(DomainGroup::getName)
+        .sorted()
         .collect(Collectors.toList());
   }
 

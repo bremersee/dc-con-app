@@ -16,26 +16,41 @@
 
 package org.bremersee.dccon.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
+import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.comparator.spring.mapper.SortMapper;
+import org.bremersee.dccon.model.CommonAttributes;
+import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainUserPage;
 import org.bremersee.dccon.model.Password;
+import org.bremersee.test.TestReadWriteUtils;
+import org.bremersee.test.exception.TestFrameworkException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 
@@ -48,6 +63,7 @@ import org.springframework.util.LinkedMultiValueMap;
     "bremersee.security.authentication.enable-jwt-support=false"
 })
 @ActiveProfiles({"in-memory"})
+@ExtendWith(SoftAssertionsExtension.class)
 class DomainUserManagementControllerTest {
 
   private static final String user = "admin";
@@ -61,37 +77,67 @@ class DomainUserManagementControllerTest {
   TestRestTemplate restTemplate;
 
   /**
+   * The object mapper builder.
+   */
+  @Autowired
+  Jackson2ObjectMapperBuilder objectMapperBuilder;
+
+  /**
    * Sets up.
    */
   @BeforeEach
   void setUp() {
-    ResponseEntity<Void> response = restTemplate
+    restTemplate
         .withBasicAuth(user, pass)
         .postForEntity("/api/reset", null, Void.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
-  // TODO
   /**
    * Gets users.
    *
+   * @param softly the softly
+   */
   @Test
-  void getUsers() {
-    ResponseEntity<DomainUser[]> response = restTemplate
+  void getUsers(SoftAssertions softly) {
+    ResponseEntity<DomainUserPage> response = restTemplate
         .withBasicAuth(user, pass)
-        .getForEntity("/api/users", DomainUser[].class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    DomainUser[] actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual.length > 0);
+        .getForEntity("/api/users", DomainUserPage.class);
+    softly.assertThat(response.getStatusCode())
+        .as("Get users without pageable and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
+    DomainUserPage actual = response.getBody();
+    List<DomainUser> expectedContent = findUsers(Sort
+        .by(Order.by(DomainUser.USER_NAME).ignoreCase()));
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DomainUserPage::getContent, InstanceOfAssertFactories.list(DomainUser.class))
+        .as("Get users without pageable and expect content of users.json")
+        .containsExactlyElementsOf(expectedContent);
+
+    response = restTemplate
+        .withBasicAuth(user, pass)
+        .getForEntity("/api/users?page=0&size=3&sort=distinguishedName,desc",
+            DomainUserPage.class);
+    softly.assertThat(response.getStatusCode())
+        .as("Get users with pageable and expect status is 200")
+        .isEqualTo(HttpStatus.OK);
+    actual = response.getBody();
+    expectedContent = findUsers(Sort
+        .by(Order.by(CommonAttributes.DISTINGUISHED_NAME).ignoreCase().with(Direction.DESC)));
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(DomainUserPage::getContent, InstanceOfAssertFactories.list(DomainUser.class))
+        .as("Get users with pageable and expect three entries")
+        .containsExactlyElementsOf(expectedContent.subList(0, 3));
   }
-  */
 
   /**
    * Add user.
+   *
+   * @param softly the softly
    */
   @Test
-  void addUser() {
+  void addUser(SoftAssertions softly) {
     DomainUser source = DomainUser.builder()
         .userName(UUID.randomUUID().toString())
         .description("A new test user.")
@@ -99,45 +145,64 @@ class DomainUserManagementControllerTest {
     ResponseEntity<DomainUser> response = restTemplate
         .withBasicAuth(user, pass)
         .postForEntity("/api/users", source, DomainUser.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Add user and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     DomainUser actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals(source.getUserName(), actual.getUserName());
-    assertEquals(source.getDescription(), actual.getDescription());
+    softly.assertThat(actual)
+        .as("Add user and assert, that response is not null")
+        .isNotNull()
+        .extracting(DomainUser::getUserName)
+        .as("Add user and assert, that user names are equal")
+        .isEqualTo(source.getUserName());
+    softly.assertThat(actual)
+        .isNotNull()
+        .as("Add user and assert, that response is not null")
+        .extracting(DomainUser::getDescription)
+        .as("Add user and assert, that descriptions are equal")
+        .isEqualTo(source.getDescription());
   }
 
   /**
    * Gets user.
    *
+   * @param softly the softly
+   */
   @Test
-  void getUser() {
+  void getUser(SoftAssertions softly) {
     DomainUser expected = findFirst();
     ResponseEntity<DomainUser> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}", DomainUser.class, expected.getUserName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Get user and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     DomainUser actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getUserName(), actual.getUserName());
+    softly.assertThat(actual)
+        .as("Get user")
+        .isEqualTo(expected);
   }
 
   /**
    * Gets user avatar.
-   *
+   */
   @Test
   void getUserAvatar() {
     DomainUser expected = findFirst();
     ResponseEntity<byte[]> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/avatar", byte[].class, expected.getUserName());
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   /**
    * Update user.
    *
+   * @param softly the softly
+   */
   @Test
-  void updateUser() {
+  void updateUser(SoftAssertions softly) {
     DomainUser expected = findFirst().toBuilder()
         .description("New test user description")
         .build();
@@ -148,15 +213,20 @@ class DomainUserManagementControllerTest {
             new HttpEntity<>(expected),
             DomainUser.class,
             expected.getUserName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Update user and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     DomainUser actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals(expected.getDescription(), actual.getDescription());
+    softly.assertThat(actual)
+        .as("Update user")
+        .isNotNull()
+        .extracting(DomainUser::getDescription)
+        .isEqualTo(expected.getDescription());
   }
 
   /**
    * Update user password.
-   *
+   */
   @Test
   void updateUserPassword() {
     String userName = findFirst().getUserName();
@@ -167,12 +237,13 @@ class DomainUserManagementControllerTest {
             new HttpEntity<>(Password.builder().value(UUID.randomUUID().toString()).build()),
             Void.class,
             userName);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
   }
 
   /**
    * Update user password and expect forbidden.
-   *
+   */
   @Test
   void updateUserPasswordAndExpectForbidden() {
     String userName = findFirst().getUserName();
@@ -186,14 +257,17 @@ class DomainUserManagementControllerTest {
                 .build()),
             Void.class,
             userName);
-    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
   }
 
   /**
    * Update and remove user avatar.
    *
+   * @param softly the softly
+   */
   @Test
-  void updateAndRemoveUserAvatar() {
+  void updateAndRemoveUserAvatar(SoftAssertions softly) {
     LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("avatar", new ClassPathResource("avatar.jpeg"));
 
@@ -210,13 +284,17 @@ class DomainUserManagementControllerTest {
             entity,
             Void.class,
             userName);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Update user avatar and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
 
     ResponseEntity<byte[]> avatarResponse = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/avatar", byte[].class, userName);
     byte[] actualBytes = avatarResponse.getBody();
-    assertNotNull(actualBytes);
+    softly.assertThat(actualBytes)
+        .as("Updated user avatar is present")
+        .isNotNull();
 
     restTemplate
         .withBasicAuth(user, pass)
@@ -225,60 +303,80 @@ class DomainUserManagementControllerTest {
     avatarResponse = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/avatar", byte[].class, userName);
-    assertEquals(HttpStatus.NOT_FOUND, avatarResponse.getStatusCode());
+    softly.assertThat(avatarResponse.getStatusCode())
+        .as("User avatar was deleted")
+        .isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   /**
    * User exists.
    *
+   * @param softly the softly
+   */
   @Test
-  void userExists() {
+  void userExists(SoftAssertions softly) {
     DomainUser expected = findFirst();
     ResponseEntity<Boolean> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/exists", Boolean.class, expected.getUserName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Call 'user exists' (1) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     Boolean actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual);
+    softly.assertThat(actual)
+        .as("Call 'user exists' (1) and expect, that is is true")
+        .isTrue();
 
     response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/exists", Boolean.class, UUID.randomUUID().toString());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Call 'user exists' (2) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     actual = response.getBody();
-    assertNotNull(actual);
-    assertFalse(actual);
+    softly.assertThat(actual)
+        .as("Call 'user exists' (2) and expect, that is is false")
+        .isFalse();
   }
 
   /**
    * Is user name in use.
    *
+   * @param softly the softly
+   */
   @Test
-  void isUserNameInUse() {
+  void isUserNameInUse(SoftAssertions softly) {
     DomainUser expected = findFirst();
     ResponseEntity<Boolean> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/in-use", Boolean.class, expected.getUserName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Call 'is user name in use' (1) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     Boolean actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual);
+    softly.assertThat(actual)
+        .as("Call 'is user name in use' (1) and expect, that is is true")
+        .isTrue();
 
     response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/users/{name}/in-use", Boolean.class, UUID.randomUUID().toString());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Call 'is user name in use' (2) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     actual = response.getBody();
-    assertNotNull(actual);
-    assertFalse(actual);
+    softly.assertThat(actual)
+        .as("Call 'is user name in use' (2) and expect, that is is false")
+        .isFalse();
   }
 
   /**
    * Delete user.
    *
+   * @param softly the softly
+   */
   @Test
-  void deleteUser() {
+  void deleteUser(SoftAssertions softly) {
     DomainUser expected = findFirst();
     ResponseEntity<Boolean> response = restTemplate
         .withBasicAuth(user, pass)
@@ -287,10 +385,13 @@ class DomainUserManagementControllerTest {
             null,
             Boolean.class,
             expected.getUserName());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Delete user (1) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     Boolean actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual);
+    softly.assertThat(actual)
+        .as("Delete user (1) and expect, that it is true")
+        .isTrue();
 
     response = restTemplate
         .withBasicAuth(user, pass)
@@ -299,21 +400,55 @@ class DomainUserManagementControllerTest {
             null,
             Boolean.class,
             UUID.randomUUID().toString());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .as("Delete user (2) and expect, that status is 200")
+        .isEqualTo(HttpStatus.OK);
     actual = response.getBody();
-    assertNotNull(actual);
-    assertFalse(actual);
+    softly.assertThat(actual)
+        .as("Delete user (2) and expect, that it is false")
+        .isFalse();
   }
-  */
+
+  private List<String> findDomainGroups(final String userName) {
+    try {
+      return TestReadWriteUtils.readJsonFromClassPath(
+              "demo/groups.json",
+              objectMapperBuilder.build(),
+              new TypeReference<List<DomainGroup>>() {
+              })
+          .stream()
+          .filter(domainGroup -> domainGroup.getMembers().contains(userName))
+          .map(DomainGroup::getName)
+          .sorted()
+          .collect(Collectors.toList());
+
+    } catch (Exception e) {
+      throw new TestFrameworkException(e.getMessage(), e);
+    }
+  }
+
+  private List<DomainUser> findUsers(Sort sort) {
+    try {
+      return TestReadWriteUtils.readJsonFromClassPath(
+              "demo/users.json",
+              objectMapperBuilder.build(),
+              new TypeReference<List<DomainUser>>() {
+              })
+          .stream()
+          .map(domainUser -> domainUser
+              .toBuilder()
+              .groups(findDomainGroups(domainUser.getUserName()))
+              .build())
+          .sorted(ComparatorBuilder.newInstance().addAll(SortMapper.fromSort(sort)).build())
+          .collect(Collectors.toList());
+
+    } catch (Exception e) {
+      throw new TestFrameworkException(e.getMessage(), e);
+    }
+  }
 
   private DomainUser findFirst() {
-    ResponseEntity<DomainUser[]> response = restTemplate
-        .withBasicAuth(user, pass)
-        .getForEntity("/api/users", DomainUser[].class);
-    DomainUser[] actual = response.getBody();
-    assertNotNull(actual);
-    assertTrue(actual.length > 0);
-    return actual[0];
+    return findUsers(Sort.by("userName")).get(0);
   }
 
 }

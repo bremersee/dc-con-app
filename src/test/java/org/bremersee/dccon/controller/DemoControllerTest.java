@@ -16,9 +16,10 @@
 
 package org.bremersee.dccon.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.exception.model.RestApiException;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -42,6 +44,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles({"in-memory"})
 @TestInstance(Lifecycle.PER_CLASS) // allows us to use @BeforeAll with a non-static method
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ExtendWith(SoftAssertionsExtension.class)
 class DemoControllerTest {
 
   private static final String user = "admin";
@@ -63,7 +66,8 @@ class DemoControllerTest {
     ResponseEntity<Void> response = restTemplate
         .withBasicAuth(user, pass)
         .postForEntity("/api/reset", null, Void.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.OK);
   }
 
   /**
@@ -74,24 +78,34 @@ class DemoControllerTest {
   void resetDataAndExpect() {
     ResponseEntity<Void> response = restTemplate
         .postForEntity("/api/reset", null, Void.class);
-    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
    * Throw error.
+   *
+   * @param softly the softly
    */
   @Order(3)
   @Test
-  void throwError() {
+  void throwError(SoftAssertions softly) {
     ResponseEntity<RestApiException> response = restTemplate
         .withBasicAuth(user, pass)
         .getForEntity("/api/error", RestApiException.class);
-    assertEquals(HttpStatus.I_AM_A_TEAPOT, response.getStatusCode());
+    softly.assertThat(response.getStatusCode())
+        .isEqualTo(HttpStatus.I_AM_A_TEAPOT);
     RestApiException actual = response.getBody();
-    assertNotNull(actual);
-    assertEquals("teapot", actual.getMessage());
-    assertNotNull(actual.getCause());
-    assertEquals("Example error message", actual.getCause().getMessage());
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(RestApiException::getMessage)
+        .isEqualTo("teapot");
+    softly.assertThat(actual)
+        .isNotNull()
+        .extracting(RestApiException::getCause)
+        .isNotNull()
+        .extracting(RestApiException::getMessage)
+        .isEqualTo("Example error message");
   }
 
 }
