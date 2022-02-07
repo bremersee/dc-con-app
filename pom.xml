@@ -16,7 +16,7 @@
   <packaging>jar</packaging>
 
   <name>dc-con-app</name>
-  <description>Domain Controller Connector Application</description>
+  <description>Samba domain controller connector application</description>
   <url>https://github.com/bremersee/dc-con-app</url>
 
   <properties>
@@ -373,7 +373,9 @@
                   <url>scp://dc3.eixe.bremersee.org/home/giacomo</url>
                   <commands>
                     <command>sudo -n /usr/bin/apt-get update</command>
-                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -yq install spring-config-server</command>
+                    <command>sudo -n /usr/bin/env DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get
+                      -yq install spring-config-server
+                    </command>
                   </commands>
                   <displayCommandOutputs>true</displayCommandOutputs>
                   <failOnError>false</failOnError>

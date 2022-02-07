@@ -1,12 +1,15 @@
 package org.bremersee.dccon;
 
+import org.bremersee.xml.JaxbContextBuilderAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * The application.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    JaxbContextBuilderAutoConfiguration.class
+})
 public class Application {
 
   /**

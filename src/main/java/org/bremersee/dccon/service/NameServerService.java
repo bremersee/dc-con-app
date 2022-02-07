@@ -40,6 +40,7 @@ public interface NameServerService {
   /**
    * Query dns nodes.
    *
+   * @param pageable the pageable
    * @param query the query, can be a host name, an IP or a MAC address
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return found dns nodes
@@ -49,9 +50,9 @@ public interface NameServerService {
   /**
    * Get dhcp leases.
    *
+   * @param pageable the pageable
    * @param all if {@code true}, expired leases will also be returned, otherwise only active
    *     ones (default is {@code false})
-   * @param sort the sort order (default is {@link DhcpLease#SORT_ORDER_BEGIN_HOSTNAME})
    * @return the dhcp leases
    */
   Page<DhcpLease> getDhcpLeases(@NotNull Pageable pageable, @Nullable Boolean all);
@@ -59,6 +60,8 @@ public interface NameServerService {
   /**
    * Get dns zones.
    *
+   * @param pageable the pageable
+   * @param reverseOnly the reverse only
    * @return the dns zones
    */
   Page<DnsZone> getDnsZones(@NotNull Pageable pageable, @Nullable Boolean reverseOnly);
@@ -84,8 +87,9 @@ public interface NameServerService {
    * Gets dns nodes.
    *
    * @param zoneName the zone name
-   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
+   * @param pageable the pageable
    * @param query the query
+   * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return the dns nodes
    */
   Page<DnsNode> getDnsNodes(
