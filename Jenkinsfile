@@ -4,7 +4,7 @@ pipeline {
   }
   environment {
     CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
-    SNAPSHOT_SITE = true
+    SNAPSHOT_SITE = false
     RELEASE_SITE = true
     DEPLOY_SNAPSHOT_ON_SERVER = false
     DEPLOY_RELEASE_ON_SERVER = false
@@ -26,6 +26,7 @@ pipeline {
     }
     stage('Build') {
       steps {
+        sh 'echo "Maven Version ${POM_VERSION}"'
         sh 'mvn -B clean package'
       }
       post {
