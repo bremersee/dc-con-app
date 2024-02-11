@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.config;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainControllerProperties implements Serializable {
 
+  @Serial
   private static final long serialVersionUID = 2L;
 
   private static final String MIN_LENGTH_PLACEHOLDER = "{{MIN_LENGTH}}";

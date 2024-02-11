@@ -16,8 +16,8 @@
 
 package org.bremersee.dccon.service;
 
-import javax.validation.constraints.NotNull;
-import org.bremersee.common.model.TwoLetterLanguageCode;
+import jakarta.validation.constraints.NotNull;
+import java.util.Locale;
 import org.springframework.lang.Nullable;
 
 /**
@@ -30,13 +30,13 @@ public interface EmailService {
   /**
    * Send email with credentials.
    *
-   * @param userName the user name
+   * @param userName the username
    * @param clearPassword the clear password
    * @param language the language
    */
   void sendEmailWithCredentials(
       @NotNull String userName,
       @Nullable String clearPassword,
-      @Nullable TwoLetterLanguageCode language);
+      @Nullable Locale language);
 
 }

@@ -1,33 +1,32 @@
 pipeline {
-  agent none
+  agent {
+    label 'docker && maven'
+  }
   environment {
-    DEPLOY_SNAPSHOT_ON_SERVER = true
-    DEPLOY_RELEASE_ON_SERVER = true
-    DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE = true
-    SNAPSHOT_SITE = false
+    CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
+    SNAPSHOT_SITE = true
     RELEASE_SITE = true
+    DEPLOY_SNAPSHOT_ON_SERVER = false
+    DEPLOY_RELEASE_ON_SERVER = false
+    DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE = false
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '8', artifactNumToKeepStr: '8'))
   }
   stages {
-    stage('Test') {
-      agent {
-        label 'maven'
-      }
+    stage('Tools') {
       tools {
-        jdk 'jdk11'
+        jdk 'jdk17'
         maven 'm3'
-      }
-      when {
-        not {
-          branch 'feature/*'
-        }
       }
       steps {
         sh 'java -version'
         sh 'mvn -B --version'
-        sh 'mvn -B clean test'
+      }
+    }
+    stage('Build') {
+      steps {
+        sh 'mvn -B clean package'
       }
       post {
         always {
@@ -38,79 +37,18 @@ pipeline {
         }
       }
     }
-    stage('Deploy snapshot on servers') {
-      agent {
-        label 'maven'
-      }
-      when {
-        allOf {
-          branch 'develop'
-          environment name: 'DEPLOY_SNAPSHOT_ON_SERVER', value: 'true'
-        }
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
-      }
-    }
-    stage('Deploy release on servers') {
-      agent {
-        label 'maven'
-      }
-      when {
-        allOf {
-          branch 'master'
-          environment name: 'DEPLOY_RELEASE_ON_SERVER', value: 'true'
-        }
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
-      }
-    }
-    stage('Deploy release on apt repository debian-bullseye') {
-      agent {
-        label 'maven'
-      }
-      when {
-        allOf {
-          branch 'master'
-          environment name: 'DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE', value: 'true'
-        }
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
-      steps {
-        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian11,deploy-to-repo-debian-bullseye clean deploy'
-      }
-    }
     stage('Deploy snapshot site') {
-      agent {
-        label 'maven'
-      }
-      environment {
-        CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
-      }
       when {
         allOf {
-          branch 'develop'
           environment name: 'SNAPSHOT_SITE', value: 'true'
+          anyOf {
+            branch 'develop'
+            branch 'feature/*'
+          }
         }
       }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
       steps {
-        sh 'mvn -B site-deploy'
+        sh 'mvn -B clean site-deploy'
       }
       post {
         always {
@@ -119,24 +57,14 @@ pipeline {
       }
     }
     stage('Deploy release site') {
-      agent {
-        label 'maven'
-      }
-      environment {
-        CODECOV_TOKEN = credentials('dc-con-app-codecov-token')
-      }
       when {
         allOf {
-          branch 'master'
+          branch 'main'
           environment name: 'RELEASE_SITE', value: 'true'
         }
       }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
-      }
       steps {
-        sh 'mvn -B -P gh-pages-site site site:stage scm-publish:publish-scm'
+        sh 'mvn -B -P gh-pages-site clean site site:stage scm-publish:publish-scm'
       }
       post {
         always {
@@ -144,29 +72,37 @@ pipeline {
         }
       }
     }
-    stage('Test feature') {
-      agent {
-        label 'maven'
-      }
+    stage('Deploy snapshot on servers') {
       when {
-        branch 'feature/*'
-      }
-      tools {
-        jdk 'jdk11'
-        maven 'm3'
+        allOf {
+          branch 'develop'
+          environment name: 'DEPLOY_SNAPSHOT_ON_SERVER', value: 'true'
+        }
       }
       steps {
-        sh 'java -version'
-        sh 'mvn -B --version'
-        sh 'mvn -B -P feature,allow-features clean test'
+        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
       }
-      post {
-        always {
-          junit '**/surefire-reports/*.xml'
-          jacoco(
-              execPattern: '**/coverage-reports/*.exec'
-          )
+    }
+    stage('Deploy release on servers') {
+      when {
+        allOf {
+          branch 'master'
+          environment name: 'DEPLOY_RELEASE_ON_SERVER', value: 'true'
         }
+      }
+      steps {
+        sh 'mvn -B -DskipTests=true -Pdebian11,copy-to-and-install-on-dc3 clean deploy'
+      }
+    }
+    stage('Deploy release on apt repository debian-bullseye') {
+      when {
+        allOf {
+          branch 'master'
+          environment name: 'DEPLOY_RELEASE_ON_REPOSITORY_DEBIAN_BULLSEYE', value: 'true'
+        }
+      }
+      steps {
+        sh 'mvn -B -DskipTests=true -Dhttp.protocol.expect-continue=true -Pdebian11,deploy-to-repo-debian-bullseye clean deploy'
       }
     }
   }

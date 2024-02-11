@@ -16,9 +16,9 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;

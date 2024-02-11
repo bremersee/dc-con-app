@@ -16,13 +16,13 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;

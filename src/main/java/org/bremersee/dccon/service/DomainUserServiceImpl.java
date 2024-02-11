@@ -19,9 +19,9 @@ package org.bremersee.dccon.service;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
@@ -103,7 +103,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   public DomainUser addUser(
       final DomainUser domainUser,
       final Boolean sendEmail,
-      final TwoLetterLanguageCode language) {
+      final Locale language) {
     domainUserValidator.doAddValidation(domainUser);
     final DomainUser addedDomainUser = domainUserRepository.save(domainUser, true);
     if (Boolean.TRUE.equals(sendEmail)) {
@@ -150,7 +150,7 @@ public class DomainUserServiceImpl implements DomainUserService {
       final String userName,
       final Password newPassword,
       final Boolean sendEmail,
-      final TwoLetterLanguageCode language) {
+      final Locale language) {
     domainUserRepository.savePassword(userName, newPassword.getValue());
     if (Boolean.TRUE.equals(sendEmail)) {
       emailService.sendEmailWithCredentials(

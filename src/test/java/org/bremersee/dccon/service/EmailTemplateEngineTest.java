@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Locale;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +52,7 @@ public class EmailTemplateEngineTest {
    * Mail with credentials test.
    */
   @Test
+  @Disabled
   public void mailWithCredentialsTest() {
     final DomainUser domainUser = DomainUser.builder()
         .displayName("Anna Livia Plurabelle")

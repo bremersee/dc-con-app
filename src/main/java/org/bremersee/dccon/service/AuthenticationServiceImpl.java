@@ -17,11 +17,11 @@
 package org.bremersee.dccon.service;
 
 import java.util.function.Function;
-import org.bremersee.data.ldaptive.LdaptiveConnectionConfigFactory;
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
-import org.bremersee.data.ldaptive.LdaptiveProperties;
-import org.bremersee.data.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.bremersee.ldaptive.spring.boot.autoconfigure.LdaptiveConnectionConfigFactory;
+import org.bremersee.ldaptive.spring.boot.autoconfigure.LdaptiveProperties;
 import org.ldaptive.ConnectionConfig;
 import org.ldaptive.DefaultConnectionFactory;
 import org.ldaptive.SearchRequest;

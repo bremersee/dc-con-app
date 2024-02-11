@@ -17,7 +17,7 @@
 package org.bremersee.dccon.controller;
 
 import java.util.List;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.bremersee.dccon.api.NameServerManagementApi;
 import org.bremersee.dccon.model.DhcpLeasePage;
 import org.bremersee.dccon.model.DnsNode;

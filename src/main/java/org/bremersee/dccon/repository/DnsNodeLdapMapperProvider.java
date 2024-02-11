@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.UnknownFilter;
 

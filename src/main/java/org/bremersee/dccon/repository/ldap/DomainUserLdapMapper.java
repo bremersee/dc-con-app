@@ -16,8 +16,8 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.setAttribute;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.setAttribute;
 import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DESCRIPTION;
 import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.DISPLAY_NAME;
 import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.GECOS;
@@ -41,7 +41,7 @@ import static org.bremersee.dccon.repository.ldap.DomainUserLdapConstants.USER_A
 
 import java.util.ArrayList;
 import java.util.List;
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.ldap.transcoder.FileTimeToOffsetDateTimeValueTranscoder;

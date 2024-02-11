@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.controller;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupPage;

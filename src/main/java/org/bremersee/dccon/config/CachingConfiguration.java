@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Christian Bremer
  */
 @Configuration
-@EnableCaching
+//@EnableCaching
 @Slf4j
 public class CachingConfiguration {
 

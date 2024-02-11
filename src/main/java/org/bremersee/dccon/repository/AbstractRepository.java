@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.bremersee.data.ldaptive.LdaptiveTemplate;
+import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.springframework.util.Assert;

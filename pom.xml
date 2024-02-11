@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>2.4.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,14 +26,15 @@
     <start-class>org.bremersee.dccon.Application</start-class>
 
     <dc-con-api-spring.version>3.0.0-SNAPSHOT</dc-con-api-spring.version>
-    <common-base.version>2.4.0-SNAPSHOT</common-base.version>
+    <ldaptive-extensions.version>0.0.1-SNAPSHOT</ldaptive-extensions.version>
 
     <!--suppress UnresolvedMavenProperty -->
     <debBaseName>
-      dc-con_${project.version}-${maven.build.timestamp}+${scmBranch}+${buildNumber}_all
+      dc-con_${project.version}-${maven.build.timestamp}+${buildNumber}_all
     </debBaseName>
     <debName>${debBaseName}.deb</debName>
     <debChangesName>${debBaseName}.changes</debChangesName>
+
     <dockerfile.image>dc-con-app</dockerfile.image>
   </properties>
 
@@ -99,21 +100,65 @@
       <artifactId>dc-con-api-spring</artifactId>
       <version>${dc-con-api-spring.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base-actuator-starter</artifactId>
-      <version>${common-base.version}</version>
+      <artifactId>ldaptive-extensions-spring-boot-starter</artifactId>
+      <version>${ldaptive-extensions.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bremersee</groupId>
+      <artifactId>ldaptive-extensions-spring-security</artifactId>
+      <version>${ldaptive-extensions.version}</version>
+    </dependency>
+
+   <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-bridge-brave</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.thymeleaf.extras</groupId>
+      <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <!--
-      JMX-Bean Management for Spring Boot Admin Server:
-      1) Only for servlet based applications
-      2) Set spring.jmx.enabled=true
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
     -->
+    <!--
+    <dependency>
+      <groupId>de.codecentric</groupId>
+      <artifactId>spring-boot-admin-starter-client</artifactId>
+    </dependency>
+    -->
+
+    <!--
+     JMX-Bean Management for Spring Boot Admin Server:
+     1) Only for servlet based applications
+     2) Set spring.jmx.enabled=true
     <dependency>
       <groupId>org.jolokia</groupId>
       <artifactId>jolokia-core</artifactId>
     </dependency>
+   -->
+
+    <!--
     <dependency>
       <groupId>org.bremersee</groupId>
       <artifactId>common-base-web-starter</artifactId>
@@ -131,22 +176,19 @@
     </dependency>
     <dependency>
       <groupId>org.bremersee</groupId>
-      <artifactId>common-base-ldaptive-starter</artifactId>
-      <version>${common-base.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bremersee</groupId>
       <artifactId>common-base-thymeleaf-starter</artifactId>
       <version>${common-base.version}</version>
     </dependency>
+    -->
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-cache</artifactId>
+      <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-mail</artifactId>
+      <artifactId>spring-boot-starter-cache</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.cache</groupId>
@@ -156,6 +198,7 @@
       <groupId>org.ehcache</groupId>
       <artifactId>ehcache</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -177,12 +220,8 @@
 
     <!-- Sleuth and Zipkin -->
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-sleuth-zipkin</artifactId>
+      <groupId>io.zipkin.reporter2</groupId>
+      <artifactId>zipkin-reporter-brave</artifactId>
     </dependency>
 
     <!-- Eureka client -->
@@ -197,11 +236,11 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-core</artifactId>
     </dependency>
-    -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
     </dependency>
+    -->
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -221,9 +260,28 @@
     </dependency>
 
     <dependency>
-      <groupId>org.bremersee</groupId>
-      <artifactId>common-base-test</artifactId>
-      <version>${common-base.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.unboundid</groupId>
+      <artifactId>unboundid-ldapsdk</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

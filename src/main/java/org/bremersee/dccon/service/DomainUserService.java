@@ -16,11 +16,11 @@
 
 package org.bremersee.dccon.service;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Optional;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
@@ -62,7 +62,7 @@ public interface DomainUserService {
   DomainUser addUser(
       @NotNull @Valid DomainUser domainUser,
       @Nullable Boolean sendEmail,
-      @Nullable TwoLetterLanguageCode language);
+      @Nullable Locale language);
 
   /**
    * Get domain user.
@@ -102,7 +102,7 @@ public interface DomainUserService {
   /**
    * Update user password.
    *
-   * @param userName the user name
+   * @param userName the username
    * @param newPassword the new password
    * @param sendEmail specifies whether to send an email or not (default is {@code false})
    * @param language the language of the email
@@ -111,7 +111,7 @@ public interface DomainUserService {
       @NotNull String userName,
       @NotNull @Valid Password newPassword,
       @Nullable Boolean sendEmail,
-      @Nullable TwoLetterLanguageCode language);
+      @Nullable Locale language);
 
   /**
    * Update user avatar.

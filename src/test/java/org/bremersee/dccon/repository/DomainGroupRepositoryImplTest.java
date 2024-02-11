@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.bremersee.data.ldaptive.LdaptiveTemplate;
+import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;

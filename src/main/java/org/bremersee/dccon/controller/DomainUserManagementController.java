@@ -16,12 +16,10 @@
 
 package org.bremersee.dccon.controller;
 
-import static org.bremersee.security.core.AuthorityConstants.ADMIN_ROLE_NAME;
-
+import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
-import javax.validation.Valid;
-import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
@@ -51,6 +49,8 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @RestController
 public class DomainUserManagementController implements DomainUserManagementApi {
+
+  public static final String ADMIN_ROLE_NAME = "ROLE_ADMIN"; // TODO
 
   private final DomainUserService domainUserService;
 
@@ -82,10 +82,8 @@ public class DomainUserManagementController implements DomainUserManagementApi {
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
   @Override
-  public ResponseEntity<DomainUser> addUser(
-      final Boolean email,
-      final TwoLetterLanguageCode language,
-      final DomainUser domainUser) {
+  public ResponseEntity<DomainUser> addUser(Boolean email, Locale language,
+      @Valid DomainUser domainUser) {
     return ResponseEntity.ok(domainUserService.addUser(domainUser, email, language));
   }
 
@@ -123,10 +121,10 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   @Override
   public ResponseEntity<Void> updateUserPassword(
-      final String userName,
-      final Boolean email,
-      final TwoLetterLanguageCode language,
-      @Valid final Password newPassword) {
+      String userName,
+      Boolean email,
+      Locale language,
+      @Valid Password newPassword) {
 
     final boolean sendEmail;
     if (isNotAdmin()) {

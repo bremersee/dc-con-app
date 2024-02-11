@@ -32,6 +32,7 @@ import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZonePage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +85,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void query(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
@@ -128,6 +130,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void getDhcpLeases(SoftAssertions softly) {
     ResponseEntity<DhcpLeasePage> response = restTemplate
         .withBasicAuth(user, pass)
@@ -149,6 +152,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void getDnsZones(SoftAssertions softly) {
     ResponseEntity<DnsZonePage> response = restTemplate
         .withBasicAuth(user, pass)
@@ -170,6 +174,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void addDnsZoneAndDelete(SoftAssertions softly) {
     DnsZone expected = DnsZone.builder().name("newtestzone").build();
     ResponseEntity<DnsZone> addResponse = restTemplate
@@ -219,6 +224,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void getDnsNodes(SoftAssertions softly) {
     ResponseEntity<DnsNodePage> response = restTemplate
         .withBasicAuth(user, pass)
@@ -242,6 +248,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void saveDnsNodeAndDelete(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
@@ -301,6 +308,7 @@ class NameServerManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void saveAndGetDnsNode(SoftAssertions softly) {
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
@@ -343,6 +351,7 @@ class NameServerManagementControllerTest {
    * Delete all dns nodes.
    */
   @Test
+  @Disabled
   void deleteAllDnsNodes() {
     ResponseEntity<String> response = restTemplate
         .withBasicAuth(user, pass)

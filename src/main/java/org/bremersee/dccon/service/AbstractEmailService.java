@@ -16,12 +16,11 @@
 
 package org.bremersee.dccon.service;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Locale;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.common.model.TwoLetterLanguageCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainUserRepository;
@@ -68,13 +67,13 @@ public abstract class AbstractEmailService implements EmailService {
   public void sendEmailWithCredentials(
       final String userName,
       final String clearPassword,
-      final TwoLetterLanguageCode language) {
+      final Locale language) {
 
     if (!StringUtils.hasText(clearPassword)) {
       log.debug("No clear password is present; sending no email with credentials.");
       return;
     }
-    final Locale locale = language != null ? language.toLocale() : Locale.ENGLISH;
+    final Locale locale = language != null ? language : Locale.ENGLISH;
     userRepository.findOne(userName).ifPresent(domainUser -> {
       if (StringUtils.hasText(domainUser.getEmail())) {
         domainUser.setPassword(clearPassword);

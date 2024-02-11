@@ -17,7 +17,7 @@
 package org.bremersee.dccon.repository.ldap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
 import java.time.Month;
 import java.time.OffsetDateTime;

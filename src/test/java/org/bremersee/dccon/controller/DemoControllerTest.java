@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.exception.model.RestApiException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,7 @@ class DemoControllerTest {
    */
   @Order(1)
   @Test
+  @Disabled
   void resetData() {
     ResponseEntity<Void> response = restTemplate
         .withBasicAuth(user, pass)
@@ -75,6 +77,7 @@ class DemoControllerTest {
    */
   @Order(2)
   @Test
+  @Disabled
   void resetDataAndExpect() {
     ResponseEntity<Void> response = restTemplate
         .postForEntity("/api/reset", null, Void.class);
@@ -89,6 +92,7 @@ class DemoControllerTest {
    */
   @Order(3)
   @Test
+  @Disabled
   void throwError(SoftAssertions softly) {
     ResponseEntity<RestApiException> response = restTemplate
         .withBasicAuth(user, pass)

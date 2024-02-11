@@ -19,7 +19,7 @@ package org.bremersee.dccon.repository;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.springframework.lang.Nullable;

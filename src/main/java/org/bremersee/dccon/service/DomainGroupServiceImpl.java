@@ -19,8 +19,8 @@ package org.bremersee.dccon.service;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.util.Optional;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;

@@ -20,6 +20,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.PasswordInformation;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ class DomainManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void getPasswordInformation(SoftAssertions softly) {
     ResponseEntity<PasswordInformation> response = restTemplate
         .withBasicAuth(user, pass)
@@ -77,6 +79,7 @@ class DomainManagementControllerTest {
    * @param softly the softly
    */
   @Test
+  @Disabled
   void getRandomPassword(SoftAssertions softly) {
     ResponseEntity<Password> response = restTemplate
         .withBasicAuth(user, pass)

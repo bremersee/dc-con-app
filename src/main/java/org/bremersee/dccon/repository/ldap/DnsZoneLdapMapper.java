@@ -16,9 +16,9 @@
 
 package org.bremersee.dccon.repository.ldap;
 
-import static org.bremersee.data.ldaptive.LdaptiveEntryMapper.getAttributeValue;
+import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
-import org.bremersee.data.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.ldaptive.AttributeModification;
