@@ -16,84 +16,63 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.function.Function;
-import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
-import org.bremersee.ldaptive.LdaptiveTemplate;
-import org.bremersee.ldaptive.spring.boot.autoconfigure.LdaptiveConnectionConfigFactory;
-import org.bremersee.ldaptive.spring.boot.autoconfigure.LdaptiveProperties;
-import org.ldaptive.ConnectionConfig;
-import org.ldaptive.DefaultConnectionFactory;
-import org.ldaptive.SearchRequest;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.bremersee.spring.security.authentication.ldaptive.LdaptiveAuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * The authentication service.
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
 @Component("authenticationService")
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-  private final LdaptiveProperties ldaptiveProperties;
+  private final AuthenticationProvider authenticationProvider;
 
-  private final DomainControllerProperties domainControllerProperties;
-
-  private Function<String, String> baseDnProvider;
-
-  /**
-   * Instantiates a new authentication service.
-   *
-   * @param ldaptivePropertiesProvider the ldaptive properties provider
-   * @param domainControllerProperties the domain controller properties
-   */
-  public AuthenticationServiceImpl(
-      final ObjectProvider<LdaptiveProperties> ldaptivePropertiesProvider,
-      final DomainControllerProperties domainControllerProperties) {
-    this.ldaptiveProperties = ldaptivePropertiesProvider.getIfAvailable();
-    Assert.notNull(this.ldaptiveProperties, "Ldaptive properties must be present.");
-    this.domainControllerProperties = domainControllerProperties;
-    this.baseDnProvider = userName -> userName + "@" + domainControllerProperties.getDefaultZone();
-  }
-
-  /**
-   * Sets base dn provider.
-   *
-   * @param baseDnProvider the base dn provider
-   */
-  @SuppressWarnings("unused")
-  public void setBaseDnProvider(final Function<String, String> baseDnProvider) {
-    if (baseDnProvider != null) {
-      this.baseDnProvider = baseDnProvider;
+  public AuthenticationServiceImpl(List<AuthenticationProvider> authenticationProviders) {
+    this.authenticationProvider = Stream.ofNullable(authenticationProviders)
+        .flatMap(Collection::stream)
+        .filter(authProvider -> nonNull(authProvider)
+            && authProvider.supports(UsernamePasswordAuthenticationToken.class))
+        .min(((o1, o2) -> {
+          if (o1 instanceof LdaptiveAuthenticationManager) {
+            return -1;
+          }
+          if (o2 instanceof LdaptiveAuthenticationManager) {
+            return 1;
+          }
+          return 0;
+        }))
+        .orElse(null);
+    if (isNull(authenticationProvider)) {
+      log.warn("No authentication provider found.");
+    } else {
+      log.info("Found authentication provider [{}].", authenticationProvider.getClass().getName());
     }
   }
 
   @Override
   public boolean passwordMatches(final String userName, final String clearPassword) {
-    if (!StringUtils.hasText(userName) || !StringUtils.hasText(clearPassword)) {
-      return false;
+    if (isNull(authenticationProvider)) {
+      throw new IllegalStateException("Authentication provider not set.");
     }
-    // TODO use bind?
-    final String baseDn = baseDnProvider.apply(userName);
     try {
-      final ConnectionConfig connectionConfig = LdaptiveConnectionConfigFactory.defaultFactory()
-          .createConnectionConfig(ldaptiveProperties, baseDn, clearPassword);
-      final DefaultConnectionFactory connectionFactory = new DefaultConnectionFactory();
-      connectionFactory.setConnectionConfig(connectionConfig);
-      final String dn = LdaptiveEntryMapper.createDn(
-          domainControllerProperties.getUserRdn(),
-          userName,
-          domainControllerProperties.getUserBaseDn());
-      final SearchRequest searchRequest = SearchRequest.objectScopeSearchRequest(dn);
-      final LdaptiveTemplate ldaptiveTemplate = new LdaptiveTemplate(connectionFactory);
-      return ldaptiveTemplate.findOne(searchRequest).isPresent();
-
-    } catch (final Exception e) {
+      Authentication authentication = authenticationProvider
+          .authenticate(new UsernamePasswordAuthenticationToken(userName, clearPassword));
+      return nonNull(authentication) && authentication.isAuthenticated();
+    } catch (AuthenticationException e) {
       return false;
     }
   }

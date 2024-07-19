@@ -16,6 +16,9 @@
 
 package org.bremersee.dccon.repository;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -33,10 +36,6 @@ import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.bremersee.ldaptive.AbstractLdaptiveErrorHandler;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
-import org.bremersee.ldaptive.LdaptiveException;
-import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
@@ -49,6 +48,10 @@ import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
 import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
+import org.bremersee.ldaptive.AbstractLdaptiveErrorHandler;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveException;
+import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.AttributeModification.Type;
 import org.ldaptive.FilterTemplate;
@@ -150,7 +153,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         .scope(getProperties().getUserFindAllSearchScope())
         .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
         .build();
-    if (query == null || query.trim().length() == 0) {
+    if (isNull(query) || query.isBlank()) {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
     } else {
       return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper)
@@ -166,7 +169,7 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    * @return the boolean
    */
   static boolean isQueryResult(final DomainUser domainUser, final String query) {
-    return query != null && query.length() > 2 && domainUser != null
+    return nonNull(query) && query.length() > 2 && domainUser != null
         && (contains(domainUser.getDisplayName(), query)
         || contains(domainUser.getUserName(), query)
         || contains(domainUser.getEmail(), query)
@@ -333,7 +336,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       LdapAttribute ldapAttribute,
       AttributeModification.Type modificationType) {
 
-    AttributeModification attributeModification = new AttributeModification(modificationType, ldapAttribute);
+    AttributeModification attributeModification = new AttributeModification(modificationType,
+        ldapAttribute);
     String dn = LdaptiveEntryMapper.createDn(
         getProperties().getUserRdn(),
         userName,
@@ -443,7 +447,8 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     ldapAttribute.setName("unicodePwd");
     ldapAttribute.setBinary(true);
     ldapAttribute.addBinaryValues(pwdArray);
-    final AttributeModification attributeModification = new AttributeModification(Type.REPLACE, ldapAttribute);
+    final AttributeModification attributeModification = new AttributeModification(Type.REPLACE,
+        ldapAttribute);
     final String dn = LdaptiveEntryMapper.createDn(
         getProperties().getUserRdn(),
         userName,

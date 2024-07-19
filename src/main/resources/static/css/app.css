@@ -1,0 +1,36 @@
+body {
+  padding-top: 5rem;
+}
+.inner-container {
+  padding: 1.5rem 1.5rem;
+}
+
+/* register.html */
+.passwords-do-not-match {
+  display: none;
+  width: 100%;
+  margin-top: .25rem;
+  font-size: 80%;
+  color: #dc3545;
+}
+
+/* enable absolute positioning */
+.inner-addon {
+  position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+  position: absolute;
+  padding: 10px;
+  /* pointer-events: none; */
+  z-index: inherit;
+}
+
+/* align icon */
+.left-addon .glyphicon  { left:  0;}
+.right-addon .glyphicon { right: 0;}
+
+/* add padding  */
+.left-addon input  { padding-left:  30px; }
+.right-addon input { padding-right: 30px; }

@@ -31,7 +31,7 @@ class GroupMemberValueTranscoderTest {
    */
   @Test
   void decodeStringValue() {
-    String expected = "cn=anna,cn=Users,dc=example,dc=org";
+    String expected = "cn=anna,cn=users,dc=example,dc=org";
     assertThat(transcoder.encodeStringValue("anna"))
         .isEqualTo(expected);
   }

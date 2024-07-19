@@ -35,7 +35,7 @@ import org.thymeleaf.context.Context;
  *
  * @author Christian Bremer
  */
-@SpringBootTest(webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 public class EmailTemplateEngineTest {
 

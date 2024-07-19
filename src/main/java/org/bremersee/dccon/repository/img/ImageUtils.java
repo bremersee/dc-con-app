@@ -86,8 +86,8 @@ public class ImageUtils {
     float factor = getBinFactor(w, h, dimension);
 
     // make new size
-    w *= factor;
-    h *= factor;
+    w = (int) (w * factor);
+    h = (int) (h * factor);
     BufferedImage scaled = new BufferedImage(w, h,
         BufferedImage.TYPE_INT_RGB);
     Graphics2D g = scaled.createGraphics();

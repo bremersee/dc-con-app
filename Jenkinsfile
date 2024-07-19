@@ -26,7 +26,6 @@ pipeline {
     }
     stage('Build') {
       steps {
-        sh 'echo "Maven Version ${POM_VERSION}"'
         sh 'mvn -B clean package'
       }
       post {

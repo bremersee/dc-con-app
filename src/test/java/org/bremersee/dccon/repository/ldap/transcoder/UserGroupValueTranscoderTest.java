@@ -22,7 +22,7 @@ class UserGroupValueTranscoderTest {
   static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
-    properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
+    properties.setGroupBaseDn("cn=users,dc=example,dc=org");
     transcoder = new UserGroupValueTranscoder(properties);
   }
 
@@ -31,7 +31,7 @@ class UserGroupValueTranscoderTest {
    */
   @Test
   void decodeStringValue() {
-    String expected = "cn=anna,cn=Users,dc=example,dc=org";
+    String expected = "cn=anna,cn=users,dc=example,dc=org";
     assertThat(transcoder.encodeStringValue("anna"))
         .isEqualTo(expected);
   }
@@ -41,7 +41,7 @@ class UserGroupValueTranscoderTest {
    */
   @Test
   void encodeStringValue() {
-    assertThat(transcoder.decodeStringValue("cn=anna,cn=Users,dc=example,dc=org"))
+    assertThat(transcoder.decodeStringValue("cn=anna,cn=users,dc=example,dc=org"))
         .isEqualTo("anna");
   }
 

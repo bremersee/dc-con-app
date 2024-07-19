@@ -1,44 +1,45 @@
 bremersee:
-  ldaptive:
-    enabled: false
-  exception-mapping:
-    api-paths:
-      - /api/**
-    default-exception-mapping-config:
-      include-stack-trace: true
-      include-cause: true
-      include-application-name: true
-      include-exception-class-name: true
-      include-handler: true
-      include-path: true
-  domain-controller:
-    company-name: ${COMPANY_NAME:example.org}
-    company-url: ${COMPANY_URL:http://example.org}
-    group-base-dn: ${LDAP_GROUP_DN:cn=Groups,dc=example,dc=org}
-    user-base-dn: ${LDAP_USER_DN:cn=Users,dc=example,dc=org}
-    name-server-host: ${NAME_SERVER_HOST:ns.example.org}
-    dns-zone-base-dn: ${LDAP_ZONE_DN:CN=MicrosoftDNS,DC=DomainDnsZones,DC=example,DC=org}
-    dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
-    default-zone: ${DEFAULT_ZONE:samdom.example.org}
-    mail-with-credentials:
-      sender: ${spring.mail.username:no-reply@example.org}
-      login-url: http://localhost:4200/change-password
+  messages:
+    default-locale: en
+    fallback-to-system-locale: false
   thymeleaf:
     resolvers:
+      - prefix: "classpath:template/"
+        suffix: ".html"
+        resolvable-patterns:
+          - "*"
+        template-mode: HTML
       - prefix: "classpath:mail/"
         suffix: ".html"
         resolvable-patterns:
           - "*"
         template-mode: HTML
-  messages:
-    default-locale: en
-    fallback-to-system-locale: false
-  actuator:
-    auth:
-      enable: auto
-      enable-cors: true
-  cors:
-    enable: true
+
+  exception-mapping:
+    api-paths:
+      - /api/**
+    default-exception-mapping-config:
+      include-message: true
+      include-exception: true
+      include-application-name: true
+      include-path: true
+      include-handler: true
+      include-stack-trace: true
+      include-cause: true
+
+  domain-controller:
+    company-name: ${COMPANY_NAME:bremersee.org}
+    company-url: ${COMPANY_URL:https://bremersee.org}
+    group-base-dn: ${LDAP_GROUP_DN:cn=users,dc=eixe,dc=bremersee,dc=org}
+    user-base-dn: ${LDAP_USER_DN:cn=users,dc=eixe,dc=bremersee,dc=org}
+    name-server-host: ${NAME_SERVER_HOST:dc1.eixe.bremersee.org}
+    dns-zone-base-dn: ${LDAP_ZONE_DN:CN=MicrosoftDNS,DC=DomainDnsZones,DC=eixe,DC=bremersee,DC=org}
+    dns-node-base-dn: DC={zoneName},${bremersee.domain-controller.dns-zone-base-dn}
+    default-zone: ${DEFAULT_ZONE:eixe.bremersee.org}
+    mail-with-credentials:
+      sender: ${spring.mail.username:no-reply@bremersee.org}
+      login-url: http://localhost:4200/change-password
+
   auth:
     resource-server: auto
     path-matchers:
@@ -120,7 +121,22 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://openid.bremersee.org/auth/realms/omnis/protocol/openid-connect/certs
+          jwk-set-uri: https://openid.bremersee.org/realms/eixe/protocol/openid-connect/certs
+bremersee:
+  authentication:
+    jwt-converter:
+      name-json-path: $.preferred_username
+      first-name-json-path: $.given_name
+      last-name-json-path: $.family_name
+      roles-json-path: $.realm_access.roles
+      roles-value-list: true
+      role-prefix: "ROLE_"
+      role-case-transformation: to_upper_case
+      role-string-replacements:
+        - regex: "[- ]"
+          replacement: "_"
+        - regex: "_ADMINS"
+          replacement: "_ADMIN"
 
 ---
 
@@ -129,23 +145,14 @@ spring:
     activate:
       on-profile: in-memory
 
-bremersee:
-  auth:
-    in-memory-users:
-      - name: "admin"
-        password: "admin"
-        authorities:
-          - "ROLE_LOCAL_USER"
-          - "ROLE_ADMIN"
-      - name: "actuator"
-        password: "actuator"
-        authorities:
-          - "ROLE_ACTUATOR"
-          - "ROLE_ACTUATOR_ADMIN"
-      - name: "user"
-        password: "user"
-        authorities:
-          - "ROLE_LOCAL_USER"
+  security:
+    user:
+      name: testuser
+      password: changeit
+      roles:
+        - "LOCAL_USER"
+        - "ADMIN"
+        - "ACTUATOR_ADMINS"
 
 ---
 
@@ -156,26 +163,35 @@ spring:
 
 bremersee:
   ldaptive:
-    enabled: true
-    ldap-url: ${LDAP_URL:ldaps://example.org:636}
+    ldaptive-template-class: org.bremersee.ldaptive.LdaptiveSambaTemplate
+    immutable: true
+    ldap-url: ${LDAP_URL:ldaps://dc1.eixe.bremersee.org:636}
     use-start-tls: ${LDAP_START_TLS:false}
-    bind-dn: ${LDAP_BIND_DN:areader@example.org}
+    bind-dn: ${LDAP_BIND_DN:admin@example.org}
     bind-credentials: ${LDAP_BIND_PASSWORD:changeit}
-    pooled: true
-    min-pool-size: 3
-    max-pool-size: 10
-    validate-on-check-in: false
-    validate-on-check-out: false
-    validate-periodically: true
-    search-validator:
+    pooled: ${LDAP_POOLED:false}
+    connection-validator:
       search-request:
-        base-dn: ${LDAP_BASE_DN:dc=example,dc=org}
-        search-filter:
-          filter: ${LDAP_VALIDATION_FILTER:(cn=Administrator)}
-        size-limit: 1
-        search-scope: ONELEVEL
-        return-attributes:
-          - cn
+        base-dn: ${LDAP_BASE_DN:${bremersee.domain-controller.user-base-dn}}
+    connection-pool:
+      min-pool-size: 3
+      max-pool-size: 10
+      validate-on-check-in: false
+      validate-on-check-out: false
+      validate-periodically: true
+  authentication:
+    ldaptive:
+      template: active_directory
+      user-base-dn: ${LDAP_USER_BASE_DN:${bremersee.domain-controller.user-base-dn}}
+      role-prefix: "ROLE_"
+      role-case-transformation: to_upper_case
+      role-string-replacements:
+        - regex: "[- ]"
+          replacement: "_"
+        - regex: "_ADMINS"
+          replacement: "_ADMIN"
+      default-roles:
+        - "ROLE_LOCAL_USER"
 
 ---
 

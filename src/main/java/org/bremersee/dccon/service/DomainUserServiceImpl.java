@@ -60,10 +60,10 @@ public class DomainUserServiceImpl implements DomainUserService {
    * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
-      final DomainControllerProperties properties,
-      final DomainUserRepository domainUserRepository,
-      final EmailService emailService,
-      final DomainGroupRepository domainGroupRepository) {
+      DomainControllerProperties properties,
+      DomainUserRepository domainUserRepository,
+      EmailService emailService,
+      DomainGroupRepository domainGroupRepository) {
     this.domainUserRepository = domainUserRepository;
     this.emailService = emailService;
     this.domainUserValidator = DomainUserValidator.defaultValidator(

@@ -49,9 +49,9 @@ class DomainGroupLdapMapperTest {
   static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
     properties.setGroupRdn("cn");
-    properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
+    properties.setGroupBaseDn("cn=users,dc=example,dc=org");
     properties.setUserRdn("cn");
-    properties.setUserBaseDn("cn=Users,dc=example,dc=org");
+    properties.setUserBaseDn("cn=users,dc=example,dc=org");
     mapper = new DomainGroupLdapMapper(properties);
   }
 
@@ -73,7 +73,7 @@ class DomainGroupLdapMapperTest {
     domainGroup.setName("somename");
     String dn = mapper.mapDn(domainGroup);
     assertThat(dn)
-        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
+        .isEqualTo("cn=somename,cn=users,dc=example,dc=org");
   }
 
   /**
@@ -91,20 +91,20 @@ class DomainGroupLdapMapperTest {
         .isEqualTo(DomainGroup.builder().build());
 
     LdapEntry source = new LdapEntry();
-    source.setDn("cn=somename,cn=Users,dc=example,dc=org");
+    source.setDn("cn=somename,cn=users,dc=example,dc=org");
     source.addAttributes(
         new LdapAttribute(AbstractLdapMapper.WHEN_CREATED, "20170520150034.000Z"),
         new LdapAttribute(AbstractLdapMapper.WHEN_CHANGED, "20180621160135.000Z"),
         new LdapAttribute("name", "somename"),
         new LdapAttribute(
             "member",
-            "cn=member1,cn=Users,dc=example,dc=org", "cn=member2,cn=Users,dc=example,dc=org")
+            "cn=member1,cn=users,dc=example,dc=org", "cn=member2,cn=users,dc=example,dc=org")
     );
 
     destination = mapper.map(source);
     softly.assertThat(destination)
         .extracting(DomainGroup::getDistinguishedName)
-        .isEqualTo("cn=somename,cn=Users,dc=example,dc=org");
+        .isEqualTo("cn=somename,cn=users,dc=example,dc=org");
 
     softly.assertThat(destination)
         .extracting(DomainGroup::getCreated)
@@ -186,13 +186,13 @@ class DomainGroupLdapMapperTest {
         .isEqualTo("somename");
     softly.assertThat(destination.getAttribute("member").getStringValues())
         .containsExactlyInAnyOrder(
-            "cn=member1,cn=Users,dc=example,dc=org",
-            "cn=member2,cn=Users,dc=example,dc=org");
+            "cn=member1,cn=users,dc=example,dc=org",
+            "cn=member2,cn=users,dc=example,dc=org");
 
     source.getMembers().remove(0);
     mapper.mapAndComputeModifications(source, destination);
     softly.assertThat(destination.getAttribute("member").getStringValues())
         .containsExactlyInAnyOrder(
-            "cn=member2,cn=Users,dc=example,dc=org");
+            "cn=member2,cn=users,dc=example,dc=org");
   }
 }
