@@ -36,7 +36,7 @@ import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
+import org.bremersee.dccon.repository.mapper.DnsZoneLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

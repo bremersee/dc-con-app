@@ -19,11 +19,12 @@ package org.bremersee.dccon.service;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
-import java.util.Locale;
 import java.util.Optional;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -49,20 +50,23 @@ public interface DomainUserService {
    * @param query the query
    * @return the users
    */
-  Page<DomainUser> getUsers(@NotNull Pageable pageable, @Nullable String query);
+  Page<DomainUser> getUsers(
+      @NotNull Pageable pageable,
+      @Nullable String query,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Add domain user.
    *
    * @param domainUser the domain user
    * @param sendEmail specifies whether to send an email or not (default is {@code false})
-   * @param language the language of the email
    * @return the domain user
    */
   DomainUser addUser(
       @NotNull @Valid DomainUser domainUser,
-      @Nullable Boolean sendEmail,
-      @Nullable Locale language);
+      @Nullable Dn ou,
+      @Nullable Boolean sendEmail);
 
   /**
    * Get domain user.
@@ -70,7 +74,7 @@ public interface DomainUserService {
    * @param userName the user name
    * @return the domain user
    */
-  Optional<DomainUser> getUser(@NotNull String userName);
+  Optional<DomainUser> getUser(@NotNull String userName, @Nullable Dn ou, @Nullable SearchScope searchScope);
 
   /**
    * Gets user avatar.
@@ -82,6 +86,8 @@ public interface DomainUserService {
    */
   Optional<byte[]> getUserAvatar(
       @NotNull String userName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope,
       @Nullable AvatarDefault avatarDefault,
       @Nullable Integer size);
 
@@ -89,14 +95,11 @@ public interface DomainUserService {
    * Update domain user.
    *
    * @param userName the user name
-   * @param updateGroups specifies whether the groups should also be updated or not (default is
-   *     false)
    * @param domainUser the domain user
    * @return the domain user
    */
   Optional<DomainUser> updateUser(
       @NotNull String userName,
-      @Nullable Boolean updateGroups,
       @NotNull @Valid DomainUser domainUser);
 
   /**
@@ -105,13 +108,11 @@ public interface DomainUserService {
    * @param userName the username
    * @param newPassword the new password
    * @param sendEmail specifies whether to send an email or not (default is {@code false})
-   * @param language the language of the email
    */
   void updateUserPassword(
       @NotNull String userName,
       @NotNull @Valid Password newPassword,
-      @Nullable Boolean sendEmail,
-      @Nullable Locale language);
+      @Nullable Boolean sendEmail);
 
   /**
    * Update user avatar.
@@ -127,14 +128,6 @@ public interface DomainUserService {
    * @param userName the user name
    */
   void removeUserAvatar(@NotNull String userName);
-
-  /**
-   * Check whether user exists or not.
-   *
-   * @param userName the user name
-   * @return {@code true} if the user exists, otherwise {@code false}
-   */
-  Boolean userExists(@NotNull String userName);
 
   /**
    * Delete user.

@@ -20,6 +20,8 @@ import java.util.Optional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainGroup;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -40,7 +42,11 @@ public interface DomainGroupService {
    * @param query the query
    * @return the groups
    */
-  Page<DomainGroup> getGroups(@NotNull Pageable pageable, @Nullable String query);
+  Page<DomainGroup> getGroups(
+      @NotNull Pageable pageable,
+      @Nullable String query,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Add domain group.
@@ -48,7 +54,7 @@ public interface DomainGroupService {
    * @param domainGroup the domain group
    * @return the domain group
    */
-  DomainGroup addGroup(@NotNull @Valid DomainGroup domainGroup);
+  DomainGroup addGroup(@NotNull @Valid DomainGroup domainGroup, @Nullable Dn ou);
 
   /**
    * Get group by name.
@@ -56,7 +62,10 @@ public interface DomainGroupService {
    * @param groupName the group name
    * @return the group
    */
-  Optional<DomainGroup> getGroup(@NotNull String groupName);
+  Optional<DomainGroup> getGroup(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Update domain group.
@@ -68,14 +77,6 @@ public interface DomainGroupService {
   Optional<DomainGroup> updateGroup(
       @NotNull String groupName,
       @NotNull @Valid DomainGroup domainGroup);
-
-  /**
-   * Check whether group exists or not.
-   *
-   * @param groupName the group name
-   * @return {@code true} if the group exists, otherwise {@code false}
-   */
-  Boolean groupExists(@NotNull String groupName);
 
   /**
    * Delete group.

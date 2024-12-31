@@ -16,12 +16,18 @@
 
 package org.bremersee.dccon.repository.cli;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bremersee.exception.ServiceException;
@@ -83,18 +89,17 @@ public abstract class CommandExecutor {
       final String dir,
       final CommandExecutorResponseParser<T> responseParser) {
 
+    List<String> parsedCommands = parseCommands(commands);
     try {
-      ProcessBuilder pb = new ProcessBuilder(commands);
-      if (dir != null && dir.trim().length() > 0) {
+      ProcessBuilder pb = new ProcessBuilder(parsedCommands);
+      if (!isEmpty(dir)) {
         pb.directory(new File(dir));
       }
-      if (env != null && !env.isEmpty()) {
+      if (!isEmpty(env)) {
         pb.environment().putAll(env);
       }
 
-      if (log.isTraceEnabled()) {
-        log.trace("msg=[Running external program.] commands=[{}]", commands);
-      }
+      log.debug("Executing commands = {}", String.join(" ", parsedCommands));
       final Process p = pb.start();
       final StringWriter out = new StringWriter();
       final StringWriter err = new StringWriter();
@@ -104,8 +109,8 @@ public abstract class CommandExecutor {
       final String output = out.toString();
       final String error = err.toString();
       if (log.isTraceEnabled()) {
-        log.trace("msg=[Program output]\n{}", output);
-        log.trace("msg=[Program error output]\n{}", error);
+        log.trace("Program output:\n{}", output);
+        log.trace("Program error output:\n{}", error);
       }
       return responseParser.parse(new CommandExecutorResponse(output, error));
 
@@ -114,9 +119,25 @@ public abstract class CommandExecutor {
           "Running commands failed.",
           "org.bremersee:dc-con-app:6fa0f473-6204-4f75-9130-a1049910d8fd",
           e);
-      log.error("Executing commands [{}] failed.", commands, se);
+      log.error("Executing commands [{}] failed.", parsedCommands, se);
       throw se;
     }
+  }
+
+  static List<String> parseCommands(List<String> commands) {
+    return Stream.ofNullable(commands)
+        .flatMap(Collection::stream)
+        .filter(command -> !isEmpty(command))
+        .flatMap(command -> {
+          Stream<String> stream = Stream.empty();
+          StringTokenizer tokenizer = new StringTokenizer(command, " ");
+          while (tokenizer.hasMoreTokens()) {
+            stream = Stream.concat(stream, Stream.of(tokenizer.nextToken()));
+          }
+          return stream;
+        })
+        .filter(command -> !isEmpty(command))
+        .collect(Collectors.toList());
   }
 
 }

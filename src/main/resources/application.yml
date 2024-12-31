@@ -1,20 +1,4 @@
 bremersee:
-  messages:
-    default-locale: en
-    fallback-to-system-locale: false
-  thymeleaf:
-    resolvers:
-      - prefix: "classpath:template/"
-        suffix: ".html"
-        resolvable-patterns:
-          - "*"
-        template-mode: HTML
-      - prefix: "classpath:mail/"
-        suffix: ".html"
-        resolvable-patterns:
-          - "*"
-        template-mode: HTML
-
   exception-mapping:
     api-paths:
       - /api/**
@@ -30,6 +14,7 @@ bremersee:
   domain-controller:
     company-name: ${COMPANY_NAME:bremersee.org}
     company-url: ${COMPANY_URL:https://bremersee.org}
+    base-dn: ${LDAP_BASE_DN:dc=eixe,dc=bremersee,dc=org}
     group-base-dn: ${LDAP_GROUP_DN:cn=users,dc=eixe,dc=bremersee,dc=org}
     user-base-dn: ${LDAP_USER_DN:cn=users,dc=eixe,dc=bremersee,dc=org}
     name-server-host: ${NAME_SERVER_HOST:dc1.eixe.bremersee.org}
@@ -40,33 +25,15 @@ bremersee:
       sender: ${spring.mail.username:no-reply@bremersee.org}
       login-url: http://localhost:4200/change-password
 
-  auth:
-    resource-server: auto
-    path-matchers:
-      - ant-pattern: "/v3/**"
-        access-mode: permit_all
-      - ant-pattern: "/webjars/**"
-        access-mode: permit_all
-      - ant-pattern: "/swagger-ui/**"
-        access-mode: permit_all
-      - ant-pattern: "/swagger-ui.html"
-        access-mode: permit_all
-    any-access-mode: authenticated
-
 eureka:
   client:
     enabled: false
 
 spring:
+  profiles:
+    default: mock,in-memory
   application:
     name: ${APPLICATION_NAME:dc-con-app}
-  sleuth:
-    enabled: ${SLEUTH_ENABLED:false}
-    sampler:
-      probability: ${SLEUTH_PROBABILITY:1.0}
-  zipkin:
-    enabled: ${ZIPKIN_ENABLED:false}
-    base-url: ${ZIPKIN_BASE_URL:http://localhost:9411/}
   cache:
     jcache:
       config: classpath:_ehcache.xml
@@ -101,14 +68,13 @@ management:
 
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: ${CONTEXT_PATH:/}
 
 logging:
   level:
     ROOT: info
     com.netflix.eureka.registry: warn
     com.netflix.discovery.shared.resolver: warn
+    org.bremersee.dccon: debug
     org.springframework.cloud.configclient: warn
 
 ---
@@ -137,6 +103,13 @@ bremersee:
           replacement: "_"
         - regex: "_ADMINS"
           replacement: "_ADMIN"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: mock
 
 ---
 
@@ -179,7 +152,12 @@ bremersee:
       validate-on-check-in: false
       validate-on-check-out: false
       validate-periodically: true
+      validator:
+        search-request:
+          base-dn: ${LDAP_BASE_DN:${bremersee.domain-controller.user-base-dn}}
   authentication:
+    remember-me:
+      key: "M#iyRKR@ZoLAN!rSxhT%dM636!y"
     ldaptive:
       template: active_directory
       user-base-dn: ${LDAP_USER_BASE_DN:${bremersee.domain-controller.user-base-dn}}
@@ -199,6 +177,12 @@ spring:
   config:
     activate:
       on-profile: cli
+
+bremersee:
+  domain-controller:
+    using-ssh: true
+    ssh-command: "/usr/bin/ssh root@dc1"
+    using-kinit: false
 
 ---
 

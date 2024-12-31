@@ -37,8 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Christian Bremer
  */
-@RestController
-public class NameServerManagementController implements NameServerManagementApi {
+//@RestController
+public class NameServerManagementController {// implements NameServerManagementApi {
 
   private final NameServerService nameServerService;
 
@@ -53,7 +53,7 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DnsNodePage> query(
       Pageable pageable,
       final String query,
@@ -63,7 +63,7 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DhcpLeasePage> getDhcpLeases(
       Pageable pageable,
       final Boolean all) {
@@ -71,27 +71,27 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DnsZonePage> getDnsZones(Pageable pageable, Boolean reverseOnly) {
     return ResponseEntity.ok(new DnsZonePage(nameServerService.getDnsZones(pageable, reverseOnly)));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<DnsZone> addDnsZone(
       @Valid final DnsZone dnsZone) {
     return ResponseEntity.ok(nameServerService.addDnsZone(dnsZone));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<Boolean> deleteDnsZone(
       final String zoneName) {
     return ResponseEntity.ok(nameServerService.deleteDnsZone(zoneName));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DnsNodePage> getDnsNodes(
       String zoneName,
       Pageable pageable,
@@ -102,7 +102,7 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<DnsNode> saveDnsNode(
       String zoneName,
       @Valid DnsNode dnsNode) {
@@ -112,7 +112,7 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DnsNode> getDnsNode(
       String zoneName,
       String nodeName,
@@ -121,13 +121,13 @@ public class NameServerManagementController implements NameServerManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<Boolean> deleteDnsNode(String zoneName, String nodeName) {
     return ResponseEntity.ok(nameServerService.deleteDnsNode(zoneName, nodeName));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<Void> deleteAllDnsNodes(String zoneName, List<String> nodeNames) {
     if (nodeNames == null || nodeNames.isEmpty()) {
       nameServerService.deleteAllDnsNodes(zoneName);

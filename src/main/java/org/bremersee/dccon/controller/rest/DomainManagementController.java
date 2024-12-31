@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Christian Bremer
  */
-@RestController
-public class DomainManagementController implements DomainManagementApi {
+//@RestController
+public class DomainManagementController {// implements DomainManagementApi {
 
   private final DomainService domainService;
 
@@ -43,12 +43,12 @@ public class DomainManagementController implements DomainManagementApi {
     this.domainService = domainService;
   }
 
-  @Override
+  //@Override
   public ResponseEntity<PasswordInformation> getPasswordInformation() {
     return ResponseEntity.ok(domainService.getPasswordInformation());
   }
 
-  @Override
+  //@Override
   public ResponseEntity<Password> getRandomPassword() {
     return ResponseEntity.ok(Password.builder()
         .value(domainService.createRandomPassword())

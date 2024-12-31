@@ -17,36 +17,29 @@
 package org.bremersee.dccon.repository;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.PasswordComplexity;
-import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.dccon.model.Sid;
+import org.bremersee.dccon.repository.automock.MockComponent;
+import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.img.ImageUtils;
-import org.bremersee.dccon.repository.ldap.DomainUserLdapConstants;
-import org.bremersee.dccon.repository.ldap.DomainUserLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.AbstractLdaptiveErrorHandler;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
@@ -54,50 +47,54 @@ import org.bremersee.ldaptive.LdaptiveException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.AttributeModification.Type;
-import org.ldaptive.FilterTemplate;
 import org.ldaptive.LdapAttribute;
+import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
 import org.ldaptive.ModifyRequest;
 import org.ldaptive.ResultCode;
 import org.ldaptive.SearchRequest;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
+import org.ldaptive.filter.AndFilter;
+import org.ldaptive.filter.EqualityFilter;
+import org.ldaptive.filter.Filter;
+import org.ldaptive.filter.NotFilter;
+import org.ldaptive.filter.OrFilter;
+import org.ldaptive.filter.SubstringFilter;
 import org.ldaptive.transcode.ByteArrayValueTranscoder;
 import org.ldaptive.transcode.StringValueTranscoder;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * The domain user repository.
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
+@Primary
 @Component("domainUserRepository")
+@ProfileRequired("ldap")
+@MockComponent(value = DomainUserRepositoryMock.class, methodsOf = DomainUserRepository.class)
 @Slf4j
-public class DomainUserRepositoryImpl extends AbstractRepository implements DomainUserRepository {
-
-  static final int MAX_AVATAR_SIZE = 2048;
+public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
+    implements DomainUserRepository, DomainUserRepositoryConstants {
 
   private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
 
   private static final ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
       = new ByteArrayValueTranscoder();
 
-  private static final ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();
-
-  private static final String NO_EMAIL_AVATAR = "classpath:mp.jpg";
-
   private final DomainRepository domainRepository;
 
-  private final DomainGroupRepository domainGroupRepository;
+  private final List<AvatarProvider> avatarProviders;
 
-  private LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
+  private final LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
+
+  private Pattern passwordPattern;
 
   /**
    * Instantiates a new domain user repository.
@@ -105,211 +102,195 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    * @param properties the properties
    * @param ldapTemplateProvider the ldap template provider
    * @param domainRepository the domain repository
-   * @param domainGroupRepository the domain group repository
+   * @param avatarProviders the avatar repositories
    */
   public DomainUserRepositoryImpl(
-      final DomainControllerProperties properties,
-      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
-      final DomainRepository domainRepository,
-      final DomainGroupRepository domainGroupRepository) {
+      DomainControllerProperties properties,
+      ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
+      LdaptiveEntryMapper<DomainUser> domainUserLdapMapper,
+      DomainRepository domainRepository,
+      List<AvatarProvider> avatarProviders) {
     super(properties, ldapTemplateProvider.getIfAvailable());
-    this.domainUserLdapMapper = new DomainUserLdapMapper(properties);
+    this.domainUserLdapMapper = domainUserLdapMapper;
     this.domainRepository = domainRepository;
-    this.domainGroupRepository = domainGroupRepository;
-  }
-
-  private Pattern getPasswordPattern() {
-    final PasswordInformation info = domainRepository.getPasswordInformation();
-    final int minLength = info.getMinimumPasswordLength() != null
-        ? info.getMinimumPasswordLength()
-        : 7;
-    final String regex;
-    if (PasswordComplexity.OFF == info.getPasswordComplexity()) {
-      regex = DomainControllerProperties.getSimplePasswordRegex(minLength);
-    } else {
-      regex = DomainControllerProperties.getComplexPasswordRegex(minLength);
-    }
-    return Pattern.compile(regex);
+    this.avatarProviders = avatarProviders;
   }
 
   /**
-   * Sets domain user ldap mapper.
-   *
-   * @param domainUserLdapMapper the domain user ldap mapper
+   * Init.
    */
-  @SuppressWarnings("unused")
-  public void setDomainUserLdapMapper(
-      final LdaptiveEntryMapper<DomainUser> domainUserLdapMapper) {
-    if (domainUserLdapMapper != null) {
-      this.domainUserLdapMapper = domainUserLdapMapper;
-    }
+  @EventListener(ApplicationReadyEvent.class)
+  public void init() {
+    passwordPattern = domainRepository.getPasswordInformation().getPasswordPattern();
   }
 
   @Override
-  public Stream<DomainUser> findAll(final String query) {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getUserBaseDn())
-        .filter(getProperties().getUserFindAllFilter())
-        .scope(getProperties().getUserFindAllSearchScope())
-        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
-        .build();
-    if (isNull(query) || query.isBlank()) {
-      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
-    } else {
-      return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper)
-          .filter(domainUser -> isQueryResult(domainUser, query.trim().toLowerCase()));
-    }
-  }
-
-  /**
-   * Is query result boolean.
-   *
-   * @param domainUser the domain user
-   * @param query the query
-   * @return the boolean
-   */
-  static boolean isQueryResult(final DomainUser domainUser, final String query) {
-    return nonNull(query) && query.length() > 2 && domainUser != null
-        && (contains(domainUser.getDisplayName(), query)
-        || contains(domainUser.getUserName(), query)
-        || contains(domainUser.getEmail(), query)
-        || contains(domainUser.getMobile(), query)
-        || contains(domainUser.getTelephoneNumber(), query)
-        || contains(domainUser.getDescription(), query)
-        || contains(domainUser.getFirstName(), query)
-        || contains(domainUser.getLastName(), query)
-        || contains(domainUser.getGroups(), query));
+  Dn getDefaultOu() {
+    return isEmpty(getProperties().getDefaultUserOu())
+        ? LDAP_OU_USERS
+        : new Dn(getProperties().getDefaultUserOu());
   }
 
   @Override
-  public Optional<DomainUser> findOne(final String userName) {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getUserBaseDn())
-        .filter(FilterTemplate.builder()
-            .filter(getProperties().getUserFindOneFilter())
-            .parameters(userName)
-            .build())
-        .scope(getProperties().getUserFindOneSearchScope())
-        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
-        .sizeLimit(1)
-        .build();
+  String getObjectClassValue() {
+    return LDAP_OBJECT_CLASS_USER;
+  }
+
+  @Override
+  String[] getBinaryAttributes() {
+    return LDAP_USER_BINARY_ATTRIBUTES;
+  }
+
+  @Override
+  String[] getReturnAttributes() {
+    return LDAP_USER_MAPPED_ATTRIBUTES;
+  }
+
+  Pattern getPasswordPattern() {
+    if (isEmpty(passwordPattern)) {
+      init();
+    }
+    return passwordPattern;
+  }
+
+  Filter objectClassFilter() {
+    Filter objectClassFilter = new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_USER);
+    Filter noComputerFilter = new NotFilter(
+        new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_COMPUTER));
+    return new AndFilter(objectClassFilter, noComputerFilter);
+  }
+
+  private Filter getFindAllFilter(String query) {
+    //noinspection DuplicatedCode
+    Filter objectClassFilter = objectClassFilter();
+    if (isNull(query) || query.length() <= 2) {
+      return objectClassFilter;
+    }
+    Filter orFilter = new OrFilter(
+        new SubstringFilter(LDAP_USER_COMPANY, null, null, query),
+        new SubstringFilter(LDAP_USER_DEPARTMENT, null, null, query),
+        new SubstringFilter(LDAP_DESCRIPTION, null, null, query),
+        new SubstringFilter(LDAP_USER_DISPLAY_NAME, null, null, query),
+        new EqualityFilter(LDAP_GID_NUMBER, query),
+        new SubstringFilter(LDAP_USER_GIVEN_NAME, null, null, query),
+        new SubstringFilter(LDAP_MAIL, null, null, query),
+        new SubstringFilter(LDAP_USER_MOBILE, null, null, query),
+        new SubstringFilter(LDAP_USER_OFFICE_NAME, null, null,
+            query),
+        new SubstringFilter(LDAP_SAM_ACCOUNT_NAME, null, null, query),
+        new SubstringFilter(LDAP_USER_SN, null, null, query),
+        new SubstringFilter(LDAP_USER_TELEPHONE_NUMBER, null, null, query),
+        new EqualityFilter(LDAP_USER_UID_NUMBER, query)
+    );
+    return new AndFilter(objectClassFilter, orFilter);
+  }
+
+  @Override
+  public Stream<DomainUser> findAll(String query, Dn ou, SearchScope searchScope) {
+    log.debug("findAll({}, {}, {})", query, ou, searchScope);
+    SearchRequest searchRequest = searchAllRequest(
+        ou,
+        getFindAllFilter(query),
+        searchScope,
+        getReturnAttributes());
+    log.debug("findAll, searchRequest = {}", searchRequest);
+    return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
+  }
+
+  @Override
+  public Optional<DomainUser> findOne(String userName, Dn ou, SearchScope searchScope) {
+    log.debug("findOne({})", userName);
+    SearchRequest searchRequest = searchOneRequest(userName, ou, searchScope);
+    log.debug("findOne, searchRequest = {}", searchRequest);
     return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
   }
 
   @Override
   public Optional<byte[]> findAvatar(
-      final String userName,
-      final AvatarDefault avatarDefault,
-      final Integer size) {
+      String userNameOrEmail,
+      Dn ou,
+      SearchScope searchScope,
+      AvatarDefault avatarDefault,
+      Integer size) {
 
-    final int avatarSize = size == null || size < 1 || size > MAX_AVATAR_SIZE ? 80 : size;
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getUserBaseDn())
-        .filter(FilterTemplate.builder()
-            .filter(getProperties().getUserFindOneFilter())
-            .parameters(userName)
-            .build())
-        .scope(getProperties().getUserFindOneSearchScope())
-        .binaryAttributes(DomainUserLdapConstants.BINARY_ATTRIBUTES)
-        .returnAttributes(DomainUserLdapConstants.JPEG_PHOTO)
-        .sizeLimit(1)
-        .build();
-    return getLdapTemplate().findOne(searchRequest)
+    log.debug("findAvatar({}, {}, {})", userNameOrEmail, avatarDefault, size);
+    int avatarSize = getAvatarSize(size);
+    return findLdapEntryForAvatar(userNameOrEmail, ou, searchScope)
         .map(ldapEntry -> {
           byte[] avatar = LdaptiveEntryMapper.getAttributeValue(
-              ldapEntry, DomainUserLdapConstants.JPEG_PHOTO, BYTE_ARRAY_VALUE_TRANSCODER, null);
+              ldapEntry, LDAP_USER_JPEG_PHOTO, BYTE_ARRAY_VALUE_TRANSCODER, null);
           if (avatar != null && avatar.length > 0) {
             try {
-              final BufferedImage img = ImageUtils.toSquareImage(avatar);
-              final BufferedImage scaledImg = ImageUtils
+              BufferedImage img = ImageUtils.toSquareImage(avatar);
+              BufferedImage scaledImg = ImageUtils
                   .scaleImage(img, new Dimension(avatarSize, avatarSize));
-              final ByteArrayOutputStream out = new ByteArrayOutputStream();
+              ByteArrayOutputStream out = new ByteArrayOutputStream();
               ImageIO.write(scaledImg, "JPG", out);
               avatar = out.toByteArray();
 
             } catch (IOException e) {
-              log.error("msg=[Creating image from ldap attribute {} failed.]",
-                  DomainUserLdapConstants.JPEG_PHOTO, e);
+              log.error("Creating image from ldap attribute {} failed.",
+                  LDAP_USER_JPEG_PHOTO, e);
+              avatar = null;
             }
-          } else {
-            final String mail = LdaptiveEntryMapper
-                .getAttributeValue(ldapEntry, "mail", STRING_VALUE_TRANSCODER, null);
-            avatar = findAvatar(mail, getProperties().getGravatarUrl(), avatarDefault, avatarSize);
+          }
+          if (avatar == null) {
+            log.debug("Avatar not found in active directory.");
+            String mail = LdaptiveEntryMapper.getAttributeValue(
+                ldapEntry, LDAP_MAIL, STRING_VALUE_TRANSCODER, userNameOrEmail);
+            avatar = findAvatarsOfProviders(mail, avatarDefault, avatarSize)
+                .findFirst()
+                .orElse(null);
           }
           return avatar;
-        });
+        })
+        .filter(this::isNotEmpty)
+        .or(() -> findAvatarsOfProviders(userNameOrEmail, avatarDefault, avatarSize)
+            .findFirst());
   }
 
-  /**
-   * Find avatar.
-   *
-   * @param mail the mail
-   * @param avatarUrlTemplate the avatar url template
-   * @param avatarDefault the avatar default
-   * @param avatarSize the avatar size
-   * @return the avatar byte array
-   */
-  static byte[] findAvatar(
-      final String mail,
-      final String avatarUrlTemplate,
-      final AvatarDefault avatarDefault,
-      final int avatarSize) {
+  private Optional<LdapEntry> findLdapEntryForAvatar(
+      String userNameOrEmail,
+      Dn ou,
+      SearchScope searchScope) {
 
-    if (StringUtils.hasText(mail)) {
-      final byte[] md5 = DigestUtils.md5Digest(mail.getBytes(StandardCharsets.UTF_8));
-      final String hex = new String(Hex.encode(md5));
-      final String defaultAvatar = avatarDefault != null
-          ? avatarDefault.toString()
-          : AvatarDefault.NOT_FOUND.toString();
-      final String url = avatarUrlTemplate
-          .replace("{hash}", hex)
-          .replace("{default}", defaultAvatar)
-          .replace("{size}", String.valueOf(avatarSize));
-      try {
-        return IOUtils.toByteArray(new URL(url));
-      } catch (Exception e) {
-        if (AvatarDefault.NOT_FOUND.toString().equalsIgnoreCase(defaultAvatar)) {
-          return null;
-        }
-        log.error("msg=[Getting avatar failed. This should not happen.] url=[{}]",
-            url, e);
-      }
-    } else if (AvatarDefault.NOT_FOUND == avatarDefault) {
-      return null;
+    if (isEmpty(userNameOrEmail)) {
+      log.debug("Avatar not found because userNameOrEmail is empty.");
+      return Optional.empty();
     }
-    try {
-      final BufferedImage img = ImageIO
-          .read(RESOURCE_LOADER.getResource(NO_EMAIL_AVATAR).getInputStream());
-      final BufferedImage scaledImg = ImageUtils
-          .scaleImage(img, new Dimension(avatarSize, avatarSize));
-      final ByteArrayOutputStream out = new ByteArrayOutputStream();
-      ImageIO.write(scaledImg, "JPG", out);
-      return out.toByteArray();
+    Filter objectClassFilter = new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
+    Filter nameFilter = new EqualityFilter(getUniqueNameAttributeName(), userNameOrEmail);
+    Filter emailFilter = new EqualityFilter(LDAP_MAIL, userNameOrEmail);
+    Filter orFilter = new OrFilter(nameFilter, emailFilter);
+    Filter filter = new AndFilter(objectClassFilter, orFilter);
+    SearchRequest searchRequest = searchOneRequest(userNameOrEmail, ou, filter, searchScope,
+        LDAP_USER_JPEG_PHOTO, LDAP_MAIL);
+    log.debug("findAvatar, searchRequest = {}", searchRequest);
+    return getLdapTemplate().findOne(searchRequest);
+  }
 
-    } catch (IOException e) {
-      final ServiceException se = ServiceException.internalServerError(
-          "Getting default avatar for no email failed.",
-          "org.bremersee:dc-con-app:1ec0dda8-7358-4e1c-a8f2-f4bd64e439f0",
-          e);
-      log.error("msg=[{}]", se.getMessage(), se);
-      throw se;
-    }
-
+  private Stream<byte[]> findAvatarsOfProviders(String user, AvatarDefault avatarDefault,
+      Integer size) {
+    log.debug("findAvatarsOfProviders({}, {}, {})", user, avatarDefault, size);
+    return avatarProviders.stream()
+        .flatMap(repo -> repo.findAvatar(user, avatarDefault, size).stream())
+        .filter(this::isNotEmpty);
   }
 
   @Override
-  public void removeAvatar(final String userName) {
-    final LdapAttribute ldapAttribute = new LdapAttribute();
-    ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
+  public void removeAvatar(String userName) {
+    log.debug("removeAvatar({})", userName);
+    LdapAttribute ldapAttribute = new LdapAttribute();
+    ldapAttribute.setName(LDAP_USER_JPEG_PHOTO);
     ldapAttribute.setBinary(true);
     modifyAvatar(userName, ldapAttribute, Type.DELETE);
   }
 
   @Override
-  public void saveAvatar(final String userName, final InputStream avatar) {
-
-    final LdapAttribute ldapAttribute = new LdapAttribute();
-    ldapAttribute.setName(DomainUserLdapConstants.JPEG_PHOTO);
+  public void saveAvatar(String userName, InputStream avatar) {
+    log.debug("saveAvatar({}, InputStream)", userName);
+    LdapAttribute ldapAttribute = new LdapAttribute();
+    ldapAttribute.setName(LDAP_USER_JPEG_PHOTO);
     ldapAttribute.setBinary(true);
     try (InputStream in = avatar) {
       BufferedImage img = ImageIO.read(in);
@@ -326,7 +307,10 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
       ImageIO.write(img, "jpg", out);
       ldapAttribute.addBinaryValues(out.toByteArray());
     } catch (IOException e) {
-      throw ServiceException.internalServerError("Saving avatar failed.", e);
+      throw ServiceException.internalServerError(
+          "Saving avatar failed.",
+          EC_SAVING_AVATAR_FAILED,
+          e);
     }
     modifyAvatar(userName, ldapAttribute, AttributeModification.Type.REPLACE);
   }
@@ -338,21 +322,20 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
 
     AttributeModification attributeModification = new AttributeModification(modificationType,
         ldapAttribute);
-    String dn = LdaptiveEntryMapper.createDn(
-        getProperties().getUserRdn(),
-        userName,
-        getProperties().getUserBaseDn());
-    ModifyRequest modifyRequest = ModifyRequest.builder()
-        .dn(dn)
-        .modifications(attributeModification)
-        .build();
-    getLdapTemplate().modify(modifyRequest);
-  }
-
-  @Override
-  public boolean exists(final String userName) {
-    return getLdapTemplate()
-        .exists(DomainUser.builder().userName(userName).build(), domainUserLdapMapper);
+    domainRepository.findDnOfSamAccountName(userName).ifPresentOrElse(
+        dn -> {
+          ModifyRequest modifyRequest = ModifyRequest.builder()
+              .dn(dn)
+              .modifications(attributeModification)
+              .build();
+          getLdapTemplate().modify(modifyRequest);
+        },
+        () -> {
+          throw ServiceException.notFoundWithErrorCode(
+              DomainUser.class.getSimpleName(),
+              userName,
+              EC_SAM_ACCOUNT_NOT_FOUND);
+        });
   }
 
   /**
@@ -360,65 +343,98 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
    *
    * @param domainUser the domain user
    */
-  void doAdd(final DomainUser domainUser) {
-    // Maybe I can add an user directly:
-    // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
+  String doAdd(DomainUser domainUser, Dn ou) {
     kinit();
-    final List<String> commands = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("user");
     commands.add("create");
-    commands.add(domainUser.getUserName());
+    commands.add(quote(domainUser.getSamAccountName()));
     commands.add("--random-password");
-    commands.add("--use-username-as-cn");
+    commands.add("--userou=" + quote(validateOu(ou).format()));
+    if (getProperties().isUseUsernameAsCn()
+        || isEmpty(domainUser.getFirstName()) || isEmpty(domainUser.getLastName())) {
+      commands.add("--use-username-as-cn");
+    } else {
+      String lastName = quote(domainUser.getLastName());
+      String firstName = quote(domainUser.getFirstName());
+      commands.add("--surname=" + lastName);
+      commands.add("--given-name=" + firstName);
+    }
+    if (domainRepository.isRfc2307Enabled() && hasAllNisAttributes(domainUser)) {
+      commands.add("--nis-domain=" + quote(getNisDomain(domainUser)));
+      commands.add("--uidNumber=" + domainUser.getUidNumber());
+      commands.add("--login-shell=" + quote(domainUser.getLoginShell()));
+      commands.add("--unix-home=" + quote(domainUser.getUnixHomeDirectory()));
+      commands.add("--gid-number=" + domainUser.getGidNumber());
+      commands.add("--uid=" + quote(domainUser.getSamAccountName()));
+    }
     auth(commands);
 
-    CommandExecutor.exec(
+    return CommandExecutor.exec(
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> {
-          if (!exists(domainUser.getUserName())) {
-            throw ServiceException.internalServerError("msg=[Saving user failed.] userName=["
-                    + domainUser.getUserName() + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response),
-                "org.bremersee:dc-con-app:216e1246-b464-48f1-ac88-20e8461dea1e");
-          }
-        });
+        response -> domainRepository.findDnOfSamAccount(domainUser)
+            .orElseThrow(() -> ServiceException
+                .internalServerError(String.format("Adding user '%s' failed. %s",
+                        domainUser.getSamAccountName(),
+                        CommandExecutorResponse.toExceptionMessage(response)),
+                    EC_ADDING_USER_FAILED)));
   }
 
-  @Override
-  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
-    if (!exists(domainUser.getUserName())) {
-      if (StringUtils.hasText(domainUser.getPassword())
-          && !getPasswordPattern().matcher(domainUser.getPassword()).matches()) {
-        throw ServiceException.badRequest(
-            "msg=[The password does not meet the complexity criteria!] userName=["
-                + domainUser.getUserName() + "]",
-            "check_password_restrictions");
-      }
-      doAdd(domainUser);
-      if (StringUtils.hasText(domainUser.getPassword())) {
-        savePassword(domainUser.getUserName(), domainUser.getPassword());
-      }
-    }
+  // TODO ERROR: Missing parameters. To enable NIS features, the following options have to be given: --nis-domain=, --uidNumber=, --login-shell=, --unix-home=, --gid-number= Operation cancelled.
+  public boolean hasAllNisAttributes(DomainUser domainUser) {
+    return !isEmpty(domainUser)
+        && !isEmpty(getNisDomain(domainUser))
+        && !isEmpty(domainUser.getUidNumber())
+        && !isEmpty(domainUser.getLoginShell())
+        && !isEmpty(domainUser.getUnixHomeDirectory())
+        && !isEmpty(domainUser.getGidNumber());
+  }
 
+  @ProfileRequired({"cli", "ldap"})
+  @Override
+  public DomainUser add(DomainUser domainUser, Dn ou) {
+    log.debug("add({}, {})", domainUser, ou);
+    if (domainRepository.samAccountNameExists(domainUser.getSamAccountName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          domainUser.getSamAccountName(),
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
+    }
+    if (!isEmpty(domainUser.getPassword())
+        && !getPasswordPattern().matcher(domainUser.getPassword()).matches()) {
+      throw ServiceException.badRequest(
+          String.format(
+              "The password of user '%s' does not meet the complexity criteria!",
+              domainUser.getSamAccountName()),
+          EC_PASSWORD_RESTRICTIONS);
+    }
+    String dn = doAdd(domainUser, ou);
+    if (!isEmpty(domainUser.getPassword())) {
+      doSavePassword(dn, domainUser.getPassword());
+    }
+    domainUser.setDistinguishedName(dn);
+    return getLdapTemplate().save(domainUser, domainUserLdapMapper);
+    /*
     DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
     if (Boolean.TRUE.equals(updateGroups)) {
-      final Set<String> oldGroups = new HashSet<>(updatedDomainUser.getGroups());
-      final Set<String> newGroups = new HashSet<>(domainUser.getGroups());
-      for (final String newGroup : newGroups) {
+      Set<String> oldGroups = new HashSet<>(updatedDomainUser.getGroups());
+      Set<String> newGroups = new HashSet<>(domainUser.getGroups());
+      for (String newGroup : newGroups) {
         if (!oldGroups.remove(newGroup)) {
           domainGroupRepository.findOne(newGroup).ifPresent(group -> {
-            group.getMembers().add(domainUser.getUserName());
+            group.getMembers().add(domainUser.getSamAccountName());
             domainGroupRepository.save(group);
           });
         }
       }
-      for (final String oldGroup : oldGroups) {
+      for (String oldGroup : oldGroups) {
         domainGroupRepository.findOne(oldGroup).ifPresent(group -> {
-          group.getMembers().remove(domainUser.getUserName());
+          group.getMembers().remove(domainUser.getSamAccountName());
           domainGroupRepository.save(group);
         });
       }
@@ -432,37 +448,64 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
     }
     updatedDomainUser.getGroups().sort(String::compareToIgnoreCase);
     return updatedDomainUser;
+    */
   }
 
   @Override
-  public void savePassword(final String userName, final String newPassword) {
-    final String quotedPassword = "\"" + newPassword + "\"";
-    final char[] unicodePwd = quotedPassword.toCharArray();
-    final byte[] pwdArray = new byte[unicodePwd.length * 2];
+  public DomainUser update(DomainUser domainUser) {
+    log.debug("update({})", domainUser);
+    return domainRepository.findDnOfSamAccount(domainUser)
+        .map(dn -> validateDn(domainUser, dn))
+        .map(dn -> getLdapTemplate().save(domainUser, domainUserLdapMapper))
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            DomainUser.class.getSimpleName(),
+            domainUser.getSamAccountName(),
+            EC_SAM_ACCOUNT_NOT_FOUND));
+  }
+
+  // TODO
+  public DomainUser update(String userName, DomainUser domainUser, Dn newOu) {
+    return findOne(userName, null, null).orElse(null);
+  }
+
+  @Override
+  public void savePassword(String userName, String newPassword) {
+    log.debug("savePassword({}, ****)", userName);
+    domainRepository.findDnOfSamAccountName(userName).ifPresentOrElse(
+        dn -> doSavePassword(dn, newPassword),
+        () -> {
+          throw ServiceException.notFoundWithErrorCode(
+              DomainUser.class.getSimpleName(),
+              userName,
+              EC_SAM_ACCOUNT_NOT_FOUND);
+        });
+  }
+
+  void doSavePassword(String dn, String newPassword) {
+    // https://asadumar.wordpress.com/2013/02/28/create-user-password-in-active-directory-through-java-code/
+    String quotedPassword = "\"" + newPassword + "\"";
+    char[] unicodePwd = quotedPassword.toCharArray();
+    byte[] pwdArray = new byte[unicodePwd.length * 2];
     for (int i = 0; i < unicodePwd.length; i++) {
       pwdArray[i * 2 + 1] = (byte) (unicodePwd[i] >>> 8);
       pwdArray[i * 2] = (byte) (unicodePwd[i] & 0xff);
     }
-    final LdapAttribute ldapAttribute = new LdapAttribute();
-    ldapAttribute.setName("unicodePwd");
+    LdapAttribute ldapAttribute = new LdapAttribute();
+    ldapAttribute.setName(LDAP_USER_UNICODE_PWD);
     ldapAttribute.setBinary(true);
     ldapAttribute.addBinaryValues(pwdArray);
-    final AttributeModification attributeModification = new AttributeModification(Type.REPLACE,
+    AttributeModification attributeModification = new AttributeModification(Type.REPLACE,
         ldapAttribute);
-    final String dn = LdaptiveEntryMapper.createDn(
-        getProperties().getUserRdn(),
-        userName,
-        getProperties().getUserBaseDn());
-    final ModifyRequest modifyRequest = ModifyRequest.builder()
+    ModifyRequest modifyRequest = ModifyRequest.builder()
         .dn(dn)
         .modifications(attributeModification)
         .build();
     getLdapTemplate()
         .clone(new AbstractLdaptiveErrorHandler() {
           @Override
-          public LdaptiveException map(final LdapException ldapException) {
-            final HttpStatus httpStatus;
-            final String errorCode;
+          public LdaptiveException map(LdapException ldapException) {
+            HttpStatus httpStatus;
+            String errorCode;
             if (ldapException.getResultCode() == ResultCode.CONSTRAINT_VIOLATION
                 && ldapException.getMessage().contains("check_password_restrictions")) {
               httpStatus = HttpStatus.BAD_REQUEST;
@@ -471,7 +514,9 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
               httpStatus = ldapException.getResultCode() == ResultCode.NO_SUCH_OBJECT
                   ? HttpStatus.NOT_FOUND
                   : HttpStatus.INTERNAL_SERVER_ERROR;
-              errorCode = "org.bremersee.dc-con-app:a70939fb-2c94-412f-80c0-00a7d5dcf4a6";
+              errorCode = httpStatus == HttpStatus.NOT_FOUND
+                  ? EC_SAM_ACCOUNT_NOT_FOUND
+                  : EC_PREFIX + "3b5b0cae-d223-4077-944b-e978d415e7e2";
             }
             return LdaptiveException.builder()
                 .httpStatus(httpStatus.value())
@@ -483,40 +528,46 @@ public class DomainUserRepositoryImpl extends AbstractRepository implements Doma
         .modify(modifyRequest);
   }
 
+  @ProfileRequired({"cli", "ldap"})
   @Override
-  public boolean delete(final String userName) {
-
-    if (exists(userName)) {
-      doDelete(userName);
-      return true;
-    }
-    return false;
+  public boolean delete(String userName) {
+    log.debug("delete({})", userName);
+    return findOne(userName, null, null)
+        .filter(user -> Optional.ofNullable(user.getSid())
+            .map(Sid::getSystemEntity)
+            .orElse(false))
+        .map(user -> doDelete(user.getSamAccountName()))
+        .orElse(false);
   }
 
   /**
    * Delete user.
    *
-   * @param userName the user name
+   * @param userName the username
    */
-  void doDelete(final String userName) {
+  boolean doDelete(String userName) {
     kinit();
-    final List<String> commands = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("user");
     commands.add("delete");
-    commands.add(userName);
+    commands.add(quote(userName));
     auth(commands);
-    CommandExecutor.exec(
+    return CommandExecutor.exec(
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> {
-          if (exists(userName)) {
+        response -> {
+          if (domainRepository.samAccountNameExists(userName)) {
             throw ServiceException.internalServerError(
-                "msg=[Deleting user failed.] userName=[" + userName + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response));
+                String.format("Deleting user '%s' failed: %s", userName,
+                    CommandExecutorResponse.toExceptionMessage(response)),
+                EC_DELETING_USER_FAILED);
           }
+          return true;
         });
   }
+
 }

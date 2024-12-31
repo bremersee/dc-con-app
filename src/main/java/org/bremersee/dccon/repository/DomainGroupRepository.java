@@ -16,10 +16,12 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainGroup;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -37,7 +39,10 @@ public interface DomainGroupRepository {
    * @param query the query
    * @return the groups
    */
-  Stream<DomainGroup> findAll(@Nullable String query);
+  Stream<DomainGroup> findAll(
+      @Nullable String query,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Find group be name.
@@ -45,23 +50,26 @@ public interface DomainGroupRepository {
    * @param groupName the group name
    * @return the group
    */
-  Optional<DomainGroup> findOne(@NotNull String groupName);
+  Optional<DomainGroup> findOne(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
-   * Check whether group exists or not.
-   *
-   * @param groupName the group name
-   * @return {@code true} if the group exists, otherwise {@code false}
-   */
-  boolean exists(@NotNull String groupName);
-
-  /**
-   * Save domain group.
+   * Add domain group.
    *
    * @param domainGroup the domain group
    * @return the domain group
    */
-  DomainGroup save(@NotNull DomainGroup domainGroup);
+  DomainGroup add(@NotNull DomainGroup domainGroup, @Nullable Dn ou);
+
+  /**
+   * Update domain group.
+   *
+   * @param domainGroup the domain group
+   * @return the domain group
+   */
+  DomainGroup update(@NotNull DomainGroup domainGroup);
 
   /**
    * Delete group.

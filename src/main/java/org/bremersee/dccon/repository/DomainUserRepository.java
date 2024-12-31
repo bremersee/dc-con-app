@@ -16,12 +16,12 @@
 
 package org.bremersee.dccon.repository;
 
-import java.io.InputStream;
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
-import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface DomainUserRepository {
+public interface DomainUserRepository extends AvatarRepository {
 
   /**
    * Find all users.
@@ -39,7 +39,10 @@ public interface DomainUserRepository {
    * @param query the query
    * @return the users
    */
-  Stream<DomainUser> findAll(@Nullable String query);
+  Stream<DomainUser> findAll(
+      @Nullable String query,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Find user by name.
@@ -47,53 +50,30 @@ public interface DomainUserRepository {
    * @param userName the user name
    * @return the user
    */
-  Optional<DomainUser> findOne(@NotNull String userName);
-
-  /**
-   * Find avatar.
-   *
-   * @param userName the user name
-   * @param avatarDefault the avatar default
-   * @param size the size
-   * @return the avatar
-   */
-  Optional<byte[]> findAvatar(
+  Optional<DomainUser> findOne(
       @NotNull String userName,
-      @Nullable AvatarDefault avatarDefault,
-      @Nullable Integer size);
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
-   * Save avatar.
-   *
-   * @param userName the user name
-   * @param avatar the avatar
-   */
-  void saveAvatar(@NotNull String userName, @NotNull InputStream avatar);
-
-  /**
-   * Remove avatar.
-   *
-   * @param userName the user name
-   */
-  void removeAvatar(@NotNull String userName);
-
-  /**
-   * Check whether user exists or not.
-   *
-   * @param userName the user name
-   * @return {@code true} if the user exists, otherwise {@code false}
-   */
-  boolean exists(@NotNull String userName);
-
-  /**
-   * Save domain user.
+   * Add domain user.
    *
    * @param domainUser the domain user
-   * @param updateGroups specifies whether the groups should also be updated or not (default is
-   *     false)
    * @return the domain user
    */
-  DomainUser save(@NotNull DomainUser domainUser, Boolean updateGroups);
+  DomainUser add(@NotNull DomainUser domainUser, @Nullable Dn ou);
+
+  // TODO add userName, it can change
+  // add new ou? it can change, too. Or a new method?
+  /**
+   * Update domain user.
+   *
+   * @param domainUser the domain user
+   * @return the domain user
+   */
+  DomainUser update(@NotNull DomainUser domainUser);
+
+  //DomainUser update(@NotNull String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
 
   /**
    * Save password.

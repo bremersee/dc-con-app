@@ -16,19 +16,17 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.bremersee.dccon.repository.DomainGroupRepositoryImpl.isQueryResult;
+import static org.bremersee.dccon.repository.AbstractRepository.contains;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.exception.ServiceException;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,58 +34,65 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("!ldap")
-@Component
+@Profile("mock")
+@Component("domainGroupRepositoryMock")
 @Slf4j
-public class DomainGroupRepositoryMock implements DomainGroupRepository {
+public class DomainGroupRepositoryMock extends AbstractRepositoryMock
+    implements DomainGroupRepository {
 
-  private final Map<String, DomainGroup> repo = new ConcurrentHashMap<>();
-
-  /**
-   * Init.
-   */
-  @EventListener(ApplicationReadyEvent.class)
-  public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DomainGroupRepository                                          !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
+  public DomainGroupRepositoryMock(DomainControllerProperties properties) {
+    super(properties);
   }
 
   @Override
-  public Stream<DomainGroup> findAll(final String query) {
-    final boolean all = query == null || query.trim().length() == 0;
-    return repo.values().stream()
-        .filter(domainGroup -> all || isQueryResult(domainGroup, query.trim().toLowerCase()))
-        .map(domainGroup -> domainGroup.toBuilder().build());
+  public void resetData() {
+    // TODO
   }
 
   @Override
-  public Optional<DomainGroup> findOne(@NotNull String groupName) {
-    return Optional.ofNullable(repo.get(groupName.toLowerCase()))
-        .flatMap(domainGroup -> Optional.of(domainGroup.toBuilder().build()));
+  public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
+    final boolean all = query == null || query.trim().length() <= 2;
+    return groupRepo.values().stream()
+        .filter(domainGroup -> all
+            || isQueryResult(domainGroup, query.trim().toLowerCase()));
+  }
+
+  private boolean isQueryResult(final DomainGroup domainGroup, final String query) {
+    return query != null && domainGroup != null
+        && (contains(domainGroup.getSamAccountName(), query)
+        || contains(domainGroup.getDescription(), query)
+        || contains(domainGroup.getMembers(), query));
   }
 
   @Override
-  public boolean exists(@NotNull String groupName) {
-    return repo.get(groupName.toLowerCase()) != null;
+  public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
+    return Optional.ofNullable(groupRepo.get(groupName.toLowerCase()));
+  }
+
+  public boolean exists(String groupName) {
+    return groupRepo.get(groupName.toLowerCase()) != null;
   }
 
   @Override
-  public DomainGroup save(@NotNull DomainGroup domainGroup) {
-    if (repo.size() > 100 && repo.get(domainGroup.getName().toLowerCase()) == null) {
+  public DomainGroup add(DomainGroup domainGroup, Dn ou) {
+    if (groupRepo.size() > 100) {
       throw ServiceException.internalServerError(
           "Maximum size of groups is exceeded.",
-          "org.bremersee:dc-con-app:318a27fd-b083-460f-ac8e-0c59a490b391");
+          EC_MAX_MOCK_DATA);
     }
-    repo.put(domainGroup.getName().toLowerCase(), domainGroup);
-    return domainGroup.toBuilder().build();
+    updateCommonAttributes(domainGroup, ou, domainGroup.getSamAccountName());
+    return update(domainGroup);
   }
 
   @Override
-  public boolean delete(@NotNull String groupName) {
-    return repo.remove(groupName.toLowerCase()) != null;
+  public DomainGroup update(DomainGroup domainGroup) {
+    groupRepo.put(domainGroup.getSamAccountName().toLowerCase(), domainGroup);
+    return domainGroup;
+  }
+
+  @Override
+  public boolean delete(String groupName) {
+    return groupRepo.remove(groupName.toLowerCase()) != null;
   }
 
 }

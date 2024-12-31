@@ -35,7 +35,7 @@ import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
 import org.bremersee.dccon.repository.DnsZoneRepository;
-import org.bremersee.dccon.repository.MockRepository;
+import org.bremersee.dccon.repository.RepositoryMock;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.pagebuilder.PageBuilder;
 import org.springframework.data.domain.Page;
@@ -163,7 +163,7 @@ public class NameServerServiceImpl implements NameServerService {
   @Override
   public Boolean deleteDnsZone(String zoneName) {
     final boolean success = dnsZoneRepository.delete(zoneName);
-    if (success && (dnsNodeRepository instanceof MockRepository)) {
+    if (success && (dnsNodeRepository instanceof RepositoryMock)) {
       dnsNodeRepository.deleteAll(zoneName);
     }
     return success;

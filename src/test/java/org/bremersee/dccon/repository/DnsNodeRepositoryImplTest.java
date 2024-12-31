@@ -41,7 +41,7 @@ import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
-import org.bremersee.dccon.repository.ldap.DnsNodeLdapMapper;
+import org.bremersee.dccon.repository.mapper.DnsNodeLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

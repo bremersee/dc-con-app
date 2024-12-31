@@ -32,11 +32,9 @@ public interface EmailService {
    *
    * @param userName the username
    * @param clearPassword the clear password
-   * @param language the language
    */
   void sendEmailWithCredentials(
       @NotNull String userName,
-      @Nullable String clearPassword,
-      @Nullable Locale language);
+      @Nullable String clearPassword);
 
 }

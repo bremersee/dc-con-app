@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Users</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div class="pb-3">
+    <h3>Edit Group</h3>
+  </div>
+
+  <div>
+    <form th:action="@{group-edit}" th:object="${group}" action="#" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <input type="hidden" name="page" th:value="${page}"/>
+      <input type="hidden" name="size" th:value="${size}"/>
+      <input type="hidden" name="sort" th:value="${sort}"/>
+      <input type="hidden" name="q" th:value="${q}"/>
+
+      <div class="form-group">
+        <label for="groupName">Group name</label>
+        <input type="text" class="form-control"
+               id="groupName" name="groupName"
+               readonly
+               th:field="*{name}"/>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <input type="text" class="form-control"
+               id="description" name="description"
+               th:field="*{description}"/>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <div class="card-title">Members</div>
+          <div class="form-check" th:each="member,iter : ${members}">
+            <input th:id="'member-' + ${iter.index}" id="members"
+                   th:name="'member-' + ${iter.index}" name="members"
+                   type="checkbox" class="form-check-input"
+                   th:field="*{members}"
+                   th:value="${member.value}" th:checked="${member.selected}" />
+            <label th:for="'member-' + ${iter.index}" for="members"
+                   th:text="${member.displayValue}"></label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-3">
+        Update
+      </button>
+      <a href="groups.html" th:href="@{/admin/groups(page=${page},size=${size},sort=${sort},q=${q})}"
+         class="btn btn-secondary ml-3 mt-3" role="button">
+        Cancel
+      </a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

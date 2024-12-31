@@ -16,8 +16,8 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.bremersee.dccon.config.DomainControllerProperties.getComplexPasswordRegex;
-import static org.bremersee.dccon.repository.DomainUserRepositoryImpl.isQueryResult;
+import static java.util.Objects.nonNull;
+import static org.bremersee.dccon.repository.AbstractRepository.contains;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.Dimension;
@@ -25,25 +25,21 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
-import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.exception.ServiceException;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
@@ -58,10 +54,11 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-@Profile("!ldap")
-@Component
+@Profile("mock")
+@Component("domainUserRepositoryMock")
 @Slf4j
-public class DomainUserRepositoryMock implements DomainUserRepository, MockRepository {
+public class DomainUserRepositoryMock extends AbstractRepositoryMock
+    implements DomainUserRepository, RepositoryMock, AvatarRepository {
 
   private static final String USERS_LOCATION = "classpath:demo/users.json";
 
@@ -69,11 +66,7 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
   private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-  private final Map<String, DomainUser> repo = new ConcurrentHashMap<>();
-
   private final Map<String, byte[]> avatarRepo = new ConcurrentHashMap<>();
-
-  private Pattern passwordPattern = Pattern.compile(getComplexPasswordRegex(7));
 
   private final ObjectMapper objectMapper;
 
@@ -81,20 +74,29 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
   private final DomainGroupRepository groupRepository;
 
+  private final List<AvatarProvider> avatarProviders;
+
+  private Pattern passwordPattern;
+
   /**
    * Instantiates a new Domain user repository mock.
    *
    * @param objectMapperBuilder the object mapper builder
    * @param domainRepository the domain repository
    * @param groupRepository the group repository
+   * @param avatarProviders the avatar repositories
    */
   public DomainUserRepositoryMock(
+      DomainControllerProperties properties,
       Jackson2ObjectMapperBuilder objectMapperBuilder,
       DomainRepository domainRepository,
-      DomainGroupRepository groupRepository) {
+      DomainGroupRepository groupRepository,
+      List<AvatarProvider> avatarProviders) {
+    super(properties);
     this.objectMapper = objectMapperBuilder.build();
     this.domainRepository = domainRepository;
     this.groupRepository = groupRepository;
+    this.avatarProviders = avatarProviders;
   }
 
   /**
@@ -102,21 +104,13 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
    */
   @EventListener(ApplicationReadyEvent.class)
   public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DomainUserRepository                                           !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
-    final PasswordInformation info = domainRepository.getPasswordInformation();
-    final int minLength = info.getMinimumPasswordLength() != null
-        ? info.getMinimumPasswordLength()
-        : 7;
-    passwordPattern = Pattern.compile(getComplexPasswordRegex(minLength));
+    passwordPattern = domainRepository.getPasswordInformation().getPasswordPattern();
     resetData();
   }
 
   @Override
   public void resetData() {
+    /*
     avatarRepo.clear();
     DomainUser[] users;
     DomainGroup[] groups;
@@ -128,81 +122,91 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
     } catch (IOException e) {
       throw ServiceException.internalServerError("Loading demo data failed.", e);
     }
-    groupRepository.findAll(null).forEach(group -> groupRepository.delete(group.getName()));
+    groupRepository.findAll(null).forEach(group -> groupRepository.delete(group.getSamAccountName()));
     repo.clear();
     for (DomainUser user : users) {
       if (!StringUtils.hasText(user.getPassword())) {
         user.setPassword(domainRepository.createRandomPassword());
       }
-      repo.put(user.getUserName().toLowerCase(), user);
+      repo.put(user.getSamAccountName().toLowerCase(), user);
     }
     for (DomainGroup group : groups) {
       groupRepository.save(group);
     }
+    */
   }
 
+  /*
   private List<String> findDomainGroups(final String userName) {
     return groupRepository.findAll(null)
         .filter(domainGroup -> domainGroup.getMembers().contains(userName))
-        .map(DomainGroup::getName)
+        .map(DomainGroup::getSamAccountName)
         .sorted()
         .collect(Collectors.toList());
   }
+  */
 
   @Override
-  public Stream<DomainUser> findAll(final String query) {
-    final boolean all = query == null || query.trim().length() == 0;
-    return repo.values().stream()
-        .filter(domainUser -> all || isQueryResult(domainUser, query.trim().toLowerCase()))
-        .map(domainUser -> domainUser.toBuilder()
-            .groups(findDomainGroups(domainUser.getUserName()))
-            .build());
+  public Stream<DomainUser> findAll(final String query, Dn ou, SearchScope scope) {
+    final boolean all = query == null || query.length() <= 2;
+    return userRepo.values().stream()
+        .filter(domainUser -> all || isQueryResult(domainUser, query.toLowerCase()));
+  }
+
+  private boolean isQueryResult(DomainUser domainUser, String query) {
+    return nonNull(query) && domainUser != null
+        && (contains(domainUser.getDisplayName(), query)
+        || contains(domainUser.getSamAccountName(), query)
+        || contains(domainUser.getEmail(), query)
+        || contains(domainUser.getMobile(), query)
+        || contains(domainUser.getTelephoneNumber(), query)
+        || contains(domainUser.getDescription(), query)
+        || contains(domainUser.getFirstName(), query)
+        || contains(domainUser.getLastName(), query));
   }
 
   @Override
-  public Optional<DomainUser> findOne(final String userName) {
-    return Optional.ofNullable(repo.get(userName.toLowerCase()))
-        .flatMap(domainUser -> Optional.of(domainUser
-            .toBuilder()
-            .groups(findDomainGroups(domainUser.getUserName()))
-            .password(null)
-            .build()));
+  public Optional<DomainUser> findOne(String userName, Dn ou, SearchScope searchScope) {
+    return Optional.ofNullable(userRepo.get(userName.toLowerCase()));
   }
 
   @Override
   public Optional<byte[]> findAvatar(
-      final String userName,
-      final AvatarDefault avatarDefault,
-      final Integer size) {
+      String userNameOrEmail,
+      Dn ou,
+      SearchScope searchScope,
+      AvatarDefault avatarDefault,
+      Integer size) {
 
-    final int avatarSize = size == null || size < 1 || size > 2048 ? 80 : size;
-    return findOne(userName)
-        .map(domainUser -> avatarRepo.getOrDefault(
-            domainUser.getUserName(),
-            DomainUserRepositoryImpl.findAvatar(
-                domainUser.getEmail(),
-                new DomainControllerProperties().getGravatarUrl(),
-                avatarDefault,
-                avatarSize)));
+    return Optional.ofNullable(userNameOrEmail)
+        .map(user -> avatarRepo.get(user.toLowerCase()))
+        .or(() -> avatarProviders.stream()
+            .flatMap(repo -> repo.findAvatar(userNameOrEmail, avatarDefault, size).stream())
+            .findFirst());
   }
 
   @Override
   public void saveAvatar(final String userName, final InputStream avatar) {
-
+    if (!exists(userName)) {
+      throw ServiceException.notFoundWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          userName,
+          EC_SAM_ACCOUNT_NOT_FOUND);
+    }
     try (InputStream in = avatar) {
       BufferedImage img = ImageIO.read(in);
       int width = img.getWidth();
       int height = img.getHeight();
       int max = Math.max(width, height);
-      if (max > DomainUserRepositoryImpl.MAX_AVATAR_SIZE) {
-        float factor = Integer.valueOf(DomainUserRepositoryImpl.MAX_AVATAR_SIZE).floatValue() / max;
-        width = Math.min(Math.round(factor * width), DomainUserRepositoryImpl.MAX_AVATAR_SIZE);
-        height = Math.min(Math.round(factor * height), DomainUserRepositoryImpl.MAX_AVATAR_SIZE);
+      if (max > AvatarRepository.MAX_AVATAR_SIZE) {
+        float factor = Integer.valueOf(AvatarRepository.MAX_AVATAR_SIZE).floatValue() / max;
+        width = Math.min(Math.round(factor * width), AvatarRepository.MAX_AVATAR_SIZE);
+        height = Math.min(Math.round(factor * height), AvatarRepository.MAX_AVATAR_SIZE);
         img = ImageUtils.scaleImage(img, new Dimension(width, height));
       }
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       ImageIO.write(img, "jpg", out);
-      avatarRepo.put(userName, out.toByteArray());
+      avatarRepo.put(userName.toLowerCase(), out.toByteArray());
     } catch (IOException e) {
       throw ServiceException.internalServerError("Saving avatar failed.", e);
     }
@@ -213,18 +217,23 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
     avatarRepo.remove(userName);
   }
 
-  @Override
-  public boolean exists(final String userName) {
-    return repo.get(userName.toLowerCase()) != null;
+  private boolean exists(final String userName) {
+    return nonNull(userRepo.get(userName.toLowerCase()));
   }
 
   @Override
-  public DomainUser save(final DomainUser domainUser, final Boolean updateGroups) {
+  public DomainUser add(final DomainUser domainUser, Dn ou) {
 
-    if (repo.size() > 100 && repo.get(domainUser.getUserName().toLowerCase()) == null) {
+    if (exists(domainUser.getSamAccountName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          domainUser.getSamAccountName(),
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
+    }
+    if (userRepo.size() > MAX_ENTRIES) {
       throw ServiceException.internalServerError(
           "Maximum size of users is exceeded.",
-          "org.bremersee:dc-con-app:9272263e-2074-46f7-ba64-23978981a1d3");
+          EC_MAX_MOCK_DATA);
     }
     if (!StringUtils.hasText(domainUser.getPassword())) {
       domainUser.setPassword(domainRepository.createRandomPassword());
@@ -232,37 +241,38 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
     if (!passwordPattern.matcher(domainUser.getPassword()).matches()) {
       throw ServiceException.badRequest(
           "msg=[The password does not meet the complexity criteria!] userName=["
-              + domainUser.getUserName() + "]",
+              + domainUser.getSamAccountName() + "]",
           "check_password_restrictions");
     }
-    final boolean doGroupUpdate = Boolean.TRUE.equals(updateGroups);
-    final Set<String> groups = doGroupUpdate
-        ? new HashSet<>(domainUser.getGroups())
-        : Collections.emptySet();
-    domainUser.getGroups().clear();
-    repo.put(domainUser.getUserName().toLowerCase(), domainUser);
+    updateCommonAttributes(domainUser, ou, domainUser.getSamAccountName());
+    userRepo.put(domainUser.getSamAccountName().toLowerCase(), domainUser);
+    return domainUser;
+  }
 
-    if (doGroupUpdate) {
-      groups.forEach(groupName -> groupRepository.findOne(groupName).ifPresent(domainGroup -> {
-        if (!domainGroup.getMembers().contains(domainUser.getUserName())) {
-          domainGroup.getMembers().add(domainUser.getUserName());
-          groupRepository.save(domainGroup);
-        }
-      }));
+  @Override
+  public DomainUser update(DomainUser domainUser) {
+    if (!exists(domainUser.getSamAccountName())) {
+      throw ServiceException.notFoundWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          domainUser.getSamAccountName(),
+          EC_SAM_ACCOUNT_NOT_FOUND);
     }
-    return domainUser.toBuilder().groups(findDomainGroups(domainUser.getUserName())).build();
+    userRepo.put(domainUser.getSamAccountName().toLowerCase(), domainUser);
+    return domainUser;
   }
 
   @Override
   public void savePassword(final String userName, final String newPassword) {
-    final DomainUser domainUser = repo.get(userName.toLowerCase());
+    final DomainUser domainUser = userRepo.get(userName.toLowerCase());
     if (domainUser == null) {
-      throw ServiceException.notFound(DomainUser.class.getSimpleName(), userName);
+      throw ServiceException.notFoundWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          userName,
+          EC_SAM_ACCOUNT_NOT_FOUND);
     }
     if (!passwordPattern.matcher(newPassword).matches()) {
       throw ServiceException.badRequest(
-          "msg=[The password does not meet the complexity criteria!] userName=["
-              + domainUser.getUserName() + "]",
+          "The password does not meet the complexity criteria!",
           "check_password_restrictions");
     }
     domainUser.setPassword(newPassword);
@@ -270,14 +280,11 @@ public class DomainUserRepositoryMock implements DomainUserRepository, MockRepos
 
   @Override
   public boolean delete(final String userName) {
-    return Optional.ofNullable(repo.remove(userName.toLowerCase()))
-        .map(DomainUser::getUserName)
+    return Optional.ofNullable(userRepo.remove(userName.toLowerCase()))
+        .map(DomainUser::getSamAccountName)
         .map(name -> {
-          groupRepository.findAll(null).forEach(domainGroup -> {
-            if (domainGroup.getMembers().remove(name)) {
-              groupRepository.save(domainGroup);
-            }
-          });
+          groupRepository.findAll(null, null, null)
+              .forEach(domainGroup -> domainGroup.getMembers().remove(userName));
           return true;
         })
         .orElse(false);

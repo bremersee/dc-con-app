@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Groups</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div class="mb-3 p-3 border border-1">
+    <div class="row justify-content-between">
+      <div class="col col-auto">
+        <form id="search" action="#" method="post" th:action="@{/admin/groups}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <input type="hidden" name="page" th:value="${page}"/>
+          <input type="hidden" name="size" th:value="${size}"/>
+          <input type="hidden" name="sort" th:value="${sort}"/>
+          <div class="row g-3 align-items-center">
+            <div class="col-auto">
+              <div class="input-group">
+                <!--suppress HtmlFormInputWithoutLabel -->
+                <input type="text" id="q" name="q" class="form-control"
+                       placeholder="Search ..."
+                       th:value="${q}">
+                <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
+                  <a id="searchInputReset" href="#" title="Reset search"
+                     th:href="@{/admin/groups(page=${page},size=${size},sort=${sort})}"
+                     th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
+                     th:disabled="${#strings.isEmpty(q)}"
+                     th:aria-disabled="${#strings.isEmpty(q)}">
+                    <span class="glyphicon glyphicon-remove text-danger" aria-hidden="true"></span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="col col-auto mt-sm-2 mt-md-0">
+        <a id="addGroup" href="#" title="Add group" class="btn btn-outline-primary"
+           th:href="@{/admin/group-add(page=${page},size=${size},sort=${sort},q=${q})}">
+          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div th:if="${#lists.isEmpty(groups.content)}"
+       class="alert alert-info" role="alert">
+    No groups were found.
+  </div>
+
+  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(groups.content)}">
+    <a th:each="entry : ${groups.content}" href="#"
+       th:href="@{/admin/group-edit(name=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q})}"
+       class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1" th:text="${entry.samAccountName}">
+          Administrators
+        </h5>
+      </div>
+    </a>
+  </div>
+</main>
+<script type="text/javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    function moveCursorToEnd(input) {
+      const length = input.value.length;
+      input.focus();
+      input.setSelectionRange(length, length);
+    }
+    const searchForm = $('#search');
+    const searchInput = $('#q');
+    searchInput.typeWatch({
+      callback: function (value) {
+        //console.log('TypeWatch callback: (' + (this.type || this.nodeName) + ') ' + value);
+        searchForm.submit();
+      },
+      wait: 750,
+      highlight: true,
+      allowSubmit: true,
+      captureLength: 3
+    });
+    moveCursorToEnd(searchInput[0]);
+  });
+  //]]>
+</script>
+</body>
+</html>

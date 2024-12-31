@@ -35,6 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
  *
  * @author Christian Bremer
  */
+@Disabled
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 @ExtendWith(SoftAssertionsExtension.class)

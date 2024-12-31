@@ -36,7 +36,7 @@ import org.springframework.core.io.ResourceLoader;
 @ExtendWith(SoftAssertionsExtension.class)
 class ImageScalerTest {
 
-  private static final String IMAGE_LOCATION = "classpath:mp.jpg";
+  private static final String IMAGE_LOCATION = "classpath:static/mp.jpg";
 
   private static final ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();
 

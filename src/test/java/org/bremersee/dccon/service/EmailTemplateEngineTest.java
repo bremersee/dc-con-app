@@ -36,7 +36,7 @@ import org.thymeleaf.context.Context;
  * @author Christian Bremer
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"in-memory"})
+@ActiveProfiles({"mock", "in-memory"})
 public class EmailTemplateEngineTest {
 
   @Autowired
@@ -54,13 +54,13 @@ public class EmailTemplateEngineTest {
   @Test
   @Disabled
   public void mailWithCredentialsTest() {
-    final DomainUser domainUser = DomainUser.builder()
-        .displayName("Anna Livia Plurabelle")
-        .firstName("Anna")
-        .email("anna@example.org")
-        .userName("anna")
-        .password("changeit")
-        .build();
+    final DomainUser domainUser = new DomainUser(); //.builder()
+        //.displayName("Anna Livia Plurabelle")
+        //.firstName("Anna")
+        //.email("anna@example.org")
+        //.userName("anna")
+        //.password("changeit")
+        //.build();
     final String expected = "<span>Hello, " + domainUser.getFirstName() + "!</span>";
     final Locale locale = Locale.ENGLISH;
     final Context ctx = new Context(locale);

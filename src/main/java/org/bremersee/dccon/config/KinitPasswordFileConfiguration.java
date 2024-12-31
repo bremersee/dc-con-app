@@ -61,24 +61,26 @@ public class KinitPasswordFileConfiguration {
    */
   @EventListener(ApplicationReadyEvent.class)
   public void init() {
-    if (ldaptiveProperties == null) {
-      log.warn("Kinit password file cannot be created because ldaptive properties are not "
-          + "present. You have to enable profile 'ldap'.");
-    } else {
-      Assert.hasText(properties.getKinitAdministratorName(),
-          "Kinit administrator name must be present.");
-      Assert.hasText(properties.getKinitPasswordFile(),
-          "Kinit password file must be specified.");
-      final File file = new File(properties.getKinitPasswordFile());
-      if (!file.exists()) {
-        try (final FileOutputStream out = new FileOutputStream(file)) {
-          out.write(ldaptiveProperties.getBindCredentials().getBytes(StandardCharsets.UTF_8));
-          out.flush();
-        } catch (IOException e) {
-          log.error("Creating kinit password file failed.");
+    if (properties.isUsingKinit()) {
+      if (ldaptiveProperties == null) {
+        log.warn("Kinit password file cannot be created because ldaptive properties are not "
+            + "present. You have to enable profile 'ldap'.");
+      } else {
+        Assert.hasText(properties.getKinitAdministratorName(),
+            "Kinit administrator name must be present.");
+        Assert.hasText(properties.getKinitPasswordFile(),
+            "Kinit password file must be specified.");
+        final File file = new File(properties.getKinitPasswordFile());
+        if (!file.exists()) {
+          try (final FileOutputStream out = new FileOutputStream(file)) {
+            out.write(ldaptiveProperties.getBindCredentials().getBytes(StandardCharsets.UTF_8));
+            out.flush();
+          } catch (IOException e) {
+            log.error("Creating kinit password file failed.");
+          }
         }
+        Assert.isTrue(file.exists(), "Kinit password file must exist.");
       }
-      Assert.isTrue(file.exists(), "Kinit password file must exist.");
     }
   }
 

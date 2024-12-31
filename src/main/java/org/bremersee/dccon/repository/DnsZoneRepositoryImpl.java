@@ -25,20 +25,22 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
-import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.repository.automock.MockComponent;
+import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
-import org.bremersee.dccon.repository.ldap.DnsZoneLdapMapper;
+import org.bremersee.dccon.repository.mapper.DnsZoneLdapMapper;
 import org.bremersee.exception.ServiceException;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.FilterTemplate;
 import org.ldaptive.SearchRequest;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -46,8 +48,10 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
+@Primary
 @Component("dnsZoneRepository")
+@ProfileRequired("ldap")
+@MockComponent(value = DnsZoneRepositoryMock.class, methodsOf = DnsZoneRepository.class)
 @Slf4j
 public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
 
@@ -136,6 +140,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
         .filter(this::isNonExcludedDnsZone);
   }
 
+  @ProfileRequired({"ldap", "cli"})
   @Override
   public DnsZone save(final String zoneName) {
     if (isExcludedDnsZone(zoneName)) {
@@ -163,6 +168,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
                 "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0")));
   }
 
+  @ProfileRequired({"ldap", "cli"})
   @Override
   public boolean delete(final String zoneName) {
     if (exists(zoneName)) {
@@ -197,6 +203,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
     kinit();
     final List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("dns");

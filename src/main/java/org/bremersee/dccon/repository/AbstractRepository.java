@@ -16,14 +16,20 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.NisDomainMember;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.dn.Dn;
 import org.springframework.util.Assert;
 
 /**
@@ -31,9 +37,9 @@ import org.springframework.util.Assert;
  *
  * @author Christian Bremer
  */
-abstract class AbstractRepository {
+abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
 
-  private static final Object KINIT_LOG = new Object();
+  private static final Object KINIT_LOCK = new Object();
 
   private static final String KINIT_PASSWORD_FILE = "--password-file={}";
 
@@ -54,9 +60,9 @@ abstract class AbstractRepository {
    * @param ldapTemplate the ldap template
    */
   AbstractRepository(
-      final DomainControllerProperties properties,
-      final LdaptiveTemplate ldapTemplate) {
-    Assert.notNull(properties, "Domain controller properties must not be null.");
+      DomainControllerProperties properties,
+      LdaptiveTemplate ldapTemplate) {
+    Assert.notNull(properties, "Domain controller properties must not be present.");
     this.properties = properties;
     this.ldapTemplate = ldapTemplate;
   }
@@ -65,13 +71,22 @@ abstract class AbstractRepository {
    * Calls linux command {@code kinit} for authentication.
    */
   void kinit() {
-    synchronized (KINIT_LOG) {
-      List<String> commands = new ArrayList<>();
-      sudo(commands);
-      commands.add(properties.getKinitBinary());
-      commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
-      commands.add(properties.getKinitAdministratorName());
-      CommandExecutor.exec(commands, properties.getSambaToolExecDir());
+    if (getProperties().isUsingKinit()) {
+      synchronized (KINIT_LOCK) {
+        List<String> commands = new ArrayList<>();
+        sudo(commands);
+        commands.add(properties.getKinitBinary());
+        commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
+        commands.add(properties.getKinitAdministratorName());
+        CommandExecutor.exec(commands, properties.getSambaToolExecDir());
+      }
+    }
+  }
+
+  void ssh(List<String> commands) {
+    if (getProperties().isUsingSsh()) {
+      Assert.isTrue(!properties.isUsingKinit(), "Using ssh with kinit is not supported.");
+      commands.add(properties.getSshCommand());
     }
   }
 
@@ -80,7 +95,7 @@ abstract class AbstractRepository {
    *
    * @param commands the commands
    */
-  void sudo(final List<String> commands) {
+  void sudo(List<String> commands) {
     if (properties.isUsingSudo()) {
       commands.add(properties.getSudoBinary());
     }
@@ -92,9 +107,44 @@ abstract class AbstractRepository {
    *
    * @param commands the commands
    */
-  void auth(final List<String> commands) {
-    commands.add(USE_KERBEROS);
-    commands.add(YES);
+  void auth(List<String> commands) {
+    if (getProperties().isUsingKinit()) {
+      commands.add(USE_KERBEROS);
+      commands.add(YES);
+    }
+  }
+
+  Dn getBaseDn() {
+    return new Dn(getProperties().getBaseDn());
+  }
+
+  boolean isDn(String value) {
+    if (isEmpty(value)) {
+      return false;
+    }
+    try {
+      Dn dn = new Dn(value);
+      return getBaseDn().isAncestor(dn);
+
+    } catch (RuntimeException e) {
+      return false;
+    }
+  }
+
+  String getNisDomain(NisDomainMember nisDomainMember) {
+    return !isEmpty(nisDomainMember) && !isEmpty(nisDomainMember.getNisDomain())
+        ? nisDomainMember.getNisDomain()
+        : getProperties().getDefaultNisDomain();
+  }
+
+  static String quote(String value) {
+    if (Objects.isNull(value)) {
+      return null;
+    }
+    if (value.contains("\"")) {
+      return '\'' + value + '\'';
+    }
+    return '"' + value + '"';
   }
 
   /**
@@ -104,7 +154,10 @@ abstract class AbstractRepository {
    * @param query the query
    * @return {@code true} if the value contains the query, otherwise {@code false}
    */
-  static boolean contains(final Object value, final String query) {
+  static boolean contains(Object value, String query) {
+    if (isEmpty(value) || isEmpty(query)) {
+      return false;
+    }
     if (value instanceof Collection) {
       //noinspection rawtypes
       for (Object item : (Collection) value) {
@@ -114,7 +167,7 @@ abstract class AbstractRepository {
       }
       return false;
     }
-    return value != null && value.toString().toLowerCase().contains(query);
+    return value.toString().toLowerCase().contains(query.toLowerCase());
   }
 
 }

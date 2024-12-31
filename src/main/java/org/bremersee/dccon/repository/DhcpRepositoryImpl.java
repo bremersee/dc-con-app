@@ -17,19 +17,19 @@
 package org.bremersee.dccon.repository;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.comparator.ComparatorBuilder;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.repository.automock.MockComponent;
+import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,8 +37,10 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("cli")
+@Primary
 @Component("dhcpRepository")
+@ProfileRequired("cli")
+@MockComponent(value = DhcpRepositoryMock.class, methodsOf = DhcpRepository.class)
 @Slf4j
 public class DhcpRepositoryImpl extends AbstractRepository implements DhcpRepository {
 
@@ -105,6 +107,7 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
    */
   List<DhcpLease> find(final boolean all) {
     final List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getDhcpLeaseListBinary());
     commands.add("--parsable");

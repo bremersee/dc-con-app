@@ -66,20 +66,19 @@ public abstract class AbstractEmailService implements EmailService {
   @Override
   public void sendEmailWithCredentials(
       final String userName,
-      final String clearPassword,
-      final Locale language) {
+      final String clearPassword) {
 
     if (!StringUtils.hasText(clearPassword)) {
       log.debug("No clear password is present; sending no email with credentials.");
       return;
     }
-    final Locale locale = language != null ? language : Locale.ENGLISH;
-    userRepository.findOne(userName).ifPresent(domainUser -> {
+    userRepository.findOne(userName, null, null).ifPresent(domainUser -> { // TODO
       if (StringUtils.hasText(domainUser.getEmail())) {
         domainUser.setPassword(clearPassword);
         if (!StringUtils.hasText(domainUser.getDisplayName())) {
-          domainUser.setDescription(domainUser.getUserName());
+          domainUser.setDescription(domainUser.getSamAccountName());
         }
+        Locale locale = domainUser.getLocale(Locale.ENGLISH);
         final Context ctx = new Context(locale);
         ctx.setVariable("user", domainUser);
         ctx.setVariable("props", properties);

@@ -19,21 +19,22 @@ package org.bremersee.dccon.service;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.io.InputStream;
-import java.util.Locale;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
-import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.repository.DomainUserRepository;
-import org.bremersee.dccon.repository.MockRepository;
+import org.bremersee.dccon.repository.RepositoryMock;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.bremersee.pagebuilder.PageBuilder;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -57,17 +58,15 @@ public class DomainUserServiceImpl implements DomainUserService {
    * @param properties the properties
    * @param domainUserRepository the domain user repository
    * @param emailService the email service
-   * @param domainGroupRepository the domain group repository
    */
   public DomainUserServiceImpl(
       DomainControllerProperties properties,
+      DomainUserValidator domainUserValidator,
       DomainUserRepository domainUserRepository,
-      EmailService emailService,
-      DomainGroupRepository domainGroupRepository) {
+      EmailService emailService) {
     this.domainUserRepository = domainUserRepository;
     this.emailService = emailService;
-    this.domainUserValidator = DomainUserValidator.defaultValidator(
-        properties, domainGroupRepository, domainUserRepository);
+    this.domainUserValidator = domainUserValidator;
   }
 
   /**
@@ -84,101 +83,88 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   @Override
   public void resetData() {
-    if (domainUserRepository instanceof MockRepository) {
-      ((MockRepository) domainUserRepository).resetData();
+    if (domainUserRepository instanceof RepositoryMock) {
+      ((RepositoryMock) domainUserRepository).resetData();
     } else {
       throw new UnsupportedOperationException("Reset data is not available.");
     }
   }
 
   @Override
-  public Page<DomainUser> getUsers(Pageable pageable, String query) {
+  public Page<DomainUser> getUsers(Pageable pageable, String query, Dn ou, SearchScope scope) {
     return new PageBuilder<DomainUser, DomainUser>()
-        .sourceEntries(domainUserRepository.findAll(query))
+        .sourceEntries(domainUserRepository.findAll(query, ou, scope))
         .pageable(applyDefaults(pageable, null, true, null))
         .build();
   }
 
   @Override
   public DomainUser addUser(
-      final DomainUser domainUser,
-      final Boolean sendEmail,
-      final Locale language) {
+      DomainUser domainUser,
+      Dn ou,
+      Boolean sendEmail) {
     domainUserValidator.doAddValidation(domainUser);
-    final DomainUser addedDomainUser = domainUserRepository.save(domainUser, true);
+    DomainUser addedDomainUser = domainUserRepository.add(domainUser, ou);
     if (Boolean.TRUE.equals(sendEmail)) {
       emailService.sendEmailWithCredentials(
-          addedDomainUser.getUserName(),
-          domainUser.getPassword(),
-          language);
+          addedDomainUser.getSamAccountName(),
+          domainUser.getPassword());
     }
     return addedDomainUser;
   }
 
   @Override
-  public Optional<DomainUser> getUser(final String userName) {
-    return domainUserRepository.findOne(userName);
+  public Optional<DomainUser> getUser(String userName, Dn ou, SearchScope searchScope) {
+    return domainUserRepository.findOne(userName, ou, searchScope);
   }
 
   @Override
   public Optional<byte[]> getUserAvatar(
-      final String userName,
-      final AvatarDefault avatarDefault,
-      final Integer size) {
+      String userName,
+      Dn ou,
+      SearchScope searchScope,
+      AvatarDefault avatarDefault,
+      Integer size) {
 
-    return domainUserRepository.findAvatar(userName, avatarDefault, size);
+    return domainUserRepository.findAvatar(userName, ou, searchScope, avatarDefault, size);
   }
 
   @Override
   public Optional<DomainUser> updateUser(
-      final String userName,
-      final Boolean updateGroups,
-      final DomainUser domainUser) {
+      String userName,
+      DomainUser domainUser) {
 
-    return domainUserRepository.findOne(userName)
-        .map(oldDomainUser -> {
-          if (!Boolean.TRUE.equals(updateGroups)) {
-            domainUser.setGroups(oldDomainUser.getGroups());
-          }
-          domainUserValidator.doUpdateValidation(userName, domainUser);
-          return domainUserRepository.save(domainUser, updateGroups);
-        });
+    domainUserValidator.doUpdateValidation(userName, domainUser);
+    return Optional.of(domainUserRepository.update(domainUser));
   }
 
   @Override
   public void updateUserPassword(
-      final String userName,
-      final Password newPassword,
-      final Boolean sendEmail,
-      final Locale language) {
+      String userName,
+      Password newPassword,
+      Boolean sendEmail) {
     domainUserRepository.savePassword(userName, newPassword.getValue());
     if (Boolean.TRUE.equals(sendEmail)) {
       emailService.sendEmailWithCredentials(
           userName,
-          newPassword.getValue(),
-          language);
+          newPassword.getValue());
     }
   }
 
   @Override
   public void updateUserAvatar(
-      final String userName,
-      final InputStream avatar) {
+      String userName,
+      InputStream avatar) {
     domainUserRepository.saveAvatar(userName, avatar);
   }
 
   @Override
-  public void removeUserAvatar(final String userName) {
+  public void removeUserAvatar(String userName) {
     domainUserRepository.removeAvatar(userName);
   }
 
   @Override
-  public Boolean userExists(final String userName) {
-    return domainUserRepository.exists(userName);
-  }
-
-  @Override
-  public Boolean deleteUser(final String userName) {
+  public Boolean deleteUser(String userName) {
     return domainUserRepository.delete(userName);
   }
 

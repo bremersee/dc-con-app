@@ -2,11 +2,13 @@ package org.bremersee.dccon;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * The application.
  */
 @SpringBootApplication()
+@EnableAspectJAutoProxy
 public class Application {
 
   /**

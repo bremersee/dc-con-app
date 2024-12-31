@@ -16,20 +16,18 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,8 +35,8 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("!ldap")
-@Component
+@Profile("mock")
+@Component("dnsZoneRepositoryMock")
 @Slf4j
 public class DnsZoneRepositoryMock implements DnsZoneRepository {
 
@@ -58,18 +56,6 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
   public DnsZoneRepositoryMock(
       DomainControllerProperties properties) {
     this.properties = properties;
-  }
-
-  /**
-   * Init.
-   */
-  @EventListener(ApplicationReadyEvent.class)
-  public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DnsZoneRepository                                              !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
   }
 
   @Override

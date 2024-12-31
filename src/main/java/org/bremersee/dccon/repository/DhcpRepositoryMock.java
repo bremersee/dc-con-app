@@ -27,10 +27,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.exception.ServiceException;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -41,8 +39,8 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("!cli")
-@Component
+@Profile("mock")
+@Component("dhcpRepositoryMock")
 @Slf4j
 public class DhcpRepositoryMock implements DhcpRepository {
 
@@ -59,19 +57,6 @@ public class DhcpRepositoryMock implements DhcpRepository {
    */
   public DhcpRepositoryMock(Jackson2ObjectMapperBuilder objectMapperBuilder) {
     this.objectMapper = objectMapperBuilder.build();
-  }
-
-  /**
-   * Init.
-   */
-  @EventListener(ApplicationReadyEvent.class)
-  public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DhcpRepository                                                 !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
-    findAll();
   }
 
   @Cacheable(cacheNames = "dhcp-leases-by-ip")

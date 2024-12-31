@@ -18,6 +18,7 @@ package org.bremersee.dccon.config;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import org.bremersee.spring.security.ldaptive.authentication.LdaptiveRememberMeServices;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
@@ -38,9 +39,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatchers;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * The type WebSecurityConfiguration.
@@ -62,21 +63,25 @@ public class WebSecurityConfiguration {
 
   private final Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter;
 
+  private final LdaptiveRememberMeServices rememberMeServices;
+
   public WebSecurityConfiguration(
       Environment env,
       OAuth2ResourceServerProperties resourceServerProperties,
       //CorsConfigurationSource corsConfigurationSource,
-      ObjectProvider<Converter<Jwt, AbstractAuthenticationToken>> jwtConverterProvider) {
+      ObjectProvider<Converter<Jwt, AbstractAuthenticationToken>> jwtConverterProvider,
+      ObjectProvider<LdaptiveRememberMeServices> rememberMeServices) {
     this.env = env;
     this.resourceServerProperties = resourceServerProperties;
     //this.corsConfigurationSource = corsConfigurationSource;
     this.jwtAuthenticationConverter = jwtConverterProvider
         .getIfAvailable(JwtAuthenticationConverter::new);
+    this.rememberMeServices = rememberMeServices.getIfAvailable();
   }
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    String appName = env.getProperty("spring.application.name", "config-server");
+    String appName = env.getProperty("spring.application.name", "dc-con-app");
     http
         .authorizeHttpRequests(customizer -> customizer
             .requestMatchers(HttpMethod.OPTIONS, "/**")
@@ -87,8 +92,13 @@ public class WebSecurityConfiguration {
                 EndpointRequest.to(HealthEndpoint.class))
             .permitAll()
 
+            .requestMatchers(new AndRequestMatcher(
+                EndpointRequest.toAnyEndpoint(),
+                new AntPathRequestMatcher("/**", "GET")))
+            .hasAnyAuthority("ROLE_ACTUATOR", "ROLE_ACTUATOR_ADMIN", "ROLE_ADMIN")
+
             .requestMatchers(EndpointRequest.toAnyEndpoint())
-            .hasAuthority("ROLE_ACTUATOR_ADMIN")
+            .hasAnyAuthority("ROLE_ACTUATOR_ADMIN", "ROLE_ADMIN")
 
             .requestMatchers("/css/**").permitAll()
             .requestMatchers("/fonts/**").permitAll()
@@ -121,6 +131,7 @@ public class WebSecurityConfiguration {
 
         .httpBasic(customizer -> customizer.realmName(appName))
 
+        /*
         .formLogin(form -> form
             .loginPage("/login")
             .loginProcessingUrl("/login")
@@ -129,9 +140,16 @@ public class WebSecurityConfiguration {
         .logout(logout -> logout
             .logoutUrl("/logged-out")
             .permitAll())
+        */
 
-        //.formLogin(Customizer.withDefaults())
-        ;
+        .formLogin(Customizer.withDefaults())
+    ;
+
+    if (!isEmpty(rememberMeServices)) {
+      http.rememberMe(customizer -> customizer
+          .userDetailsService(rememberMeServices.getUserDetailsService())
+          .rememberMeServices(rememberMeServices));
+    }
 
     if (!isEmpty(resourceServerProperties.getJwt().getJwkSetUri())) {
       http

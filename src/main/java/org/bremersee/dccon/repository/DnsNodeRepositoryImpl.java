@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.repository.automock.MockComponent;
+import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -36,12 +38,12 @@ import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
-import org.bremersee.dccon.repository.ldap.DnsNodeLdapMapper;
+import org.bremersee.dccon.repository.mapper.DnsNodeLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.FilterTemplate;
 import org.ldaptive.SearchRequest;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -51,8 +53,10 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
+@Primary
 @Component("dnsNodeRepository")
+@ProfileRequired("ldap")
+@MockComponent(value = DnsNodeRepositoryMock.class, methodsOf = DnsNodeRepository.class)
 @Slf4j
 public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
 
@@ -82,7 +86,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
   /**
    * Keep dhcp lease caches up to date.
    */
-  @Scheduled(fixedDelay = 30000L, initialDelay = 2000)
+  //@Scheduled(fixedDelay = 30000L, initialDelay = 2000)
   public void keepDhcpLeaseCachesUpToDate() {
     log.trace("msg=[Keeping dhcp lease cache up to date.]");
     getDhcpRepository().findActiveByIp();
@@ -260,6 +264,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
     kinit();
     for (final DnsRecord record : records) {
       final List<String> commands = new ArrayList<>();
+      ssh(commands);
       sudo(commands);
       commands.add(getProperties().getSambaToolBinary());
       commands.add("dns");

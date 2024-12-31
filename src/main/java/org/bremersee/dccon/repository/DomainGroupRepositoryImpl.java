@@ -16,25 +16,35 @@
 
 package org.bremersee.dccon.repository;
 
+import static java.util.Objects.isNull;
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
-import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.Sid;
+import org.bremersee.dccon.repository.automock.MockComponent;
+import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
-import org.bremersee.dccon.repository.ldap.DomainGroupLdapConstants;
-import org.bremersee.dccon.repository.ldap.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.FilterTemplate;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
+import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.SearchRequest;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
+import org.ldaptive.filter.AndFilter;
+import org.ldaptive.filter.EqualityFilter;
+import org.ldaptive.filter.Filter;
+import org.ldaptive.filter.OrFilter;
+import org.ldaptive.filter.SubstringFilter;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,12 +52,17 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("ldap")
+@Primary
 @Component("domainGroupRepository")
+@ProfileRequired("ldap")
+@MockComponent(value = DomainUserRepositoryMock.class, methodsOf = DomainGroupRepository.class)
 @Slf4j
-public class DomainGroupRepositoryImpl extends AbstractRepository implements DomainGroupRepository {
+public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
+    implements DomainGroupRepository {
 
-  private LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
+  private final DomainRepository domainRepository;
+
+  private final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
 
   /**
    * Instantiates a new domain group repository.
@@ -56,80 +71,57 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    * @param ldapTemplateProvider the ldap template provider
    */
   public DomainGroupRepositoryImpl(
-      final DomainControllerProperties properties,
-      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+      DomainControllerProperties properties,
+      ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
+      LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper,
+      DomainRepository domainRepository) {
     super(properties, ldapTemplateProvider.getIfAvailable());
-    domainGroupLdapMapper = new DomainGroupLdapMapper(properties);
+    this.domainRepository = domainRepository;
+    this.domainGroupLdapMapper = domainGroupLdapMapper;
   }
 
-  /**
-   * Sets domain group ldap mapper.
-   *
-   * @param domainGroupLdapMapper the domain group ldap mapper
-   */
-  @SuppressWarnings("unused")
-  public void setDomainGroupLdapMapper(
-      final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper) {
-    if (domainGroupLdapMapper != null) {
-      this.domainGroupLdapMapper = domainGroupLdapMapper;
+  Filter getFindAllFilter(String query) {
+    //noinspection DuplicatedCode
+    Filter objectClassFilter = new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_GROUP);
+    if (isNull(query) || query.length() <= 2) {
+      return objectClassFilter;
     }
+    Filter orFilter = new OrFilter(
+        new SubstringFilter(LDAP_SAM_ACCOUNT_NAME, null, null, query),
+        new SubstringFilter(LDAP_DESCRIPTION, null, null, query),
+        new SubstringFilter(LDAP_MAIL, null, null, query),
+        new EqualityFilter(LDAP_GID_NUMBER, query)
+    );
+    return new AndFilter(objectClassFilter, orFilter);
   }
 
   @Override
-  public Stream<DomainGroup> findAll(final String query) {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getGroupBaseDn())
-        .filter(getProperties().getGroupFindAllFilter())
-        .scope(getProperties().getGroupFindAllSearchScope())
-        .binaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES)
-        .build();
-    if (query == null || query.trim().length() == 0) {
-      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
-    } else {
-      return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper)
-          .filter(domainGroup -> isQueryResult(domainGroup, query.trim().toLowerCase()));
-    }
-  }
-
-  /**
-   * Is query result boolean.
-   *
-   * @param domainGroup the domain group
-   * @param query the query
-   * @return the boolean
-   */
-  static boolean isQueryResult(final DomainGroup domainGroup, final String query) {
-    return query != null && query.length() > 2 && domainGroup != null
-        && (contains(domainGroup.getName(), query)
-        || contains(domainGroup.getDescription(), query)
-        || contains(domainGroup.getMembers(), query));
+  public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
+    SearchRequest searchRequest = searchAllRequest(
+        ou,
+        getFindAllFilter(query),
+        searchScope,
+        getReturnAttributes());
+    return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
   }
 
   @Override
-  public Optional<DomainGroup> findOne(final String groupName) {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getGroupBaseDn())
-        .filter(FilterTemplate.builder()
-            .filter(getProperties().getGroupFindOneFilter())
-            .parameters(groupName)
-            .build())
-        .scope(getProperties().getGroupFindOneSearchScope())
-        .binaryAttributes(DomainGroupLdapConstants.BINARY_ATTRIBUTES)
-        .build();
+  public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
+    SearchRequest searchRequest = searchOneRequest(groupName, ou, searchScope);
     return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);
   }
 
+  @ProfileRequired({"cli", "ldap"})
   @Override
-  public boolean exists(final String groupName) {
-    return getLdapTemplate()
-        .exists(DomainGroup.builder().name(groupName).build(), domainGroupLdapMapper);
-  }
-
-  @Override
-  public DomainGroup save(final DomainGroup domainGroup) {
-    if (!exists(domainGroup.getName())) {
-      doAdd(domainGroup);
+  public DomainGroup add(DomainGroup domainGroup, Dn ou) {
+    if (domainRepository.samAccountNameExists(domainGroup.getSamAccountName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          domainGroup.getSamAccountName(),
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
+    String dn = doAdd(domainGroup, ou);
+    domainGroup.setDistinguishedName(dn);
     return getLdapTemplate().save(domainGroup, domainGroupLdapMapper);
   }
 
@@ -138,37 +130,59 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    *
    * @param domainGroup the domain group
    */
-  void doAdd(final DomainGroup domainGroup) {
+  String doAdd(DomainGroup domainGroup, Dn ou) {
     kinit();
     final List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("group");
     commands.add("add");
-    commands.add(domainGroup.getName());
-    auth(commands);
-    CommandExecutor.exec(
+    commands.add(
+        quote(domainGroup.getSamAccountName())); // TODO what happens if name contains a space?
+    if (!isEmpty(ou) && !ou.isEmpty()) {
+      commands.add("--groupou=" + quote(validateOu(ou).format()));
+    }
+    //auth(commands);
+    return CommandExecutor.exec(
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> {
-          if (!exists(domainGroup.getName())) {
-            throw ServiceException.internalServerError("msg=[Saving group failed.] groupName=["
-                    + domainGroup.getName() + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response),
-                "org.bremersee:dc-con-app:7729c3c7-aeff-49f2-9243-dd5aee4b023a");
-          }
-        });
+        response -> domainRepository.findDnOfSamAccount(domainGroup)
+            .orElseThrow(() -> ServiceException
+                .internalServerError(String.format("Adding group '%s' failed: %s",
+                        domainGroup.getSamAccountName(),
+                        CommandExecutorResponse.toExceptionMessage(response)),
+                    EC_ADDING_GROUP_FAILED)));
   }
 
-  @Override
-  public boolean delete(final String groupName) {
+  public DomainGroup update(DomainGroup domainGroup) {
+    return domainRepository.findDnOfSamAccount(domainGroup)
+        .map(dn -> validateDn(domainGroup, dn))
+        .map(dn -> getLdapTemplate().save(domainGroup, domainGroupLdapMapper))
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            DomainGroup.class.getSimpleName(),
+            domainGroup.getSamAccountName(),
+            EC_SAM_ACCOUNT_NOT_FOUND));
+  }
 
-    if (exists(groupName)) {
-      doDelete(groupName);
-      return true;
-    }
-    return false;
+  // TODO
+  public boolean hasAllNisAttributes(DomainGroup domainUser) {
+    return !isEmpty(domainUser)
+        && !isEmpty(getNisDomain(domainUser))
+        && !isEmpty(domainUser.getGidNumber());
+  }
+
+  @ProfileRequired({"cli", "ldap"})
+  @Override
+  public boolean delete(String groupName) {
+    log.debug("delete({})", groupName);
+    return findOne(groupName, null, null)
+        .filter(group -> Optional.ofNullable(group.getSid())
+            .map(Sid::getSystemEntity)
+            .orElse(false))
+        .map(group -> doDelete(group.getSamAccountName()))
+        .orElse(false);
   }
 
   /**
@@ -176,28 +190,29 @@ public class DomainGroupRepositoryImpl extends AbstractRepository implements Dom
    *
    * @param groupName the group name
    */
-  void doDelete(final String groupName) {
+  boolean doDelete(String groupName) {
     kinit();
     final List<String> commands = new ArrayList<>();
+    ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("group");
     commands.add("delete");
-    commands.add(groupName);
+    commands.add(quote(groupName));
     auth(commands);
-    CommandExecutor.exec(
+    return CommandExecutor.exec(
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> {
-          if (exists(groupName)) {
+        response -> {
+          if (domainRepository.samAccountNameExists(groupName)) {
             throw ServiceException.internalServerError(
-                "msg=[Deleting group failed.] groupName=[" + groupName + "] "
-                    + CommandExecutorResponse.toExceptionMessage(response),
-                "org.bremersee:dc-con-app:28f610a5-1679-47d9-8f90-2a4d75882d52");
+                String.format("Deleting group '%s' failed: %s", groupName,
+                    CommandExecutorResponse.toExceptionMessage(response)),
+                EC_DELETING_GROUP_FAILED);
           }
+          return true;
         });
   }
-
 
 }

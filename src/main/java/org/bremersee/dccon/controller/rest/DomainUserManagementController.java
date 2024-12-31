@@ -47,8 +47,8 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * @author Christian Bremer
  */
-@RestController
-public class DomainUserManagementController implements DomainUserManagementApi {
+//@RestController
+public class DomainUserManagementController {// implements DomainUserManagementApi {
 
   public static final String ADMIN_ROLE_NAME = "ROLE_ADMIN"; // TODO
 
@@ -75,33 +75,33 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DomainUserPage> getUsers(Pageable pageable, String query) {
-    return ResponseEntity.ok(new DomainUserPage(domainUserService.getUsers(pageable, query)));
+    return ResponseEntity.ok(new DomainUserPage(domainUserService.getUsers(pageable, query, null, null))); // TODO
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<DomainUser> addUser(Boolean email, Locale language,
       @Valid DomainUser domainUser) {
-    return ResponseEntity.ok(domainUserService.addUser(domainUser, email, language));
+    return ResponseEntity.ok(domainUserService.addUser(domainUser, null, email)); // TODO
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<DomainUser> getUser(
       final String userName) {
-    return ResponseEntity.of(domainUserService.getUser(userName));
+    return ResponseEntity.of(domainUserService.getUser(userName, null, null)); // TODO
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<byte[]> getUserAvatar(
       final String userName,
       final AvatarDefault avatarDefault,
       final Integer size) {
 
-    return domainUserService.getUserAvatar(userName, avatarDefault, size)
+    return domainUserService.getUserAvatar(userName, null, null, avatarDefault, size) // TODO
         .map(avatar -> ResponseEntity
             .status(HttpStatus.OK)
             .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + userName + ".jpg\"")
@@ -110,16 +110,16 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<DomainUser> updateUser(
       final String userName,
       final Boolean updateGroups,
       @Valid final DomainUser domainUser) {
-    return ResponseEntity.of(domainUserService.updateUser(userName, updateGroups, domainUser));
+    return ResponseEntity.of(domainUserService.updateUser(userName, domainUser));
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<Void> updateUserPassword(
       String userName,
       Boolean email,
@@ -140,12 +140,12 @@ public class DomainUserManagementController implements DomainUserManagementApi {
     } else {
       sendEmail = Boolean.TRUE.equals(email);
     }
-    domainUserService.updateUserPassword(userName, newPassword, sendEmail, language);
+    domainUserService.updateUserPassword(userName, newPassword, sendEmail);
     return ResponseEntity.ok().build();
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<Void> updateUserAvatar(
       final String userName,
       final MultipartFile avatar) {
@@ -169,7 +169,7 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
+  //@Override
   public ResponseEntity<Void> removeUserAvatar(final String userName) {
     if (isNotAdmin() && isNotUser(userName)) {
       throw ServiceException.forbidden();
@@ -179,21 +179,21 @@ public class DomainUserManagementController implements DomainUserManagementApi {
   }
 
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
-  public ResponseEntity<Boolean> userExists(final String userName) {
-    return ResponseEntity.ok(domainUserService.userExists(userName));
-  }
+  //@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  //@Override
+  //public ResponseEntity<Boolean> userExists(final String userName) {
+  //  return ResponseEntity.ok(domainUserService.userExists(userName));
+  //}
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
-  @Override
-  public ResponseEntity<Boolean> isUserNameInUse(String userName) {
-    return ResponseEntity.ok(domainUserService.userExists(userName)
-        || domainGroupService.groupExists(userName));
-  }
+  //@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  //@Override
+  //public ResponseEntity<Boolean> isUserNameInUse(String userName) {
+  //  return ResponseEntity.ok(domainUserService.userExists(userName)
+  //      || domainGroupService.groupExists(userName));
+  //}
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN')")
-  @Override
+  //@Override
   public ResponseEntity<Boolean> deleteUser(final String userName) {
     return ResponseEntity.ok(domainUserService.deleteUser(userName));
   }

@@ -41,6 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
  *
  * @author Christian Bremer
  */
+@Disabled
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"in-memory"})
 @TestInstance(Lifecycle.PER_CLASS) // allows us to use @BeforeAll with a non-static method

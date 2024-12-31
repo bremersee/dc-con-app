@@ -49,10 +49,10 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-@Profile("!ldap")
-@Component
+@Profile("mock")
+@Component("dnsNodeRepositoryMock")
 @Slf4j
-public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements MockRepository {
+public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements RepositoryMock {
 
   private static final String NODES_LOCATION = "classpath:demo/nodes.json";
 
@@ -89,17 +89,13 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
    */
   @EventListener(ApplicationReadyEvent.class)
   public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DnsNodeRepository                                              !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
     resetData();
   }
 
   @Override
   public void resetData() {
-
+    // TODO
+    /*
     DnsNode[] dnsNodes;
     try {
       dnsNodes = objectMapper.readValue(
@@ -123,6 +119,7 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
     for (DnsNode dnsNode : dnsNodes) {
       save(getProperties().getDefaultZone(), dnsNode);
     }
+    */
   }
 
   @Override

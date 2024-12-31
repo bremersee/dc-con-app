@@ -16,12 +16,14 @@
 
 package org.bremersee.dccon.repository;
 
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.bremersee.dccon.model.SamAccount;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,21 +31,40 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("!cli")
-@Component
+@Profile("mock")
+@Component("domainRepositoryMock")
 @Slf4j
-public class DomainRepositoryMock implements DomainRepository {
+public class DomainRepositoryMock extends AbstractRepositoryMock implements DomainRepository {
 
-  /**
-   * Init.
-   */
-  @EventListener(ApplicationReadyEvent.class)
-  public void init() {
-    log.warn("\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        + "!! MOCK is running:  DomainRepository                                               !!\n"
-        + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    );
+  public DomainRepositoryMock(DomainControllerProperties properties) {
+    super(properties);
+  }
+
+  @Override
+  public void resetData() {
+    // noting to do
+  }
+
+  @Override
+  public boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses) {
+    return findAllEntities()
+        .map(CommonAttributes::getDistinguishedName)
+        .anyMatch(n -> n.equalsIgnoreCase(dn));
+  }
+
+  @Override
+  public Optional<String> findDnOfSamAccountName(String samAccountName) {
+    return findAllEntities()
+        .filter(e -> e instanceof SamAccount)
+        .filter(e -> ((SamAccount) e).getSamAccountName()
+            .equalsIgnoreCase(samAccountName))
+        .map(CommonAttributes::getDistinguishedName)
+        .findFirst();
+  }
+
+  @Override
+  public boolean isRfc2307Enabled() {
+    return true;
   }
 
   @Override

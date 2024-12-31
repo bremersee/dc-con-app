@@ -16,11 +16,7 @@
 
 package org.bremersee.dccon.service.validator;
 
-import java.util.stream.Collectors;
-import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
-import org.bremersee.dccon.repository.DomainGroupRepository;
-import org.bremersee.dccon.repository.DomainUserRepository;
 
 /**
  * The domain group validator interface.
@@ -43,55 +39,5 @@ public interface DomainGroupValidator {
    * @param domainGroup the domain group
    */
   void doUpdateValidation(String groupName, DomainGroup domainGroup);
-
-  /**
-   * Default domain group validator.
-   *
-   * @param properties the properties
-   * @param groupRepository the group repository
-   * @param userRepository the user repository
-   * @return the domain group validator
-   */
-  static DomainGroupValidator defaultValidator(
-      DomainControllerProperties properties,
-      DomainGroupRepository groupRepository,
-      DomainUserRepository userRepository) {
-    return new Default(properties, groupRepository, userRepository);
-  }
-
-  /**
-   * The default domain group validator.
-   */
-  class Default extends AbstractDomainEntityValidator implements DomainGroupValidator {
-
-    /**
-     * Instantiates a new default domain group validator.
-     *
-     * @param properties the properties
-     * @param groupRepository the group repository
-     * @param userRepository the user repository
-     */
-    Default(DomainControllerProperties properties,
-        DomainGroupRepository groupRepository,
-        DomainUserRepository userRepository) {
-      super(properties, groupRepository, userRepository);
-    }
-
-    @Override
-    public void doAddValidation(DomainGroup domainGroup) {
-      validateNameNotExists(domainGroup.getName(), DomainGroup.class);
-      domainGroup.setMembers(domainGroup.getMembers().stream()
-          .filter(name -> getUserRepository().exists(name) || getGroupRepository().exists(name))
-          .collect(Collectors.toList()));
-    }
-
-    @Override
-    public void doUpdateValidation(String groupName, DomainGroup domainGroup) {
-      domainGroup.setName(groupName);
-      domainGroup.setMembers(domainGroup.getMembers().stream()
-          .filter(name -> getUserRepository().exists(name) || getGroupRepository().exists(name))
-          .collect(Collectors.toList()));
-    }
-  }
 
 }

@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.model.DnsRecord;
-import org.bremersee.dccon.repository.ldap.transcoder.DnsRecordDataMapper;
+import org.bremersee.dccon.repository.transcoder.DnsRecordDataMapper;
 import org.ldaptive.io.Hex;
 
 /**

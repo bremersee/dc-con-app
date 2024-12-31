@@ -16,11 +16,13 @@
 
 package org.bremersee.dccon.service.validator;
 
+import static org.bremersee.dccon.ErrorCode.EC_SAM_ACCOUNT_ALREADY_EXISTS;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.repository.DomainGroupRepository;
-import org.bremersee.dccon.repository.DomainUserRepository;
+import org.bremersee.dccon.model.SamAccount;
+import org.bremersee.dccon.repository.DomainRepository;
 import org.bremersee.exception.ServiceException;
 
 /**
@@ -35,25 +37,18 @@ public abstract class AbstractDomainEntityValidator {
   private final DomainControllerProperties properties;
 
   @Getter(AccessLevel.PROTECTED)
-  private final DomainGroupRepository groupRepository;
-
-  @Getter(AccessLevel.PROTECTED)
-  private final DomainUserRepository userRepository;
+  private final DomainRepository domainRepository;
 
   /**
    * Instantiates a new abstract domain entity validator.
    *
    * @param properties the properties
-   * @param groupRepository the group repository
-   * @param userRepository the user repository
    */
   protected AbstractDomainEntityValidator(
       DomainControllerProperties properties,
-      DomainGroupRepository groupRepository,
-      DomainUserRepository userRepository) {
+      DomainRepository domainRepository) {
     this.properties = properties;
-    this.groupRepository = groupRepository;
-    this.userRepository = userRepository;
+    this.domainRepository = domainRepository;
   }
 
   /**
@@ -62,22 +57,23 @@ public abstract class AbstractDomainEntityValidator {
    * @param name the name
    * @return the boolean
    */
-  protected boolean nameExists(String name) {
-    return groupRepository.exists(name) || userRepository.exists(name);
+  protected boolean samAccountNameExists(String name) {
+    return domainRepository.samAccountNameExists(name);
   }
 
   /**
-   * Throws an already exception if the name is already in use.
+   * Throws an already exists exception if the name is already in use.
    *
    * @param name the name
    * @param domainClass the domain class
    */
-  protected void validateNameNotExists(String name, Class<?> domainClass) {
-    if (nameExists(name)) {
+  protected void validateSamAccountNameNotExists(
+      String name, Class<? extends SamAccount> domainClass) {
+    if (samAccountNameExists(name)) {
       throw ServiceException.alreadyExistsWithErrorCode(
           domainClass.getSimpleName(),
           name,
-          "org.bremersee:dc-con-app:7bca7443-19f3-4d44-9607-118b10882b92");
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
   }
 

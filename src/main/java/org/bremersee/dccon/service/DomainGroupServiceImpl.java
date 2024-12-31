@@ -19,15 +19,14 @@ package org.bremersee.dccon.service;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.util.Optional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.DomainGroupRepository;
-import org.bremersee.dccon.repository.DomainUserRepository;
 import org.bremersee.dccon.service.validator.DomainGroupValidator;
 import org.bremersee.pagebuilder.PageBuilder;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,16 +49,14 @@ public class DomainGroupServiceImpl implements DomainGroupService {
    * Instantiates a new domain group service.
    *
    * @param properties the properties
-   * @param domainUserRepository the domain user repository
    * @param domainGroupRepository the domain group repository
    */
   public DomainGroupServiceImpl(
       final DomainControllerProperties properties,
-      final DomainUserRepository domainUserRepository,
+      final DomainGroupValidator domainGroupValidator,
       final DomainGroupRepository domainGroupRepository) {
     this.domainGroupRepository = domainGroupRepository;
-    this.domainGroupValidator = DomainGroupValidator.defaultValidator(
-        properties, domainGroupRepository, domainUserRepository);
+    this.domainGroupValidator = domainGroupValidator;
   }
 
   /**
@@ -76,41 +73,32 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public Page<DomainGroup> getGroups(Pageable pageable, String query) {
+  public Page<DomainGroup> getGroups(Pageable pageable, String query, Dn ou, SearchScope scope) {
     return new PageBuilder<DomainGroup, DomainGroup>()
-        .sourceEntries(domainGroupRepository.findAll(query))
+        .sourceEntries(domainGroupRepository.findAll(query, ou, scope))
         .pageable(applyDefaults(pageable, null, true, null))
         .build();
   }
 
   @Override
-  public DomainGroup addGroup(@NotNull @Valid DomainGroup domainGroup) {
+  public DomainGroup addGroup(DomainGroup domainGroup, Dn dn) {
     domainGroupValidator.doAddValidation(domainGroup);
-    return domainGroupRepository.save(domainGroup);
+    return domainGroupRepository.add(domainGroup, dn);
   }
 
   @Override
-  public Optional<DomainGroup> getGroup(@NotNull String groupName) {
-    return domainGroupRepository.findOne(groupName);
+  public Optional<DomainGroup> getGroup(String groupName, Dn ou, SearchScope scope) {
+    return domainGroupRepository.findOne(groupName, ou, scope);
   }
 
   @Override
-  public Optional<DomainGroup> updateGroup(@NotNull String groupName,
-      @NotNull @Valid DomainGroup domainGroup) {
-    return domainGroupRepository.findOne(groupName)
-        .map(oldDomainGroup -> {
-          domainGroupValidator.doUpdateValidation(groupName, domainGroup);
-          return domainGroupRepository.save(domainGroup);
-        });
+  public Optional<DomainGroup> updateGroup(String groupName, DomainGroup domainGroup) {
+    domainGroupValidator.doUpdateValidation(groupName, domainGroup);
+    return Optional.of(domainGroupRepository.update(domainGroup));
   }
 
   @Override
-  public Boolean groupExists(@NotNull String groupName) {
-    return domainGroupRepository.exists(groupName);
-  }
-
-  @Override
-  public Boolean deleteGroup(@NotNull String groupName) {
+  public Boolean deleteGroup(String groupName) {
     return domainGroupRepository.delete(groupName);
   }
 }

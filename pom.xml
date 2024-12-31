@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -25,7 +25,7 @@
 
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <lib-bundle.version>0.1.0</lib-bundle.version>
+    <lib-bundle.version>0.1.1</lib-bundle.version>
     <dc-con-api-spring.version>3.0.0-SNAPSHOT</dc-con-api-spring.version>
 
     <!--suppress UnresolvedMavenProperty -->
@@ -121,10 +121,12 @@
       <groupId>org.bremersee</groupId>
       <artifactId>spring-integration-web</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.bremersee</groupId>
       <artifactId>spring-integration-thymeleaf</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>org.bremersee</groupId>
       <artifactId>spring-integration-security-ldaptive</artifactId>
