@@ -16,18 +16,13 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import org.bremersee.dccon.config.DomainControllerProperties;
-import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.context.MessageSourceAware;
 
 /**
- * The type ChangePasswordController.
+ * The interface MessageProvider.
  *
  * @author Christian Bremer
  */
-public class ChangePasswordController extends AbstractController {
+public interface MessageProvider extends MessageSourceAware {
 
-  public ChangePasswordController(
-      DomainControllerProperties domainControllerProperties,LocaleResolver localeResolver) {
-    super(domainControllerProperties, localeResolver);
-  }
 }

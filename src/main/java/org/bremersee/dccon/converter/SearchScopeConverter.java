@@ -33,7 +33,7 @@ public class SearchScopeConverter implements Converter<String, SearchScope> {
   public SearchScope convert(@NonNull String source) {
     try {
       return SearchScope.valueOf(source.toUpperCase());
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       return null;
     }
   }

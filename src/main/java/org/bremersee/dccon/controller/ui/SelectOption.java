@@ -52,6 +52,7 @@ import org.springframework.lang.NonNull;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Deprecated
 public class SelectOption implements Serializable, Comparable<SelectOption> {
 
   @Serial

@@ -22,9 +22,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.RedirectMessage;
-import org.bremersee.dccon.controller.ui.RedirectMessageType;
+import org.bremersee.dccon.controller.ui.model.RedirectMessage;
+import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.controller.ui.SelectOption;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
@@ -53,10 +54,12 @@ public class GroupEditController extends AbstractController {
 
   private final DomainGroupService domainGroupService;
 
-  public GroupEditController(LocaleResolver localeResolver,
+  public GroupEditController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver,
       DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
-    super(localeResolver);
+    super(domainControllerProperties, localeResolver);
     this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
   }

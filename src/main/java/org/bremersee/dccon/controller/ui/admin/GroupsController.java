@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.comparator.spring.mapper.SortMapper;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.model.DomainGroupPage;
 import org.bremersee.dccon.service.DomainGroupService;
@@ -40,9 +41,11 @@ public class GroupsController extends AbstractController {
 
   private final DomainGroupService domainGroupService;
 
-  public GroupsController(LocaleResolver localeResolver,
+  public GroupsController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver,
       DomainGroupService domainGroupService) {
-    super(localeResolver);
+    super(domainControllerProperties, localeResolver);
     this.domainGroupService = domainGroupService;
   }
 

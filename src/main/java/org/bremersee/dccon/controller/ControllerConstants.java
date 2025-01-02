@@ -23,13 +23,15 @@ package org.bremersee.dccon.controller;
  */
 public interface ControllerConstants {
 
+  String CURRENT_PAGE_NAME = "currentPage";
+
   String PAGE = "page";
 
   String PAGE_DEFAULT = "0";
 
   String SIZE = "size";
 
-  String SIZE_DEFAULT = "2147483647";
+  String SIZE_DEFAULT = "20"; // "2147483647";
 
   String SORT = "sort";
 

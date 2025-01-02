@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,27 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import lombok.Getter;
+import org.bremersee.pagebuilder.model.AbstractPageDto;
+import org.springframework.stereotype.Component;
 
 /**
+ * The type PaginationHelper.
+ *
  * @author Christian Bremer
  */
-public enum RedirectMessageType {
-  PRIMARY("alert alert-primary"),
-  SECONDARY("alert alert-secondary"),
-  SUCCESS("alert alert-success"),
-  DANGER("alert alert-danger"),
-  WARNING("alert alert-warning"),
-  INFO("alert alert-info"),
-  LIGHT("alert alert-light"),
-  DARK("alert alert-dark");
+@Component("paginationHelper")
+public class PaginationHelper {
 
-  @Getter
-  private final String cssClass;
-
-  RedirectMessageType(final String cssClass) {
-    this.cssClass = cssClass;
+  private int ceil(Number a, Number b) {
+    return (int) Math.ceil(a.doubleValue() / b.doubleValue());
   }
+
+  public int getTotalPages(AbstractPageDto<?> page) {
+    return ceil(page.getTotalElements(), page.getSize());
+  }
+
+  public boolean isValidPageNumber(AbstractPageDto<?> page, int number) {
+    return 0 <= number && number < getTotalPages(page);
+  }
+
 }

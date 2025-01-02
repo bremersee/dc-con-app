@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,27 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller;
+package org.bremersee.dccon.controller.ui.model;
+
+import lombok.Getter;
 
 /**
- * The interface MessageProvider.
- *
  * @author Christian Bremer
  */
-public interface MessageProvider {
+public enum RedirectMessageType {
+  PRIMARY("alert alert-primary"),
+  SECONDARY("alert alert-secondary"),
+  SUCCESS("alert alert-success"),
+  DANGER("alert alert-danger"),
+  WARNING("alert alert-warning"),
+  INFO("alert alert-info"),
+  LIGHT("alert alert-light"),
+  DARK("alert alert-dark");
 
+  @Getter
+  private final String cssClass;
+
+  RedirectMessageType(final String cssClass) {
+    this.cssClass = cssClass;
+  }
 }

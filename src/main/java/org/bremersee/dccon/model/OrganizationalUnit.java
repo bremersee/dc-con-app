@@ -84,12 +84,12 @@ public class OrganizationalUnit extends CommonAttributes
     List<String> names = new ArrayList<>();
     StringTokenizer st = new StringTokenizer(dn, ",");
     while (st.hasMoreTokens()) {
-      String rdn = st.nextToken().trim();
+      String rdn = st.nextToken();
       index = rdn.indexOf('=');
       if (index != -1) {
-        names.add(rdn.substring(index + 1).trim());
+        names.add(rdn.substring(index + 1));
       } else {
-        names.add(rdn.trim());
+        names.add(rdn);
       }
     }
     Collections.reverse(names);

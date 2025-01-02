@@ -17,18 +17,18 @@
 package org.bremersee.dccon.controller.ui.admin;
 
 import static org.bremersee.dccon.ErrorCode.EC_ADDING_USER_FAILED;
-import static org.bremersee.dccon.ErrorCode.EC_SAM_ACCOUNT_ALREADY_EXISTS;
 import static org.bremersee.dccon.ErrorCode.EC_PASSWORD_RESTRICTIONS;
+import static org.bremersee.dccon.ErrorCode.EC_SAM_ACCOUNT_ALREADY_EXISTS;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.RedirectMessage;
-import org.bremersee.dccon.controller.ui.RedirectMessageType;
+import org.bremersee.dccon.controller.ui.model.RedirectMessage;
+import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
@@ -51,7 +51,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-@Slf4j
 public class UserAddController extends AbstractController {
 
   private final DomainService domainService;
@@ -60,11 +59,13 @@ public class UserAddController extends AbstractController {
 
   private final DomainGroupService domainGroupService;
 
-  public UserAddController(LocaleResolver localeResolver,
+  public UserAddController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver,
       DomainService domainService,
       DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
-    super(localeResolver);
+    super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
     this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;

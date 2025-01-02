@@ -18,11 +18,11 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.RedirectMessage;
-import org.bremersee.dccon.controller.ui.RedirectMessageType;
+import org.bremersee.dccon.controller.ui.model.RedirectMessage;
+import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
@@ -44,7 +44,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-@Slf4j
 public class GroupAddController extends AbstractController {
 
   private final DomainService domainService;
@@ -53,11 +52,13 @@ public class GroupAddController extends AbstractController {
 
   private final DomainGroupService domainGroupService;
 
-  public GroupAddController(LocaleResolver localeResolver,
+  public GroupAddController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver,
       DomainService domainService,
       DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
-    super(localeResolver);
+    super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
     this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;

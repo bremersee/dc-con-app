@@ -20,12 +20,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ControllerConstants;
+import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.springframework.ui.ModelMap;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -34,7 +35,7 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface OrganizationalUnitSelectorComponent extends ControllerConstants {
+public interface OrganizationalUnitSelectorComponent extends CurrentPageNameProvider {
 
   OrganizationalUnitService getOrganizationalUnitService();
 
@@ -43,6 +44,10 @@ public interface OrganizationalUnitSelectorComponent extends ControllerConstants
   String getDefaultOrganizationalUnit();
 
   SearchScope getDefaultSearchScope();
+
+  default void addOrganizationalUnitSelector(ModelMap model, OrganizationalUnitSelector selector) {
+    model.addAttribute(OU_SELECTOR, selector);
+  }
 
   default OrganizationalUnitSelector getOrganizationalUnitSelector(
       Dn ou,
@@ -83,7 +88,8 @@ public interface OrganizationalUnitSelectorComponent extends ControllerConstants
   }
 
   default boolean isBaseOu(OrganizationalUnit ou) {
-    return new Dn(getDomainControllerProperties().getBaseDn()).isSame(new Dn(ou.getDistinguishedName()));
+    return new Dn(getDomainControllerProperties().getBaseDn()).isSame(
+        new Dn(ou.getDistinguishedName()));
   }
 
   default Comparator<OrganizationalUnit> getOrganizationalUnitComparator() {

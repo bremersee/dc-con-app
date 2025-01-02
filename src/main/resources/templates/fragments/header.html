@@ -71,7 +71,7 @@
           <ul class="dropdown-menu" th:if="${not #lists.isEmpty(ouSelector.selectableOus)}">
             <li th:each="entry : ${ouSelector.selectableOus}">
               <a class="dropdown-item" href="#" th:text="'OU: ' + ${entry.nameTree}"
-                 th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouSelector.selectedScope})}">
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouSelector.selectedScope})}">
                 OU: Groups
               </a>
             </li>
@@ -91,7 +91,7 @@
           <ul class="dropdown-menu" th:if="${ouSelector.scopeSelectable}">
             <li>
               <a class="dropdown-item" href="#" th:text="${ouSelector.selectableScopeDisplayValue}"
-                 th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectableScope})}">
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectableScope})}">
                 One level
               </a>
             </li>

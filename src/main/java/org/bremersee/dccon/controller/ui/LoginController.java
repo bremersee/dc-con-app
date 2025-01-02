@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.controller.ui;
 
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,8 +30,10 @@ import org.springframework.web.servlet.LocaleResolver;
 @Controller("loginController")
 public class LoginController extends AbstractController {
 
-  public LoginController(LocaleResolver localeResolver) {
-    super(localeResolver);
+  public LoginController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver) {
+    super(domainControllerProperties, localeResolver);
   }
 
   @RequestMapping(

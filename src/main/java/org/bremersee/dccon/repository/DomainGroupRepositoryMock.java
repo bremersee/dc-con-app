@@ -51,10 +51,10 @@ public class DomainGroupRepositoryMock extends AbstractRepositoryMock
 
   @Override
   public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
-    final boolean all = query == null || query.trim().length() <= 2;
+    final boolean all = query == null || query.length() <= 2;
     return groupRepo.values().stream()
         .filter(domainGroup -> all
-            || isQueryResult(domainGroup, query.trim().toLowerCase()));
+            || isQueryResult(domainGroup, query.toLowerCase()));
   }
 
   private boolean isQueryResult(final DomainGroup domainGroup, final String query) {

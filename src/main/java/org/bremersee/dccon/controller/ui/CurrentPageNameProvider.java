@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,21 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import org.bremersee.dccon.config.DomainControllerProperties;
-import org.springframework.web.servlet.LocaleResolver;
+import org.bremersee.dccon.controller.ControllerConstants;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 /**
- * The type ChangePasswordController.
+ * The interface CurrentPageProvider.
  *
  * @author Christian Bremer
  */
-public class ChangePasswordController extends AbstractController {
+public interface CurrentPageNameProvider extends ControllerConstants {
 
-  public ChangePasswordController(
-      DomainControllerProperties domainControllerProperties,LocaleResolver localeResolver) {
-    super(domainControllerProperties, localeResolver);
+  String getCurrentPageName();
+
+  @ModelAttribute(CURRENT_PAGE_NAME)
+  default String addCurrentPageName() {
+    return getCurrentPageName();
   }
+
 }

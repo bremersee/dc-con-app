@@ -19,9 +19,10 @@ package org.bremersee.dccon.controller.ui.admin;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.RedirectMessage;
-import org.bremersee.dccon.controller.ui.RedirectMessageType;
+import org.bremersee.dccon.controller.ui.model.RedirectMessage;
+import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
@@ -47,10 +48,12 @@ public class UserEditController extends AbstractController {
 
   private final DomainGroupService domainGroupService;
 
-  public UserEditController(LocaleResolver localeResolver,
+  public UserEditController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver,
       DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
-    super(localeResolver);
+    super(domainControllerProperties, localeResolver);
     this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
   }

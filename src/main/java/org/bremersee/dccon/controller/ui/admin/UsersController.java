@@ -46,7 +46,7 @@ import org.springframework.web.servlet.LocaleResolver;
 @Controller
 //@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class UsersController extends AbstractController
-    implements ControllerConstants, OrganizationalUnitSelectorComponent {
+    implements OrganizationalUnitSelectorComponent {
 
   private final DomainControllerProperties properties;
 
@@ -59,8 +59,9 @@ public class UsersController extends AbstractController
       DomainControllerProperties properties,
       LocaleResolver localeResolver,
       DomainUserService domainUserService,
-      OrganizationalUnitService organizationalUnitService) {
-    super(localeResolver);
+      OrganizationalUnitService organizationalUnitService,
+      DomainControllerProperties domainControllerProperties) {
+    super(domainControllerProperties, localeResolver);
     this.properties = properties;
     this.domainUserService = domainUserService;
     this.organizationalUnitService = organizationalUnitService;
@@ -69,6 +70,11 @@ public class UsersController extends AbstractController
   @Override
   public DomainControllerProperties getDomainControllerProperties() {
     return properties;
+  }
+
+  @Override
+  public String getCurrentPageName() {
+    return "users";
   }
 
   @Override
@@ -92,13 +98,13 @@ public class UsersController extends AbstractController
       ModelMap model) {
 
     OrganizationalUnitSelector ouSelector = getOrganizationalUnitSelector(ou, scope);
-    Dn ouDn = new Dn(ouSelector.getSelectedOu().getDistinguishedName());
+    addOrganizationalUnitSelector(model, ouSelector);
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
     DomainUserPage userPage = new DomainUserPage(
         domainUserService.getUsers(pageable, query, ou, ouSelector.getSelectedScope()));
     model.addAttribute("users", userPage);
-    model.addAttribute(OU_SELECTOR, ouSelector);
     addPageRequest(model, page, size, sort, query);
     return "admin/users";
   }
+
 }

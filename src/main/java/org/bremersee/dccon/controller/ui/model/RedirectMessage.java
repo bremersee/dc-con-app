@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller.ui;
+package org.bremersee.dccon.controller.ui.model;
 
 import jakarta.validation.constraints.NotNull;
 import java.io.Serial;

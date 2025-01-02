@@ -24,14 +24,16 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Optional;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.controller.ControllerConstants;
+import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
 import org.ldaptive.SearchScope;
-import org.ldaptive.dn.Dn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceAware;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.LocaleResolver;
 
@@ -40,16 +42,23 @@ import org.springframework.web.servlet.LocaleResolver;
  *
  * @author Christian Bremer
  */
-public class AbstractController implements MessageSourceAware {
+@Getter
+public class AbstractController implements DomainControllerPropertiesProvider, ControllerConstants,
+    LoggerProvider, MessageProvider {
 
-  @Getter(AccessLevel.PROTECTED)
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private final LocaleResolver localeResolver;
+
+  private final DomainControllerProperties domainControllerProperties;
+
   @Setter
   private MessageSource messageSource;
 
-  @Getter(AccessLevel.PROTECTED)
-  private LocaleResolver localeResolver;
-
-  public AbstractController(LocaleResolver localeResolver) {
+  public AbstractController(
+      DomainControllerProperties domainControllerProperties,
+      LocaleResolver localeResolver) {
+    this.domainControllerProperties = domainControllerProperties;
     this.localeResolver = localeResolver;
   }
 
