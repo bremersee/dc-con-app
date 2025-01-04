@@ -60,55 +60,6 @@ abstract class AbstractDomainEntityRepository extends AbstractRepository {
 
   abstract String[] getReturnAttributes();
 
-  abstract Dn getDefaultOu();
-
-  Dn getBaseDn(Dn ouRdn) {
-    if (isEmpty(ouRdn) || ouRdn.isEmpty()) {
-      return getBaseDn();
-    }
-    Dn dn = new Dn(ouRdn.getRDns());
-    if (dn.isSame(getBaseDn()) || getBaseDn().isAncestor(dn)) {
-      return dn;
-    }
-    dn.add(getBaseDn());
-    return dn;
-  }
-
-  Dn validateOu(Dn ouRdn) {
-    Dn ou = isEmpty(ouRdn) || ouRdn.isEmpty() ? getDefaultOu() : ouRdn;
-    if (isEmpty(ou) || ou.isEmpty()) {
-      throw LdaptiveException.badRequest(
-          "Organizational unit cannot be empty.", EC_EMPTY_OU_RDN);
-    }
-    Dn dn = new Dn(ou.getRDns());
-    if (!getBaseDn().isAncestor(ou)) {
-      dn.add(getBaseDn());
-    }
-    if (!getLdapTemplate().exists(dn.format())) {
-      throw LdaptiveException.badRequest(
-          String.format("Organizational unit '%s' does not exist.", ou.format()), EC_OU_NOT_FOUND);
-    }
-    return ou;
-  }
-
-  String validateDn(CommonAttributes ldapEntry, String dn) {
-    if (isEmpty(ldapEntry.getDistinguishedName())) {
-      ldapEntry.setDistinguishedName(dn);
-      return dn;
-    }
-    try {
-      if (new Dn(dn).isSame(new Dn(ldapEntry.getDistinguishedName()))) {
-        return dn;
-      }
-
-    } catch (RuntimeException e) {
-      // ignored
-    }
-    throw ServiceException.badRequest(String.format("Distinguished name of object '%s' is not "
-            + "the same distinguished name of the ldap entry '%s'.",
-        ldapEntry.getDistinguishedName(), dn), EC_ILLEGAL_DN);
-  }
-
   Filter objectClassFilter() {
     return new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
   }

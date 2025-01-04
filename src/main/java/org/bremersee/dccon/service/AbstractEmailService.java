@@ -16,6 +16,8 @@
 
 package org.bremersee.dccon.service;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import jakarta.validation.constraints.NotNull;
 import java.util.Locale;
 import lombok.AccessLevel;
@@ -68,27 +70,30 @@ public abstract class AbstractEmailService implements EmailService {
       final String userName,
       final String clearPassword) {
 
+    log.debug("sendEmailWithCredentials({}, ****)", userName);
     if (!StringUtils.hasText(clearPassword)) {
       log.debug("No clear password is present; sending no email with credentials.");
       return;
     }
-    userRepository.findOne(userName, null, null).ifPresent(domainUser -> { // TODO
-      if (StringUtils.hasText(domainUser.getEmail())) {
-        domainUser.setPassword(clearPassword);
-        if (!StringUtils.hasText(domainUser.getDisplayName())) {
-          domainUser.setDescription(domainUser.getSamAccountName());
-        }
-        Locale locale = domainUser.getLocale(Locale.ENGLISH);
-        final Context ctx = new Context(locale);
-        ctx.setVariable("user", domainUser);
-        ctx.setVariable("props", properties);
-        ctx.setVariable("lang", locale.getLanguage());
-        final String mailText = templateEngine.process(
-            properties.getMailWithCredentials().getTemplateBasename(),
-            ctx);
-        doSendEmailWithCredentials(domainUser, locale, mailText);
-      }
-    });
+    userRepository.findOne(userName, null, null)
+        .filter(user -> !isEmpty(user.getEmail()))
+        .ifPresentOrElse(
+            domainUser -> {
+              domainUser.setPassword(clearPassword);
+              if (isEmpty(domainUser.getDisplayName())) {
+                domainUser.setDisplayName(domainUser.getSamAccountName());
+              }
+              Locale locale = domainUser.getLocale(Locale.ENGLISH);
+              final Context ctx = new Context(locale);
+              ctx.setVariable("user", domainUser);
+              ctx.setVariable("props", properties);
+              ctx.setVariable("lang", locale.getLanguage());
+              final String mailText = templateEngine.process(
+                  properties.getMailWithCredentials().getTemplateBasename(),
+                  ctx);
+              doSendEmailWithCredentials(domainUser, locale, mailText);
+            },
+            () -> log.warn("No email is present; sending no email with credentials."));
   }
 
   /**

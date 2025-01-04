@@ -66,6 +66,7 @@ public interface DomainUserService {
   DomainUser addUser(
       @NotNull @Valid DomainUser domainUser,
       @Nullable Dn ou,
+      @Nullable Boolean useUsernameAsCn,
       @Nullable Boolean sendEmail);
 
   /**

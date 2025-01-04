@@ -27,6 +27,7 @@ import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
+import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
@@ -42,7 +43,7 @@ import org.springframework.stereotype.Component;
 @ProfileRequired("cli")
 @MockComponent(value = DhcpRepositoryMock.class, methodsOf = DhcpRepository.class)
 @Slf4j
-public class DhcpRepositoryImpl extends AbstractRepository implements DhcpRepository {
+public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRepository {
 
   private DhcpLeaseParser parser;
 
@@ -121,4 +122,9 @@ public class DhcpRepositoryImpl extends AbstractRepository implements DhcpReposi
         parser);
   }
 
+  @Override
+  Dn getDefaultOu() {
+    // TODO
+    return null;
+  }
 }

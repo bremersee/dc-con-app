@@ -27,6 +27,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.repository.DomainRepositoryMock;
 import org.bremersee.dccon.repository.RepositoryConstants;
+import org.bremersee.dccon.repository.RepositoryMockStore;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,9 @@ class DomainGroupLdapMapperTest {
     properties.setGroupBaseDn("cn=users,dc=example,dc=org");
     properties.setUserRdn("cn");
     properties.setUserBaseDn("cn=users,dc=example,dc=org");
-    mapper = new DomainGroupLdapMapper(properties, new DomainRepositoryMock(properties));
+    mapper = new DomainGroupLdapMapper(
+        properties,
+        new DomainRepositoryMock(properties, new RepositoryMockStore()));
   }
 
   /**

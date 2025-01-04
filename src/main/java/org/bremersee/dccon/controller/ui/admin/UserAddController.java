@@ -16,25 +16,33 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import static org.bremersee.dccon.ErrorCode.EC_ADDING_USER_FAILED;
-import static org.bremersee.dccon.ErrorCode.EC_PASSWORD_RESTRICTIONS;
-import static org.bremersee.dccon.ErrorCode.EC_SAM_ACCOUNT_ALREADY_EXISTS;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.bremersee.comparator.model.SortOrders;
+import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.components.FieldTemplateComponent;
+import org.bremersee.dccon.controller.ui.components.PageableComponent;
+import org.bremersee.dccon.controller.ui.components.RedirectComponent;
+import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.model.OrganizationalUnit;
+import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
+import org.bremersee.dccon.service.OrganizationalUnitService;
+import org.bremersee.dccon.service.TemplateEngine;
 import org.bremersee.exception.ServiceException;
-import org.springframework.data.util.Pair;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -51,24 +59,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class UserAddController extends AbstractController {
+public class UserAddController extends AbstractController
+    implements PageableComponent, RedirectComponent, FieldTemplateComponent {
 
   private final DomainService domainService;
 
   private final DomainUserService domainUserService;
 
-  private final DomainGroupService domainGroupService;
+  private final OrganizationalUnitService organizationalUnitService;
+
+  @Getter
+  private final TemplateEngine templateEngine;
 
   public UserAddController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainService domainService,
       DomainUserService domainUserService,
-      DomainGroupService domainGroupService) {
+      OrganizationalUnitService organizationalUnitService,
+      TemplateEngine templateEngine) {
     super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
     this.domainUserService = domainUserService;
-    this.domainGroupService = domainGroupService;
+    this.organizationalUnitService = organizationalUnitService;
+    this.templateEngine = templateEngine;
   }
 
   @ModelAttribute("passwordPattern")
@@ -76,93 +90,311 @@ public class UserAddController extends AbstractController {
     return domainService.getPasswordInformation().getPasswordRegex();
   }
 
-  @ModelAttribute("sendEmail")
-  public boolean getSendEmail() {
-    return false;
+  @ModelAttribute("rfc2307Enabled")
+  public boolean isRfc2307Enabled() {
+    return domainService.isRfc2307Enabled();
+  }
+
+  @ModelAttribute(SCOPE)
+  public SearchScope getSearchScope(
+      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
+    return scope;
+  }
+
+  @ModelAttribute("ous")
+  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
+      @RequestParam(name = OU, required = false) Dn ou,
+      ModelMap model) {
+
+    Dn ouDn = Optional.ofNullable(model.get("userAddRequest"))
+        .map(obj -> obj instanceof DomainUserAddRequest)
+        .map(DomainUserAddRequest.class::cast)
+        .map(DomainUserAddRequest::getOuDn)
+        .orElseGet(() -> Optional.ofNullable(ou)
+            .filter(dn -> !dn.isEmpty())
+            .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())));
+    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
+  }
+
+  @Override
+  public String getDefaultSort() {
+    return USER_SORT;
   }
 
   @GetMapping(path = "/admin/user-add")
   public String displayUserAdd(
-      @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "2147483647") int size,
-      @RequestParam(name = "sort", defaultValue = "lastName,asc;firstName,asc;samAccountName,asc") SortOrders sort,
-      @RequestParam(name = "q", required = false) String query,
+      @RequestParam(name = OU, required = false) Dn ou,
       ModelMap model) {
 
-    addPageRequest(model, page, size, sort, query);
-    if (!model.containsAttribute("user")) {
-      DomainUser domainUser = new DomainUser();
-      model.addAttribute("user", domainUser);
+    getLogger().debug("displayUserAdd({})", ou);
+    Dn ouDn = Optional.ofNullable(ou)
+        .filter(dn -> !dn.isEmpty())
+        .orElseGet(() -> new Dn(getProperties().getDefaultUserOu()));
+    DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
+    userAddRequest.setUser(createNewDomainUser());
+    userAddRequest.setOu(ouDn.format());
+    userAddRequest.setUseUsernameAsCn(getProperties().isUseUsernameAsCn());
+    userAddRequest.setSendEmail(false);
+    if (!model.containsAttribute("userAddRequest")) {
+      model.addAttribute("userAddRequest", userAddRequest);
     }
     return "admin/user-add";
   }
 
   @PostMapping(path = "/admin/user-add")
   public String addUser(
-      @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "2147483647") int size,
-      @RequestParam(name = "sort", defaultValue = "lastName,asc;firstName,asc;samAccountName,asc") SortOrders sort,
-      @RequestParam(name = "q", required = false) String query,
-      @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
-      @ModelAttribute("user") DomainUser user,
+      @ModelAttribute(name = PAGE, binding = false) Integer page,
+      @ModelAttribute(name = SIZE, binding = false) Integer size,
+      @ModelAttribute(name = SORT, binding = false) String sort,
+      @ModelAttribute(name = QUERY, binding = false) String query,
+      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
+      @ModelAttribute(name = "userAddRequest") DomainUserAddRequest userAddRequest,
       ModelMap model,
       HttpServletRequest request,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    return Optional.ofNullable(user)
-        .map(usr -> doAddUser(usr, sendEmail, resolveLocale(request), bindingResult))
-        .map(pair -> {
-          if (pair.getSecond().hasErrors()) {
-            addPageRequest(model, page, size, sort, query);
-            model.addAttribute("sendEmail", sendEmail);
-            return "admin/user-add";
-          }
-          DomainUser addedUser = pair.getFirst();
-          model.clear();
-          String msg = getMessageSource().getMessage(
-              "i18n.user.added",
-              new Object[]{addedUser.getDisplayName()},
-              String.format("User '%s' was successfully added.", addedUser.getDisplayName()),
-              resolveLocale(request));
-          final RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
-          redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-          return redirect("/admin/user-edit?user=" + encodeUrlParameter(addedUser.getSamAccountName()),
-              page, size, sort, query);
-        })
-        .orElseGet(() -> redirect("/admin/users", page, size, sort, query));
+    getLogger().debug("addUser({}, {}, {}, {}, {}, {})",
+        userAddRequest, page, size, sort, query, scope);
+    Map<String, Object> parameters = Map.of(
+        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
+        SIZE, Optional.ofNullable(size)
+            .filter(s -> s > 0)
+            .orElse(SIZE_DEFAULT_INT),
+        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
+        QUERY, Optional.ofNullable(query).orElse(""),
+        OU, Optional.ofNullable(userAddRequest)
+            .map(DomainUserAddRequest::getOuDn)
+            .map(Dn::format)
+            .orElse(getProperties().getDefaultUserOu()),
+        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
+    );
+
+    getLogger().debug("Try to add user '{}'.", userAddRequest);
+
+    if (isEmpty(userAddRequest)) {
+      String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
+      getLogger().debug("User add request is empty. Redirecting to {}", redirect);
+      return redirect;
+    }
+
+    processTemplates(bindingResult, userAddRequest.getUser());
+    DomainUser addedUser = addUser(
+        bindingResult,
+        userAddRequest.getUser(),
+        Optional.ofNullable(userAddRequest.getOu())
+            .map(Dn::new)
+            .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())),
+        userAddRequest.getUseUsernameAsCn(),
+        userAddRequest.getSendEmail());
+
+    if (bindingResult.hasErrors()) {
+      getLogger().debug("Adding user failed. Some fields were invalid.");
+      return "admin/user-add";
+    }
+
+    model.clear();
+    String msg = getMessageSource().getMessage(
+        "i18n.user.added",
+        new Object[]{addedUser.getDisplayName()},
+        String.format("User '%s' was successfully added.", addedUser.getDisplayName()),
+        resolveLocale(request));
+    RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
+    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
+
+    parameters = new HashMap<>(parameters);
+    parameters.put("user", addedUser);
+    String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
+        PAGE_AND_OU_PARAMS, parameters);
+    getLogger().debug("User successfully added. Redirecting to {}", redirect);
+    return redirect;
   }
 
-  private Pair<DomainUser, BindingResult> doAddUser(DomainUser user, boolean sendEmail,
-      Locale locale, BindingResult bindingResult) {
+  private DomainUser addUser(BindingResult bindingResult, DomainUser user, Dn ou,
+      boolean useUsernameAsCn, boolean sendEmail) {
     try {
-      DomainUser addedUser = fake(); //domainUserService.addUser(user, sendEmail, locale);
-      return Pair.of(addedUser, bindingResult);
+      return domainUserService.addUser(user, ou, useUsernameAsCn, sendEmail);
 
-    } catch (ServiceException serviceException) {
-      String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
-      switch (errorCode) {
-        case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-          bindingResult.rejectValue("userName", "code",
-              "User name already exists.");
-          break;
-        }
-        case EC_PASSWORD_RESTRICTIONS: {
-          bindingResult.rejectValue("userName", "code",
-              "Password restrictions are not met.");
-          break;
-        }
-        case EC_ADDING_USER_FAILED: {
-          bindingResult.rejectValue("userName", "code",
-              "Something went wrong. Please try again later.");
-        }
+    } catch (ServiceException e) {
+      handleException(bindingResult, e);
+    }
+    return user;
+  }
+
+  private void handleException(BindingResult bindingResult, ServiceException serviceException) {
+
+    Object bindTarget = bindingResult.getTarget();
+    getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
+
+    if (!(bindTarget instanceof DomainUserAddRequest)) {
+      return;
+    }
+    DomainUser user = ((DomainUserAddRequest) bindTarget).getUser();
+
+    String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
+    switch (errorCode) {
+      case EC_SAM_ACCOUNT_NAME_REQUIRED: {
+        bindingResult.rejectValue("user.samAccountName", "code",
+            "Username is required.");
+        break;
+      }
+      case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.samAccountName", "code",
+            "Username already exists.");
+        clearInvalidUsername(user);
+        break;
+      }
+      case EC_PASSWORD_RESTRICTIONS: {
+        bindingResult.rejectValue("user.password", "code",
+            "Password restrictions are not met.");
+        break;
+      }
+      case EC_EMPTY_OU_RDN: {
+        bindingResult.rejectValue("ou", "code",
+            "Organizational unit is empty.");
+        break;
+      }
+      case EC_OU_NOT_FOUND: {
+        bindingResult.rejectValue("ou", "code",
+            "Organizational unit was not found.");
+        break;
+      }
+      case EC_ADDING_USER_FAILED: { // TODO global
+        getLogger().error("Adding user failed.", serviceException);
+        bindingResult.rejectValue("user.samAccountName", "code",
+            "Something went wrong. Please try again later.");
+        break;
+      }
+      default: {
+        getLogger().error("Adding user failed with a not mapped exception.", serviceException);
+        throw serviceException;
       }
     }
-    return Pair.of(user, bindingResult);
   }
 
-  private DomainUser fake() {
-    throw ServiceException.alreadyExistsWithErrorCode("", "", EC_SAM_ACCOUNT_ALREADY_EXISTS);
+  private DomainUser createNewDomainUser() {
+    DomainUser domainUser = new DomainUser();
+    domainUser.setCompany(getProperties().getUser().getDefaultCompany());
+    domainUser.setDisplayName(getProperties().getUser().getDisplayNameTemplate());
+    domainUser.setEmail(getProperties().getUser().getEmailTemplate());
+    domainUser.setHomeDirectory(
+        getProperties().getUser().getHomeDirectoryTemplate());
+    domainUser.setHomeDrive(getProperties().getUser().getDefaultHomeDrive());
+    domainUser.setPreferredLanguage(getProperties().getUser().getDefaultLanguage());
+    domainUser.setProfilePath(getProperties().getUser().getProfilePathTemplate());
+    domainUser.setScriptPath(getProperties().getUser().getScriptPathTemplate());
+    if (isRfc2307Enabled()) {
+      domainUser.setGecos(getProperties().getUser().getGecosTemplate());
+      domainUser.setGidNumber(getProperties().getUser().getDefaultGidNumber());
+      domainUser.setLoginShell(getProperties().getUser().getDefaultLoginShell());
+      domainUser.setNisDomain(getProperties().getUser().getNisDomainTemplate());
+      domainUser.setUid(getProperties().getUser().getUidTemplate());
+      domainUser.setUnixHomeDirectory(
+          getProperties().getUser().getUnixHomeDirectoryTemplate());
+    }
+    return domainUser;
+  }
+
+  private void clearInvalidUsername(DomainUser domainUser) {
+    String username = domainUser.getSamAccountName();
+    if (isEmpty(username)) {
+      return;
+    }
+    username = username.toLowerCase();
+    if (!isEmpty(domainUser.getCompany()) && domainUser.getCompany().toLowerCase()
+        .contains(username)) {
+      domainUser.setCompany(getProperties().getUser().getDefaultCompany());
+    }
+    if (!isEmpty(domainUser.getDisplayName()) && domainUser.getDisplayName().toLowerCase()
+        .contains(username)) {
+      domainUser.setDisplayName(getProperties().getUser().getDisplayNameTemplate());
+    }
+    if (!isEmpty(domainUser.getEmail()) && domainUser.getEmail().toLowerCase().contains(username)) {
+      domainUser.setEmail(getProperties().getUser().getEmailTemplate());
+    }
+    if (!isEmpty(domainUser.getHomeDirectory()) && domainUser.getHomeDirectory().toLowerCase()
+        .contains(username)) {
+      domainUser.setHomeDirectory(
+          getProperties().getUser().getHomeDirectoryTemplate());
+    }
+    if (!isEmpty(domainUser.getHomeDrive()) && domainUser.getHomeDrive().toLowerCase()
+        .contains(username)) {
+      domainUser.setHomeDrive(getProperties().getUser().getDefaultHomeDrive());
+    }
+    if (!isEmpty(domainUser.getScriptPath()) && domainUser.getScriptPath().toLowerCase()
+        .contains(username)) {
+      domainUser.setScriptPath(getProperties().getUser().getScriptPathTemplate());
+    }
+    if (isRfc2307Enabled()) {
+      if (!isEmpty(domainUser.getGecos()) && domainUser.getGecos().toLowerCase()
+          .contains(username)) {
+        domainUser.setGecos(getProperties().getUser().getGecosTemplate());
+      }
+      if (!isEmpty(domainUser.getLoginShell()) && domainUser.getLoginShell().toLowerCase()
+          .contains(username)) {
+        domainUser.setLoginShell(getProperties().getUser().getDefaultLoginShell());
+      }
+      if (!isEmpty(domainUser.getUid()) && domainUser.getUid().toLowerCase().contains(username)) {
+        domainUser.setUid(getProperties().getUser().getUidTemplate());
+      }
+      if (!isEmpty(domainUser.getUnixHomeDirectory()) && domainUser.getUnixHomeDirectory()
+          .toLowerCase().contains(username)) {
+        domainUser.setUnixHomeDirectory(
+            getProperties().getUser().getUnixHomeDirectoryTemplate());
+      }
+    }
+  }
+
+  private void processTemplates(BindingResult bindingResult, DomainUser user) {
+    Map<String, Object> map = Map.of("user", user);
+
+    String value = processTemplatedField(bindingResult, "company", user.getCompany(), map);
+    user.setCompany(value);
+
+    value = processTemplatedField(bindingResult, "department", user.getDepartment(), map);
+    user.setDepartment(value);
+
+    value = processTemplatedField(bindingResult, "description", user.getDescription(), map);
+    user.setDescription(value);
+
+    value = processTemplatedField(bindingResult, "displayName", user.getDisplayName(), map);
+    user.setDisplayName(value);
+
+    value = processTemplatedField(bindingResult, "email", user.getEmail(), map);
+    user.setEmail(value);
+
+    value = processTemplatedField(bindingResult, "gecos", user.getGecos(), map);
+    user.setGecos(value);
+
+    value = processTemplatedField(bindingResult, "homeDirectory", user.getHomeDirectory(), map);
+    user.setHomeDirectory(value);
+
+    value = processTemplatedField(bindingResult, "loginShell", user.getLoginShell(), map);
+    user.setLoginShell(value);
+
+    value = processTemplatedField(bindingResult, "nisDomain", user.getNisDomain(), map);
+    user.setNisDomain(value);
+
+    value = processTemplatedField(bindingResult, "physicalDeliveryOfficeName",
+        user.getPhysicalDeliveryOfficeName(), map);
+    user.setPhysicalDeliveryOfficeName(value);
+
+    value = processTemplatedField(bindingResult, "preferredLanguage", user.getPreferredLanguage(),
+        map);
+    user.setPreferredLanguage(value);
+
+    value = processTemplatedField(bindingResult, "profilePath", user.getProfilePath(), map);
+    user.setProfilePath(value);
+
+    value = processTemplatedField(bindingResult, "scriptPath", user.getScriptPath(), map);
+    user.setScriptPath(value);
+
+    value = processTemplatedField(bindingResult, "uid", user.getUid(), map);
+    user.setUid(value);
+
+    value = processTemplatedField(bindingResult, "unixHomeDirectory", user.getUnixHomeDirectory(),
+        map);
+    user.setUnixHomeDirectory(value);
   }
 
 }

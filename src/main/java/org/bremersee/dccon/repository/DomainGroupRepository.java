@@ -69,7 +69,10 @@ public interface DomainGroupRepository {
    * @param domainGroup the domain group
    * @return the domain group
    */
+  @Deprecated
   DomainGroup update(@NotNull DomainGroup domainGroup);
+
+  DomainGroup update(@NotNull String groupName, @NotNull DomainGroup domainGroup, Dn newOu);
 
   /**
    * Delete group.

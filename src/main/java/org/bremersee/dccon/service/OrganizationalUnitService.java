@@ -33,6 +33,8 @@ public interface OrganizationalUnitService {
 
   List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(@Nullable Dn ou);
 
+  List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectorsWithBase(@Nullable Dn ou);
+
   Stream<OrganizationalUnit> getOrganizationalUnits();
 
   Stream<OrganizationalUnit> getOrganizationalUnitsWithBase();

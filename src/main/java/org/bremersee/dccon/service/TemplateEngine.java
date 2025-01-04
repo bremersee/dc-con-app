@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller;
+package org.bremersee.dccon.service;
 
-import org.bremersee.dccon.config.DomainControllerProperties;
+import java.util.Map;
 
 /**
- * The interface DomainControllerPropertiesProvider.
+ * The interface TemplateEngine.
  *
  * @author Christian Bremer
  */
-public interface DomainControllerPropertiesProvider {
+public interface TemplateEngine {
 
-  DomainControllerProperties getProperties();
+  String compileAndExecute(String template, Map<String, Object> model);
 
 }

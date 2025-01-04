@@ -17,10 +17,8 @@
 package org.bremersee.dccon.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +31,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
-import org.bremersee.exception.ServiceException;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;

@@ -16,11 +16,6 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.bremersee.dccon.repository.RepositoryConstants.LDAP_NAME;
-import static org.bremersee.dccon.repository.RepositoryConstants.LDAP_OBJECT_CLASS;
-import static org.bremersee.dccon.repository.RepositoryConstants.LDAP_SAM_ACCOUNT_NAME;
-import static org.bremersee.dccon.repository.DomainGroupRepositoryConstants.LDAP_GROUP_MEMBER;
-import static org.bremersee.dccon.repository.RepositoryConstants.LDAP_OBJECT_CLASS_GROUP;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.Arrays;
@@ -65,8 +60,9 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
    */
   public DomainGroupMemberRepositoryImpl(
       final DomainControllerProperties properties,
-      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
-    super(properties, ldapTemplateProvider.getIfAvailable());
+      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
+      DomainRepository domainRepository) {
+    super(properties, ldapTemplateProvider.getIfAvailable(), domainRepository);
   }
 
   @Override
@@ -156,7 +152,8 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
 
     SearchRequest searchRequest = SearchRequest.builder()
         .dn(getProperties().getBaseDn())
-        .filter(new EqualityFilter(LDAP_OBJECT_CLASS, RepositoryConstants.LDAP_OBJECT_CLASS_COMPUTER))
+        .filter(
+            new EqualityFilter(LDAP_OBJECT_CLASS, RepositoryConstants.LDAP_OBJECT_CLASS_COMPUTER))
         .scope(SearchScope.SUBTREE)
         .returnAttributes(
             LDAP_OBJECT_CLASS,
@@ -215,13 +212,15 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
   }
 
   private String getMemberDisplayName(LdapEntry member) {
-    return Optional.ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME))
+    return Optional.ofNullable(
+            member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME))
         .map(LdapAttribute::getStringValue)
         .flatMap(firstName -> Optional
             .ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_SN))
             .map(LdapAttribute::getStringValue)
             .map(lastName -> firstName + " " + lastName))
-        .or(() -> Optional.ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_DISPLAY_NAME))
+        .or(() -> Optional.ofNullable(
+                member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_DISPLAY_NAME))
             .map(LdapAttribute::getStringValue))
         .or(() -> Optional.ofNullable(member.getAttribute(LDAP_NAME))
             .map(LdapAttribute::getStringValue))
@@ -229,7 +228,8 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
   }
 
   private String getMemberSortValue(LdapEntry member) {
-    return Optional.ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME))
+    return Optional.ofNullable(
+            member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME))
         .map(LdapAttribute::getStringValue)
         .flatMap(firstName -> Optional
             .ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_SN))

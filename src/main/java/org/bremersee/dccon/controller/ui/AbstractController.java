@@ -27,8 +27,8 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ControllerConstants;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
 import org.ldaptive.SearchScope;
 import org.slf4j.Logger;
@@ -43,22 +43,22 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Getter
-public class AbstractController implements DomainControllerPropertiesProvider, ControllerConstants,
-    LoggerProvider, MessageProvider {
+public class AbstractController implements DomainControllerPropertiesProvider, SortOrderConstants,
+    LoggerProvider, MessageProvider, ErrorCode {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private final LocaleResolver localeResolver;
+  private final DomainControllerProperties properties;
 
-  private final DomainControllerProperties domainControllerProperties;
+  private final LocaleResolver localeResolver;
 
   @Setter
   private MessageSource messageSource;
 
   public AbstractController(
-      DomainControllerProperties domainControllerProperties,
+      DomainControllerProperties properties,
       LocaleResolver localeResolver) {
-    this.domainControllerProperties = domainControllerProperties;
+    this.properties = properties;
     this.localeResolver = localeResolver;
   }
 

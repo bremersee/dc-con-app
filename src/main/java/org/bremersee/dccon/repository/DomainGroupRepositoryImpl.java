@@ -60,8 +60,6 @@ import org.springframework.stereotype.Component;
 public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     implements DomainGroupRepository {
 
-  private final DomainRepository domainRepository;
-
   private final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
 
   /**
@@ -75,8 +73,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
       LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper,
       DomainRepository domainRepository) {
-    super(properties, ldapTemplateProvider.getIfAvailable());
-    this.domainRepository = domainRepository;
+    super(properties, ldapTemplateProvider.getIfAvailable(), domainRepository);
     this.domainGroupLdapMapper = domainGroupLdapMapper;
   }
 
@@ -114,7 +111,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   @ProfileRequired({"cli", "ldap"})
   @Override
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
-    if (domainRepository.samAccountNameExists(domainGroup.getSamAccountName())) {
+    if (getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           domainGroup.getSamAccountName(),
@@ -148,7 +145,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        response -> domainRepository.findDnOfSamAccount(domainGroup)
+        response -> getDomainRepository().findDnOfSamAccount(domainGroup)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding group '%s' failed: %s",
                         domainGroup.getSamAccountName(),
@@ -157,13 +154,18 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   public DomainGroup update(DomainGroup domainGroup) {
-    return domainRepository.findDnOfSamAccount(domainGroup)
+    return getDomainRepository().findDnOfSamAccount(domainGroup)
         .map(dn -> validateDn(domainGroup, dn))
         .map(dn -> getLdapTemplate().save(domainGroup, domainGroupLdapMapper))
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainGroup.class.getSimpleName(),
             domainGroup.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
+  }
+
+  public DomainGroup update(String groupName, DomainGroup domainGroup, Dn newOu) {
+    // TODO
+    return null;
   }
 
   // TODO
@@ -205,7 +207,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         null,
         getProperties().getSambaToolExecDir(),
         response -> {
-          if (domainRepository.samAccountNameExists(groupName)) {
+          if (getDomainRepository().samAccountNameExists(groupName)) {
             throw ServiceException.internalServerError(
                 String.format("Deleting group '%s' failed: %s", groupName,
                     CommandExecutorResponse.toExceptionMessage(response)),

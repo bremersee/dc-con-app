@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.bremersee.dccon.repository.AbstractRepository.contains;
+import static org.bremersee.dccon.repository.RepositoryMockStore.updateCommonAttributes;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -26,7 +26,9 @@ import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,11 +39,22 @@ import org.springframework.stereotype.Component;
 @Profile("mock")
 @Component("domainGroupRepositoryMock")
 @Slf4j
-public class DomainGroupRepositoryMock extends AbstractRepositoryMock
-    implements DomainGroupRepository {
+public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
+    implements DomainGroupRepository, RepositoryMock {
 
-  public DomainGroupRepositoryMock(DomainControllerProperties properties) {
-    super(properties);
+  private final RepositoryMockStore store;
+
+  public DomainGroupRepositoryMock(
+      DomainControllerProperties properties,
+      RepositoryMockStore store,
+      DomainRepository domainRepository) {
+    super(properties, null, domainRepository);
+    this.store = store;
+  }
+
+  @EventListener(ApplicationReadyEvent.class)
+  public void init() {
+    resetData();
   }
 
   @Override
@@ -52,7 +65,7 @@ public class DomainGroupRepositoryMock extends AbstractRepositoryMock
   @Override
   public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
     final boolean all = query == null || query.length() <= 2;
-    return groupRepo.values().stream()
+    return store.getGroupRepo().values().stream()
         .filter(domainGroup -> all
             || isQueryResult(domainGroup, query.toLowerCase()));
   }
@@ -66,33 +79,35 @@ public class DomainGroupRepositoryMock extends AbstractRepositoryMock
 
   @Override
   public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
-    return Optional.ofNullable(groupRepo.get(groupName.toLowerCase()));
-  }
-
-  public boolean exists(String groupName) {
-    return groupRepo.get(groupName.toLowerCase()) != null;
+    return Optional.ofNullable(store.getGroupRepo().get(groupName.toLowerCase()));
   }
 
   @Override
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
-    if (groupRepo.size() > 100) {
+    if (store.getGroupRepo().size() > MAX_ENTRIES) {
       throw ServiceException.internalServerError(
           "Maximum size of groups is exceeded.",
           EC_MAX_MOCK_DATA);
     }
-    updateCommonAttributes(domainGroup, ou, domainGroup.getSamAccountName());
+    updateCommonAttributes(domainGroup, getBaseDn(validateOu(ou)), "CN",
+        domainGroup.getSamAccountName());
     return update(domainGroup);
   }
 
   @Override
   public DomainGroup update(DomainGroup domainGroup) {
-    groupRepo.put(domainGroup.getSamAccountName().toLowerCase(), domainGroup);
+    store.getGroupRepo().put(domainGroup.getSamAccountName().toLowerCase(), domainGroup);
     return domainGroup;
+  }
+
+  public DomainGroup update(String groupName, DomainGroup domainGroup, Dn newOu) {
+    // TODO
+    return null;
   }
 
   @Override
   public boolean delete(String groupName) {
-    return groupRepo.remove(groupName.toLowerCase()) != null;
+    return store.getGroupRepo().remove(groupName.toLowerCase()) != null;
   }
 
 }

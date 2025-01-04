@@ -23,9 +23,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +59,9 @@ public class DomainControllerProperties implements Serializable {
   public static final String DEFAULT_DOMAIN_CONTROLLERS_OU = "OU=Domain Controllers";
 
 
+  private UserProperties user = new UserProperties();
+
+
   private String personalName = "Anna Livia";
 
   private String companyName = "example.org";
@@ -66,8 +69,10 @@ public class DomainControllerProperties implements Serializable {
   private String companyUrl = "http://example.org";
 
 
-  private String defaultNisDomain; // = "eixe"; // TODO can I determine it with ldap?
+  @Deprecated
+  private String defaultNisDomain; // = "eixe"; // TODO can I determine it with ldap?, wo hatte ich den gefunden?
 
+  @Deprecated
   private Integer defaultGidNumber; // = 100; // = Domain Users
 
 
@@ -113,6 +118,9 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
 
   @Deprecated
+  private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}"; // TODO collect
+
+  @Deprecated
   private String userBaseDn;
 
   @Deprecated
@@ -146,6 +154,7 @@ public class DomainControllerProperties implements Serializable {
    * ISO 639-1 language codes. The combinations like de-DE and en-US with ISO-639 and ISO-3166 also
    * work.
    */
+  @Deprecated
   private String defaultPreferredLanguage = "de";
 
   //private String defaultSidPrefix = "S-1-5-21-";
@@ -204,12 +213,24 @@ public class DomainControllerProperties implements Serializable {
 
   private String sambaToolExecDir = "/tmp";
 
-  // TODO move to rfc class
-  private String loginShell = "/bin/bash";
 
-  private String homeDirectoryTemplate = "\\\\data\\users\\{}"; // TODO use %s
+  @Deprecated
+  private String defaultLoginShell = "/bin/bash";
 
-  private String unixHomeDirTemplate = "/home/{}"; // TODO use %s
+  @Deprecated
+  private String defaultHomeDrive; // = "H"; // TODO with ':'?
+
+  @Deprecated
+  private String defaultHomeDirectory = "\\\\data\\home";
+
+  @Deprecated
+  private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
+
+  @Deprecated
+  private String defaultGecos = "{{user.firstName}} {{user.lastName}}";
+
+  @Deprecated
+  private String defaultUid = "{{user.samAccountName}}";
 
 
   private String dhcpLeaseListBinary = "/usr/sbin/dhcp-lease-list";
@@ -233,7 +254,7 @@ public class DomainControllerProperties implements Serializable {
   private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
 
 
-  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}";
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}"; // TODO mustache or string format
 
 
   private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();
@@ -339,17 +360,45 @@ public class DomainControllerProperties implements Serializable {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
   }
 
+  @Data
+  public static class UserProperties {
+
+    private String defaultCompany;
+
+    private String displayNameTemplate = "{{user.firstName}} {{user.lastName}}";
+
+    private String emailTemplate;
+
+    private String gecosTemplate = "{{user.firstName}} {{user.lastName}}";
+
+    private Integer defaultGidNumber; // = 100; // = Domain Users
+
+    private String homeDirectoryTemplate;
+
+    private String defaultHomeDrive;
+
+    private String defaultLoginShell = "/bin/bash";
+
+    private String nisDomainTemplate;
+
+    private String defaultLanguage = "de-DE";
+
+    private String profilePathTemplate;
+
+    private String scriptPathTemplate;
+
+    private String uidTemplate = "{{user.samAccountName}}";
+
+    private String unixHomeDirectoryTemplate = "/home/{{user.samAccountName}}";
+
+  }
+
   /**
    * The mail with credentials properties.
    *
    * @author Christian Bremer
    */
-  @Getter
-  @Setter
-  @ToString
-  @EqualsAndHashCode
-  @NoArgsConstructor
-  @SuppressWarnings("WeakerAccess")
+  @Data
   public static class MailWithCredentialsProperties {
 
     private String sender = "no-reply@example.org";
@@ -364,11 +413,7 @@ public class DomainControllerProperties implements Serializable {
   /**
    * The mail inline attachment.
    */
-  @Getter
-  @Setter
-  @ToString
-  @EqualsAndHashCode
-  @NoArgsConstructor
+  @Data
   public static class MailInlineAttachment {
 
     private String contentId;

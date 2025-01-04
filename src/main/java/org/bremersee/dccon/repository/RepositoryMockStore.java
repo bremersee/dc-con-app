@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,59 +19,58 @@ package org.bremersee.dccon.repository;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
-import org.bremersee.dccon.config.DomainControllerProperties;
+import lombok.Getter;
 import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.OrganizationalUnit;
 import org.ldaptive.dn.Dn;
 import org.ldaptive.dn.NameValue;
 import org.ldaptive.dn.RDn;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 /**
- * The type AbstractRepositoryMock.
+ * The type RepositoryMockStore.
  *
  * @author Christian Bremer
  */
-abstract class AbstractRepositoryMock extends AbstractRepository
-    implements RepositoryMock, RepositoryMockConstants {
+@Profile("mock")
+@Component
+@Getter
+public class RepositoryMockStore {
 
-  final Map<String, DomainGroup> groupRepo = new ConcurrentHashMap<>();
+  private final List<OrganizationalUnit> ouRepo = new CopyOnWriteArrayList<>();
 
-  final Map<String, DomainUser> userRepo = new ConcurrentHashMap<>();
+  private final Map<String, DomainGroup> groupRepo = new ConcurrentHashMap<>();
 
-  AbstractRepositoryMock(DomainControllerProperties properties) {
-    super(properties, null);
-    if (isEmpty(getProperties().getBaseDn())) {
-      getProperties().setBaseDn("DC=samdom,DC=example,DC=org");
-    }
-  }
+  private final Map<String, DomainUser> userRepo = new ConcurrentHashMap<>();
 
-  Stream<String> findAllNames() {
+  private final Map<String, byte[]> avatarRepo = new ConcurrentHashMap<>();
+
+  public Stream<String> findSamAccountNames() {
     Stream<String> stream = groupRepo.keySet().stream();
     return Stream.concat(stream, userRepo.keySet().stream());
   }
 
-  Stream<? extends CommonAttributes> findAllEntities() {
+  public Stream<? extends CommonAttributes> findCommonAttributes() {
     Stream<? extends CommonAttributes> stream = groupRepo.values().stream();
     return Stream.concat(stream, userRepo.values().stream());
   }
 
-  public void updateCommonAttributes(CommonAttributes entity, Dn ou, String rdnName, String rdnValue) {
-    Dn baseDn;
-    if (isEmpty(ou) || ou.isEmpty()) {
-      baseDn = getBaseDn(getDefaultOu());
-    } else {
-      baseDn = getBaseDn(ou);
-    }
+  public static void updateCommonAttributes(CommonAttributes object, Dn parentDn, String rdnName, String rdnValue) {
     Dn dn = new Dn(new RDn(new NameValue(rdnName, rdnValue)));
-    dn.add(baseDn);
-    entity.setDistinguishedName(dn.format());
-    if (isEmpty(entity.getCreated())) {
-      entity.setCreated(OffsetDateTime.now());
+    dn.add(parentDn);
+    object.setDistinguishedName(dn.format());
+    if (isEmpty(object.getCreated())) {
+      object.setCreated(OffsetDateTime.now());
     }
-    entity.setModified(OffsetDateTime.now());
+    object.setModified(OffsetDateTime.now());
   }
 }

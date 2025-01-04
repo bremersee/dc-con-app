@@ -22,6 +22,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.model.SamAccount;
 import org.passay.CharacterData;
@@ -33,7 +34,7 @@ import org.passay.PasswordGenerator;
  *
  * @author Christian Bremer
  */
-public interface DomainRepository {
+public interface DomainRepository extends RepositoryConstants, ErrorCode {
 
   boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses);
 

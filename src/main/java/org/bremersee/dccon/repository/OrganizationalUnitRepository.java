@@ -28,7 +28,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Christian Bremer
  */
-public interface OrganizationalUnitRepository {
+public interface OrganizationalUnitRepository extends OrganizationalUnitRepositoryConstants {
 
   String LDAP_OU = "OU";
 

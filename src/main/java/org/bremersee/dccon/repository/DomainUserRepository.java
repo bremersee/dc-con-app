@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface DomainUserRepository extends AvatarRepository {
+public interface DomainUserRepository extends DomainUserRepositoryConstants, AvatarRepository {
 
   /**
    * Find all users.
@@ -61,19 +61,18 @@ public interface DomainUserRepository extends AvatarRepository {
    * @param domainUser the domain user
    * @return the domain user
    */
-  DomainUser add(@NotNull DomainUser domainUser, @Nullable Dn ou);
+  DomainUser add(@NotNull DomainUser domainUser, @Nullable Dn ou, @Nullable Boolean useUsernameAsCn);
 
-  // TODO add userName, it can change
-  // add new ou? it can change, too. Or a new method?
   /**
    * Update domain user.
    *
    * @param domainUser the domain user
    * @return the domain user
    */
+  @Deprecated
   DomainUser update(@NotNull DomainUser domainUser);
 
-  //DomainUser update(@NotNull String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
+  DomainUser update(@NotNull String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
 
   /**
    * Save password.

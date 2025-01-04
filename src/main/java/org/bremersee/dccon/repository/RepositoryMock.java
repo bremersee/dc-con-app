@@ -16,16 +16,46 @@
 
 package org.bremersee.dccon.repository;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
+import java.time.OffsetDateTime;
+import org.bremersee.dccon.model.CommonAttributes;
+import org.ldaptive.dn.Dn;
+import org.ldaptive.dn.NameValue;
+import org.ldaptive.dn.RDn;
+
 /**
  * The mock repository interface.
  *
  * @author Christian Bremer
  */
-public interface RepositoryMock {
+public interface RepositoryMock extends RepositoryMockConstants {
 
   /**
    * Reset data.
    */
   void resetData();
 
+  /*
+  Dn getDefaultOu();
+
+  Dn getBaseDn(Dn ou);
+
+  default void updateCommonAttributes(CommonAttributes entity, Dn ou, String rdnName,
+      String rdnValue) {
+    Dn baseDn;
+    if (isEmpty(ou) || ou.isEmpty()) {
+      baseDn = getBaseDn(getDefaultOu());
+    } else {
+      baseDn = getBaseDn(ou);
+    }
+    Dn dn = new Dn(new RDn(new NameValue(rdnName, rdnValue)));
+    dn.add(baseDn);
+    entity.setDistinguishedName(dn.format());
+    if (isEmpty(entity.getCreated())) {
+      entity.setCreated(OffsetDateTime.now());
+    }
+    entity.setModified(OffsetDateTime.now());
+  }
+  */
 }

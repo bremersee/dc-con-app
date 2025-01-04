@@ -71,24 +71,24 @@ public class DomainUserValidatorImpl extends AbstractDomainEntityValidator
 
     // TODO depends on rf...
     // Login shell
-    if (StringUtils.hasText(getProperties().getLoginShell())) {
-      domainUser.setLoginShell(getProperties().getLoginShell());
+    if (StringUtils.hasText(getProperties().getDefaultLoginShell())) {
+      domainUser.setLoginShell(getProperties().getDefaultLoginShell());
     } else {
       domainUser.setLoginShell(null);
     }
 
     // Unix home
-    if (StringUtils.hasText(getProperties().getUnixHomeDirTemplate())) {
+    if (StringUtils.hasText(getProperties().getDefaultUnixHomeDirectory())) {
       domainUser.setUnixHomeDirectory(getProperties()
-          .getUnixHomeDirTemplate().replace("{}", domainUser.getSamAccountName()));
+          .getDefaultUnixHomeDirectory().replace("{}", domainUser.getSamAccountName()));
     } else {
       domainUser.setUnixHomeDirectory(null);
     }
 
     // Home directory/share
-    if (StringUtils.hasText(getProperties().getHomeDirectoryTemplate())) {
+    if (StringUtils.hasText(getProperties().getDefaultHomeDirectory())) {
       domainUser.setHomeDirectory(getProperties()
-          .getHomeDirectoryTemplate().replace("{}", domainUser.getSamAccountName()));
+          .getDefaultHomeDirectory().replace("{}", domainUser.getSamAccountName()));
     } else {
       domainUser.setHomeDirectory(null);
     }

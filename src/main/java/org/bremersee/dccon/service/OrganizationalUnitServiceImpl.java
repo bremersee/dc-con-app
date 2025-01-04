@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,26 +58,37 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
     this.baseDn = new Dn(this.properties.getBaseDn());
     this.base = OrganizationalUnit.builder()
         .distinguishedName(properties.getBaseDn())
+        .created(OffsetDateTime.now())
+        .modified(OffsetDateTime.now())
         .name("Base")
         .description("Base of Active Directory")
-        //.ouRdn(this.baseDn.format())
         .systemOu(true)
         .build();
   }
 
-  @Override
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(Dn ou) { // TODO sort function?
+  List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(
+      Stream<OrganizationalUnit> ous, Dn ou) {
     Dn ouDn = parseDn(ou);
-    return getOrganizationalUnitsWithBase()
+    return ous
         .map(organizationalUnit -> new SelectOption<>(
-            organizationalUnit.getDistinguishedName(),
+            new Dn(organizationalUnit.getDistinguishedName()).format(),
             organizationalUnit,
-            organizationalUnit.getDistinguishedName(),
+            organizationalUnit.getNameTree(),
             isSelected(organizationalUnit, ouDn),
             false,
             false))
         .sorted()
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(Dn ou) {
+    return getOrganizationalUnitSelectors(getOrganizationalUnits(), ou);
+  }
+
+  @Override
+  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectorsWithBase(Dn ou) {
+    return getOrganizationalUnitSelectors(getOrganizationalUnitsWithBase(), ou);
   }
 
   @Override
@@ -92,9 +104,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithBaseButWithoutSelected(Dn ou) {
     Dn ouDn = parseDn(ou);
-    log.info("===============> {}", ouDn.format());
     return getOrganizationalUnitsWithBase()
-        .peek(organizationalUnit -> log.info("--> {}", organizationalUnit))
         .filter(organizationalUnit -> !isSelected(organizationalUnit, ouDn));
   }
 
@@ -106,7 +116,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   private Dn parseDn(Dn ou) {
     if (ObjectUtils.isEmpty(ou) || ou.isEmpty()) {
       return baseDn;
-    } else if (baseDn.isAncestor(ou)) {
+    } else if (baseDn.isAncestor(ou) || baseDn.isSame(ou)) {
       return ou;
     }
     Dn ouDn = new Dn(ou.getRDns());

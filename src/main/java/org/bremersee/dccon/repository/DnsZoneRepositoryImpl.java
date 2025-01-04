@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component;
 @ProfileRequired("ldap")
 @MockComponent(value = DnsZoneRepositoryMock.class, methodsOf = DnsZoneRepository.class)
 @Slf4j
-public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
+public class DnsZoneRepositoryImpl extends AbstractDnsZoneRepository implements DnsZoneRepository {
 
   private final List<Pattern> excludedZoneNamePatterns;
 
@@ -214,6 +214,5 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
     return CommandExecutor.exec(
         commands, null, getProperties().getSambaToolExecDir(), parser);
   }
-
 
 }

@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import java.io.Serial;
@@ -23,7 +24,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -95,6 +95,11 @@ public class DomainUser extends CommonAttributes
    * User's first name.
    */
   String firstName;
+
+  /**
+   * User's Unix/RFC2307 GECOS field.
+   */
+  String gecos;
 
   /**
    * User's Unix/RFC2307 primary GID number.
@@ -208,6 +213,11 @@ public class DomainUser extends CommonAttributes
   String title;
 
   /**
+   * User's Unix/RFC2307 username.
+   */
+  String uid;
+
+  /**
    * User's Unix/RFC2307 numeric UID.
    */
   Integer uidNumber;
@@ -223,10 +233,14 @@ public class DomainUser extends CommonAttributes
   String userPrincipalName;
 
   public Locale getLocale(Locale defaultLocale) {
-    if (Objects.isNull(getPreferredLanguage()) || getPreferredLanguage().isEmpty()) {
+    if (isNull(getPreferredLanguage()) || getPreferredLanguage().isEmpty()) {
       return defaultLocale;
     }
-    return Locale.forLanguageTag(getPreferredLanguage());
+    Locale locale = Locale.forLanguageTag(getPreferredLanguage());
+    if (isNull(locale) || locale.getLanguage().isEmpty()) {
+      return defaultLocale;
+    }
+    return locale;
   }
 
   /**

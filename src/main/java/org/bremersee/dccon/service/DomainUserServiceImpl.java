@@ -102,9 +102,12 @@ public class DomainUserServiceImpl implements DomainUserService {
   public DomainUser addUser(
       DomainUser domainUser,
       Dn ou,
+      Boolean useUsernameAsCn,
       Boolean sendEmail) {
-    domainUserValidator.doAddValidation(domainUser);
-    DomainUser addedDomainUser = domainUserRepository.add(domainUser, ou);
+
+    log.debug("addUser({}, {}, {}, {})",
+        domainUser.getSamAccountName(), ou, useUsernameAsCn, sendEmail);
+    DomainUser addedDomainUser = domainUserRepository.add(domainUser, ou, useUsernameAsCn);
     if (Boolean.TRUE.equals(sendEmail)) {
       emailService.sendEmailWithCredentials(
           addedDomainUser.getSamAccountName(),

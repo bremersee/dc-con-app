@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="en">
+      lang="en"
+      data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
@@ -22,6 +23,8 @@
         th:href="@{/css/glyphicons.css}"/>
   <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
           th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
   <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
           th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
 </head>
@@ -49,184 +52,304 @@
   </div>
 
   <div>
-    <form th:action="@{user-add}" th:object="${user}" action="#" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <form th:action="@{user-add}" th:object="${userAddRequest}" action="#" method="post">
       <input type="hidden" name="page" th:value="${page}"/>
       <input type="hidden" name="size" th:value="${size}"/>
       <input type="hidden" name="sort" th:value="${sort}"/>
       <input type="hidden" name="q" th:value="${q}"/>
+      <input type="hidden" name="scope" th:value="${scope}"/>
 
-      <div class="form-group">
-        <label for="userName" th:text="#{i18n.user.name}">User name</label>
-        <input type="text" class="form-control"
-               th:classappend="${#fields.hasErrors('userName')} ? 'is-invalid' : ''"
-               id="userName" name="userName"
-               aria-describedby="userNameValidation"
-               required
-               th:field="*{userName}"/>
-        <div id="userNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('userName')} ? ${#fields.errors('userName')[0]} : ''">
+      <div class="mb-3">
+        <label for="ou" class="form-label">Organizational Unit</label>
+        <select id="ou" class="form-select" aria-label="Organizational Unit"
+                aria-describedby="ouValidation"
+                th:classappend="${#fields.hasErrors('ou')} ? 'is-invalid' : ''"
+                th:field="*{ou}">
+          <option th:each="o : ${ous}" th:value="${o.value}" th:selected="${o.selected}"
+                  th:text="${o.displayValue.nameTree}">
+            Users
+          </option>
+        </select>
+        <div id="ouValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('ou')} ? ${#fields.errors('ou')[0]} : ''">
         </div>
       </div>
 
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="enabled"  name="enabled"
-               th:field="*{accountControl.enabled}" />
+      <div class="mb-3">
+        <label for="samAccountName" class="form-label">Username</label>
+        <input type="text" class="form-control" id="samAccountName" name="samAccountName"
+               aria-describedby="samAccountNameValidation" required th:field="*{user.samAccountName}"
+               th:classappend="${#fields.hasErrors('user.samAccountName')} ? 'is-invalid' : ''"/>
+        <div id="samAccountNameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.samAccountName')} ? ${#fields.errors('user.samAccountName')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="useUsernameAsCn"
+               name="useUsernameAsCn" th:field="*{useUsernameAsCn}" />
+        <label class="form-check-label" for="useUsernameAsCn">
+          Use username as CN
+        </label>
+      </div>
+
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="enabled" name="enabled"
+               th:field="*{user.accountControl.enabled}" />
         <label class="form-check-label" for="enabled" th:text="#{i18n.enabled}">
           Enabled
         </label>
       </div>
 
-      <div class="form-group">
-        <label for="lastName">Last name</label>
-        <input type="text" class="form-control"
-               id="lastName" name="lastName"
-               th:field="*{lastName}"/>
-      </div>
-
-      <div class="form-group">
-        <label for="firstName">First name</label>
-        <input type="text" class="form-control"
-               id="firstName" name="firstName"
-               th:field="*{firstName}"/>
-      </div>
-
-      <div class="form-group">
-        <label for="email" th:text="#{i18n.email.address}">Email Address</label>
-        <input type="email" class="form-control"
-               th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
-               id="email" name="email"
-               th:field="*{email}"
-               onkeyup="document.getElementById('sendEmail').disabled = !this.value.includes('@')"
-               onfocusout="document.getElementById('sendEmail').disabled = !this.value.includes('@')"/>
-        <small id="emailHelp" class="form-text text-muted"
-               th:class="${#fields.hasErrors('email')} ? 'invalid-feedback' : 'form-text text-muted'"
-               >
-          Please enter the email address of the user.
-        </small>
-        <div class="invalid-feedback"
-             th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : ''">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="mobile">
-          Mobile number
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="passwordExpirationEnabled" name="passwordExpirationEnabled"
+               th:field="*{user.accountControl.passwordExpirationEnabled}" />
+        <label class="form-check-label" for="passwordExpirationEnabled">
+          Password expiration enabled
         </label>
-        <input id="mobile" name="mobile" class="form-control" type="text"
-               th:class="${#fields.hasErrors('mobile')} ? 'form-control is-invalid' : 'form-control'"
-               th:field="*{mobile}"/>
-        <small id="mobileHelp" class="form-text text-muted"
-               th:class="${#fields.hasErrors('mobile')} ? 'invalid-feedback' : 'form-text text-muted'"
-               >
-          Please enter the mobile number.
-        </small>
-        <div class="invalid-feedback"
-             th:text="${#fields.hasErrors('mobile')} ? ${#fields.errors('mobile')[0]} : ''">
+      </div>
+
+      <div class="mb-3">
+        <label for="firstName" class="form-label">First Name</label>
+        <input type="text" class="form-control" id="firstName" name="firstName"
+               aria-describedby="firstNameValidation" th:field="*{user.firstName}"
+               th:classappend="${#fields.hasErrors('user.firstName')} ? 'is-invalid' : ''"/>
+        <div id="firstNameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.firstName')} ? ${#fields.errors('user.firstName')[0]} : ''">
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="telephoneNumber">
-          Telephone number
-        </label>
-        <input id="telephoneNumber" name="telephoneNumber" class="form-control" type="text"
-               th:class="${#fields.hasErrors('telephoneNumber')} ? 'form-control is-invalid' : 'form-control'"
-               th:field="*{telephoneNumber}"/>
-        <small id="telephoneNumberHelp" class="form-text text-muted"
-               th:class="${#fields.hasErrors('telephoneNumber')} ? 'invalid-feedback' : 'form-text text-muted'"
-        >
-          Please enter the telephone number.
-        </small>
-        <div class="invalid-feedback"
-             th:text="${#fields.hasErrors('telephoneNumber')} ? ${#fields.errors('telephoneNumber')[0]} : ''">
+      <div class="mb-3">
+        <label for="lastName" class="form-label">Last Name</label>
+        <input type="text" class="form-control" id="lastName" name="lastName"
+               aria-describedby="lastNameValidation" th:field="*{user.lastName}"
+               th:classappend="${#fields.hasErrors('user.lastName')} ? 'is-invalid' : ''"/>
+        <div id="lastNameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.lastName')} ? ${#fields.errors('user.lastName')[0]} : ''">
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="description">Description</label>
-        <input type="text" class="form-control"
-               id="description" name="description"
-               th:field="*{description}"/>
+      <div class="mb-3">
+        <label for="displayName" class="form-label">Display Name</label>
+        <input type="text" class="form-control" id="displayName" name="displayName"
+               th:field="*{user.displayName}" />
+        <div class="form-check form-switch small text-secondary mt-2">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="displayNameLink" name="displayNameLink" checked />
+          <label for="displayNameLink" class="form-label">Link with first and last name</label>
+        </div>
       </div>
 
-      <div class="form-check mb-3" id="sendEmailDiv"> <!--  th:style=" ${#strings.isEmpty(user.email)} ? 'display: none' : 'display: block'" -->
-        <input class="form-check-input" type="checkbox" id="sendEmail" name="sendEmail"
-               th:disabled="${#strings.isEmpty(user.email)}"
-               th:checked="${sendEmail}"
-               onchange="this.checked ? document.getElementById('passwordDiv').style.display = 'none' : document.getElementById('passwordDiv').style.display = 'block'"
-        />
+      <div class="mb-3">
+        <label for="initials" class="form-label">Initials</label>
+        <input type="text" class="form-control" id="initials" name="initials"
+               th:field="*{user.initials}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="preferredLanguage" class="form-label">Preferred language</label>
+        <input type="text" class="form-control" id="preferredLanguage" name="preferredLanguage"
+               aria-describedby="preferredLanguageValidation" th:field="*{user.preferredLanguage}"
+               th:classappend="${#fields.hasErrors('user.preferredLanguage')} ? 'is-invalid' : ''"/>
+        <div id="preferredLanguageHelp" class="form-text">
+          User's preferred language. ISO 639-1 language codes. The combinations like de-DE and
+          en-US with ISO-639 and ISO-3166 also work.
+        </div>
+        <div id="preferredLanguageValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.preferredLanguage')} ? ${#fields.errors('user.preferredLanguage')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email"
+               aria-describedby="emailValidation" th:field="*{user.email}"
+               th:classappend="${#fields.hasErrors('user.email')} ? 'is-invalid' : ''"/>
+        <div id="emailValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.email')} ? ${#fields.errors('user.email')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="sendEmail"
+               name="sendEmail" th:field="*{sendEmail}" />
         <label class="form-check-label" for="sendEmail">
-          Send email
+          Send an invitation email with a random password
         </label>
       </div>
 
-      <div class="form-group" id="passwordDiv"
-           th:style="${sendEmail} ? 'display: none' : 'display: block'">
-        <label for="password">
-          Password
-        </label>
-        <input id="password" name="password" class="form-control" type="text"
-               th:class="${#fields.hasErrors('password')} ? 'form-control is-invalid' : 'form-control'"
-               th:field="*{password}"
-               pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,75}$"
-               th:pattern="${passwordPattern}"/>
-        <small id="passwordHelp" class="form-text text-muted"
-               th:class="${#fields.hasErrors('password')} ? 'invalid-feedback' : 'form-text text-muted'"
-        >
-          Please enter your new password. It must be between 8 and 75 characters in length and must
-          include at least one upper case letter, one lower case letter, and one numeric digit.
-        </small>
-        <div class="invalid-feedback"
-             th:text="${#fields.hasErrors('password')} ? ${#fields.errors('password')[0]} : ''">
+      <div class="mb-3">
+        <label for="mobile" class="form-label">Mobile phone number</label>
+        <input type="text" class="form-control" id="mobile" name="mobile"
+               th:field="*{user.mobile}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="telephoneNumber" class="form-label">Telephone number</label>
+        <input type="text" class="form-control" id="telephoneNumber" name="telephoneNumber"
+               th:field="*{user.telephoneNumber}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="description" name="description"
+               th:field="*{user.description}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="homeDirectory" class="form-label">Home directory</label>
+        <input type="text" class="form-control" id="homeDirectory" name="homeDirectory"
+               th:field="*{user.homeDirectory}" />
+        <div class="form-check form-switch small text-secondary mt-2">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="homeDirectoryAuto" name="homeDirectoryAuto" checked />
+          <label for="homeDirectoryAuto" class="form-label">Automatic</label>
         </div>
       </div>
 
-      <!--
-      <div class="form-group">
-        <label for="homeDirectory">Home directory</label>
-        <input type="text" class="form-control"
-               id="homeDirectory" name="homeDirectory"
-               readonly
-               th:field="*{homeDirectory}"/>
+      <div class="mb-3">
+        <label for="homeDrive" class="form-label">Home Drive Letter</label>
+        <input type="text" class="form-control" id="homeDrive" name="homeDrive"
+               th:field="*{user.homeDrive}" />
       </div>
 
-      <div class="form-group">
-        <label for="unixHomeDirectory">Unix home directory</label>
-        <input type="text" class="form-control"
-               id="unixHomeDirectory" name="unixHomeDirectory"
-               readonly
-               th:field="*{unixHomeDirectory}"/>
+      <div class="mb-3">
+        <label for="profilePath" class="form-label">Profile path</label>
+        <input type="text" class="form-control" id="profilePath" name="profilePath"
+               th:field="*{user.profilePath}" />
       </div>
 
-      <div class="form-group">
-        <label for="loginShell">Login shell</label>
-        <input type="text" class="form-control"
-               id="loginShell" name="loginShell"
-               readonly
-               th:field="*{loginShell}"/>
+      <div class="mb-3">
+        <label for="scriptPath" class="form-label">Logon script path</label>
+        <input type="text" class="form-control" id="scriptPath" name="scriptPath"
+               th:field="*{user.scriptPath}" />
       </div>
 
-      <div class="card mt-3">
-        <div class="card-body">
-          <div class="card-title">Groups</div>
-          <div class="form-check" th:each="group,iter : ${groups}">
-            <input th:id="'group-' + ${iter.index}" id="groups"
-                   th:name="'group-' + ${iter.index}" name="groups"
-                   type="checkbox" class="form-check-input"
-                   th:field="*{groups}"
-                   th:value="${group.value}" th:checked="${group.selected}" />
-            <label th:for="'group-' + ${iter.index}"  for="groups"
-                   th:text="${group.displayValue}"></label>
+      <div class="mb-3">
+        <label for="company" class="form-label">Company</label>
+        <input type="text" class="form-control" id="company" name="company"
+               th:field="*{user.company}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="title" class="form-label">Job title</label>
+        <input type="text" class="form-control" id="title" name="title"
+               th:field="*{user.title}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="department" class="form-label">Department</label>
+        <input type="text" class="form-control" id="department" name="department"
+               th:field="*{user.department}" />
+      </div>
+
+      <div class="mb-3">
+        <label for="physicalDeliveryOfficeName" class="form-label">
+          Office location
+        </label>
+        <input type="text" class="form-control" id="physicalDeliveryOfficeName"
+               name="physicalDeliveryOfficeName" th:field="*{user.physicalDeliveryOfficeName}" />
+      </div>
+
+      <div th:if="${rfc2307Enabled}">
+        <div class="mb-3">
+          <label for="uid" class="form-label">
+            User's Unix/RFC2307 username
+          </label>
+          <input type="text" class="form-control" id="uid" name="uid"
+                 th:field="*{user.uid}" />
+          <div class="form-check form-switch small text-secondary mt-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="uidLink" name="uidLink" checked />
+            <label for="uidLink" class="form-label">Link with windows username</label>
           </div>
         </div>
+
+        <div class="mb-3">
+          <label for="uidNumber" class="form-label">
+            User's Unix/RFC2307 UID number
+          </label>
+          <input type="number" class="form-control" id="uidNumber"
+                 name="uidNumber" th:field="*{user.uidNumber}" />
+        </div>
+
+        <div class="mb-3"> <!-- TODO select ? -->
+          <label for="gidNumber" class="form-label">
+            User's Unix/RFC2307 primary group ID
+          </label>
+          <input type="number" class="form-control" id="gidNumber"
+                 name="gidNumber" th:field="*{user.gidNumber}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="loginShell" class="form-label">User's Unix/RFC2307 login shell</label>
+          <input type="text" class="form-control" id="loginShell" name="loginShell"
+                 th:field="*{user.loginShell}" />
+          <div class="form-check form-switch small text-secondary mt-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="loginShellAuto" name="loginShellAuto" checked />
+            <label for="loginShellAuto" class="form-label">Automatic</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="unixHomeDirectory" class="form-label">
+            User's Unix/RFC2307 home directory
+          </label>
+          <input type="text" class="form-control" id="unixHomeDirectory" name="unixHomeDirectory"
+                 th:field="*{user.unixHomeDirectory}" />
+          <div class="form-check form-switch small text-secondary mt-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="unixHomeDirectoryAuto" name="unixHomeDirectoryAuto" checked />
+            <label for="unixHomeDirectoryAuto" class="form-label">Automatic</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="gecos" class="form-label">
+            User's Unix/RFC2307 GECOS field
+          </label>
+          <input type="text" class="form-control" id="gecos" name="gecos"
+                 th:field="*{user.gecos}" />
+          <div class="form-check form-switch small text-secondary mt-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="gecosLink" name="gecosLink" checked />
+            <label for="gecosLink" class="form-label">Link with display name</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="nisDomain" class="form-label">
+            User's Unix/RFC2307 NIS domain
+          </label>
+          <input type="text" class="form-control" id="nisDomain"
+                 name="nisDomain" th:field="*{user.nisDomain}" />
+        </div>
+      </div> <!-- end of rfc2307Enabled -->
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password"
+               aria-describedby="passwordValidation" th:field="*{user.password}"
+               th:classappend="${#fields.hasErrors('user.password')} ? 'is-invalid' : ''"
+               pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,75}$"
+               th:pattern="${passwordPattern}"/>
+        <!-- TODO it's not required if send email -->
+        <div id="passwordHelp" class="form-text">
+          Please enter a new password. It must be between 8 and 75 characters in length and must
+          include at least one upper case letter, one lower case letter, and one numeric digit.
+        </div>
+        <div id="passwordValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('user.password')} ? ${#fields.errors('user.password')[0]} : ''">
+        </div>
       </div>
-      -->
 
       <button type="submit" class="btn btn-primary mt-3">
-        Update
+        Add
       </button>
-      <a href="users.html" th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q})}"
+      <a href="users.html"
+         th:href="@{users(page=${page},size=${size},sort=${sort},q=${q},ou=${userAddRequest.ou},scope=${scope})}"
          class="btn btn-secondary ml-3 mt-3" role="button">
         Cancel
       </a>

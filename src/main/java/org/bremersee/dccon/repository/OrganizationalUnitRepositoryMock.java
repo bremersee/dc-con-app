@@ -19,8 +19,6 @@ package org.bremersee.dccon.repository;
 import static java.util.Objects.nonNull;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -39,20 +37,22 @@ import org.springframework.stereotype.Component;
  */
 @Profile("mock")
 @Component("organizationalUnitRepositoryMock")
-public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
-    implements OrganizationalUnitRepository {
+public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnitRepository
+    implements RepositoryMock {
 
-  final List<OrganizationalUnit> ouRepo = new ArrayList<>();
+  private final RepositoryMockStore store;
 
-  public OrganizationalUnitRepositoryMock(DomainControllerProperties properties) {
-    super(properties);
+  public OrganizationalUnitRepositoryMock(
+      DomainControllerProperties properties, RepositoryMockStore store) {
+    super(properties, null);
+    this.store = store;
     resetData();
   }
 
   @Override
   public void resetData() {
-    ouRepo.clear();
-    ouRepo.add(OrganizationalUnit.builder()
+    store.getOuRepo().clear();
+    store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .distinguishedName(LDAP_OU_USERS.format() + ',' + getProperties().getBaseDn())
@@ -60,7 +60,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
         .description("Default container for upgraded user accounts")
         .systemOu(true)
         .build());
-    ouRepo.add(OrganizationalUnit.builder()
+    store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .distinguishedName(LDAP_OU_COMPUTERS.format() + ',' + getProperties().getBaseDn())
@@ -68,7 +68,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
         .description("Default container for upgraded computer accounts")
         .systemOu(true)
         .build());
-    ouRepo.add(OrganizationalUnit.builder()
+    store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .distinguishedName(LDAP_OU_DOMAIN_CONTROLLERS.format() + ',' + getProperties().getBaseDn())
@@ -79,8 +79,13 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
   }
 
   @Override
+  Dn getDefaultOu() {
+    return getBaseDn();
+  }
+
+  @Override
   public Stream<OrganizationalUnit> findAll() {
-    return ouRepo.stream()
+    return store.getOuRepo().stream()
         .map(this::copy);
   }
 
@@ -135,7 +140,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
           organizationalUnit.getName(),
           EC_OU_ALREADY_EXISTS);
     }
-    if (ouRepo.size() > MAX_ENTRIES) {
+    if (store.getOuRepo().size() > MAX_ENTRIES) {
       throw ServiceException.internalServerError(
           "Maximum size of organizational units is exceeded.",
           EC_MAX_MOCK_DATA);
@@ -149,13 +154,13 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepositoryMock
         .distinguishedName(dn.format())
         .systemOu(false)
         .build();
-    ouRepo.add(newOu);
+    store.getOuRepo().add(newOu);
     return newOu;
   }
 
   @Override
   public boolean delete(Dn ou) {
-    return ouRepo.removeIf(o -> isDeletable(o, ou));
+    return store.getOuRepo().removeIf(o -> isDeletable(o, ou));
   }
 
   private boolean isDeletable(OrganizationalUnit o, Dn ou) {

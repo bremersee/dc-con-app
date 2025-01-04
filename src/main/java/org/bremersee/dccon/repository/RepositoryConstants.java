@@ -20,6 +20,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.repository.transcoder.SidValueTranscoder;
 import org.ldaptive.dn.Dn;
 import org.ldaptive.transcode.BooleanValueTranscoder;
+import org.ldaptive.transcode.ByteArrayValueTranscoder;
 import org.ldaptive.transcode.IntegerValueTranscoder;
 import org.ldaptive.transcode.StringValueTranscoder;
 
@@ -35,6 +36,8 @@ public interface RepositoryConstants {
   IntegerValueTranscoder INT_VALUE_TRANSCODER = new IntegerValueTranscoder();
 
   BooleanValueTranscoder BOOLEAN_VALUE_TRANSCODER = new BooleanValueTranscoder();
+
+  ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER = new ByteArrayValueTranscoder();
 
   SidValueTranscoder SID_VALUE_TRANSCODER = new SidValueTranscoder();
 

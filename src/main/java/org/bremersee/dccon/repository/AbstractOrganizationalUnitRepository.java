@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,53 +16,48 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
-import lombok.AccessLevel;
-import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.dn.Dn;
 
 /**
- * The type AbstractDomainGroupRepository.
+ * The type AbstractOrganizationalUnitRepository.
  *
  * @author Christian Bremer
  */
-abstract class AbstractDomainGroupRepository extends AbstractRepository
-    implements DomainGroupRepositoryConstants {
+abstract class AbstractOrganizationalUnitRepository extends AbstractRepository
+    implements OrganizationalUnitRepository {
 
-  @Getter(AccessLevel.PACKAGE)
-  private final DomainRepository domainRepository;
-
-  AbstractDomainGroupRepository(
+  /**
+   * Instantiates a new abstract repository.
+   *
+   * @param properties the properties
+   * @param ldapTemplate the ldap template
+   */
+  AbstractOrganizationalUnitRepository(
       DomainControllerProperties properties,
-      LdaptiveTemplate ldapTemplate,
-      DomainRepository domainRepository) {
+      LdaptiveTemplate ldapTemplate) {
     super(properties, ldapTemplate);
-    this.domainRepository = domainRepository;
   }
 
   @Override
   Dn getDefaultOu() {
-    return isEmpty(getProperties().getDefaultGroupOu())
-        ? LDAP_OU_USERS
-        : new Dn(getProperties().getDefaultGroupOu());
+    return getBaseDn();
   }
 
   @Override
   String getObjectClassValue() {
-    return LDAP_OBJECT_CLASS_GROUP;
+    return LDAP_OBJECT_CLASS_OU;
   }
 
   @Override
   String[] getBinaryAttributes() {
-    return LDAP_GROUP_BINARY_ATTRIBUTES;
+    return LDAP_OU_BINARY_ATTRIBUTES;
   }
 
   @Override
   String[] getReturnAttributes() {
-    return LDAP_GROUP_MAPPED_ATTRIBUTES;
+    return LDAP_OU_MAPPED_ATTRIBUTES;
   }
 
 }

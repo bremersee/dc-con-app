@@ -40,6 +40,11 @@ public class DomainServiceImpl implements DomainService {
   }
 
   @Override
+  public boolean isRfc2307Enabled() {
+    return domainRepository.isRfc2307Enabled();
+  }
+
+  @Override
   public PasswordInformation getPasswordInformation() {
     return domainRepository.getPasswordInformation();
   }

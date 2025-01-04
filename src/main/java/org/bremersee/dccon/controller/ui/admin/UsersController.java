@@ -20,7 +20,6 @@ import lombok.Getter;
 import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ControllerConstants;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitSelectorComponent;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
@@ -48,8 +47,6 @@ import org.springframework.web.servlet.LocaleResolver;
 public class UsersController extends AbstractController
     implements OrganizationalUnitSelectorComponent {
 
-  private final DomainControllerProperties properties;
-
   private final DomainUserService domainUserService;
 
   @Getter
@@ -59,17 +56,10 @@ public class UsersController extends AbstractController
       DomainControllerProperties properties,
       LocaleResolver localeResolver,
       DomainUserService domainUserService,
-      OrganizationalUnitService organizationalUnitService,
-      DomainControllerProperties domainControllerProperties) {
-    super(domainControllerProperties, localeResolver);
-    this.properties = properties;
+      OrganizationalUnitService organizationalUnitService) {
+    super(properties, localeResolver);
     this.domainUserService = domainUserService;
     this.organizationalUnitService = organizationalUnitService;
-  }
-
-  @Override
-  public DomainControllerProperties getDomainControllerProperties() {
-    return properties;
   }
 
   @Override
@@ -79,12 +69,12 @@ public class UsersController extends AbstractController
 
   @Override
   public String getDefaultOrganizationalUnit() {
-    return getDomainControllerProperties().getDefaultUserOu();
+    return getProperties().getDefaultUserOu();
   }
 
   @Override
   public SearchScope getDefaultSearchScope() {
-    return getDomainControllerProperties().getDefaultUserSearchScope();
+    return getProperties().getDefaultUserSearchScope();
   }
 
   @RequestMapping(path = "/admin/users", method = {RequestMethod.GET, RequestMethod.POST})

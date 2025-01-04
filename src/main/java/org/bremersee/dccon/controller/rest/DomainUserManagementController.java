@@ -84,7 +84,7 @@ public class DomainUserManagementController {// implements DomainUserManagementA
   //@Override
   public ResponseEntity<DomainUser> addUser(Boolean email, Locale language,
       @Valid DomainUser domainUser) {
-    return ResponseEntity.ok(domainUserService.addUser(domainUser, null, email)); // TODO
+    return ResponseEntity.ok(domainUserService.addUser(domainUser, null, null, email)); // TODO
   }
 
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")

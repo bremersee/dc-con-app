@@ -34,10 +34,16 @@ import org.springframework.stereotype.Component;
 @Profile("mock")
 @Component("domainRepositoryMock")
 @Slf4j
-public class DomainRepositoryMock extends AbstractRepositoryMock implements DomainRepository {
+public class DomainRepositoryMock extends AbstractDomainRepository
+    implements DomainRepository, RepositoryMock {
 
-  public DomainRepositoryMock(DomainControllerProperties properties) {
-    super(properties);
+  private final RepositoryMockStore store;
+
+  public DomainRepositoryMock(
+      DomainControllerProperties properties,
+      RepositoryMockStore store) {
+    super(properties, null);
+    this.store = store;
   }
 
   @Override
@@ -47,14 +53,14 @@ public class DomainRepositoryMock extends AbstractRepositoryMock implements Doma
 
   @Override
   public boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses) {
-    return findAllEntities()
+    return store.findCommonAttributes()
         .map(CommonAttributes::getDistinguishedName)
         .anyMatch(n -> n.equalsIgnoreCase(dn));
   }
 
   @Override
   public Optional<String> findDnOfSamAccountName(String samAccountName) {
-    return findAllEntities()
+    return store.findCommonAttributes()
         .filter(e -> e instanceof SamAccount)
         .filter(e -> ((SamAccount) e).getSamAccountName()
             .equalsIgnoreCase(samAccountName))

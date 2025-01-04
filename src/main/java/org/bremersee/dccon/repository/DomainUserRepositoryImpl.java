@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNullElse;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.awt.Dimension;
@@ -26,8 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.AbstractLdaptiveErrorHandler;
@@ -55,18 +57,15 @@ import org.ldaptive.ResultCode;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.ldaptive.dn.RDn;
 import org.ldaptive.filter.AndFilter;
 import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.Filter;
 import org.ldaptive.filter.NotFilter;
 import org.ldaptive.filter.OrFilter;
 import org.ldaptive.filter.SubstringFilter;
-import org.ldaptive.transcode.ByteArrayValueTranscoder;
-import org.ldaptive.transcode.StringValueTranscoder;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -80,21 +79,9 @@ import org.springframework.stereotype.Component;
 @ProfileRequired("ldap")
 @MockComponent(value = DomainUserRepositoryMock.class, methodsOf = DomainUserRepository.class)
 @Slf4j
-public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
-    implements DomainUserRepository, DomainUserRepositoryConstants {
-
-  private static final StringValueTranscoder STRING_VALUE_TRANSCODER = new StringValueTranscoder();
-
-  private static final ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER
-      = new ByteArrayValueTranscoder();
-
-  private final DomainRepository domainRepository;
-
-  private final List<AvatarProvider> avatarProviders;
+public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
 
   private final LdaptiveEntryMapper<DomainUser> domainUserLdapMapper;
-
-  private Pattern passwordPattern;
 
   /**
    * Instantiates a new domain user repository.
@@ -110,49 +97,11 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
       LdaptiveEntryMapper<DomainUser> domainUserLdapMapper,
       DomainRepository domainRepository,
       List<AvatarProvider> avatarProviders) {
-    super(properties, ldapTemplateProvider.getIfAvailable());
+    super(properties, ldapTemplateProvider.getIfAvailable(), domainRepository, avatarProviders);
     this.domainUserLdapMapper = domainUserLdapMapper;
-    this.domainRepository = domainRepository;
-    this.avatarProviders = avatarProviders;
-  }
-
-  /**
-   * Init.
-   */
-  @EventListener(ApplicationReadyEvent.class)
-  public void init() {
-    passwordPattern = domainRepository.getPasswordInformation().getPasswordPattern();
   }
 
   @Override
-  Dn getDefaultOu() {
-    return isEmpty(getProperties().getDefaultUserOu())
-        ? LDAP_OU_USERS
-        : new Dn(getProperties().getDefaultUserOu());
-  }
-
-  @Override
-  String getObjectClassValue() {
-    return LDAP_OBJECT_CLASS_USER;
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    return LDAP_USER_BINARY_ATTRIBUTES;
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    return LDAP_USER_MAPPED_ATTRIBUTES;
-  }
-
-  Pattern getPasswordPattern() {
-    if (isEmpty(passwordPattern)) {
-      init();
-    }
-    return passwordPattern;
-  }
-
   Filter objectClassFilter() {
     Filter objectClassFilter = new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_USER);
     Filter noComputerFilter = new NotFilter(
@@ -269,14 +218,6 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
     return getLdapTemplate().findOne(searchRequest);
   }
 
-  private Stream<byte[]> findAvatarsOfProviders(String user, AvatarDefault avatarDefault,
-      Integer size) {
-    log.debug("findAvatarsOfProviders({}, {}, {})", user, avatarDefault, size);
-    return avatarProviders.stream()
-        .flatMap(repo -> repo.findAvatar(user, avatarDefault, size).stream())
-        .filter(this::isNotEmpty);
-  }
-
   @Override
   public void removeAvatar(String userName) {
     log.debug("removeAvatar({})", userName);
@@ -322,7 +263,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
 
     AttributeModification attributeModification = new AttributeModification(modificationType,
         ldapAttribute);
-    domainRepository.findDnOfSamAccountName(userName).ifPresentOrElse(
+    getDomainRepository().findDnOfSamAccountName(userName).ifPresentOrElse(
         dn -> {
           ModifyRequest modifyRequest = ModifyRequest.builder()
               .dn(dn)
@@ -343,27 +284,38 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
    *
    * @param domainUser the domain user
    */
-  String doAdd(DomainUser domainUser, Dn ou) {
+  String doAdd(DomainUser domainUser, Dn ou, Boolean useUsernameAsCn) {
+    log.debug("doAdd({}, {}, {})", domainUser.getSamAccountName(),
+        Optional.ofNullable(ou).map(Dn::format).orElse(null), useUsernameAsCn);
+    Dn userOu = removeBaseDn(validateOu(ou));
+    log.debug("doAdd({}, {}, {})", domainUser.getSamAccountName(),
+        Optional.ofNullable(userOu).map(Dn::format).orElse(null), useUsernameAsCn);
+    boolean usernameAsCn = requireNonNullElse(useUsernameAsCn, getProperties().isUseUsernameAsCn());
     kinit();
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());
     commands.add("user");
-    commands.add("create");
+    commands.add("add");
     commands.add(quote(domainUser.getSamAccountName()));
     commands.add("--random-password");
-    commands.add("--userou=" + quote(validateOu(ou).format()));
-    if (getProperties().isUseUsernameAsCn()
-        || isEmpty(domainUser.getFirstName()) || isEmpty(domainUser.getLastName())) {
-      commands.add("--use-username-as-cn");
-    } else {
-      String lastName = quote(domainUser.getLastName());
-      String firstName = quote(domainUser.getFirstName());
-      commands.add("--surname=" + lastName);
-      commands.add("--given-name=" + firstName);
+    if (!isEmpty(userOu)) {
+      commands.add("--userou=" + quote(userOu.format()));
     }
-    if (domainRepository.isRfc2307Enabled() && hasAllNisAttributes(domainUser)) {
+    if (usernameAsCn || isEmpty(domainUser.getFirstName()) || isEmpty(domainUser.getLastName())) {
+      commands.add("--use-username-as-cn");
+    }
+    if (!isEmpty(domainUser.getLastName())) {
+      commands.add("--surname=" + quote(domainUser.getLastName()));
+    }
+    if (!isEmpty(domainUser.getFirstName())) {
+      commands.add("--given-name=" + quote(domainUser.getFirstName()));
+    }
+    if (!isEmpty(domainUser.getInitials())) {
+      commands.add("--initials=" + quote(domainUser.getInitials()));
+    }
+    if (getDomainRepository().isRfc2307Enabled() && hasAllNisAttributes(domainUser)) {
       commands.add("--nis-domain=" + quote(getNisDomain(domainUser)));
       commands.add("--uidNumber=" + domainUser.getUidNumber());
       commands.add("--login-shell=" + quote(domainUser.getLoginShell()));
@@ -377,7 +329,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        response -> domainRepository.findDnOfSamAccount(domainUser)
+        response -> getDomainRepository().findDnOfSamAccount(domainUser)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding user '%s' failed. %s",
                         domainUser.getSamAccountName(),
@@ -397,9 +349,14 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
 
   @ProfileRequired({"cli", "ldap"})
   @Override
-  public DomainUser add(DomainUser domainUser, Dn ou) {
-    log.debug("add({}, {})", domainUser, ou);
-    if (domainRepository.samAccountNameExists(domainUser.getSamAccountName())) {
+  public DomainUser add(DomainUser domainUser, Dn ou, Boolean useUsernameAsCn) {
+    log.debug("add({}, {}, {})", domainUser.getSamAccountName(), ou, useUsernameAsCn);
+    if (isEmpty(domainUser.getSamAccountName())) {
+      throw ServiceException.badRequest(
+          "Username (samAccountName) is required.",
+          EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
+    if (getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           domainUser.getSamAccountName(),
@@ -413,7 +370,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
               domainUser.getSamAccountName()),
           EC_PASSWORD_RESTRICTIONS);
     }
-    String dn = doAdd(domainUser, ou);
+    String dn = doAdd(domainUser, ou, useUsernameAsCn);
     if (!isEmpty(domainUser.getPassword())) {
       doSavePassword(dn, domainUser.getPassword());
     }
@@ -454,7 +411,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
   @Override
   public DomainUser update(DomainUser domainUser) {
     log.debug("update({})", domainUser);
-    return domainRepository.findDnOfSamAccount(domainUser)
+    return getDomainRepository().findDnOfSamAccount(domainUser)
         .map(dn -> validateDn(domainUser, dn))
         .map(dn -> getLdapTemplate().save(domainUser, domainUserLdapMapper))
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
@@ -463,15 +420,139 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
             EC_SAM_ACCOUNT_NOT_FOUND));
   }
 
-  // TODO
+  @Override
   public DomainUser update(String userName, DomainUser domainUser, Dn newOu) {
-    return findOne(userName, null, null).orElse(null);
+    if (!userName.equalsIgnoreCase(domainUser.getSamAccountName())
+        && getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          domainUser.getSamAccountName(),
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
+    }
+    if (!isEmpty(newOu) && !newOu.isEmpty()) {
+      validateOu(newOu);
+    }
+    return getDomainRepository().findDnOfSamAccountName(userName)
+        .flatMap(dn -> findOne(userName, getParentDn(dn), SearchScope.ONELEVEL))
+        .map(existingDomainUser -> {
+          if (isRenamingRequired(domainUser, existingDomainUser)) {
+            return rename(userName, domainUser);
+          }
+          //getBaseDn(newOu);
+          return existingDomainUser;
+        })
+        .map(existingDomainUser -> getLdapTemplate().save(domainUser, domainUserLdapMapper))
+        .map(existingDomainUser -> move(existingDomainUser, newOu))
+        .flatMap(existingDomainUser -> findOne(
+            existingDomainUser.getDistinguishedName(), null, null))
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            DomainUser.class.getSimpleName(),
+            domainUser.getSamAccountName(),
+            EC_SAM_ACCOUNT_NOT_FOUND));
+  }
+
+  boolean isRenamingRequired(DomainUser newDomainUser, DomainUser existingDomainUser) {
+    if (!Objects.equals(newDomainUser.getLastName(), existingDomainUser.getLastName())) {
+      return true;
+    }
+    if (!Objects.equals(newDomainUser.getFirstName(), existingDomainUser.getFirstName())) {
+      return true;
+    }
+    if (!Objects.equals(newDomainUser.getInitials(), existingDomainUser.getInitials())) {
+      return true;
+    }
+    if (!Objects.equals(newDomainUser.getDisplayName(), existingDomainUser.getDisplayName())) {
+      return true;
+    }
+    if (!Objects.equals(newDomainUser.getEmail(), existingDomainUser.getEmail())) {
+      return true;
+    }
+    if (!Objects.equals(newDomainUser.getSamAccountName(),
+        existingDomainUser.getSamAccountName())) {
+      return true;
+    }
+    return !Objects.equals(newDomainUser.getUserPrincipalName(),
+        existingDomainUser.getUserPrincipalName());
+  }
+
+  DomainUser rename(String userName, DomainUser domainUser) {
+    kinit();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("user");
+    commands.add("rename");
+    commands.add(quote(userName));
+    commands.add("--surname=" + quote(domainUser.getLastName()));
+    commands.add("--given-name=" + quote(domainUser.getFirstName()));
+    commands.add("--initials=" + quote(domainUser.getInitials()));
+    commands.add("--display-name=" + quote(domainUser.getDisplayName()));
+    commands.add("--mail-address=" + quote(domainUser.getEmail()));
+    if (!Objects.equals(userName, domainUser.getSamAccountName())) {
+      commands.add("--samaccountname=" + quote(domainUser.getSamAccountName()));
+    }
+    if (!isEmpty(domainUser.getUserPrincipalName())) {
+      commands.add("--upn=" + quote(domainUser.getUserPrincipalName()));
+    }
+    auth(commands);
+
+    return CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        response -> findOne(domainUser.getSamAccountName(), null, null)
+            .orElseThrow(() -> ServiceException
+                .internalServerError(String.format("Updating names of user '%s' failed. %s",
+                        domainUser.getSamAccountName(),
+                        CommandExecutorResponse.toExceptionMessage(response)),
+                    EC_UPDATING_USER_FAILED)));
+  }
+
+  DomainUser move(DomainUser domainUser, Dn newOu) {
+    if (isEmpty(newOu) || newOu.isEmpty()) {
+      return domainUser;
+    }
+    Dn ou = getBaseDn(validateOu(newOu));
+    if (ou.isSame(getParentDn(domainUser.getDistinguishedName()))) {
+      return domainUser;
+    }
+    RDn rdn = new Dn(domainUser.getDistinguishedName()).getRDn();
+    Dn dn = new Dn(rdn);
+    dn.add(ou);
+    domainUser.setDistinguishedName(dn.format());
+
+    kinit();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("user");
+    commands.add("move");
+    commands.add(quote(domainUser.getSamAccountName()));
+    commands.add(quote(ou.format()));
+    auth(commands);
+
+    CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        (CommandExecutorResponseValidator) response -> getDomainRepository()
+            .findDnOfSamAccountName(domainUser.getSamAccountName())
+            .filter(userDn -> new Dn(userDn).isSame(dn))
+            .orElseThrow(() -> ServiceException
+                .internalServerError(String.format("Moving user '%s' to '%s' failed. %s",
+                        domainUser.getSamAccountName(), ou.format(),
+                        CommandExecutorResponse.toExceptionMessage(response)),
+                    EC_UPDATING_USER_FAILED)));
+
+    return domainUser;
   }
 
   @Override
   public void savePassword(String userName, String newPassword) {
     log.debug("savePassword({}, ****)", userName);
-    domainRepository.findDnOfSamAccountName(userName).ifPresentOrElse(
+    getDomainRepository().findDnOfSamAccountName(userName).ifPresentOrElse(
         dn -> doSavePassword(dn, newPassword),
         () -> {
           throw ServiceException.notFoundWithErrorCode(
@@ -516,7 +597,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
                   : HttpStatus.INTERNAL_SERVER_ERROR;
               errorCode = httpStatus == HttpStatus.NOT_FOUND
                   ? EC_SAM_ACCOUNT_NOT_FOUND
-                  : EC_PREFIX + "3b5b0cae-d223-4077-944b-e978d415e7e2";
+                  : EC_SAVING_PASSWORD_FAILED;
             }
             return LdaptiveException.builder()
                 .httpStatus(httpStatus.value())
@@ -560,7 +641,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainEntityRepository
         null,
         getProperties().getSambaToolExecDir(),
         response -> {
-          if (domainRepository.samAccountNameExists(userName)) {
+          if (getDomainRepository().samAccountNameExists(userName)) {
             throw ServiceException.internalServerError(
                 String.format("Deleting user '%s' failed: %s", userName,
                     CommandExecutorResponse.toExceptionMessage(response)),

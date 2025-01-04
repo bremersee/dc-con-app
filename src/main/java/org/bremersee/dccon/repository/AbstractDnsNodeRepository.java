@@ -38,6 +38,7 @@ import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
+import org.ldaptive.dn.Dn;
 import org.springframework.util.StringUtils;
 
 /**
@@ -45,7 +46,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christian Bremer
  */
-public abstract class AbstractDnsNodeRepository extends AbstractRepository
+abstract class AbstractDnsNodeRepository extends AbstractRepository
     implements DnsNodeRepository {
 
   @Getter(AccessLevel.PACKAGE)
@@ -81,6 +82,27 @@ public abstract class AbstractDnsNodeRepository extends AbstractRepository
         .map(Pattern::compile)
         .collect(Collectors.toList());
     this.patternIp4 = Pattern.compile(properties.getIp4Regex());
+  }
+
+  @Override
+  Dn getDefaultOu() {
+    // TODO
+    return getBaseDn();
+  }
+
+  @Override
+  String getObjectClassValue() {
+    return "";
+  }
+
+  @Override
+  String[] getBinaryAttributes() {
+    return new String[0];
+  }
+
+  @Override
+  String[] getReturnAttributes() {
+    return new String[0];
   }
 
   /**

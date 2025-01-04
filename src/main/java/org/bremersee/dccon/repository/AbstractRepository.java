@@ -16,20 +16,29 @@
 
 package org.bremersee.dccon.repository;
 
+import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.NisDomainMember;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.exception.ServiceException;
+import org.bremersee.ldaptive.LdaptiveException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.SearchRequest;
+import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.ldaptive.filter.AndFilter;
+import org.ldaptive.filter.EqualityFilter;
+import org.ldaptive.filter.Filter;
 import org.springframework.util.Assert;
 
 /**
@@ -114,8 +123,41 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
     }
   }
 
+  abstract Dn getDefaultOu();
+
   Dn getBaseDn() {
     return new Dn(getProperties().getBaseDn());
+  }
+
+  Dn getBaseDn(Dn ou) {
+    if (isEmpty(ou) || ou.isEmpty()) {
+      return getBaseDn();
+    }
+    Dn dn = new Dn(ou.getRDns());
+    if (dn.isSame(getBaseDn()) || getBaseDn().isAncestor(dn)) {
+      return dn;
+    }
+    dn.add(getBaseDn());
+    return dn;
+  }
+
+  Dn removeBaseDn(Dn dn) {
+    Dn baseDn = getBaseDn();
+    if (isEmpty(dn) || dn.isEmpty() || dn.isSame(baseDn)) {
+      return null;
+    }
+    if (baseDn.isAncestor(dn)) {
+      return dn.subDn(0, dn.size() - baseDn.size());
+    }
+    return dn;
+  }
+
+  Dn getParentDn(String dn) {
+    Dn sourceDn = new Dn(dn);
+    if (getBaseDn().isSame(sourceDn)) {
+      return sourceDn;
+    }
+    return sourceDn.getParent();
   }
 
   boolean isDn(String value) {
@@ -131,15 +173,129 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
     }
   }
 
+  Dn validateOu(Dn ou) {
+    Dn ouDn = isEmpty(ou) || ou.isEmpty() ? getDefaultOu() : ou;
+    if (isEmpty(ouDn) || ouDn.isEmpty()) {
+      throw LdaptiveException.badRequest(
+          "Organizational unit cannot be empty.", EC_EMPTY_OU_RDN);
+    }
+    Dn dn = getBaseDn(ouDn);
+    if (!isEmpty(getLdapTemplate()) && !getLdapTemplate().exists(dn.format())) {
+      throw LdaptiveException.badRequest(
+          String.format("Organizational unit '%s' does not exist.", ouDn.format()),
+          EC_OU_NOT_FOUND);
+    }
+    return ouDn;
+  }
+
+  String validateDn(CommonAttributes object, String dn) {
+    if (isEmpty(object.getDistinguishedName())) {
+      object.setDistinguishedName(dn);
+      return dn;
+    }
+    try {
+      if (new Dn(dn).isSame(new Dn(object.getDistinguishedName()))) {
+        return dn;
+      }
+
+    } catch (RuntimeException e) {
+      // ignored
+    }
+    throw ServiceException.badRequest(String.format("Distinguished name of object '%s' is not "
+            + "the same distinguished name of the ldap entry '%s'.",
+        object.getDistinguishedName(), dn), EC_ILLEGAL_DN);
+  }
+
   String getNisDomain(NisDomainMember nisDomainMember) {
     return !isEmpty(nisDomainMember) && !isEmpty(nisDomainMember.getNisDomain())
         ? nisDomainMember.getNisDomain()
         : getProperties().getDefaultNisDomain();
   }
 
+
+  abstract String getObjectClassValue();
+
+  String getUniqueNameAttributeName() {
+    return LDAP_SAM_ACCOUNT_NAME;
+  }
+
+  abstract String[] getBinaryAttributes();
+
+  abstract String[] getReturnAttributes();
+
+  Filter objectClassFilter() {
+    return new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
+  }
+
+  Filter findOneFilter(String uniqueName) {
+    return new AndFilter(
+        objectClassFilter(),
+        new EqualityFilter(getUniqueNameAttributeName(), uniqueName));
+  }
+
+  SearchRequest searchOneRequest(
+      String uniqueName,
+      String... returnAttributes) {
+    return searchOneRequest(uniqueName, null, null, returnAttributes);
+  }
+
+  SearchRequest searchOneRequest(
+      String uniqueName,
+      Dn ouRdn,
+      SearchScope scope,
+      String... returnAttributes) {
+    return searchOneRequest(uniqueName, ouRdn, null, scope, returnAttributes);
+  }
+
+  SearchRequest searchOneRequest(
+      String uniqueName,
+      Dn ouRdn,
+      Filter filter,
+      SearchScope scope,
+      String... returnAttributes) {
+
+    if (isDn(uniqueName)) {
+      return SearchRequest.builder()
+          .dn(uniqueName)
+          .filter(objectClassFilter())
+          .scope(SearchScope.OBJECT)
+          .binaryAttributes(getBinaryAttributes())
+          .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
+          .sizeLimit(1)
+          .build();
+    }
+    return SearchRequest.builder()
+        .dn(getBaseDn(ouRdn).format())
+        .filter(requireNonNullElseGet(filter, () -> findOneFilter(uniqueName)))
+        .scope(Optional.ofNullable(scope)
+            .filter(searchScope -> !isEmpty(ouRdn))
+            .orElse(SearchScope.SUBTREE))
+        .binaryAttributes(getBinaryAttributes())
+        .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
+        .sizeLimit(1)
+        .build();
+  }
+
+  SearchRequest searchAllRequest(
+      Dn ouRdn,
+      Filter filter,
+      SearchScope scope,
+      String... returnAttributes) {
+    return SearchRequest.builder()
+        .dn(getBaseDn(ouRdn).format())
+        .filter(filter)
+        .scope(Optional.ofNullable(scope)
+            .filter(searchScope -> !isEmpty(ouRdn))
+            .orElse(SearchScope.SUBTREE))
+        .binaryAttributes(getBinaryAttributes())
+        .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
+        .build();
+  }
+
+
   static String quote(String value) {
-    if (Objects.isNull(value)) {
-      return null;
+    if (isEmpty(value)) {
+      return quote("\"\"");
     }
     if (value.contains("\"")) {
       return '\'' + value + '\'';

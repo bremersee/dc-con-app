@@ -46,8 +46,8 @@ public interface PageableComponent extends ControllerConstants {
   }
 
   @ModelAttribute(QUERY)
-  default String addQuery(@RequestParam(name = QUERY, required = false) String q) {
-    return Optional.ofNullable(q).orElse("");
+  default String addQuery(@RequestParam(name = QUERY, defaultValue = QUERY_DEFAULT) String q) {
+    return q;
   }
 
 }

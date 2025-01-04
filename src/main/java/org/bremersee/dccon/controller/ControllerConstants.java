@@ -27,15 +27,21 @@ public interface ControllerConstants {
 
   String PAGE = "page";
 
-  String PAGE_DEFAULT = "0";
+  int PAGE_DEFAULT_INT = 0;
+
+  String PAGE_DEFAULT = "" + PAGE_DEFAULT_INT;
 
   String SIZE = "size";
 
-  String SIZE_DEFAULT = "20"; // "2147483647";
+  int SIZE_DEFAULT_INT = 20; // "2147483647";
+
+  String SIZE_DEFAULT = "" + SIZE_DEFAULT_INT;
 
   String SORT = "sort";
 
   String QUERY = "q";
+
+  String QUERY_DEFAULT = "";
 
   String OU_SELECTOR = "ouSelector";
 

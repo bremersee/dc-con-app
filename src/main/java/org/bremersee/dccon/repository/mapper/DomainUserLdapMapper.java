@@ -117,6 +117,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         LDAP_DESCRIPTION, STRING_VALUE_TRANSCODER, null));
     domainUser.setDisplayName(
         getAttributeValue(ldapEntry, LDAP_USER_DISPLAY_NAME, STRING_VALUE_TRANSCODER, null));
+    domainUser.setGecos(
+        getAttributeValue(ldapEntry, LDAP_USER_GECOS, STRING_VALUE_TRANSCODER, null));
     domainUser.setGidNumber(
         getAttributeValue(ldapEntry, LDAP_GID_NUMBER, INT_VALUE_TRANSCODER, null));
     domainUser.setFirstName(
@@ -166,6 +168,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         getAttributeValue(ldapEntry, LDAP_USER_TELEPHONE_NUMBER, STRING_VALUE_TRANSCODER, null));
     domainUser.setTitle(
         getAttributeValue(ldapEntry, LDAP_USER_TITLE, STRING_VALUE_TRANSCODER, null));
+    domainUser.setUid(
+        getAttributeValue(ldapEntry, LDAP_USER_UID, STRING_VALUE_TRANSCODER, null));
     domainUser.setUidNumber(
         getAttributeValue(ldapEntry, LDAP_USER_UID_NUMBER, INT_VALUE_TRANSCODER, null));
     domainUser.setUnixHomeDirectory(
@@ -184,22 +188,16 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
 
     final List<AttributeModification> modifications = new ArrayList<>();
 
-    // TODO name handling
-
-    if (isEmpty(getAttributeValue(destination, LDAP_CN, STRING_VALUE_TRANSCODER, null))) {
-      setAttribute(destination, LDAP_CN, getCn(source), false, STRING_VALUE_TRANSCODER,
-          modifications);
-    }
     setAttribute(destination, LDAP_USER_COMPANY, source.getCompany(), false,
         STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_USER_DEPARTMENT, source.getDepartment(), false,
         STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_DESCRIPTION, source.getDescription(), false,
         STRING_VALUE_TRANSCODER, modifications);
-    setAttribute(destination, LDAP_USER_DISPLAY_NAME, getDisplayName(source), false,
+    setAttribute(destination, LDAP_USER_DISPLAY_NAME, source.getDisplayName(), false,
         STRING_VALUE_TRANSCODER, modifications);
     if (isRfc2307Enabled()) {
-      setAttribute(destination, LDAP_USER_GECOS, getDisplayName(source), false,
+      setAttribute(destination, LDAP_USER_GECOS, source.getGecos(), false,
           STRING_VALUE_TRANSCODER, modifications);
     }
     if (isRfc2307Enabled()) {
@@ -226,10 +224,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     // setAttributes(destination, MEMBER_OF, source.getMembership(), false, userGroupValueTranscoder, modifications);
     setAttribute(destination, LDAP_USER_MOBILE, source.getMobile(), false, STRING_VALUE_TRANSCODER,
         modifications);
-    if (isEmpty(getAttributeValue(destination, LDAP_NAME, STRING_VALUE_TRANSCODER, null))) {
-      setAttribute(destination, LDAP_NAME, getCn(source), false, STRING_VALUE_TRANSCODER,
-          modifications);
-    }
     if (isRfc2307Enabled()) {
       setAttribute(destination, LDAP_NIS_DOMAIN, source.getNisDomain(), false,
           STRING_VALUE_TRANSCODER, modifications);
@@ -262,7 +256,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     setAttribute(destination, LDAP_USER_TITLE, source.getTitle(), false, STRING_VALUE_TRANSCODER,
         modifications);
     if (isRfc2307Enabled()) {
-      setAttribute(destination, LDAP_USER_UID, source.getSamAccountName(), false,
+      setAttribute(destination, LDAP_USER_UID, source.getUid(), false,
           STRING_VALUE_TRANSCODER, modifications);
       setAttribute(destination, LDAP_USER_UID_NUMBER, source.getUidNumber(), false,
           INT_VALUE_TRANSCODER, modifications);
@@ -277,24 +271,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, modifications);
 
     return modifications.toArray(new AttributeModification[0]);
-  }
-
-  protected String getCn(DomainUser domainUser) {
-    if (getProperties().isUseUsernameAsCn()
-        || isEmpty(domainUser.getFirstName()) || isEmpty(domainUser.getLastName())) {
-      return domainUser.getSamAccountName();
-    } else {
-      return domainUser.getFirstName() + " " + domainUser.getLastName();
-    }
-  }
-
-  private String getDisplayName(DomainUser domainUser) {
-    String displayName = domainUser.getDisplayName();
-    if (isEmpty(displayName)
-        && !isEmpty(domainUser.getFirstName()) && !isEmpty(domainUser.getLastName())) {
-      return domainUser.getFirstName() + " " + domainUser.getLastName();
-    }
-    return displayName;
   }
 
 }

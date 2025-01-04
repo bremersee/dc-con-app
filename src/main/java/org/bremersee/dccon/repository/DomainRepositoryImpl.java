@@ -43,7 +43,6 @@ import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.PresenceFilter;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -57,7 +56,7 @@ import org.springframework.stereotype.Component;
 @ProfileRequired("ldap")
 @MockComponent(value = DomainRepositoryMock.class, methodsOf = DomainRepository.class)
 @Slf4j
-public class DomainRepositoryImpl extends AbstractRepository
+public class DomainRepositoryImpl extends AbstractDomainRepository
     implements DomainRepository {
 
   private PasswordInformationParser passwordInformationParser;
@@ -151,7 +150,6 @@ public class DomainRepositoryImpl extends AbstractRepository
     return result;
   }
 
-  @Cacheable(cacheNames = "password-information")
   @ProfileRequired("cli")
   @Override
   public PasswordInformation getPasswordInformation() {

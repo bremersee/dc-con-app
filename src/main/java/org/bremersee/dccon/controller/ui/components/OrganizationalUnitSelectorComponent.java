@@ -19,7 +19,7 @@ package org.bremersee.dccon.controller.ui.components;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
 import org.bremersee.dccon.model.OrganizationalUnit;
@@ -35,11 +35,10 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface OrganizationalUnitSelectorComponent extends CurrentPageNameProvider {
+public interface OrganizationalUnitSelectorComponent extends DomainControllerPropertiesProvider,
+    CurrentPageNameProvider {
 
   OrganizationalUnitService getOrganizationalUnitService();
-
-  DomainControllerProperties getDomainControllerProperties();
 
   String getDefaultOrganizationalUnit();
 
@@ -88,8 +87,7 @@ public interface OrganizationalUnitSelectorComponent extends CurrentPageNameProv
   }
 
   default boolean isBaseOu(OrganizationalUnit ou) {
-    return new Dn(getDomainControllerProperties().getBaseDn()).isSame(
-        new Dn(ou.getDistinguishedName()));
+    return new Dn(getProperties().getBaseDn()).isSame(new Dn(ou.getDistinguishedName()));
   }
 
   default Comparator<OrganizationalUnit> getOrganizationalUnitComparator() {
