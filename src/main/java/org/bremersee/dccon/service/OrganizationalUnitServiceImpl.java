@@ -83,6 +83,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(Dn ou) {
+    log.info("===========> ou {}", ou);
     return getOrganizationalUnitSelectors(getOrganizationalUnits(), ou);
   }
 

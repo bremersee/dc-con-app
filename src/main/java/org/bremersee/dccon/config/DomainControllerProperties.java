@@ -30,6 +30,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -59,6 +60,10 @@ public class DomainControllerProperties implements Serializable {
   public static final String DEFAULT_DOMAIN_CONTROLLERS_OU = "OU=Domain Controllers";
 
 
+  private Dn testDn; // TODO cool works with empty, but not with illegal
+  private String baseDn = "dc=eixe,dc=bremersee,dc=org";
+
+
   private UserProperties user = new UserProperties();
 
 
@@ -76,7 +81,6 @@ public class DomainControllerProperties implements Serializable {
   private Integer defaultGidNumber; // = 100; // = Domain Users
 
 
-  private String baseDn = "dc=eixe,dc=bremersee,dc=org";
 
 
   private String defaultGroupOu = "CN=Users";

@@ -110,8 +110,10 @@ public class UserAddController extends AbstractController
         .map(obj -> obj instanceof DomainUserAddRequest)
         .map(DomainUserAddRequest.class::cast)
         .map(DomainUserAddRequest::getOuDn)
+        .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
         .orElseGet(() -> Optional.ofNullable(ou)
             .filter(dn -> !dn.isEmpty())
+            .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
             .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())));
     return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
   }
@@ -129,7 +131,8 @@ public class UserAddController extends AbstractController
     getLogger().debug("displayUserAdd({})", ou);
     Dn ouDn = Optional.ofNullable(ou)
         .filter(dn -> !dn.isEmpty())
-        .orElseGet(() -> new Dn(getProperties().getDefaultUserOu()));
+        .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
+        .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())); // TODO full dn  --> move dn stuff to properties?
     DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
     userAddRequest.setUser(createNewDomainUser());
     userAddRequest.setOu(ouDn.format());
