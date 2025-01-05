@@ -57,7 +57,7 @@ public interface AvatarRepository {
    * @param bytes the bytes
    * @return the boolean
    */
-  default boolean isNotEmpty(byte[] bytes) {
+  default boolean isAvatarNotEmpty(byte[] bytes) {
     return bytes != null && bytes.length > 0;
   }
 
@@ -75,6 +75,11 @@ public interface AvatarRepository {
     return findAvatar(user, ou, searchScope, AvatarDefault.NOT_FOUND, DEFAULT_AVATAR_SIZE)
         .isPresent();
   }
+
+  boolean existsAvatarInActiveDirectory(
+      @NotNull String user,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Find avatar.

@@ -16,34 +16,50 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
-import static java.util.Objects.isNull;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Optional;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.dn.Dn;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
- * The type DomainUserAddRequest.
+ * The type DomainUserEditRequest.
  *
  * @author Christian Bremer
  */
 @Data
-public class DomainUserAddRequest implements Serializable {
+@NoArgsConstructor
+public class DomainUserEditRequest {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  private String oldSamAccountName;
+
+  private boolean renameSamAccountNameAutomatically = true;
+
+  private String oldFirstName;
+
+  private boolean renameFirstNameAutomatically = true;
+
+  private String oldLastName;
+
+  private boolean renameLastNameAutomatically = true;
 
   private DomainUser user;
 
   private String ou;
 
-  private Boolean useUsernameAsCn;
+  private MultipartFile avatar;
 
-  private Boolean sendEmail;
+  private boolean removeAvatar;
+
+  public DomainUserEditRequest(DomainUser user, Dn ou) {
+    this.oldSamAccountName = user.getSamAccountName();
+    this.oldFirstName = user.getFirstName();
+    this.oldLastName = user.getLastName();
+    this.user = user;
+    this.ou = ou.format();
+  }
 
   public Dn getOuDn() {
     if (isEmpty(ou)) {
@@ -52,21 +68,4 @@ public class DomainUserAddRequest implements Serializable {
     return new Dn(ou);
   }
 
-  public Boolean getUseUsernameAsCn() {
-    return isNull(useUsernameAsCn) || useUsernameAsCn;
-  }
-
-  public Boolean getSendEmail() {
-    return Boolean.TRUE.equals(sendEmail);
-  }
-
-  @Override
-  public String toString() {
-    return "DomainUserAddRequest {"
-        + "user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse("null")
-        + ", ou=" + Optional.ofNullable(getOuDn()).map(Dn::format).orElse("null")
-        + ", useUsernameAsCn=" + getUseUsernameAsCn()
-        + ", sendEmail=" + getSendEmail()
-        + '}';
-  }
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainRepository;
@@ -45,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Christian Bremer
  */
 @Component
+@Slf4j
 public class DomainUserLdapMapper extends AbstractLdapMapper
     implements LdaptiveEntryMapper<DomainUser>, DomainUserRepositoryConstants {
 
@@ -168,8 +170,9 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         getAttributeValue(ldapEntry, LDAP_USER_TELEPHONE_NUMBER, STRING_VALUE_TRANSCODER, null));
     domainUser.setTitle(
         getAttributeValue(ldapEntry, LDAP_USER_TITLE, STRING_VALUE_TRANSCODER, null));
+    String uid = getAttributeValue(ldapEntry, LDAP_USER_UID, STRING_VALUE_TRANSCODER, null);
     domainUser.setUid(
-        getAttributeValue(ldapEntry, LDAP_USER_UID, STRING_VALUE_TRANSCODER, null));
+        getAttributeValue(ldapEntry, LDAP_NIS_NAME, STRING_VALUE_TRANSCODER, uid));
     domainUser.setUidNumber(
         getAttributeValue(ldapEntry, LDAP_USER_UID_NUMBER, INT_VALUE_TRANSCODER, null));
     domainUser.setUnixHomeDirectory(
@@ -224,10 +227,12 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     // setAttributes(destination, MEMBER_OF, source.getMembership(), false, userGroupValueTranscoder, modifications);
     setAttribute(destination, LDAP_USER_MOBILE, source.getMobile(), false, STRING_VALUE_TRANSCODER,
         modifications);
+    // NOT_ALLOWED_ON_RDN, diagnosticMessage=00002016: Modify of 'name' not permitted, must use 'rename' operation instead
+    // setAttribute(destination, LDAP_NAME, getName(source), false, STRING_VALUE_TRANSCODER, modifications);
     if (isRfc2307Enabled()) {
       setAttribute(destination, LDAP_NIS_DOMAIN, source.getNisDomain(), false,
           STRING_VALUE_TRANSCODER, modifications);
-      setAttribute(destination, LDAP_NIS_NAME, source.getSamAccountName(), false,
+      setAttribute(destination, LDAP_NIS_NAME, source.getUid(), false,
           STRING_VALUE_TRANSCODER, modifications);
     }
     // sid is read only
@@ -269,8 +274,22 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         userAccountControlValue, source.getAccountControl());
     setAttribute(destination, LDAP_USER_USER_ACCOUNT_CONTROL, userAccountControl, false,
         USER_ACCOUNT_CONTROL_VALUE_TRANSCODER, modifications);
+    if (!isEmpty(source.getUserPrincipalName())) {
+      setAttribute(destination, LDAP_USER_USER_PRINCIPAL_NAME, source.getUserPrincipalName(), false,
+          STRING_VALUE_TRANSCODER, modifications);
+    }
 
     return modifications.toArray(new AttributeModification[0]);
+  }
+
+  private String getName(DomainUser domainUser) {
+    if (isEmpty(domainUser)) {
+      return null;
+    }
+    if (!isEmpty(domainUser.getDisplayName())) {
+      return domainUser.getDisplayName();
+    }
+    return domainUser.getSamAccountName();
   }
 
 }

@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
@@ -57,6 +56,7 @@ import org.ldaptive.ResultCode;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.ldaptive.dn.NameValue;
 import org.ldaptive.dn.RDn;
 import org.ldaptive.filter.AndFilter;
 import org.ldaptive.filter.EqualityFilter;
@@ -155,6 +155,20 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   }
 
   @Override
+  public boolean existsAvatarInActiveDirectory(
+      String user,
+      Dn ou,
+      SearchScope searchScope) {
+
+    log.debug("existsAvatarInActiveDirectory({}, {}, {})", user, ou, searchScope);
+    return findLdapEntryForAvatar(user, ou, searchScope)
+        .map(ldapEntry -> ldapEntry.getAttribute(LDAP_USER_JPEG_PHOTO))
+        .map(LdapAttribute::getBinaryValue)
+        .map(this::isAvatarNotEmpty)
+        .orElse(false);
+  }
+
+  @Override
   public Optional<byte[]> findAvatar(
       String userNameOrEmail,
       Dn ou,
@@ -193,7 +207,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           }
           return avatar;
         })
-        .filter(this::isNotEmpty)
+        .filter(this::isAvatarNotEmpty)
         .or(() -> findAvatarsOfProviders(userNameOrEmail, avatarDefault, avatarSize)
             .findFirst());
   }
@@ -313,9 +327,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (!isEmpty(domainUser.getFirstName())) {
       commands.add("--given-name=" + quote(domainUser.getFirstName()));
     }
-    if (!isEmpty(domainUser.getInitials())) {
-      commands.add("--initials=" + quote(domainUser.getInitials()));
-    }
+    //if (!isEmpty(domainUser.getInitials())) {
+    //  commands.add("--initials=" + quote(domainUser.getInitials()));
+    //}
     if (getDomainRepository().isRfc2307Enabled() && hasAllNisAttributes(domainUser)) {
       commands.add("--nis-domain=" + quote(getNisDomain(domainUser)));
       commands.add("--uidNumber=" + domainUser.getUidNumber());
@@ -421,8 +435,15 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
             EC_SAM_ACCOUNT_NOT_FOUND));
   }
 
+  @ProfileRequired({"cli", "ldap"})
   @Override
   public DomainUser update(String userName, DomainUser domainUser, Dn newOu) {
+    log.debug("update({}, {}, {})", userName, domainUser.getSamAccountName(), newOu);
+    if (isEmpty(domainUser.getSamAccountName())) {
+      throw ServiceException.badRequest(
+          "Username (samAccountName) is required.",
+          EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
     if (!userName.equalsIgnoreCase(domainUser.getSamAccountName())
         && getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
@@ -433,50 +454,40 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (!isEmpty(newOu) && !newOu.isEmpty()) {
       validateOu(newOu);
     }
-    return getDomainRepository().findDnOfSamAccountName(userName)
-        .flatMap(dn -> findOne(userName, getProperties().getParentDn(dn), SearchScope.ONELEVEL))
-        .map(existingDomainUser -> {
-          if (isRenamingRequired(domainUser, existingDomainUser)) {
-            return rename(userName, domainUser);
-          }
-          //getBaseDn(newOu);
-          return existingDomainUser;
-        })
-        .map(existingDomainUser -> getLdapTemplate().save(domainUser, domainUserLdapMapper))
-        .map(existingDomainUser -> move(existingDomainUser, newOu))
-        .flatMap(existingDomainUser -> findOne(
-            existingDomainUser.getDistinguishedName(), null, null))
+    DomainUser existingDomainUser = findOne(userName, null, null)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainUser.class.getSimpleName(),
             domainUser.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
+    DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
+    updatedDomainUser = adjustCommonName(existingDomainUser, updatedDomainUser);
+    return move(updatedDomainUser, newOu);
   }
 
-  boolean isRenamingRequired(DomainUser newDomainUser, DomainUser existingDomainUser) {
-    if (!Objects.equals(newDomainUser.getLastName(), existingDomainUser.getLastName())) {
-      return true;
+  DomainUser adjustCommonName(DomainUser oldDomainUser, DomainUser newDomainUser) {
+    String oldCn = new Dn(oldDomainUser.getDistinguishedName())
+        .getRDn().getNameValue().getStringValue()
+        .toLowerCase();
+    if (oldCn.equalsIgnoreCase(newDomainUser.getSamAccountName())
+        || oldCn.equalsIgnoreCase(newDomainUser.getDisplayName())) {
+      return newDomainUser;
     }
-    if (!Objects.equals(newDomainUser.getFirstName(), existingDomainUser.getFirstName())) {
-      return true;
+    String newCn;
+    if (oldCn.equalsIgnoreCase(oldDomainUser.getDisplayName())
+        && !isEmpty(newDomainUser.getDisplayName())) {
+      newCn = newDomainUser.getDisplayName();
+    } else {
+      newCn = newDomainUser.getSamAccountName();
     }
-    if (!Objects.equals(newDomainUser.getInitials(), existingDomainUser.getInitials())) {
-      return true;
+    Dn newDn = new Dn(new RDn(new NameValue("CN", newCn)));
+    newDn.add(getProperties().getParentDn(newDomainUser.getDistinguishedName()));
+    if (getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          newCn,
+          EC_DN_ALREADY_EXISTS);
     }
-    if (!Objects.equals(newDomainUser.getDisplayName(), existingDomainUser.getDisplayName())) {
-      return true;
-    }
-    if (!Objects.equals(newDomainUser.getEmail(), existingDomainUser.getEmail())) {
-      return true;
-    }
-    if (!Objects.equals(newDomainUser.getSamAccountName(),
-        existingDomainUser.getSamAccountName())) {
-      return true;
-    }
-    return !Objects.equals(newDomainUser.getUserPrincipalName(),
-        existingDomainUser.getUserPrincipalName());
-  }
 
-  DomainUser rename(String userName, DomainUser domainUser) {
     kinit();
     List<String> commands = new ArrayList<>();
     ssh(commands);
@@ -484,28 +495,18 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     commands.add(getProperties().getSambaToolBinary());
     commands.add("user");
     commands.add("rename");
-    commands.add(quote(userName));
-    commands.add("--surname=" + quote(domainUser.getLastName()));
-    commands.add("--given-name=" + quote(domainUser.getFirstName()));
-    commands.add("--initials=" + quote(domainUser.getInitials()));
-    commands.add("--display-name=" + quote(domainUser.getDisplayName()));
-    commands.add("--mail-address=" + quote(domainUser.getEmail()));
-    if (!Objects.equals(userName, domainUser.getSamAccountName())) {
-      commands.add("--samaccountname=" + quote(domainUser.getSamAccountName()));
-    }
-    if (!isEmpty(domainUser.getUserPrincipalName())) {
-      commands.add("--upn=" + quote(domainUser.getUserPrincipalName()));
-    }
+    commands.add(quote(oldDomainUser.getSamAccountName()));
+    commands.add("--force-new-cn=" + quote(newCn));
     auth(commands);
 
     return CommandExecutor.exec(
         commands,
         null,
         getProperties().getSambaToolExecDir(),
-        response -> findOne(domainUser.getSamAccountName(), null, null)
+        response -> findOne(newDomainUser.getSamAccountName(), null, null)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Updating names of user '%s' failed. %s",
-                        domainUser.getSamAccountName(),
+                        newDomainUser.getSamAccountName(),
                         CommandExecutorResponse.toExceptionMessage(response)),
                     EC_UPDATING_USER_FAILED)));
   }
@@ -514,7 +515,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (isEmpty(newOu) || newOu.isEmpty()) {
       return domainUser;
     }
-    Dn ou = getProperties().getBaseDn(validateOu(newOu));
+    Dn ou = getProperties().getBaseDn(newOu);
     if (ou.isSame(getProperties().getParentDn(domainUser.getDistinguishedName()))) {
       return domainUser;
     }
@@ -522,6 +523,13 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     Dn dn = new Dn(rdn);
     dn.add(ou);
     domainUser.setDistinguishedName(dn.format());
+
+    if (getDomainRepository().dnExistsWithAnyObjectClass(dn.format())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          getProperties().removeBaseDn(dn),
+          EC_DN_ALREADY_EXISTS);
+    }
 
     kinit();
     List<String> commands = new ArrayList<>();
@@ -531,7 +539,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     commands.add("user");
     commands.add("move");
     commands.add(quote(domainUser.getSamAccountName()));
-    commands.add(quote(ou.format()));
+    commands.add(quote(getProperties().removeBaseDn(ou).format()));
     auth(commands);
 
     CommandExecutor.exec(

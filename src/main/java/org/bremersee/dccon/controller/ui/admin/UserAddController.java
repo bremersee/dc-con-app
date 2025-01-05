@@ -138,9 +138,7 @@ public class UserAddController extends AbstractController
     userAddRequest.setOu(ouDn.format());
     userAddRequest.setUseUsernameAsCn(getProperties().getUser().isUseUsernameAsCn());
     userAddRequest.setSendEmail(false);
-    if (!model.containsAttribute("userAddRequest")) {
-      model.addAttribute("userAddRequest", userAddRequest);
-    }
+    model.addAttribute("userAddRequest", userAddRequest);
     return "admin/user-add";
   }
 
@@ -244,7 +242,7 @@ public class UserAddController extends AbstractController
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
         bindingResult.rejectValue("user.samAccountName", "code",
             "Username already exists.");
-        clearInvalidUsername(user);
+        getProperties().getUser().replaceInvalidUsernameWithDefaults(user, isRfc2307Enabled());
         break;
       }
       case EC_PASSWORD_RESTRICTIONS: {
@@ -277,75 +275,8 @@ public class UserAddController extends AbstractController
 
   private DomainUser createNewDomainUser() {
     DomainUser domainUser = new DomainUser();
-    domainUser.setCompany(getProperties().getUser().getDefaultCompany());
-    domainUser.setDisplayName(getProperties().getUser().getDisplayNameTemplate());
-    domainUser.setEmail(getProperties().getUser().getEmailTemplate());
-    domainUser.setHomeDirectory(
-        getProperties().getUser().getHomeDirectoryTemplate());
-    domainUser.setHomeDrive(getProperties().getUser().getDefaultHomeDrive());
-    domainUser.setPreferredLanguage(getProperties().getUser().getDefaultLanguage());
-    domainUser.setProfilePath(getProperties().getUser().getProfilePathTemplate());
-    domainUser.setScriptPath(getProperties().getUser().getScriptPathTemplate());
-    if (isRfc2307Enabled()) {
-      domainUser.setGecos(getProperties().getUser().getGecosTemplate());
-      domainUser.setGidNumber(getProperties().getUser().getDefaultGidNumber());
-      domainUser.setLoginShell(getProperties().getUser().getDefaultLoginShell());
-      domainUser.setNisDomain(getProperties().getUser().getNisDomainTemplate());
-      domainUser.setUid(getProperties().getUser().getUidTemplate());
-      domainUser.setUnixHomeDirectory(
-          getProperties().getUser().getUnixHomeDirectoryTemplate());
-    }
+    getProperties().getUser().fillDefaults(domainUser, isRfc2307Enabled());
     return domainUser;
-  }
-
-  private void clearInvalidUsername(DomainUser domainUser) {
-    String username = domainUser.getSamAccountName();
-    if (isEmpty(username)) {
-      return;
-    }
-    username = username.toLowerCase();
-    if (!isEmpty(domainUser.getCompany()) && domainUser.getCompany().toLowerCase()
-        .contains(username)) {
-      domainUser.setCompany(getProperties().getUser().getDefaultCompany());
-    }
-    if (!isEmpty(domainUser.getDisplayName()) && domainUser.getDisplayName().toLowerCase()
-        .contains(username)) {
-      domainUser.setDisplayName(getProperties().getUser().getDisplayNameTemplate());
-    }
-    if (!isEmpty(domainUser.getEmail()) && domainUser.getEmail().toLowerCase().contains(username)) {
-      domainUser.setEmail(getProperties().getUser().getEmailTemplate());
-    }
-    if (!isEmpty(domainUser.getHomeDirectory()) && domainUser.getHomeDirectory().toLowerCase()
-        .contains(username)) {
-      domainUser.setHomeDirectory(
-          getProperties().getUser().getHomeDirectoryTemplate());
-    }
-    if (!isEmpty(domainUser.getHomeDrive()) && domainUser.getHomeDrive().toLowerCase()
-        .contains(username)) {
-      domainUser.setHomeDrive(getProperties().getUser().getDefaultHomeDrive());
-    }
-    if (!isEmpty(domainUser.getScriptPath()) && domainUser.getScriptPath().toLowerCase()
-        .contains(username)) {
-      domainUser.setScriptPath(getProperties().getUser().getScriptPathTemplate());
-    }
-    if (isRfc2307Enabled()) {
-      if (!isEmpty(domainUser.getGecos()) && domainUser.getGecos().toLowerCase()
-          .contains(username)) {
-        domainUser.setGecos(getProperties().getUser().getGecosTemplate());
-      }
-      if (!isEmpty(domainUser.getLoginShell()) && domainUser.getLoginShell().toLowerCase()
-          .contains(username)) {
-        domainUser.setLoginShell(getProperties().getUser().getDefaultLoginShell());
-      }
-      if (!isEmpty(domainUser.getUid()) && domainUser.getUid().toLowerCase().contains(username)) {
-        domainUser.setUid(getProperties().getUser().getUidTemplate());
-      }
-      if (!isEmpty(domainUser.getUnixHomeDirectory()) && domainUser.getUnixHomeDirectory()
-          .toLowerCase().contains(username)) {
-        domainUser.setUnixHomeDirectory(
-            getProperties().getUser().getUnixHomeDirectoryTemplate());
-      }
-    }
   }
 
   private void processTemplates(BindingResult bindingResult, DomainUser user) {

@@ -34,7 +34,6 @@ import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -142,6 +141,14 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
+  public DomainUser updateUser(
+      String userName,
+      DomainUser domainUser,
+      Dn newOu) {
+    return domainUserRepository.update(userName, domainUser, newOu);
+  }
+
+  @Override
   public void updateUserPassword(
       String userName,
       Password newPassword,
@@ -169,6 +176,11 @@ public class DomainUserServiceImpl implements DomainUserService {
   @Override
   public Boolean deleteUser(String userName) {
     return domainUserRepository.delete(userName);
+  }
+
+  @Override
+  public boolean existsAvatarInActiveDirectory(String user, Dn ou, SearchScope searchScope) {
+    return domainUserRepository.existsAvatarInActiveDirectory(user, ou, searchScope);
   }
 
 }

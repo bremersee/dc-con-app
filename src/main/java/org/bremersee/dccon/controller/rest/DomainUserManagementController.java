@@ -39,6 +39,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,9 +51,10 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * @author Christian Bremer
  */
-//@RestController
+@RestController
 public class DomainUserManagementController {// implements DomainUserManagementApi {
 
+  DomainUserManagementApi n;
   public static final String ADMIN_ROLE_NAME = "ROLE_ADMIN"; // TODO
 
   private final DomainUserService domainUserService;
@@ -94,12 +99,17 @@ public class DomainUserManagementController {// implements DomainUserManagementA
     return ResponseEntity.of(domainUserService.getUser(userName, null, null)); // TODO
   }
 
-  @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
+  //@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DC_CON_ADMIN', 'ROLE_LOCAL_USER')")
   //@Override
+  // TODO
+  @RequestMapping(
+      value = "/api/users/{userName}/avatar",
+      produces = {MediaType.IMAGE_JPEG_VALUE},
+      method = RequestMethod.GET)
   public ResponseEntity<byte[]> getUserAvatar(
-      final String userName,
-      final AvatarDefault avatarDefault,
-      final Integer size) {
+      @PathVariable("userName") String userName,
+      @RequestParam(name = "d", defaultValue = "NOT_FOUND") AvatarDefault avatarDefault,
+      @RequestParam(name = "s", defaultValue = "80") Integer size) {
 
     return domainUserService.getUserAvatar(userName, null, null, avatarDefault, size) // TODO
         .map(avatar -> ResponseEntity

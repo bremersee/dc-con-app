@@ -41,6 +41,8 @@ public interface ErrorCode {
 
   String EC_DELETING_OU_FAILED = EC_PREFIX + "1344e1dc-6a00-4463-a95a-ae1d7f360341";
 
+  String EC_DN_ALREADY_EXISTS = EC_PREFIX + "4e04709a-db4f-40bc-a193-11c75a4077ac";
+
   String EC_PASSWORD_RESTRICTIONS = "check_password_restrictions";
 
   String EC_SAVING_PASSWORD_FAILED = EC_PREFIX + "3b5b0cae-d223-4077-944b-e978d415e7e2";

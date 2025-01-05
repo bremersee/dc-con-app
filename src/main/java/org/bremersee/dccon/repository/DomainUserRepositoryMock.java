@@ -160,6 +160,18 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
   }
 
   @Override
+  public boolean existsAvatarInActiveDirectory(
+      String user,
+      Dn ou,
+      SearchScope searchScope) {
+
+    return Optional.ofNullable(user)
+        .map(name -> store.getAvatarRepo().get(name.toLowerCase()))
+        .map(this::isAvatarNotEmpty)
+        .orElse(false);
+  }
+
+  @Override
   public Optional<byte[]> findAvatar(
       String userNameOrEmail,
       Dn ou,

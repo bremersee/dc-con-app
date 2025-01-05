@@ -99,9 +99,15 @@ public interface DomainUserService {
    * @param domainUser the domain user
    * @return the domain user
    */
+  @Deprecated
   Optional<DomainUser> updateUser(
       @NotNull String userName,
       @NotNull @Valid DomainUser domainUser);
+
+  DomainUser updateUser(
+      @NotNull String userName,
+      @NotNull DomainUser domainUser,
+      @Nullable Dn newOu);
 
   /**
    * Update user password.
@@ -137,5 +143,10 @@ public interface DomainUserService {
    * @return {@code true} if the user was removed; {@code false} if the user didn't exist
    */
   Boolean deleteUser(@NotNull String userName);
+
+  boolean existsAvatarInActiveDirectory(
+      @NotNull String user,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
 }

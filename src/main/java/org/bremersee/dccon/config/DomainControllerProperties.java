@@ -22,10 +22,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,6 +59,8 @@ public class DomainControllerProperties implements Serializable {
 
 
   private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
+
+  private String domainName;
 
 
   private UserProperties user = new UserProperties();
@@ -139,8 +141,6 @@ public class DomainControllerProperties implements Serializable {
   private String complexPasswordRegexTemplate = "(?=^.{%d,%d}$)"
       + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
       + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
-
-
 
 
   private String dnsZoneBaseDn;
@@ -264,6 +264,16 @@ public class DomainControllerProperties implements Serializable {
     excludedNodeRegexList.add("ForestDnsZones");
   }
 
+  public String getDomainName() {
+    if (!isEmpty(domainName)) {
+      return getBaseDn().getRDns().stream()
+          .filter(rdn -> "dc".equalsIgnoreCase(rdn.getNameValue().getName()))
+          .map(rdn -> rdn.getNameValue().getStringValue())
+          .collect(Collectors.joining("."));
+    }
+    return domainName;
+  }
+
   public boolean isDn(String value) {
     if (isEmpty(value)) {
       return false;
@@ -354,34 +364,158 @@ public class DomainControllerProperties implements Serializable {
 
     private String defaultCompany;
 
-    private String displayNameTemplate = "{{user.firstName}} {{user.lastName}}";
+    private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}";
 
-    private String emailTemplate;
+    private String defaultEmail = "{{user.samAccountName}}@{{properties.domainName}}";
 
-    private String gecosTemplate = "{{user.firstName}} {{user.lastName}}";
+    private String defaultGecos = "{{user.firstName}} {{user.lastName}}";
 
     private Integer defaultGidNumber; // = 100; // = Domain Users
 
-    private String homeDirectoryTemplate;
+    private String defaultHomeDirectory;
 
     private String defaultHomeDrive;
 
     private String defaultLoginShell = "/bin/bash";
 
-    private String nisDomainTemplate;
+    private String defaultNisDomain;
 
     private String defaultLanguage = "de-DE";
 
-    private String profilePathTemplate;
+    private String defaultProfilePath;
 
-    private String scriptPathTemplate;
+    private String defaultScriptPath;
 
-    private String uidTemplate = "{{user.samAccountName}}";
+    private String defaultUid = "{{user.samAccountName}}";
 
-    private String unixHomeDirectoryTemplate = "/home/{{user.samAccountName}}";
+    private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
 
-    private Map<String, Object> custom = new LinkedHashMap<>();
+    private Map<String, Object> customProperties = new LinkedHashMap<>();
 
+    public void fillDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
+      if (isEmpty(domainUser)) {
+        return;
+      }
+      if (isEmpty(domainUser.getCompany())) {
+        domainUser.setCompany(getDefaultCompany());
+      }
+      if (isEmpty(domainUser.getDisplayName())) {
+        domainUser.setDisplayName(getDefaultDisplayName());
+      }
+      if (isEmpty(domainUser.getEmail())) {
+        domainUser.setEmail(getDefaultEmail());
+      }
+      if (isEmpty(domainUser.getHomeDirectory())) {
+        domainUser.setHomeDirectory(getDefaultHomeDirectory());
+      }
+      if (isEmpty(domainUser.getHomeDrive())) {
+        domainUser.setHomeDrive(getDefaultHomeDrive());
+      }
+      if (isEmpty(domainUser.getPreferredLanguage())) {
+        domainUser.setPreferredLanguage(getDefaultLanguage());
+      }
+      if (isEmpty(domainUser.getProfilePath())) {
+        domainUser.setProfilePath(getDefaultProfilePath());
+      }
+      if (isEmpty(domainUser.getScriptPath())) {
+        domainUser.setScriptPath(getDefaultScriptPath());
+      }
+      if (rfc2307Enabled) {
+        if (isEmpty(domainUser.getGecos())) {
+          domainUser.setGecos(getDefaultGecos());
+        }
+        if (isEmpty(domainUser.getGidNumber())) {
+          domainUser.setGidNumber(getDefaultGidNumber());
+        }
+        if (isEmpty(domainUser.getLoginShell())) {
+          domainUser.setLoginShell(getDefaultLoginShell());
+        }
+        if (isEmpty(domainUser.getNisDomain())) {
+          domainUser.setNisDomain(getDefaultNisDomain());
+        }
+        if (isEmpty(domainUser.getUid())) {
+          domainUser.setUid(getDefaultUid());
+        }
+        if (isEmpty(domainUser.getUnixHomeDirectory())) {
+          domainUser.setUnixHomeDirectory(getDefaultUnixHomeDirectory());
+        }
+      }
+    }
+
+    public void replaceInvalidUsernameWithDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
+      if (isEmpty(domainUser) || isEmpty(domainUser.getSamAccountName())) {
+        return;
+      }
+      String username = domainUser.getSamAccountName().toLowerCase();
+      if (!isEmpty(domainUser.getDisplayName())
+          && domainUser.getDisplayName().toLowerCase().contains(username)) {
+        domainUser.setDisplayName(getDefaultDisplayName());
+      }
+      if (!isEmpty(domainUser.getEmail())
+          && domainUser.getEmail().toLowerCase().contains(username)) {
+        domainUser.setEmail(getDefaultEmail());
+      }
+      if (!isEmpty(domainUser.getHomeDirectory())
+          && domainUser.getHomeDirectory().toLowerCase().contains(username)) {
+        domainUser.setHomeDirectory(getDefaultHomeDirectory());
+      }
+      if (!isEmpty(domainUser.getScriptPath())
+          && domainUser.getScriptPath().toLowerCase().contains(username)) {
+        domainUser.setScriptPath(getDefaultScriptPath());
+      }
+      if (rfc2307Enabled) {
+        if (!isEmpty(domainUser.getGecos())
+            && domainUser.getGecos().toLowerCase().contains(username)) {
+          domainUser.setGecos(getDefaultGecos());
+        }
+        if (!isEmpty(domainUser.getLoginShell())
+            && domainUser.getLoginShell().toLowerCase().contains(username)) {
+          domainUser.setLoginShell(getDefaultLoginShell());
+        }
+        if (!isEmpty(domainUser.getUid())
+            && domainUser.getUid().toLowerCase().contains(username)) {
+          domainUser.setUid(getDefaultUid());
+        }
+        if (!isEmpty(domainUser.getUnixHomeDirectory())
+            && domainUser.getUnixHomeDirectory().toLowerCase().contains(username)) {
+          domainUser.setUnixHomeDirectory(getDefaultUnixHomeDirectory());
+        }
+      }
+    }
+    public void replaceNames(DomainUser domainUser, String oldName, String newName) {
+      if (isEmpty(domainUser) || isEmpty(oldName) || isEmpty(newName)) {
+        return;
+      }
+      if (!isEmpty(domainUser.getDisplayName())) {
+        domainUser.setDisplayName(domainUser.getDisplayName().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getEmail())) {
+        domainUser.setEmail(domainUser.getEmail().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getGecos())) {
+        domainUser.setGecos(domainUser.getGecos().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getHomeDirectory())) {
+        domainUser.setHomeDirectory(domainUser.getHomeDirectory().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getProfilePath())) {
+        domainUser.setProfilePath(domainUser.getProfilePath().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getScriptPath())) {
+        domainUser.setScriptPath(domainUser.getScriptPath().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getUid())) {
+        domainUser.setUid(domainUser.getUid().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getUnixHomeDirectory())) {
+        domainUser.setUnixHomeDirectory(
+            domainUser.getUnixHomeDirectory().replace(oldName, newName));
+      }
+      if (!isEmpty(domainUser.getUserPrincipalName())) {
+        domainUser.setUserPrincipalName(
+            domainUser.getUserPrincipalName().replace(oldName, newName));
+      }
+    }
   }
 
   @Data
@@ -405,7 +539,7 @@ public class DomainControllerProperties implements Serializable {
   }
 
   @Data
-  public static class  DomainProperties {
+  public static class DomainProperties {
 
     public static final Dn DEFAULT_DOMAIN_CONTROLLERS_OU = new Dn("OU=Domain Controllers");
 

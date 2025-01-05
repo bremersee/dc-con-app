@@ -87,7 +87,7 @@ abstract class AbstractDomainUserRepository extends AbstractRepository
     log.debug("findAvatarsOfProviders({}, {}, {})", user, avatarDefault, size);
     return getAvatarProviders().stream()
         .flatMap(repo -> repo.findAvatar(user, avatarDefault, size).stream())
-        .filter(this::isNotEmpty);
+        .filter(this::isAvatarNotEmpty);
   }
 
 }

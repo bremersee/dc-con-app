@@ -105,7 +105,7 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
   /**
    * The constant UID. Attribute of the username.
    */
-  String LDAP_USER_UID = "uid";
+  String LDAP_USER_UID = "uid"; // TODO msSFU30Name
 
   String LDAP_USER_UID_NUMBER = "uidNumber";
 
@@ -134,6 +134,7 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
       LDAP_USER_DEPARTMENT,
       LDAP_DESCRIPTION,
       LDAP_USER_DISPLAY_NAME,
+      LDAP_USER_GECOS,
       LDAP_USER_GIVEN_NAME,
       LDAP_GID_NUMBER,
       LDAP_USER_HOME_DIRECTORY,
@@ -146,9 +147,11 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
       LDAP_MEMBER_OF_GROUP,
       LDAP_USER_MOBILE,
       LDAP_NIS_DOMAIN,
+      LDAP_NIS_NAME,
       LDAP_OBJECT_SID,
       LDAP_USER_OFFICE_NAME,
       LDAP_USER_PREFERRED_LANGUAGE,
+      LDAP_USER_PRIMARY_GROUP_ID,
       LDAP_USER_PROFILE_PATH,
       LDAP_USER_PWD_LAST_SET,
       LDAP_SAM_ACCOUNT_NAME,
@@ -156,9 +159,11 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
       LDAP_USER_SN,
       LDAP_USER_TELEPHONE_NUMBER,
       LDAP_USER_TITLE,
+      LDAP_USER_UID,
       LDAP_USER_UID_NUMBER,
       LDAP_USER_UNIX_HOME_DIRECTORY,
-      LDAP_USER_USER_ACCOUNT_CONTROL
+      LDAP_USER_USER_ACCOUNT_CONTROL,
+      LDAP_USER_USER_PRINCIPAL_NAME
   };
 
 }

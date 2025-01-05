@@ -247,7 +247,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
 
   static String quote(String value) {
     if (isEmpty(value)) {
-      return quote("\"\"");
+      return "\"\"";
     }
     if (value.contains("\"")) {
       return '\'' + value + '\'';
