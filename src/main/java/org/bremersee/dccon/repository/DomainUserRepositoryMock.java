@@ -233,7 +233,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
               + domainUser.getSamAccountName() + "]",
           "check_password_restrictions");
     }
-    updateCommonAttributes(domainUser, getBaseDn(validateOu(ou)), "CN",
+    updateCommonAttributes(domainUser, getProperties().getBaseDn(validateOu(ou)), "CN",
         domainUser.getSamAccountName());
     store.getUserRepo().put(domainUser.getSamAccountName().toLowerCase(), domainUser);
     return domainUser;
@@ -263,9 +263,9 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
     }
     Dn parentDn;
     if (!isNull(newOu) && !newOu.isEmpty()) {
-      parentDn = getParentDn(domainUser.getDistinguishedName());
+      parentDn = getProperties().getParentDn(domainUser.getDistinguishedName());
     } else {
-      parentDn = getBaseDn(validateOu(newOu));
+      parentDn = getProperties().getBaseDn(validateOu(newOu));
     }
     updateCommonAttributes(domainUser, parentDn, "CN", domainUser.getSamAccountName());
     store.getUserRepo().put(domainUser.getSamAccountName().toLowerCase(), domainUser);

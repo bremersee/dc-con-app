@@ -40,7 +40,7 @@ public interface OrganizationalUnitSelectorComponent extends DomainControllerPro
 
   OrganizationalUnitService getOrganizationalUnitService();
 
-  String getDefaultOrganizationalUnit();
+  Dn getDefaultOrganizationalUnit();
 
   SearchScope getDefaultSearchScope();
 
@@ -54,7 +54,7 @@ public interface OrganizationalUnitSelectorComponent extends DomainControllerPro
 
     OrganizationalUnitSelector ouSelector = new OrganizationalUnitSelector();
     OrganizationalUnit selectedOu = Optional.ofNullable(ou)
-        .or(() -> Optional.ofNullable(getDefaultOrganizationalUnit()).map(Dn::new))
+        .or(() -> Optional.ofNullable(getDefaultOrganizationalUnit()))
         .flatMap(ouDn -> getOrganizationalUnitService().getOrganizationalUnit(ouDn))
         .orElseGet(() -> getOrganizationalUnitService().getBase());
     ouSelector.setSelectedOu(selectedOu);
@@ -87,7 +87,7 @@ public interface OrganizationalUnitSelectorComponent extends DomainControllerPro
   }
 
   default boolean isBaseOu(OrganizationalUnit ou) {
-    return new Dn(getProperties().getBaseDn()).isSame(new Dn(ou.getDistinguishedName()));
+    return getProperties().getBaseDn().isSame(new Dn(ou.getDistinguishedName()));
   }
 
   default Comparator<OrganizationalUnit> getOrganizationalUnitComparator() {

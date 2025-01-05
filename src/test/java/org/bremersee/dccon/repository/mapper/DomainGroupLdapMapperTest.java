@@ -53,10 +53,6 @@ class DomainGroupLdapMapperTest {
   @BeforeAll
   static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    properties.setGroupRdn("cn");
-    properties.setGroupBaseDn("cn=users,dc=example,dc=org");
-    properties.setUserRdn("cn");
-    properties.setUserBaseDn("cn=users,dc=example,dc=org");
     mapper = new DomainGroupLdapMapper(
         properties,
         new DomainRepositoryMock(properties, new RepositoryMockStore()));

@@ -89,7 +89,7 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
           "Maximum size of groups is exceeded.",
           EC_MAX_MOCK_DATA);
     }
-    updateCommonAttributes(domainGroup, getBaseDn(validateOu(ou)), "CN",
+    updateCommonAttributes(domainGroup, getProperties().getBaseDn(validateOu(ou)), "CN",
         domainGroup.getSamAccountName());
     return update(domainGroup);
   }

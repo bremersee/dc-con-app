@@ -22,6 +22,9 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.ComputerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.DomainProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.UserProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.dn.Dn;
@@ -55,7 +58,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
-        .distinguishedName(LDAP_OU_USERS.format() + ',' + getProperties().getBaseDn())
+        .distinguishedName(getProperties().getBaseDn(UserProperties.DEFAULT_USER_OU).format())
         .name("Users")
         .description("Default container for upgraded user accounts")
         .systemOu(true)
@@ -63,7 +66,8 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
-        .distinguishedName(LDAP_OU_COMPUTERS.format() + ',' + getProperties().getBaseDn())
+        .distinguishedName(
+            getProperties().getBaseDn(ComputerProperties.DEFAULT_COMPUTER_OU).format())
         .name("Computers")
         .description("Default container for upgraded computer accounts")
         .systemOu(true)
@@ -71,16 +75,12 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
-        .distinguishedName(LDAP_OU_DOMAIN_CONTROLLERS.format() + ',' + getProperties().getBaseDn())
+        .distinguishedName(
+            getProperties().getBaseDn(DomainProperties.DEFAULT_DOMAIN_CONTROLLERS_OU).format())
         .name("Domain Controllers")
         .description("Default container for domain controllers")
         .systemOu(true)
         .build());
-  }
-
-  @Override
-  Dn getDefaultOu() {
-    return getBaseDn();
   }
 
   @Override
@@ -96,7 +96,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     }
     return findAll().filter(o -> {
           Dn dn = new Dn(o.getDistinguishedName());
-          Dn baseDn = new Dn(getProperties().getBaseDn());
+          Dn baseDn = getProperties().getBaseDn();
           Dn ouDn = new Dn(ou.getRDns());
           if (baseDn.isAncestor(ouDn)) {
             ouDn.add(baseDn);
@@ -147,7 +147,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     }
     Dn dn = new Dn();
     dn.add(ou);
-    dn.add(new Dn(getProperties().getBaseDn()));
+    dn.add(getProperties().getBaseDn());
     OrganizationalUnit newOu = organizationalUnit.toBuilder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())

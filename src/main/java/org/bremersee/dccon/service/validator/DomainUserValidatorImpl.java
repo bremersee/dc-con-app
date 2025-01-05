@@ -20,11 +20,11 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.repository.DomainRepository;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * The default domain user validator.
  */
+// TODO delete
 @Component("domainUserValidator")
 public class DomainUserValidatorImpl extends AbstractDomainEntityValidator
     implements DomainUserValidator {
@@ -42,55 +42,14 @@ public class DomainUserValidatorImpl extends AbstractDomainEntityValidator
 
   @Override
   public void doAddValidation(DomainUser domainUser) {
-    validateSamAccountNameNotExists(domainUser.getSamAccountName(), DomainUser.class);
-    validate(domainUser);
+    //validateSamAccountNameNotExists(domainUser.getSamAccountName(), DomainUser.class);
+    //validate(domainUser);
   }
 
   @Override
   public void doUpdateValidation(String userName, DomainUser domainUser) {
-    domainUser.setSamAccountName(userName);
-    validate(domainUser);
+    //domainUser.setSamAccountName(userName);
+    //validate(domainUser);
   }
 
-  private void validate(DomainUser domainUser) {
-    // Display name
-    final StringBuilder displayNameBuilder = new StringBuilder();
-    if (StringUtils.hasText(domainUser.getFirstName())) {
-      displayNameBuilder.append(domainUser.getFirstName());
-      if (StringUtils.hasText(domainUser.getLastName())) {
-        displayNameBuilder.append(' ');
-      }
-    }
-    if (StringUtils.hasText(domainUser.getLastName())) {
-      displayNameBuilder.append(domainUser.getLastName());
-    }
-    final String displayName = StringUtils.hasText(domainUser.getDisplayName())
-        ? domainUser.getDisplayName()
-        : !displayNameBuilder.isEmpty() ? displayNameBuilder.toString() : null;
-    domainUser.setDisplayName(displayName);
-
-    // TODO depends on rf...
-    // Login shell
-    if (StringUtils.hasText(getProperties().getDefaultLoginShell())) {
-      domainUser.setLoginShell(getProperties().getDefaultLoginShell());
-    } else {
-      domainUser.setLoginShell(null);
-    }
-
-    // Unix home
-    if (StringUtils.hasText(getProperties().getDefaultUnixHomeDirectory())) {
-      domainUser.setUnixHomeDirectory(getProperties()
-          .getDefaultUnixHomeDirectory().replace("{}", domainUser.getSamAccountName()));
-    } else {
-      domainUser.setUnixHomeDirectory(null);
-    }
-
-    // Home directory/share
-    if (StringUtils.hasText(getProperties().getDefaultHomeDirectory())) {
-      domainUser.setHomeDirectory(getProperties()
-          .getDefaultHomeDirectory().replace("{}", domainUser.getSamAccountName()));
-    } else {
-      domainUser.setHomeDirectory(null);
-    }
-  }
 }

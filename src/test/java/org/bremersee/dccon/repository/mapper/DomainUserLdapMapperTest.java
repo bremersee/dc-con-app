@@ -55,10 +55,6 @@ class DomainUserLdapMapperTest {
   @BeforeAll
   static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    properties.setGroupRdn("cn");
-    properties.setGroupBaseDn("cn=Users,dc=example,dc=org");
-    properties.setUserRdn("cn");
-    properties.setUserBaseDn("cn=Users,dc=example,dc=org");
     mapper = new DomainUserLdapMapper(
         properties,
         new DomainRepositoryMock(properties, new RepositoryMockStore()));

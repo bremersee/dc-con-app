@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.ComputerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties.UserProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
@@ -79,20 +81,26 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
   Filter objectClassFilter() {
     return new OrFilter(
         new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue()),
-        new EqualityFilter(LDAP_DN, getBaseDn(LDAP_OU_USERS).format()),
-        new EqualityFilter(LDAP_DN, getBaseDn(LDAP_OU_COMPUTERS).format()));
+        new EqualityFilter(LDAP_DN,
+            getProperties().getBaseDn(UserProperties.DEFAULT_USER_OU).format()),
+        new EqualityFilter(LDAP_DN,
+            getProperties().getBaseDn(ComputerProperties.DEFAULT_COMPUTER_OU).format()));
   }
 
   @Override
   public Stream<OrganizationalUnit> findAll() {
     SearchRequest computersSearchRequest = SearchRequest
-        .objectScopeSearchRequest(getBaseDn(LDAP_OU_COMPUTERS).format(), getReturnAttributes());
+        .objectScopeSearchRequest(
+            getProperties().getBaseDn(ComputerProperties.DEFAULT_COMPUTER_OU).format(),
+            getReturnAttributes());
     Stream<OrganizationalUnit> stream = getLdapTemplate()
         .findOne(computersSearchRequest, ouLdapMapper)
         .stream();
 
     SearchRequest usersSearchRequest = SearchRequest
-        .objectScopeSearchRequest(getBaseDn(LDAP_OU_USERS).format(), getReturnAttributes());
+        .objectScopeSearchRequest(
+            getProperties().getBaseDn(UserProperties.DEFAULT_USER_OU).format(),
+            getReturnAttributes());
     stream = Stream.concat(
         stream,
         getLdapTemplate().findOne(usersSearchRequest, ouLdapMapper).stream());
@@ -113,7 +121,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     if (ou.isEmpty()) {
       return Optional.empty();
     }
-    String dn = getBaseDn(ou).format();
+    String dn = getProperties().getBaseDn(ou).format();
     log.debug("findOne, dn = {}", dn);
     new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
     SearchRequest searchRequest = searchOneRequest(dn);

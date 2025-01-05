@@ -68,13 +68,13 @@ public class UsersController extends AbstractController
   }
 
   @Override
-  public String getDefaultOrganizationalUnit() {
-    return getProperties().getDefaultUserOu();
+  public Dn getDefaultOrganizationalUnit() {
+    return getProperties().getUser().getDefaultUserOu();
   }
 
   @Override
   public SearchScope getDefaultSearchScope() {
-    return getProperties().getDefaultUserSearchScope();
+    return getProperties().getUser().getDefaultUserSearchScope();
   }
 
   @RequestMapping(path = "/admin/users", method = {RequestMethod.GET, RequestMethod.POST})

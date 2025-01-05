@@ -89,7 +89,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
   @Override
   public boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses) {
     log.debug("dnExistsWithAnyObjectClass({}, {})", dn, objectClasses);
-    if (!isDn(dn)) {
+    if (!getProperties().isDn(dn)) {
       log.debug("Dn '{}' does not exist", dn);
       return false;
     }
@@ -130,7 +130,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
       return Optional.empty();
     }
     SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getBaseDn().format())
+        .dn(getProperties().getBaseDn().format())
         .filter(new EqualityFilter(RepositoryConstants.LDAP_SAM_ACCOUNT_NAME, samAccountName))
         .scope(SearchScope.SUBTREE)
         .returnAttributes(RepositoryConstants.LDAP_DN)
@@ -144,7 +144,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
   @Override
   public boolean isRfc2307Enabled() {
     Dn dn = new Dn("CN=ypservers,CN=ypServ30,CN=RpcServices,CN=System");
-    dn.add(getBaseDn());
+    dn.add(getProperties().getBaseDn());
     boolean result = dnExistsWithAnyObjectClass(dn.format());
     log.debug("Are nis extensions (rfc2307) installed? {}", result);
     return result;

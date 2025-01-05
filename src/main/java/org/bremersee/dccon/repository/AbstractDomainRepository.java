@@ -35,7 +35,7 @@ abstract class AbstractDomainRepository extends AbstractRepository implements Do
 
   @Override
   Dn getDefaultOu() {
-    return getBaseDn(new Dn("CN=System"));
+    return getProperties().getDomain().getDefaultSystemOu();
   }
 
   @Override

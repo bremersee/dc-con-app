@@ -16,8 +16,6 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -66,9 +64,7 @@ abstract class AbstractDomainUserRepository extends AbstractRepository
 
   @Override
   Dn getDefaultOu() {
-    return isEmpty(getProperties().getDefaultUserOu())
-        ? LDAP_OU_USERS
-        : new Dn(getProperties().getDefaultUserOu());
+    return getProperties().getUser().getDefaultUserOu();
   }
 
   @Override

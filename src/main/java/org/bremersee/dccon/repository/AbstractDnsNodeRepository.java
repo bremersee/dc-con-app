@@ -87,7 +87,7 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
   @Override
   Dn getDefaultOu() {
     // TODO
-    return getBaseDn();
+    return getProperties().getBaseDn();
   }
 
   @Override

@@ -30,7 +30,6 @@ import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.repository.OrganizationalUnitRepository;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 /**
  * The type OrganizationalUnitServiceImpl.
@@ -45,8 +44,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   private final OrganizationalUnitRepository repository;
 
-  private final Dn baseDn;
-
   @Getter
   private final OrganizationalUnit base;
 
@@ -55,9 +52,8 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
       OrganizationalUnitRepository repository) {
     this.properties = properties;
     this.repository = repository;
-    this.baseDn = new Dn(this.properties.getBaseDn());
     this.base = OrganizationalUnit.builder()
-        .distinguishedName(properties.getBaseDn())
+        .distinguishedName(properties.getBaseDn().format())
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .name("Base")
@@ -68,7 +64,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(
       Stream<OrganizationalUnit> ous, Dn ou) {
-    Dn ouDn = parseDn(ou);
+    Dn ouDn = properties.getBaseDn(ou);
     return ous
         .map(organizationalUnit -> new SelectOption<>(
             new Dn(organizationalUnit.getDistinguishedName()).format(),
@@ -83,7 +79,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(Dn ou) {
-    log.info("===========> ou {}", ou);
     return getOrganizationalUnitSelectors(getOrganizationalUnits(), ou);
   }
 
@@ -104,7 +99,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithBaseButWithoutSelected(Dn ou) {
-    Dn ouDn = parseDn(ou);
+    Dn ouDn = properties.getBaseDn(ou);
     return getOrganizationalUnitsWithBase()
         .filter(organizationalUnit -> !isSelected(organizationalUnit, ouDn));
   }
@@ -112,17 +107,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   @Override
   public Optional<OrganizationalUnit> getOrganizationalUnit(Dn ou) {
     return repository.findOne(ou);
-  }
-
-  private Dn parseDn(Dn ou) {
-    if (ObjectUtils.isEmpty(ou) || ou.isEmpty()) {
-      return baseDn;
-    } else if (baseDn.isAncestor(ou) || baseDn.isSame(ou)) {
-      return ou;
-    }
-    Dn ouDn = new Dn(ou.getRDns());
-    ouDn.add(baseDn);
-    return ouDn;
   }
 
   private boolean isSelected(OrganizationalUnit organizationalUnit, Dn ouDn) {

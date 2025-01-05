@@ -22,13 +22,17 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -51,20 +55,19 @@ public class DomainControllerProperties implements Serializable {
   @Serial
   private static final long serialVersionUID = 3L;
 
-  public static final String MOCK_BASE_DN = "dc=samdom,dc=example,dc=org";
-
-  public static final String DEFAULT_USER_OU = "CN=Users";
-
-  public static final String DEFAULT_COMPUTER_OU = "CN=Computers";
-
-  public static final String DEFAULT_DOMAIN_CONTROLLERS_OU = "OU=Domain Controllers";
+  public static final Dn MOCK_BASE_DN = new Dn("dc=samdom,dc=example,dc=org");
 
 
-  private Dn testDn; // TODO cool works with empty, but not with illegal
-  private String baseDn = "dc=eixe,dc=bremersee,dc=org";
+  private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
 
 
   private UserProperties user = new UserProperties();
+
+  private GroupProperties group = new GroupProperties();
+
+  private ComputerProperties computer = new ComputerProperties();
+
+  private DomainProperties domain = new DomainProperties();
 
 
   private String personalName = "Anna Livia";
@@ -74,19 +77,12 @@ public class DomainControllerProperties implements Serializable {
   private String companyUrl = "http://example.org";
 
 
+  /*
   @Deprecated
   private String defaultNisDomain; // = "eixe"; // TODO can I determine it with ldap?, wo hatte ich den gefunden?
 
   @Deprecated
   private Integer defaultGidNumber; // = 100; // = Domain Users
-
-
-
-
-  private String defaultGroupOu = "CN=Users";
-
-  private SearchScope defaultGroupSearchScope = SearchScope.ONELEVEL;
-
 
   @Deprecated
   private String groupBaseDn;
@@ -105,24 +101,13 @@ public class DomainControllerProperties implements Serializable {
 
   @Deprecated
   private SearchScope groupFindOneSearchScope = SearchScope.ONELEVEL;
+  */
 
 
-  private String defaultComputerOu = DEFAULT_COMPUTER_OU;
 
-  private SearchScope defaultComputerSearchScope = SearchScope.ONELEVEL;
-
-
-  /**
-   * Specifies whether the username should be used for attribute 'cn' or firstname and lastname.
-   */
-  private boolean useUsernameAsCn = true;
-
-  private String defaultUserOu = DEFAULT_USER_OU;
-
-  private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
-
+  /*
   @Deprecated
-  private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}"; // TODO collect
+  private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}";
 
   @Deprecated
   private String userBaseDn;
@@ -144,6 +129,7 @@ public class DomainControllerProperties implements Serializable {
 
   @Deprecated
   private SearchScope userFindOneSearchScope = SearchScope.ONELEVEL;
+  */
 
 
   private int maximumPasswordLength = 75;
@@ -154,16 +140,7 @@ public class DomainControllerProperties implements Serializable {
       + "((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])"
       + "|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*";
 
-  /**
-   * ISO 639-1 language codes. The combinations like de-DE and en-US with ISO-639 and ISO-3166 also
-   * work.
-   */
-  @Deprecated
-  private String defaultPreferredLanguage = "de";
 
-  //private String defaultSidPrefix = "S-1-5-21-";
-
-  //private int maxSystemSidSuffix = 999;
 
 
   private String dnsZoneBaseDn;
@@ -218,11 +195,12 @@ public class DomainControllerProperties implements Serializable {
   private String sambaToolExecDir = "/tmp";
 
 
+  /*
   @Deprecated
   private String defaultLoginShell = "/bin/bash";
 
   @Deprecated
-  private String defaultHomeDrive; // = "H"; // TODO with ':'?
+  private String defaultHomeDrive; // = "H";
 
   @Deprecated
   private String defaultHomeDirectory = "\\\\data\\home";
@@ -235,6 +213,7 @@ public class DomainControllerProperties implements Serializable {
 
   @Deprecated
   private String defaultUid = "{{user.samAccountName}}";
+  */
 
 
   private String dhcpLeaseListBinary = "/usr/sbin/dhcp-lease-list";
@@ -285,53 +264,48 @@ public class DomainControllerProperties implements Serializable {
     excludedNodeRegexList.add("ForestDnsZones");
   }
 
-  public String getBaseDn() {
-    if (isEmpty(baseDn)) {
-      return MOCK_BASE_DN;
+  public boolean isDn(String value) {
+    if (isEmpty(value)) {
+      return false;
     }
-    return baseDn;
+    try {
+      Dn dn = new Dn(value);
+      return getBaseDn().isAncestor(dn);
+
+    } catch (RuntimeException e) {
+      return false;
+    }
   }
 
-  public String getDefaultGroupOu() {
-    if (isEmpty(defaultGroupOu)) {
-      return DEFAULT_USER_OU;
+  public Dn getBaseDn(Dn ou) {
+    if (isEmpty(ou) || ou.isEmpty()) {
+      return getBaseDn();
     }
-    return defaultGroupOu;
+    Dn dn = new Dn(ou.getRDns());
+    if (dn.isSame(getBaseDn()) || getBaseDn().isAncestor(dn)) {
+      return dn;
+    }
+    dn.add(getBaseDn());
+    return dn;
   }
 
-  public SearchScope getDefaultGroupSearchScope() {
-    if (isEmpty(defaultGroupSearchScope)) {
-      return SearchScope.ONELEVEL;
+  public Dn removeBaseDn(Dn dn) {
+    Dn baseDn = getBaseDn();
+    if (isEmpty(dn) || dn.isEmpty() || dn.isSame(baseDn)) {
+      return null;
     }
-    return defaultGroupSearchScope;
+    if (baseDn.isAncestor(dn)) {
+      return dn.subDn(0, dn.size() - baseDn.size());
+    }
+    return dn;
   }
 
-  public String getDefaultUserOu() {
-    if (isEmpty(defaultUserOu)) {
-      return DEFAULT_USER_OU;
+  public Dn getParentDn(String dn) {
+    Dn sourceDn = new Dn(dn);
+    if (getBaseDn().isSame(sourceDn)) {
+      return sourceDn;
     }
-    return defaultUserOu;
-  }
-
-  public SearchScope getDefaultUserSearchScope() {
-    if (isEmpty(defaultUserSearchScope)) {
-      return SearchScope.ONELEVEL;
-    }
-    return defaultUserSearchScope;
-  }
-
-  public String getDefaultComputerOu() {
-    if (isEmpty(defaultComputerOu)) {
-      return DEFAULT_COMPUTER_OU;
-    }
-    return defaultComputerOu;
-  }
-
-  public SearchScope getDefaultComputerSearchScope() {
-    if (isEmpty(defaultComputerSearchScope)) {
-      return SearchScope.ONELEVEL;
-    }
-    return defaultComputerSearchScope;
+    return sourceDn.getParent();
   }
 
   /**
@@ -367,6 +341,17 @@ public class DomainControllerProperties implements Serializable {
   @Data
   public static class UserProperties {
 
+    public static final Dn DEFAULT_USER_OU = new Dn("CN=Users");
+
+    private Dn defaultUserOu = DEFAULT_USER_OU;
+
+    private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
+
+    /**
+     * Specifies whether the username should be used for attribute 'cn' or firstname and lastname.
+     */
+    private boolean useUsernameAsCn = true;
+
     private String defaultCompany;
 
     private String displayNameTemplate = "{{user.firstName}} {{user.lastName}}";
@@ -395,6 +380,42 @@ public class DomainControllerProperties implements Serializable {
 
     private String unixHomeDirectoryTemplate = "/home/{{user.samAccountName}}";
 
+    private Map<String, Object> custom = new LinkedHashMap<>();
+
+  }
+
+  @Data
+  public static class GroupProperties {
+
+    private Dn defaultGroupOu = UserProperties.DEFAULT_USER_OU;
+
+    private SearchScope defaultGroupSearchScope = SearchScope.ONELEVEL;
+
+  }
+
+  @Data
+  public static class ComputerProperties {
+
+    public static final Dn DEFAULT_COMPUTER_OU = new Dn("CN=Computers");
+
+    private Dn defaultComputerOu = DEFAULT_COMPUTER_OU;
+
+    private SearchScope defaultComputerSearchScope = SearchScope.ONELEVEL;
+
+  }
+
+  @Data
+  public static class  DomainProperties {
+
+    public static final Dn DEFAULT_DOMAIN_CONTROLLERS_OU = new Dn("OU=Domain Controllers");
+
+    public static final Dn DEFAULT_SYSTEM_OU = new Dn("CN=System");
+
+    private Dn defaultSystemOu = DEFAULT_SYSTEM_OU;
+
+    private SearchScope defaultComputerSearchScope = SearchScope.ONELEVEL;
+
+    String defaultNisDomain;
   }
 
   /**

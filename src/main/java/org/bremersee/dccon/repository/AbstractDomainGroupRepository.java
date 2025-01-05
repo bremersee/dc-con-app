@@ -16,8 +16,6 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -45,9 +43,7 @@ abstract class AbstractDomainGroupRepository extends AbstractRepository
 
   @Override
   Dn getDefaultOu() {
-    return isEmpty(getProperties().getDefaultGroupOu())
-        ? LDAP_OU_USERS
-        : new Dn(getProperties().getDefaultGroupOu());
+    return getProperties().getGroup().getDefaultGroupOu();
   }
 
   @Override

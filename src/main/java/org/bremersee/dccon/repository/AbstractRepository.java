@@ -125,61 +125,13 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
 
   abstract Dn getDefaultOu();
 
-  Dn getBaseDn() {
-    return new Dn(getProperties().getBaseDn());
-  }
-
-  Dn getBaseDn(Dn ou) {
-    if (isEmpty(ou) || ou.isEmpty()) {
-      return getBaseDn();
-    }
-    Dn dn = new Dn(ou.getRDns());
-    if (dn.isSame(getBaseDn()) || getBaseDn().isAncestor(dn)) {
-      return dn;
-    }
-    dn.add(getBaseDn());
-    return dn;
-  }
-
-  Dn removeBaseDn(Dn dn) {
-    Dn baseDn = getBaseDn();
-    if (isEmpty(dn) || dn.isEmpty() || dn.isSame(baseDn)) {
-      return null;
-    }
-    if (baseDn.isAncestor(dn)) {
-      return dn.subDn(0, dn.size() - baseDn.size());
-    }
-    return dn;
-  }
-
-  Dn getParentDn(String dn) {
-    Dn sourceDn = new Dn(dn);
-    if (getBaseDn().isSame(sourceDn)) {
-      return sourceDn;
-    }
-    return sourceDn.getParent();
-  }
-
-  boolean isDn(String value) {
-    if (isEmpty(value)) {
-      return false;
-    }
-    try {
-      Dn dn = new Dn(value);
-      return getBaseDn().isAncestor(dn);
-
-    } catch (RuntimeException e) {
-      return false;
-    }
-  }
-
   Dn validateOu(Dn ou) {
     Dn ouDn = isEmpty(ou) || ou.isEmpty() ? getDefaultOu() : ou;
     if (isEmpty(ouDn) || ouDn.isEmpty()) {
       throw LdaptiveException.badRequest(
           "Organizational unit cannot be empty.", EC_EMPTY_OU_RDN);
     }
-    Dn dn = getBaseDn(ouDn);
+    Dn dn = getProperties().getBaseDn(ouDn);
     if (!isEmpty(getLdapTemplate()) && !getLdapTemplate().exists(dn.format())) {
       throw LdaptiveException.badRequest(
           String.format("Organizational unit '%s' does not exist.", ouDn.format()),
@@ -209,7 +161,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
   String getNisDomain(NisDomainMember nisDomainMember) {
     return !isEmpty(nisDomainMember) && !isEmpty(nisDomainMember.getNisDomain())
         ? nisDomainMember.getNisDomain()
-        : getProperties().getDefaultNisDomain();
+        : getProperties().getDomain().getDefaultNisDomain();
   }
 
 
@@ -254,7 +206,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
       SearchScope scope,
       String... returnAttributes) {
 
-    if (isDn(uniqueName)) {
+    if (getProperties().isDn(uniqueName)) {
       return SearchRequest.builder()
           .dn(uniqueName)
           .filter(objectClassFilter())
@@ -265,7 +217,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
           .build();
     }
     return SearchRequest.builder()
-        .dn(getBaseDn(ouRdn).format())
+        .dn(getProperties().getBaseDn(ouRdn).format())
         .filter(requireNonNullElseGet(filter, () -> findOneFilter(uniqueName)))
         .scope(Optional.ofNullable(scope)
             .filter(searchScope -> !isEmpty(ouRdn))
@@ -282,7 +234,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
       SearchScope scope,
       String... returnAttributes) {
     return SearchRequest.builder()
-        .dn(getBaseDn(ouRdn).format())
+        .dn(getProperties().getBaseDn(ouRdn).format())
         .filter(filter)
         .scope(Optional.ofNullable(scope)
             .filter(searchScope -> !isEmpty(ouRdn))

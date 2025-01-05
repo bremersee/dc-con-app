@@ -110,11 +110,11 @@ public class UserAddController extends AbstractController
         .map(obj -> obj instanceof DomainUserAddRequest)
         .map(DomainUserAddRequest.class::cast)
         .map(DomainUserAddRequest::getOuDn)
-        .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
+        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
         .orElseGet(() -> Optional.ofNullable(ou)
             .filter(dn -> !dn.isEmpty())
-            .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
-            .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())));
+            .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
+            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()));
     return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
   }
 
@@ -131,12 +131,12 @@ public class UserAddController extends AbstractController
     getLogger().debug("displayUserAdd({})", ou);
     Dn ouDn = Optional.ofNullable(ou)
         .filter(dn -> !dn.isEmpty())
-        .filter(dn -> !dn.isSame(new Dn(getProperties().getBaseDn())))
-        .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())); // TODO full dn  --> move dn stuff to properties?
+        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
+        .orElseGet(() -> getProperties().getBaseDn(getProperties().getUser().getDefaultUserOu()));
     DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
     userAddRequest.setUser(createNewDomainUser());
     userAddRequest.setOu(ouDn.format());
-    userAddRequest.setUseUsernameAsCn(getProperties().isUseUsernameAsCn());
+    userAddRequest.setUseUsernameAsCn(getProperties().getUser().isUseUsernameAsCn());
     userAddRequest.setSendEmail(false);
     if (!model.containsAttribute("userAddRequest")) {
       model.addAttribute("userAddRequest", userAddRequest);
@@ -169,7 +169,7 @@ public class UserAddController extends AbstractController
         OU, Optional.ofNullable(userAddRequest)
             .map(DomainUserAddRequest::getOuDn)
             .map(Dn::format)
-            .orElse(getProperties().getDefaultUserOu()),
+            .orElse(getProperties().getUser().getDefaultUserOu().format()),
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
     );
 
@@ -187,7 +187,7 @@ public class UserAddController extends AbstractController
         userAddRequest.getUser(),
         Optional.ofNullable(userAddRequest.getOu())
             .map(Dn::new)
-            .orElseGet(() -> new Dn(getProperties().getDefaultUserOu())),
+            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()),
         userAddRequest.getUseUsernameAsCn(),
         userAddRequest.getSendEmail());
 

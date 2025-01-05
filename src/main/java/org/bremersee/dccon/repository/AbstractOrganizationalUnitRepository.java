@@ -42,7 +42,7 @@ abstract class AbstractOrganizationalUnitRepository extends AbstractRepository
 
   @Override
   Dn getDefaultOu() {
-    return getBaseDn();
+    return getProperties().getBaseDn();
   }
 
   @Override

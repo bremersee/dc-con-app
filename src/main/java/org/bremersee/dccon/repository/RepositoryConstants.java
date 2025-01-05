@@ -16,9 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
-import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.repository.transcoder.SidValueTranscoder;
-import org.ldaptive.dn.Dn;
 import org.ldaptive.transcode.BooleanValueTranscoder;
 import org.ldaptive.transcode.ByteArrayValueTranscoder;
 import org.ldaptive.transcode.IntegerValueTranscoder;
@@ -40,12 +38,6 @@ public interface RepositoryConstants {
   ByteArrayValueTranscoder BYTE_ARRAY_VALUE_TRANSCODER = new ByteArrayValueTranscoder();
 
   SidValueTranscoder SID_VALUE_TRANSCODER = new SidValueTranscoder();
-
-  Dn LDAP_OU_USERS = new Dn(DomainControllerProperties.DEFAULT_USER_OU);
-
-  Dn LDAP_OU_COMPUTERS = new Dn(DomainControllerProperties.DEFAULT_COMPUTER_OU);
-
-  Dn LDAP_OU_DOMAIN_CONTROLLERS = new Dn(DomainControllerProperties.DEFAULT_DOMAIN_CONTROLLERS_OU);
 
   String LDAP_OBJECT_CLASS = "objectClass";
 

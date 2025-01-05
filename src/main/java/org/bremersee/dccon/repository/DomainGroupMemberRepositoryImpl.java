@@ -114,7 +114,8 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
       Set<String> dnOfMembers, DomainGroupMemberType... types) {
 
     SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getBaseDn())
+        .dn(getProperties().getBaseDn().format())
+        // TODO computers are also users!
         .filter(new EqualityFilter(LDAP_OBJECT_CLASS, RepositoryConstants.LDAP_OBJECT_CLASS_USER))
         .scope(SearchScope.SUBTREE)
         .returnAttributes(
@@ -134,7 +135,7 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
       Set<String> dnOfMembers, DomainGroupMemberType... types) {
 
     SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getBaseDn())
+        .dn(getProperties().getBaseDn().format())
         .filter(new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_GROUP))
         .scope(SearchScope.SUBTREE)
         .returnAttributes(
@@ -151,7 +152,7 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
       Set<String> dnOfMembers, DomainGroupMemberType... types) {
 
     SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getBaseDn())
+        .dn(getProperties().getBaseDn().format())
         .filter(
             new EqualityFilter(LDAP_OBJECT_CLASS, RepositoryConstants.LDAP_OBJECT_CLASS_COMPUTER))
         .scope(SearchScope.SUBTREE)

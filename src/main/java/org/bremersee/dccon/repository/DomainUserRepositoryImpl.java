@@ -287,10 +287,11 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   String doAdd(DomainUser domainUser, Dn ou, Boolean useUsernameAsCn) {
     log.debug("doAdd({}, {}, {})", domainUser.getSamAccountName(),
         Optional.ofNullable(ou).map(Dn::format).orElse(null), useUsernameAsCn);
-    Dn userOu = removeBaseDn(validateOu(ou));
+    Dn userOu = getProperties().removeBaseDn(validateOu(ou));
     log.debug("doAdd({}, {}, {})", domainUser.getSamAccountName(),
         Optional.ofNullable(userOu).map(Dn::format).orElse(null), useUsernameAsCn);
-    boolean usernameAsCn = requireNonNullElse(useUsernameAsCn, getProperties().isUseUsernameAsCn());
+    boolean usernameAsCn = requireNonNullElse(
+        useUsernameAsCn, getProperties().getUser().isUseUsernameAsCn());
     kinit();
     List<String> commands = new ArrayList<>();
     ssh(commands);
@@ -433,7 +434,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       validateOu(newOu);
     }
     return getDomainRepository().findDnOfSamAccountName(userName)
-        .flatMap(dn -> findOne(userName, getParentDn(dn), SearchScope.ONELEVEL))
+        .flatMap(dn -> findOne(userName, getProperties().getParentDn(dn), SearchScope.ONELEVEL))
         .map(existingDomainUser -> {
           if (isRenamingRequired(domainUser, existingDomainUser)) {
             return rename(userName, domainUser);
@@ -513,8 +514,8 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (isEmpty(newOu) || newOu.isEmpty()) {
       return domainUser;
     }
-    Dn ou = getBaseDn(validateOu(newOu));
-    if (ou.isSame(getParentDn(domainUser.getDistinguishedName()))) {
+    Dn ou = getProperties().getBaseDn(validateOu(newOu));
+    if (ou.isSame(getProperties().getParentDn(domainUser.getDistinguishedName()))) {
       return domainUser;
     }
     RDn rdn = new Dn(domainUser.getDistinguishedName()).getRDn();

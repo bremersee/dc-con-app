@@ -21,7 +21,6 @@ import static java.util.Objects.requireNonNullElse;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import org.bremersee.dccon.service.TemplateEngine;
 import org.bremersee.dccon.service.TemplateEngineException;
 import org.springframework.lang.Nullable;
@@ -46,7 +45,13 @@ public interface FieldTemplateComponent {
 
     try {
       return Optional.ofNullable(getTemplateEngine().compileAndExecute(value, context))
-          .map(v -> v.replaceAll(Pattern.quote("  "), " "))
+          .map(v -> {
+            String renderedValue = v;
+            while (renderedValue.contains("  ")) {
+              renderedValue = renderedValue.replace("  ", " ");
+            }
+            return renderedValue;
+          })
           .map(String::trim)
           .orElse(null);
 

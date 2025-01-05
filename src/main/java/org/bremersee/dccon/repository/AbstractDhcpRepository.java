@@ -40,21 +40,21 @@ abstract class AbstractDhcpRepository extends AbstractRepository {
 
   @Override
   Dn getDefaultOu() {
-    return getBaseDn();
+    throw new UnsupportedOperationException("There is no default Dn for dhcp configured.");
   }
 
   @Override
   String getObjectClassValue() {
-    return "";
+    throw new UnsupportedOperationException("There is no object class value for dhcp configured.");
   }
 
   @Override
   String[] getBinaryAttributes() {
-    return new String[0];
+    throw new UnsupportedOperationException("There are no binary attributes for dhcp configured.");
   }
 
   @Override
   String[] getReturnAttributes() {
-    return new String[0];
+    throw new UnsupportedOperationException("There are no return attributes for dhcp configured.");
   }
 }
