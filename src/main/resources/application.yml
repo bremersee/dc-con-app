@@ -24,6 +24,7 @@ bremersee:
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@bremersee.org}
       login-url: http://localhost:4200/change-password
+    ssh-command: ${SSH_COMMAND:ssh root@dc1}
 
 eureka:
   client:
