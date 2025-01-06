@@ -143,7 +143,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
         searchScope,
         getReturnAttributes());
     log.debug("findAll, searchRequest = {}", searchRequest);
-    return getLdapTemplate().findAll(searchRequest, domainUserLdapMapper);
+    return getLdapTemplate()
+        .findAll(searchRequest, domainUserLdapMapper)
+        .filter(getNoBuiltinObjectFilter());
   }
 
   @Override
@@ -151,7 +153,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     log.debug("findOne({})", userName);
     SearchRequest searchRequest = searchOneRequest(userName, ou, searchScope);
     log.debug("findOne, searchRequest = {}", searchRequest);
-    return getLdapTemplate().findOne(searchRequest, domainUserLdapMapper);
+    return getLdapTemplate()
+        .findOne(searchRequest, domainUserLdapMapper)
+        .filter(getNoBuiltinObjectFilter());
   }
 
   @Override
@@ -229,7 +233,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     SearchRequest searchRequest = searchOneRequest(userNameOrEmail, ou, filter, searchScope,
         LDAP_USER_JPEG_PHOTO, LDAP_MAIL);
     log.debug("findAvatar, searchRequest = {}", searchRequest);
-    return getLdapTemplate().findOne(searchRequest);
+    return getLdapTemplate()
+        .findOne(searchRequest)
+        .filter(getNoBuiltinEntryFilter());
   }
 
   @Override

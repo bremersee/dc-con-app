@@ -22,6 +22,7 @@ import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitSelectorComponent;
+import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
 import org.bremersee.dccon.model.DomainUserPage;
 import org.bremersee.dccon.service.DomainUserService;
@@ -45,7 +46,7 @@ import org.springframework.web.servlet.LocaleResolver;
 @Controller
 //@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class UsersController extends AbstractController
-    implements OrganizationalUnitSelectorComponent {
+    implements PageableComponent, OrganizationalUnitSelectorComponent {
 
   private final DomainUserService domainUserService;
 
@@ -63,11 +64,6 @@ public class UsersController extends AbstractController
   }
 
   @Override
-  public String getCurrentPageName() {
-    return "users";
-  }
-
-  @Override
   public Dn getDefaultOrganizationalUnit() {
     return getProperties().getUser().getDefaultUserOu();
   }
@@ -77,11 +73,21 @@ public class UsersController extends AbstractController
     return getProperties().getUser().getDefaultUserSearchScope();
   }
 
+  @Override
+  public String getDefaultSort() {
+    return USER_SORT;
+  }
+
+  @Override
+  public String getCurrentPageName() {
+    return "users";
+  }
+
   @RequestMapping(path = "/admin/users", method = {RequestMethod.GET, RequestMethod.POST})
   public String displayUsers(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = "lastName,asc;firstName,asc;samAccountName,asc") SortOrders sort,
+      @RequestParam(name = SORT, defaultValue = USER_SORT) SortOrders sort,
       @RequestParam(name = QUERY, required = false) String query,
       @RequestParam(name = OU, required = false) Dn ou,
       @RequestParam(name = SCOPE, required = false) SearchScope scope,
@@ -93,7 +99,6 @@ public class UsersController extends AbstractController
     DomainUserPage userPage = new DomainUserPage(
         domainUserService.getUsers(pageable, query, ou, ouSelector.getSelectedScope()));
     model.addAttribute("users", userPage);
-    addPageRequest(model, page, size, sort, query);
     return "admin/users";
   }
 

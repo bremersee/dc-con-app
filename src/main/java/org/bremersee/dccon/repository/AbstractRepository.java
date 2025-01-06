@@ -23,16 +23,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.CommonAttributes;
+import org.bremersee.dccon.model.DistinguishedNameProvider;
 import org.bremersee.dccon.model.NisDomainMember;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.LdapEntry;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -62,6 +65,15 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
   @Getter(AccessLevel.PACKAGE)
   private final LdaptiveTemplate ldapTemplate;
 
+  @Getter(AccessLevel.PACKAGE)
+  private final Predicate<String> noBuiltinDnFilter;
+
+  @Getter(AccessLevel.PACKAGE)
+  private final Predicate<LdapEntry> noBuiltinEntryFilter;
+
+  @Getter(AccessLevel.PACKAGE)
+  private final Predicate<DistinguishedNameProvider> noBuiltinObjectFilter;
+
   /**
    * Instantiates a new abstract repository.
    *
@@ -74,6 +86,13 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
     Assert.notNull(properties, "Domain controller properties must not be present.");
     this.properties = properties;
     this.ldapTemplate = ldapTemplate;
+
+    // TODO create a method with searchDn and scope so that filter applies only to baseDn?
+    Dn builtinDn = properties.getBaseDn(new Dn("CN=Builtin")); // TODO use ignored DNs in constants, in properties; refactor properties with nested properties, it is getting too big
+    this.noBuiltinDnFilter = dn -> isEmpty(dn) || !builtinDn.isAncestor(new Dn(dn));
+    this.noBuiltinEntryFilter = entry -> noBuiltinDnFilter.test(entry.getDn());
+    this.noBuiltinObjectFilter = distinguishedNameProvider -> noBuiltinDnFilter
+        .test(distinguishedNameProvider.getDistinguishedName());
   }
 
   /**

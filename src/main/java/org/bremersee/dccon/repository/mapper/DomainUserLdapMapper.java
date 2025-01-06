@@ -247,11 +247,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     setAttribute(destination, LDAP_USER_PROFILE_PATH, source.getProfilePath(), false,
         STRING_VALUE_TRANSCODER, modifications);
     // pwd last set is read only
-    if (isEmpty(
-        getAttributeValue(destination, LDAP_SAM_ACCOUNT_NAME, STRING_VALUE_TRANSCODER, null))) {
-      setAttribute(destination, LDAP_SAM_ACCOUNT_NAME, source.getSamAccountName(), false,
-          STRING_VALUE_TRANSCODER, modifications);
-    }
+    setAttribute(destination, LDAP_SAM_ACCOUNT_NAME, source.getSamAccountName(), false,
+        STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_USER_SCRIPT_PATH, source.getScriptPath(), false,
         STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_USER_SN, source.getLastName(), false, STRING_VALUE_TRANSCODER,

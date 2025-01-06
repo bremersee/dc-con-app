@@ -19,6 +19,7 @@ package org.bremersee.dccon.model;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serial;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -231,6 +232,15 @@ public class DomainUser extends CommonAttributes
    * User's principal name.
    */
   String userPrincipalName;
+
+  @JsonIgnore
+  @Override
+  public String getName() {
+    if (nonNull(getDisplayName()) && !getDisplayName().isBlank()) {
+      return getDisplayName();
+    }
+    return getSamAccountName();
+  }
 
   public Locale getLocale(Locale defaultLocale) {
     if (isNull(getPreferredLanguage()) || getPreferredLanguage().isEmpty()) {

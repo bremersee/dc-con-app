@@ -25,5 +25,7 @@ import org.bremersee.dccon.controller.ControllerConstants;
  */
 public interface SortOrderConstants extends ControllerConstants {
 
-  String USER_SORT = "lastName,asc;firstName,asc;samAccountName,asc";
+  String USER_SORT = "lastName;firstName;samAccountName";
+
+  String GROUP_SORT = "samAccountName";
 }

@@ -32,10 +32,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -63,13 +63,16 @@ public class DomainControllerProperties implements Serializable {
   private String domainName;
 
 
-  private UserProperties user = new UserProperties();
+  @NestedConfigurationProperty
+  private DomainUserProperties user = new DomainUserProperties();
 
-  private GroupProperties group = new GroupProperties();
+  @NestedConfigurationProperty
+  private DomainGroupProperties group = new DomainGroupProperties();
 
-  private ComputerProperties computer = new ComputerProperties();
+  @NestedConfigurationProperty
+  private DomainComputerProperties computer = new DomainComputerProperties();
 
-  private DomainProperties domain = new DomainProperties();
+  private DomainProperties domain = new DomainProperties(); // move back?
 
 
   private String personalName = "Anna Livia";
@@ -346,196 +349,6 @@ public class DomainControllerProperties implements Serializable {
    */
   public String buildDnsNodeBaseDn(String zoneName) {
     return dnsNodeBaseDn.replace("{zoneName}", zoneName);
-  }
-
-  @Data
-  public static class UserProperties {
-
-    public static final Dn DEFAULT_USER_OU = new Dn("CN=Users");
-
-    private Dn defaultUserOu = DEFAULT_USER_OU;
-
-    private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
-
-    /**
-     * Specifies whether the username should be used for attribute 'cn' or firstname and lastname.
-     */
-    private boolean useUsernameAsCn = true;
-
-    private String defaultCompany;
-
-    private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}";
-
-    private String defaultEmail = "{{user.samAccountName}}@{{properties.domainName}}";
-
-    private String defaultGecos = "{{user.firstName}} {{user.lastName}}";
-
-    private Integer defaultGidNumber; // = 100; // = Domain Users
-
-    private String defaultHomeDirectory;
-
-    private String defaultHomeDrive;
-
-    private String defaultLoginShell = "/bin/bash";
-
-    private String defaultNisDomain;
-
-    private String defaultLanguage = "de-DE";
-
-    private String defaultProfilePath;
-
-    private String defaultScriptPath;
-
-    private String defaultUid = "{{user.samAccountName}}";
-
-    private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
-
-    private Map<String, Object> customProperties = new LinkedHashMap<>();
-
-    public void fillDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
-      if (isEmpty(domainUser)) {
-        return;
-      }
-      if (isEmpty(domainUser.getCompany())) {
-        domainUser.setCompany(getDefaultCompany());
-      }
-      if (isEmpty(domainUser.getDisplayName())) {
-        domainUser.setDisplayName(getDefaultDisplayName());
-      }
-      if (isEmpty(domainUser.getEmail())) {
-        domainUser.setEmail(getDefaultEmail());
-      }
-      if (isEmpty(domainUser.getHomeDirectory())) {
-        domainUser.setHomeDirectory(getDefaultHomeDirectory());
-      }
-      if (isEmpty(domainUser.getHomeDrive())) {
-        domainUser.setHomeDrive(getDefaultHomeDrive());
-      }
-      if (isEmpty(domainUser.getPreferredLanguage())) {
-        domainUser.setPreferredLanguage(getDefaultLanguage());
-      }
-      if (isEmpty(domainUser.getProfilePath())) {
-        domainUser.setProfilePath(getDefaultProfilePath());
-      }
-      if (isEmpty(domainUser.getScriptPath())) {
-        domainUser.setScriptPath(getDefaultScriptPath());
-      }
-      if (rfc2307Enabled) {
-        if (isEmpty(domainUser.getGecos())) {
-          domainUser.setGecos(getDefaultGecos());
-        }
-        if (isEmpty(domainUser.getGidNumber())) {
-          domainUser.setGidNumber(getDefaultGidNumber());
-        }
-        if (isEmpty(domainUser.getLoginShell())) {
-          domainUser.setLoginShell(getDefaultLoginShell());
-        }
-        if (isEmpty(domainUser.getNisDomain())) {
-          domainUser.setNisDomain(getDefaultNisDomain());
-        }
-        if (isEmpty(domainUser.getUid())) {
-          domainUser.setUid(getDefaultUid());
-        }
-        if (isEmpty(domainUser.getUnixHomeDirectory())) {
-          domainUser.setUnixHomeDirectory(getDefaultUnixHomeDirectory());
-        }
-      }
-    }
-
-    public void replaceInvalidUsernameWithDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
-      if (isEmpty(domainUser) || isEmpty(domainUser.getSamAccountName())) {
-        return;
-      }
-      String username = domainUser.getSamAccountName().toLowerCase();
-      if (!isEmpty(domainUser.getDisplayName())
-          && domainUser.getDisplayName().toLowerCase().contains(username)) {
-        domainUser.setDisplayName(getDefaultDisplayName());
-      }
-      if (!isEmpty(domainUser.getEmail())
-          && domainUser.getEmail().toLowerCase().contains(username)) {
-        domainUser.setEmail(getDefaultEmail());
-      }
-      if (!isEmpty(domainUser.getHomeDirectory())
-          && domainUser.getHomeDirectory().toLowerCase().contains(username)) {
-        domainUser.setHomeDirectory(getDefaultHomeDirectory());
-      }
-      if (!isEmpty(domainUser.getScriptPath())
-          && domainUser.getScriptPath().toLowerCase().contains(username)) {
-        domainUser.setScriptPath(getDefaultScriptPath());
-      }
-      if (rfc2307Enabled) {
-        if (!isEmpty(domainUser.getGecos())
-            && domainUser.getGecos().toLowerCase().contains(username)) {
-          domainUser.setGecos(getDefaultGecos());
-        }
-        if (!isEmpty(domainUser.getLoginShell())
-            && domainUser.getLoginShell().toLowerCase().contains(username)) {
-          domainUser.setLoginShell(getDefaultLoginShell());
-        }
-        if (!isEmpty(domainUser.getUid())
-            && domainUser.getUid().toLowerCase().contains(username)) {
-          domainUser.setUid(getDefaultUid());
-        }
-        if (!isEmpty(domainUser.getUnixHomeDirectory())
-            && domainUser.getUnixHomeDirectory().toLowerCase().contains(username)) {
-          domainUser.setUnixHomeDirectory(getDefaultUnixHomeDirectory());
-        }
-      }
-    }
-    public void replaceNames(DomainUser domainUser, String oldName, String newName) {
-      if (isEmpty(domainUser) || isEmpty(oldName) || isEmpty(newName)) {
-        return;
-      }
-      if (!isEmpty(domainUser.getDisplayName())) {
-        domainUser.setDisplayName(domainUser.getDisplayName().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getEmail())) {
-        domainUser.setEmail(domainUser.getEmail().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getGecos())) {
-        domainUser.setGecos(domainUser.getGecos().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getHomeDirectory())) {
-        domainUser.setHomeDirectory(domainUser.getHomeDirectory().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getProfilePath())) {
-        domainUser.setProfilePath(domainUser.getProfilePath().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getScriptPath())) {
-        domainUser.setScriptPath(domainUser.getScriptPath().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getUid())) {
-        domainUser.setUid(domainUser.getUid().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getUnixHomeDirectory())) {
-        domainUser.setUnixHomeDirectory(
-            domainUser.getUnixHomeDirectory().replace(oldName, newName));
-      }
-      if (!isEmpty(domainUser.getUserPrincipalName())) {
-        domainUser.setUserPrincipalName(
-            domainUser.getUserPrincipalName().replace(oldName, newName));
-      }
-    }
-  }
-
-  @Data
-  public static class GroupProperties {
-
-    private Dn defaultGroupOu = UserProperties.DEFAULT_USER_OU;
-
-    private SearchScope defaultGroupSearchScope = SearchScope.ONELEVEL;
-
-  }
-
-  @Data
-  public static class ComputerProperties {
-
-    public static final Dn DEFAULT_COMPUTER_OU = new Dn("CN=Computers");
-
-    private Dn defaultComputerOu = DEFAULT_COMPUTER_OU;
-
-    private SearchScope defaultComputerSearchScope = SearchScope.ONELEVEL;
-
   }
 
   @Data

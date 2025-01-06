@@ -62,6 +62,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
   private final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
 
+  private final Dn builtinDn;
+
   /**
    * Instantiates a new domain group repository.
    *
@@ -75,6 +77,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       DomainRepository domainRepository) {
     super(properties, ldapTemplateProvider.getIfAvailable(), domainRepository);
     this.domainGroupLdapMapper = domainGroupLdapMapper;
+    builtinDn = properties.getBaseDn(new Dn("CN=Builtin"));
   }
 
   Filter getFindAllFilter(String query) {
@@ -94,18 +97,24 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
   @Override
   public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
+    log.debug("findAll({}, {}, {})", query, ou, searchScope);
     SearchRequest searchRequest = searchAllRequest(
         ou,
         getFindAllFilter(query),
         searchScope,
         getReturnAttributes());
-    return getLdapTemplate().findAll(searchRequest, domainGroupLdapMapper);
+    return getLdapTemplate()
+        .findAll(searchRequest, domainGroupLdapMapper)
+        .filter(getNoBuiltinObjectFilter())
+        .peek(group -> log.debug("Found group: {}", group.getDistinguishedName()));
   }
 
   @Override
   public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
     SearchRequest searchRequest = searchOneRequest(groupName, ou, searchScope);
-    return getLdapTemplate().findOne(searchRequest, domainGroupLdapMapper);
+    return getLdapTemplate()
+        .findOne(searchRequest, domainGroupLdapMapper)
+        .filter(getNoBuiltinObjectFilter());
   }
 
   @ProfileRequired({"cli", "ldap"})

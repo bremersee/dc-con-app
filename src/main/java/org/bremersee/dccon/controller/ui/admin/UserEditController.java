@@ -187,24 +187,19 @@ public class UserEditController extends AbstractController
 
   private void processNameChanges(DomainUserEditRequest userEditRequest) {
     DomainUser user = userEditRequest.getUser();
-    if (!isEmpty(user.getSamAccountName())
-        && !Objects.equals(user.getSamAccountName(), userEditRequest.getOldSamAccountName())
-        && userEditRequest.isRenameSamAccountNameAutomatically()) {
+    if (userEditRequest.isRenameSamAccountNameAutomatically()) {
       getProperties().getUser().replaceNames(
           user, userEditRequest.getOldSamAccountName(), user.getSamAccountName());
     }
-    if (!isEmpty(userEditRequest.getOldFirstName())
-        && !Objects.equals(user.getFirstName(), userEditRequest.getOldFirstName())
-        && userEditRequest.isRenameFirstNameAutomatically()) {
-      String firstName = Objects.requireNonNullElse(user.getFirstName(), "");
-      getProperties().getUser().replaceNames(user, userEditRequest.getOldFirstName(), firstName);
+    if (userEditRequest.isRenameFirstNameAutomatically()) {
+      getProperties().getUser().replaceNames(
+          user, userEditRequest.getOldFirstName(), user.getFirstName());
     }
-    if (!isEmpty(userEditRequest.getOldLastName())
-        && !Objects.equals(user.getLastName(), userEditRequest.getOldLastName())
-        && userEditRequest.isRenameLastNameAutomatically()) {
-      String lastName = Objects.requireNonNullElse(user.getLastName(), "");
-      getProperties().getUser().replaceNames(user, userEditRequest.getOldLastName(), lastName);
+    if (userEditRequest.isRenameLastNameAutomatically()) {
+      getProperties().getUser().replaceNames(
+          user, userEditRequest.getOldLastName(), user.getLastName());
     }
+    // TODO check displayName and gecos
   }
 
   private DomainUser updateUser(BindingResult bindingResult,

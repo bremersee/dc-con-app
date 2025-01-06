@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public abstract class CommonAttributes implements Serializable {
+public abstract class CommonAttributes implements Serializable, DistinguishedNameProvider {
 
   @Serial
   private static final long serialVersionUID = 1L;

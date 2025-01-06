@@ -16,12 +16,20 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
+import lombok.Getter;
 import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.components.OrganizationalUnitSelectorComponent;
+import org.bremersee.dccon.controller.ui.components.PageableComponent;
+import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
 import org.bremersee.dccon.model.DomainGroupPage;
+import org.bremersee.dccon.model.DomainUserPage;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.OrganizationalUnitService;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
@@ -37,30 +45,60 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class GroupsController extends AbstractController {
+public class GroupsController extends AbstractController
+    implements PageableComponent, OrganizationalUnitSelectorComponent {
 
   private final DomainGroupService domainGroupService;
+
+  @Getter
+  private final OrganizationalUnitService organizationalUnitService;
 
   public GroupsController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
-      DomainGroupService domainGroupService) {
+      DomainGroupService domainGroupService,
+      OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
     this.domainGroupService = domainGroupService;
+    this.organizationalUnitService = organizationalUnitService;
+  }
+
+  @Override
+  public Dn getDefaultOrganizationalUnit() {
+    return getProperties().getGroup().getDefaultGroupOu();
+  }
+
+  @Override
+  public SearchScope getDefaultSearchScope() {
+    return getProperties().getGroup().getDefaultGroupSearchScope();
+  }
+
+  @Override
+  public String getDefaultSort() {
+    return GROUP_SORT;
+  }
+
+  @Override
+  public String getCurrentPageName() {
+    return "groups";
   }
 
   @RequestMapping(path = "/admin/groups", method = {RequestMethod.GET, RequestMethod.POST})
   public String displayGroups(
-      @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "2147483647") int size,
-      @RequestParam(name = "sort", defaultValue = "samAccountName") SortOrders sort,
-      @RequestParam(name = "q", required = false) String query,
+      @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
+      @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
+      @RequestParam(name = SORT, defaultValue = GROUP_SORT) SortOrders sort,
+      @RequestParam(name = QUERY, required = false) String query,
+      @RequestParam(name = OU, required = false) Dn ou,
+      @RequestParam(name = SCOPE, required = false) SearchScope scope,
       ModelMap model) {
 
+    OrganizationalUnitSelector ouSelector = getOrganizationalUnitSelector(ou, scope);
+    addOrganizationalUnitSelector(model, ouSelector);
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
-    DomainGroupPage groupPage = new DomainGroupPage(domainGroupService.getGroups(pageable, query, null, null));
+    DomainGroupPage groupPage = new DomainGroupPage(domainGroupService.getGroups(pageable, query, ou, ouSelector.getSelectedScope()));
     model.addAttribute("groups", groupPage);
-    addPageRequest(model, page, size, sort, query);
     return "admin/groups";
   }
+
 }

@@ -46,7 +46,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class DomainGroup extends CommonAttributes
-    implements SamAccount, NisDomainMember {
+    implements SamAccount, NameProvider, NisDomainMember {
 
   @Serial
   private static final long serialVersionUID = 2L;
