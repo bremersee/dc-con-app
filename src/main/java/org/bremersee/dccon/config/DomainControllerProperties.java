@@ -22,9 +22,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,11 +55,17 @@ public class DomainControllerProperties implements Serializable {
 
   public static final Dn MOCK_BASE_DN = new Dn("dc=samdom,dc=example,dc=org");
 
-
-  private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
+  public static final Dn[] IGNORED_DN = new Dn[]{
+      new Dn("CN=Builtin"),
+      new Dn("CN=Configuration"),
+      new Dn("CN=Infrastructure"),
+      new Dn("CN=LostAndFound"),
+      new Dn("CN=NTDS Quotas"),
+  };
 
   private String domainName;
 
+  private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
 
   @NestedConfigurationProperty
   private DomainUserProperties user = new DomainUserProperties();

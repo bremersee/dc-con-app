@@ -103,10 +103,12 @@ public class UserEditController extends AbstractController
   @GetMapping(path = "/admin/user-edit")
   public String displayUserEdit(
       @RequestParam(value = "user", required = false) String userName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(userName)
-        .flatMap(name -> domainUserService.getUser(name, null, null))
+        .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
         .map(user -> {
           DomainUserEditRequest req = new DomainUserEditRequest(
               user, getProperties().getParentDn(user.getDistinguishedName()));
@@ -187,19 +189,14 @@ public class UserEditController extends AbstractController
 
   private void processNameChanges(DomainUserEditRequest userEditRequest) {
     DomainUser user = userEditRequest.getUser();
-    if (userEditRequest.isRenameSamAccountNameAutomatically()) {
+    if (userEditRequest.isRenameNamesAutomatically()) {
       getProperties().getUser().replaceNames(
           user, userEditRequest.getOldSamAccountName(), user.getSamAccountName());
-    }
-    if (userEditRequest.isRenameFirstNameAutomatically()) {
       getProperties().getUser().replaceNames(
           user, userEditRequest.getOldFirstName(), user.getFirstName());
-    }
-    if (userEditRequest.isRenameLastNameAutomatically()) {
       getProperties().getUser().replaceNames(
           user, userEditRequest.getOldLastName(), user.getLastName());
     }
-    // TODO check displayName and gecos
   }
 
   private DomainUser updateUser(BindingResult bindingResult,

@@ -105,7 +105,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         getReturnAttributes());
     return getLdapTemplate()
         .findAll(searchRequest, domainGroupLdapMapper)
-        .filter(getNoBuiltinObjectFilter())
+        .filter(getIgnoredObjectFilter(ou, searchScope))
         .peek(group -> log.debug("Found group: {}", group.getDistinguishedName()));
   }
 
@@ -114,7 +114,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     SearchRequest searchRequest = searchOneRequest(groupName, ou, searchScope);
     return getLdapTemplate()
         .findOne(searchRequest, domainGroupLdapMapper)
-        .filter(getNoBuiltinObjectFilter());
+        .filter(getIgnoredObjectFilter(ou, searchScope));
   }
 
   @ProfileRequired({"cli", "ldap"})

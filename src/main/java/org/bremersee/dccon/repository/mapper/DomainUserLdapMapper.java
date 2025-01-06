@@ -197,10 +197,18 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_DESCRIPTION, source.getDescription(), false,
         STRING_VALUE_TRANSCODER, modifications);
-    setAttribute(destination, LDAP_USER_DISPLAY_NAME, source.getDisplayName(), false,
+    String displayName = source.getDisplayName();
+    if (isEmpty(displayName) && !isEmpty(source.getFirstName()) && !isEmpty(source.getLastName())) {
+      displayName = source.getFirstName() + " " + source.getLastName();
+    }
+    setAttribute(destination, LDAP_USER_DISPLAY_NAME, displayName, false,
         STRING_VALUE_TRANSCODER, modifications);
     if (isRfc2307Enabled()) {
-      setAttribute(destination, LDAP_USER_GECOS, source.getGecos(), false,
+      String gecos = source.getGecos();
+      if (isEmpty(gecos) && !isEmpty(source.getFirstName()) && !isEmpty(source.getLastName())) {
+        gecos = source.getFirstName() + " " + source.getLastName();
+      }
+      setAttribute(destination, LDAP_USER_GECOS, gecos, false,
           STRING_VALUE_TRANSCODER, modifications);
     }
     if (isRfc2307Enabled()) {

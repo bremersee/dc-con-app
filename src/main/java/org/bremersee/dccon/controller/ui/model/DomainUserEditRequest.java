@@ -35,15 +35,11 @@ public class DomainUserEditRequest {
 
   private String oldSamAccountName;
 
-  private boolean renameSamAccountNameAutomatically = true;
-
   private String oldFirstName;
-
-  private boolean renameFirstNameAutomatically = true;
 
   private String oldLastName;
 
-  private boolean renameLastNameAutomatically = true;
+  private boolean renameNamesAutomatically = true;
 
   private DomainUser user;
 

@@ -102,7 +102,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
         .build();
     log.debug("dnExistsWithAnyObjectClass, searchRequest = {}", searchRequest);
     return getLdapTemplate().findOne(searchRequest)
-        .filter(getNoBuiltinEntryFilter())
+        .filter(getIgnoredEntryFilter())
         .map(ldapEntry -> {
           Set<String> wantedObjectClasses = Stream.ofNullable(objectClasses)
               .flatMap(Arrays::stream)
@@ -140,7 +140,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
     log.debug("findDnOfSamAccountName, searchRequest = {}", searchRequest);
     return getLdapTemplate().findOne(searchRequest)
         .map(LdapEntry::getDn)
-        .filter(getNoBuiltinDnFilter());
+        .filter(getIgnoredDnFilter());
   }
 
   @Override

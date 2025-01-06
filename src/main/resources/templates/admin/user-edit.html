@@ -123,15 +123,6 @@
         <div id="samAccountNameValidation" class="invalid-feedback"
              th:text="${#fields.hasErrors('user.samAccountName')} ? ${#fields.errors('user.samAccountName')[0]} : ''">
         </div>
-        <div class="form-check form-switch small text-secondary mt-2">
-          <input class="form-check-input" type="checkbox" role="switch"
-                 id="renameSamAccountNameAutomatically"
-                 name="renameSamAccountNameAutomatically"
-                 th:field="*{renameSamAccountNameAutomatically}"/>
-          <label for="renameSamAccountNameAutomatically" class="form-label">
-            Rename occurrence automatically
-          </label>
-        </div>
       </div>
 
       <div class="form-check form-switch mb-3">
@@ -165,15 +156,6 @@
         <div id="firstNameValidation" class="invalid-feedback"
              th:text="${#fields.hasErrors('user.firstName')} ? ${#fields.errors('user.firstName')[0]} : ''">
         </div>
-        <div class="form-check form-switch small text-secondary mt-2">
-          <input class="form-check-input" type="checkbox" role="switch"
-                 id="renameFirstNameAutomatically"
-                 name="renameFirstNameAutomatically"
-                 th:field="*{renameFirstNameAutomatically}"/>
-          <label for="renameFirstNameAutomatically" class="form-label">
-            Rename occurrence automatically
-          </label>
-        </div>
       </div>
 
       <div class="mb-3">
@@ -188,9 +170,9 @@
           <input class="form-check-input" type="checkbox" role="switch"
                  id="renameLastNameAutomatically"
                  name="renameLastNameAutomatically"
-                 th:field="*{renameLastNameAutomatically}"/>
+                 th:field="*{renameNamesAutomatically}"/>
           <label for="renameLastNameAutomatically" class="form-label">
-            Rename occurrence automatically
+            Rename names automatically
           </label>
         </div>
       </div>

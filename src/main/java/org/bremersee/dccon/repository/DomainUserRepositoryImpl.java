@@ -145,7 +145,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     log.debug("findAll, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findAll(searchRequest, domainUserLdapMapper)
-        .filter(getNoBuiltinObjectFilter());
+        .filter(getIgnoredObjectFilter(ou, searchScope));
   }
 
   @Override
@@ -155,7 +155,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     log.debug("findOne, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findOne(searchRequest, domainUserLdapMapper)
-        .filter(getNoBuiltinObjectFilter());
+        .filter(getIgnoredObjectFilter(ou, searchScope));
   }
 
   @Override
@@ -235,7 +235,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     log.debug("findAvatar, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findOne(searchRequest)
-        .filter(getNoBuiltinEntryFilter());
+        .filter(getIgnoredEntryFilter(ou, searchScope));
   }
 
   @Override
@@ -333,9 +333,6 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (!isEmpty(domainUser.getFirstName())) {
       commands.add("--given-name=" + quote(domainUser.getFirstName()));
     }
-    //if (!isEmpty(domainUser.getInitials())) {
-    //  commands.add("--initials=" + quote(domainUser.getInitials()));
-    //}
     if (getDomainRepository().isRfc2307Enabled() && hasAllNisAttributes(domainUser)) {
       commands.add("--nis-domain=" + quote(getNisDomain(domainUser)));
       commands.add("--uidNumber=" + domainUser.getUidNumber());
@@ -457,111 +454,114 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           domainUser.getSamAccountName(),
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
-    if (!isEmpty(newOu) && !newOu.isEmpty()) {
-      validateOu(newOu);
-    }
-    DomainUser existingDomainUser = findOne(userName, null, null)
+    Dn currentParentDn = getProperties().getParentDn(domainUser.getDistinguishedName());
+    DomainUser existingDomainUser = findOne(userName, currentParentDn, SearchScope.ONELEVEL)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainUser.class.getSimpleName(),
             domainUser.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
-    DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
-    updatedDomainUser = adjustCommonName(existingDomainUser, updatedDomainUser);
-    return move(updatedDomainUser, newOu);
+    Dn oldDn = new Dn(existingDomainUser.getDistinguishedName());
+    Dn newDn = getNewDn(existingDomainUser, domainUser, newOu);
+    if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName(),
+          getProperties().removeBaseDn(newDn),
+          EC_DN_ALREADY_EXISTS);
+    }
+
+    DomainUser updatedDomainUser = renameAndMove(existingDomainUser, domainUser, newDn);
+    return getLdapTemplate().save(updatedDomainUser, domainUserLdapMapper);
   }
 
-  DomainUser adjustCommonName(DomainUser oldDomainUser, DomainUser newDomainUser) {
-    String oldCn = new Dn(oldDomainUser.getDistinguishedName())
-        .getRDn().getNameValue().getStringValue()
-        .toLowerCase();
+  Dn getNewDn(DomainUser oldDomainUser, DomainUser newDomainUser, Dn newOu) {
+    Dn newParentDn;
+    if (!isEmpty(newOu) && !newOu.isEmpty()) {
+      newParentDn = getProperties().getBaseDn(validateOu(newOu));
+    } else {
+      newParentDn = getProperties().getParentDn(oldDomainUser.getDistinguishedName());
+    }
+
+    RDn oldRdn = new Dn(oldDomainUser.getDistinguishedName()).getRDn();
+    String oldCn = oldRdn.getNameValue().getStringValue().toLowerCase();
+    String newCn;
     if (oldCn.equalsIgnoreCase(newDomainUser.getSamAccountName())
         || oldCn.equalsIgnoreCase(newDomainUser.getDisplayName())) {
-      return newDomainUser;
-    }
-    String newCn;
-    if (oldCn.equalsIgnoreCase(oldDomainUser.getDisplayName())
-        && !isEmpty(newDomainUser.getDisplayName())) {
-      newCn = newDomainUser.getDisplayName();
+      newCn = oldCn;
+    } else if (oldCn.equalsIgnoreCase(oldDomainUser.getDisplayName())
+        && !isEmpty(newDomainUser.getFirstName()) && !isEmpty(newDomainUser.getLastName())) {
+      newCn = newDomainUser.getFirstName() + " " + newDomainUser.getLastName();
     } else {
       newCn = newDomainUser.getSamAccountName();
     }
-    Dn newDn = new Dn(new RDn(new NameValue("CN", newCn)));
-    newDn.add(getProperties().getParentDn(newDomainUser.getDistinguishedName()));
-    if (getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
-      throw ServiceException.alreadyExistsWithErrorCode(
-          DomainUser.class.getSimpleName(),
-          newCn,
-          EC_DN_ALREADY_EXISTS);
-    }
-
-    kinit();
-    List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
-    commands.add("user");
-    commands.add("rename");
-    commands.add(quote(oldDomainUser.getSamAccountName()));
-    commands.add("--force-new-cn=" + quote(newCn));
-    auth(commands);
-
-    return CommandExecutor.exec(
-        commands,
-        null,
-        getProperties().getSambaToolExecDir(),
-        response -> findOne(newDomainUser.getSamAccountName(), null, null)
-            .orElseThrow(() -> ServiceException
-                .internalServerError(String.format("Updating names of user '%s' failed. %s",
-                        newDomainUser.getSamAccountName(),
-                        CommandExecutorResponse.toExceptionMessage(response)),
-                    EC_UPDATING_USER_FAILED)));
+    Dn newDn = new Dn(new RDn(new NameValue(oldRdn.getNameValue().getName(), newCn)));
+    newDn.add(newParentDn);
+    return newDn;
   }
 
-  DomainUser move(DomainUser domainUser, Dn newOu) {
-    if (isEmpty(newOu) || newOu.isEmpty()) {
-      return domainUser;
+  DomainUser renameAndMove(DomainUser oldDomainUser, DomainUser newDomainUser, Dn newDn) {
+    String oldCn = new Dn(oldDomainUser.getDistinguishedName())
+        .getRDn().getNameValue().getStringValue();
+    String newCn = newDn
+        .getRDn().getNameValue().getStringValue();
+    Dn oldParentDn = getProperties().getParentDn(oldDomainUser.getDistinguishedName());
+    String oldSamAccountName = oldDomainUser.getSamAccountName();
+    String newSamAccountName = newDomainUser.getSamAccountName();
+    if (!oldCn.equals(newCn) || !oldSamAccountName.equals(newSamAccountName)) {
+      kinit();
+      List<String> commands = new ArrayList<>();
+      ssh(commands);
+      sudo(commands);
+      commands.add(getProperties().getSambaToolBinary());
+      commands.add("user");
+      commands.add("rename");
+      commands.add(quote(oldSamAccountName));
+      commands.add("--samaccountname=" + quote(newSamAccountName));
+      commands.add("--force-new-cn=" + quote(newCn));
+      auth(commands);
+      CommandExecutor.exec(
+          commands,
+          null,
+          getProperties().getSambaToolExecDir(),
+          (CommandExecutorResponseValidator) response -> this
+              .findOne(
+                  newSamAccountName,
+                  oldParentDn,
+                  SearchScope.ONELEVEL)
+              .orElseThrow(() -> ServiceException
+                  .internalServerError(String.format("Updating names of user '%s' failed. %s",
+                          newDomainUser.getSamAccountName(),
+                          CommandExecutorResponse.toExceptionMessage(response)),
+                      EC_UPDATING_USER_FAILED)));
     }
-    Dn ou = getProperties().getBaseDn(newOu);
-    if (ou.isSame(getProperties().getParentDn(domainUser.getDistinguishedName()))) {
-      return domainUser;
+    Dn newParentDn = getProperties().getParentDn(newDn.format());
+    if (!oldParentDn.isSame(newParentDn)) {
+      String ou = getProperties().removeBaseDn(newParentDn).format();
+      kinit();
+      List<String> commands = new ArrayList<>();
+      ssh(commands);
+      sudo(commands);
+      commands.add(getProperties().getSambaToolBinary());
+      commands.add("user");
+      commands.add("move");
+      commands.add(quote(newSamAccountName));
+      commands.add(quote(ou));
+      auth(commands);
+
+      CommandExecutor.exec(
+          commands,
+          null,
+          getProperties().getSambaToolExecDir(),
+          (CommandExecutorResponseValidator) response -> getDomainRepository()
+              .findDnOfSamAccountName(newSamAccountName)
+              .filter(userDn -> new Dn(userDn).isSame(newDn))
+              .orElseThrow(() -> ServiceException
+                  .internalServerError(String.format("Moving user '%s' to '%s' failed. %s",
+                          newSamAccountName, ou,
+                          CommandExecutorResponse.toExceptionMessage(response)),
+                      EC_UPDATING_USER_FAILED)));
     }
-    RDn rdn = new Dn(domainUser.getDistinguishedName()).getRDn();
-    Dn dn = new Dn(rdn);
-    dn.add(ou);
-    domainUser.setDistinguishedName(dn.format());
-
-    if (getDomainRepository().dnExistsWithAnyObjectClass(dn.format())) {
-      throw ServiceException.alreadyExistsWithErrorCode(
-          DomainUser.class.getSimpleName(),
-          getProperties().removeBaseDn(dn),
-          EC_DN_ALREADY_EXISTS);
-    }
-
-    kinit();
-    List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
-    commands.add("user");
-    commands.add("move");
-    commands.add(quote(domainUser.getSamAccountName()));
-    commands.add(quote(getProperties().removeBaseDn(ou).format()));
-    auth(commands);
-
-    CommandExecutor.exec(
-        commands,
-        null,
-        getProperties().getSambaToolExecDir(),
-        (CommandExecutorResponseValidator) response -> getDomainRepository()
-            .findDnOfSamAccountName(domainUser.getSamAccountName())
-            .filter(userDn -> new Dn(userDn).isSame(dn))
-            .orElseThrow(() -> ServiceException
-                .internalServerError(String.format("Moving user '%s' to '%s' failed. %s",
-                        domainUser.getSamAccountName(), ou.format(),
-                        CommandExecutorResponse.toExceptionMessage(response)),
-                    EC_UPDATING_USER_FAILED)));
-
-    return domainUser;
+    newDomainUser.setDistinguishedName(newDn.format());
+    return newDomainUser;
   }
 
   @Override

@@ -16,10 +16,12 @@
 
 package org.bremersee.dccon.repository;
 
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -66,13 +68,13 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
   private final LdaptiveTemplate ldapTemplate;
 
   @Getter(AccessLevel.PACKAGE)
-  private final Predicate<String> noBuiltinDnFilter;
+  private final Predicate<String> ignoredDnFilter;
 
   @Getter(AccessLevel.PACKAGE)
-  private final Predicate<LdapEntry> noBuiltinEntryFilter;
+  private final Predicate<LdapEntry> ignoredEntryFilter;
 
   @Getter(AccessLevel.PACKAGE)
-  private final Predicate<DistinguishedNameProvider> noBuiltinObjectFilter;
+  private final Predicate<DistinguishedNameProvider> ignoredObjectFilter;
 
   /**
    * Instantiates a new abstract repository.
@@ -88,11 +90,42 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
     this.ldapTemplate = ldapTemplate;
 
     // TODO create a method with searchDn and scope so that filter applies only to baseDn?
-    Dn builtinDn = properties.getBaseDn(new Dn("CN=Builtin")); // TODO use ignored DNs in constants, in properties; refactor properties with nested properties, it is getting too big
-    this.noBuiltinDnFilter = dn -> isEmpty(dn) || !builtinDn.isAncestor(new Dn(dn));
-    this.noBuiltinEntryFilter = entry -> noBuiltinDnFilter.test(entry.getDn());
-    this.noBuiltinObjectFilter = distinguishedNameProvider -> noBuiltinDnFilter
+    this.ignoredDnFilter = dn -> isEmpty(dn) || Arrays
+        .stream(DomainControllerProperties.IGNORED_DN)
+        .map(this.properties::getBaseDn)
+        .noneMatch(ignoredDn -> ignoredDn.isAncestor(new Dn(dn)));
+    this.ignoredEntryFilter = entry -> ignoredDnFilter.test(entry.getDn());
+    this.ignoredObjectFilter = distinguishedNameProvider -> ignoredDnFilter
         .test(distinguishedNameProvider.getDistinguishedName());
+  }
+
+  private boolean isIgnoredDnFilterRequired(Dn ou, SearchScope scope) {
+    if (nonNull(scope) && scope != SearchScope.SUBTREE) {
+      return false;
+    }
+    return isEmpty(ou) || ou.isEmpty() || getProperties().getBaseDn()
+        .isSame(getProperties().getBaseDn(ou));
+  }
+
+  Predicate<String> getIgnoredDnFilter(Dn ou, SearchScope scope) {
+    if (isIgnoredDnFilterRequired(ou, scope)) {
+      return getIgnoredDnFilter();
+    }
+    return dn -> true;
+  }
+
+  Predicate<LdapEntry> getIgnoredEntryFilter(Dn ou, SearchScope scope) {
+    if (isIgnoredDnFilterRequired(ou, scope)) {
+      return getIgnoredEntryFilter();
+    }
+    return entry -> true;
+  }
+
+  Predicate<DistinguishedNameProvider> getIgnoredObjectFilter(Dn ou, SearchScope scope) {
+    if (isIgnoredDnFilterRequired(ou, scope)) {
+      return getIgnoredObjectFilter();
+    }
+    return distinguishedNameProvider -> true;
   }
 
   /**

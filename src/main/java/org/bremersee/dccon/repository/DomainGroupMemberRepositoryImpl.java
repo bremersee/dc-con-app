@@ -83,7 +83,7 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
   private Stream<String> getDistinguishedNameOfMembers(String groupName) {
     SearchRequest searchRequest = searchOneRequest(groupName, LDAP_GROUP_MEMBER);
     return getLdapTemplate().findOne(searchRequest)
-        .filter(getNoBuiltinEntryFilter())
+        .filter(getIgnoredEntryFilter())
         .map(ldapEntry -> ldapEntry.getAttribute(LDAP_GROUP_MEMBER))
         .map(LdapAttribute::getStringValues)
         .stream()
@@ -176,7 +176,7 @@ public class DomainGroupMemberRepositoryImpl extends AbstractDomainGroupReposito
     Set<DomainGroupMemberType> supportedTypes = getSupportedTypes(types);
     return getLdapTemplate().findAll(searchRequest)
         .parallelStream()
-        .filter(getNoBuiltinEntryFilter())
+        .filter(getIgnoredEntryFilter())
         .filter(process)
         .map(entry -> {
           DomainGroupMember member = DomainGroupMember.builder()
