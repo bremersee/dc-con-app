@@ -18,8 +18,7 @@ package org.bremersee.dccon.config;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.SearchScope;
@@ -35,8 +34,10 @@ public class DomainUserProperties {
 
   public static final Dn DEFAULT_USER_OU = new Dn("CN=Users");
 
+  @NotNull
   private Dn defaultUserOu = DEFAULT_USER_OU;
 
+  @NotNull
   private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
 
   /**

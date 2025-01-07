@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.config;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -28,8 +29,10 @@ import org.ldaptive.dn.Dn;
 @Data
 public class DomainGroupProperties {
 
+  @NotNull
   private Dn defaultGroupOu = DomainUserProperties.DEFAULT_USER_OU;
 
+  @NotNull
   private SearchScope defaultGroupSearchScope = SearchScope.ONELEVEL;
 
 }
