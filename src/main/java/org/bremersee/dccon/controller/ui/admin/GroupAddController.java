@@ -20,14 +20,15 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.components.DomainGroupPurposesComponent;
-import org.bremersee.dccon.controller.ui.components.DomainGroupScopesComponent;
+import org.bremersee.dccon.controller.ui.components.DomainGroupTypesComponent;
+import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
+import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainGroupAddRequest;
@@ -38,8 +39,6 @@ import org.bremersee.dccon.model.DomainGroupType;
 import org.bremersee.dccon.model.DomainGroupType.Purpose;
 import org.bremersee.dccon.model.DomainGroupType.Scope;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
-import org.bremersee.dccon.model.OrganizationalUnit;
-import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -57,18 +56,20 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * The type UsersController.
+ * The group add controller.
  *
  * @author Christian Bremer
  */
 @Controller
 public class GroupAddController extends AbstractController implements PageableComponent,
-    RedirectComponent, DomainGroupScopesComponent, DomainGroupPurposesComponent {
+    RedirectComponent, DomainGroupTypesComponent, OrganizationalUnitComponent,
+    OrganisationalUnitsComponent {
 
   private final DomainService domainService;
 
   private final DomainGroupService domainGroupService;
 
+  @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
   public GroupAddController(
@@ -93,53 +94,6 @@ public class GroupAddController extends AbstractController implements PageableCo
     return domainService.isRfc2307Enabled();
   }
 
-  @ModelAttribute(SCOPE)
-  public SearchScope getSearchScope(
-      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
-    return scope;
-  }
-
-  @ModelAttribute("ous")
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
-      @RequestParam(name = OU, required = false) Dn ou,
-      ModelMap model) {
-
-    Dn ouDn = Optional.ofNullable(model.get("groupAddRequest"))
-        .filter(obj -> obj instanceof DomainGroupAddRequest)
-        .map(DomainGroupAddRequest.class::cast)
-        .map(DomainGroupAddRequest::getOuDn)
-        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-        .orElseGet(() -> Optional.ofNullable(ou)
-            .filter(dn -> !dn.isEmpty())
-            .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-            .orElseGet(() -> getProperties().getGroup().getDefaultGroupOu()));
-    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
-  }
-
-  @ModelAttribute("groupScopes")
-  public List<SelectOption<String>> getGroupScopes(ModelMap model) {
-    return Optional.ofNullable(model)
-        .map(m -> m.getAttribute("groupAddRequest"))
-        .filter(obj -> obj instanceof DomainGroupAddRequest)
-        .map(DomainGroupAddRequest.class::cast)
-        .map(DomainGroupAddRequest::getGroupScope)
-        .map(Scope::fromString)
-        .map(this::getDomainGroupScopes)
-        .orElseGet(this::getDomainGroupScopes);
-  }
-
-  @ModelAttribute("groupPurposes")
-  public List<SelectOption<String>> getGroupPurposes(ModelMap model) {
-    return Optional.ofNullable(model)
-        .map(m -> m.getAttribute("groupAddRequest"))
-        .filter(obj -> obj instanceof DomainGroupAddRequest)
-        .map(DomainGroupAddRequest.class::cast)
-        .map(DomainGroupAddRequest::getGroupPurpose)
-        .map(Purpose::fromString)
-        .map(this::getDomainGroupPurposes)
-        .orElseGet(this::getDomainGroupPurposes);
-  }
-
   @GetMapping(path = "/admin/group-add")
   public String displayGroupAdd(
       @RequestParam(name = OU, required = false) Dn ou,
@@ -150,8 +104,8 @@ public class GroupAddController extends AbstractController implements PageableCo
         .filter(dn -> !dn.isEmpty())
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
         .orElseGet(() -> getProperties().getBaseDn(getProperties().getGroup().getDefaultGroupOu()));
-    DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(new DomainGroup(),
-        ouDn.format());
+    DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(
+        new DomainGroup(), ouDn.format());
     model.addAttribute("groupAddRequest", groupAddRequest);
     return "admin/group-add";
   }
@@ -179,7 +133,7 @@ public class GroupAddController extends AbstractController implements PageableCo
         SORT, Optional.ofNullable(sort).orElse(USER_SORT),
         QUERY, Optional.ofNullable(query).orElse(""),
         OU, Optional.ofNullable(groupAddRequest)
-            .map(DomainGroupAddRequest::getOuDn)
+            .map(DomainGroupAddRequest::getNewOuDn)
             .map(Dn::format)
             .orElse(getProperties().getGroup().getDefaultGroupOu().format()),
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
@@ -222,13 +176,11 @@ public class GroupAddController extends AbstractController implements PageableCo
   }
 
   private DomainGroup addGroup(BindingResult bindingResult, DomainGroupAddRequest groupAddRequest) {
-    Scope groupScope = Scope.fromString(groupAddRequest.getGroupScope());
-    if (isEmpty(groupScope)) {
+    if (isEmpty(groupAddRequest.getGroupScope())) {
       bindingResult.rejectValue("groupScope", "code",
           "Group scope is required.");
     }
-    Purpose groupPurpose = Purpose.fromString(groupAddRequest.getGroupPurpose());
-    if (isEmpty(groupPurpose)) {
+    if (isEmpty(groupAddRequest.getGroupPurpose())) {
       bindingResult.rejectValue("groupPurpose", "code",
           "Group type is required.");
     }
@@ -236,10 +188,12 @@ public class GroupAddController extends AbstractController implements PageableCo
       return groupAddRequest.getGroup();
     }
 
+    Scope groupScope = groupAddRequest.getSelectedGroupScope();
+    Purpose groupPurpose = groupAddRequest.getSelectedGroupPurpose();
     DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(groupScope, groupPurpose);
     DomainGroup group = groupAddRequest.getGroup();
     group.setGroupType(new DomainGroupTypeContainer(groupType));
-    Dn ou = Optional.ofNullable(groupAddRequest.getOu())
+    Dn ou = Optional.ofNullable(groupAddRequest.getNewOu())
         .map(Dn::new)
         .orElseGet(() -> getProperties().getGroup().getDefaultGroupOu());
     try {

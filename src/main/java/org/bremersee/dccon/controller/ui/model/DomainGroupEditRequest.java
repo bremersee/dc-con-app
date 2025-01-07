@@ -16,34 +16,39 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
-import static java.util.Objects.isNull;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Optional;
 import lombok.Data;
-import org.bremersee.dccon.model.DomainUser;
+import lombok.NoArgsConstructor;
+import org.bremersee.dccon.model.DomainGroup;
 import org.ldaptive.dn.Dn;
 
 /**
- * The type DomainUserAddRequest.
+ * The type DomainGroupAddRequest.
  *
  * @author Christian Bremer
  */
 @Data
-public class DomainUserAddRequest implements Serializable {
+@NoArgsConstructor
+public class DomainGroupEditRequest implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private DomainUser user;
+  private String oldSamAccountName;
+
+  private DomainGroup group;
 
   private String newOu;
 
-  private Boolean useUsernameAsCn;
-
-  private Boolean sendEmail;
+  public DomainGroupEditRequest(DomainGroup group, Dn newOu) {
+    this.oldSamAccountName = group.getSamAccountName();
+    this.group = group;
+    this.newOu = newOu.format();
+  }
 
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
@@ -52,21 +57,12 @@ public class DomainUserAddRequest implements Serializable {
     return new Dn(newOu);
   }
 
-  public Boolean getUseUsernameAsCn() {
-    return isNull(useUsernameAsCn) || useUsernameAsCn;
-  }
-
-  public Boolean getSendEmail() {
-    return Boolean.TRUE.equals(sendEmail);
-  }
-
   @Override
   public String toString() {
-    return "DomainUserAddRequest {"
-        + "user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
+    return "DomainUserEditRequest {"
+        + "oldSamAccountName=" + oldSamAccountName
+        + ", group=" + Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null)
         + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + ", useUsernameAsCn=" + getUseUsernameAsCn()
-        + ", sendEmail=" + getSendEmail()
         + '}';
   }
 }

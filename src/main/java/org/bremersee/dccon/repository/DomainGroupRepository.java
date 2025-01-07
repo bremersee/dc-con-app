@@ -72,7 +72,7 @@ public interface DomainGroupRepository {
   @Deprecated
   DomainGroup update(@NotNull DomainGroup domainGroup);
 
-  DomainGroup update(@NotNull String groupName, @NotNull DomainGroup domainGroup, Dn newOu);
+  DomainGroup update(@NotNull String groupName, @NotNull DomainGroup domainGroup, @Nullable Dn newOu);
 
   /**
    * Delete group.

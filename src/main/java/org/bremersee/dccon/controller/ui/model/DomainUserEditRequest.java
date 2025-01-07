@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller.ui.model;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DomainUser;
@@ -43,25 +44,36 @@ public class DomainUserEditRequest {
 
   private DomainUser user;
 
-  private String ou;
+  private String newOu;
 
   private MultipartFile avatar;
 
   private boolean removeAvatar;
 
-  public DomainUserEditRequest(DomainUser user, Dn ou) {
+  public DomainUserEditRequest(DomainUser user, Dn newOu) {
     this.oldSamAccountName = user.getSamAccountName();
     this.oldFirstName = user.getFirstName();
     this.oldLastName = user.getLastName();
     this.user = user;
-    this.ou = ou.format();
+    this.newOu = newOu.format();
   }
 
-  public Dn getOuDn() {
-    if (isEmpty(ou)) {
+  public Dn getNewOuDn() {
+    if (isEmpty(newOu)) {
       return null;
     }
-    return new Dn(ou);
+    return new Dn(newOu);
+  }
+
+  @Override
+  public String toString() {
+    return "DomainUserEditRequest {"
+        + "oldSamAccountName=" + oldSamAccountName
+        + ", oldFirstName=" + oldFirstName
+        + ", oldLastName=" + oldLastName
+        + ", user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
+        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
+        + '}';
   }
 
 }

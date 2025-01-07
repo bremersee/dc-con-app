@@ -22,7 +22,7 @@ import com.samskivert.mustache.Mustache;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Objects;
-import org.bremersee.dccon.controller.ControllerConstants;
+import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 

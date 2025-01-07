@@ -22,20 +22,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
+import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainUserEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.OrganizationalUnit;
-import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -60,12 +60,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  */
 @Controller
 public class UserEditController extends AbstractController
-    implements PageableComponent, RedirectComponent {
+    implements PageableComponent, RedirectComponent,
+    OrganizationalUnitComponent, OrganisationalUnitsComponent {
 
   private final DomainService domainService;
 
   private final DomainUserService domainUserService;
 
+  @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
   public UserEditController(
@@ -97,31 +99,6 @@ public class UserEditController extends AbstractController
         .orElse(false);
   }
 
-  @ModelAttribute(SCOPE)
-  public SearchScope getSearchScope(
-      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
-    return scope;
-  }
-
-  @ModelAttribute("ous")
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
-      @RequestParam(value = "user", required = false) String userName,
-      @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
-      ModelMap model) {
-
-    Dn ouDn = Optional.ofNullable(model.get("userEditRequest"))
-        .filter(obj -> obj instanceof DomainUserEditRequest)
-        .map(DomainUserEditRequest.class::cast)
-        .map(DomainUserEditRequest::getOuDn)
-        .orElseGet(() -> Optional.ofNullable(userName)
-            .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
-            .map(DomainUser::getDistinguishedName)
-            .map(dn -> getProperties().getParentDn(dn))
-            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()));
-    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
-  }
-
   @GetMapping(path = "/admin/user-edit")
   public String displayUserEdit(
       @RequestParam(value = "user", required = false) String userName,
@@ -137,7 +114,11 @@ public class UserEditController extends AbstractController
           model.addAttribute("userEditRequest", req);
           return "admin/user-edit";
         })
-        .orElse("admin/user-add");
+        .orElseGet(() -> {
+          String msg = String.format("User '%s' not found.", userName);
+          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
+          return "admin/user-edit";
+        });
   }
 
   @PostMapping(path = "/admin/user-edit")
@@ -153,7 +134,7 @@ public class UserEditController extends AbstractController
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) throws IOException {
 
-    getLogger().debug("addUser({}, {}, {}, {}, {}, {})",
+    getLogger().debug("updateUser({}, {}, {}, {}, {}, {})",
         userEditRequest, page, size, sort, query, scope);
     Map<String, Object> parameters = Map.of(
         PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
@@ -163,7 +144,7 @@ public class UserEditController extends AbstractController
         SORT, Optional.ofNullable(sort).orElse(USER_SORT),
         QUERY, Optional.ofNullable(query).orElse(""),
         OU, Optional.ofNullable(userEditRequest)
-            .map(DomainUserEditRequest::getOuDn)
+            .map(DomainUserEditRequest::getNewOuDn)
             .map(Dn::format)
             .or(() -> Optional.ofNullable(userEditRequest)
                 .map(DomainUserEditRequest::getUser)
@@ -174,11 +155,11 @@ public class UserEditController extends AbstractController
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
     );
 
-    getLogger().debug("Try to edit user '{}'.", userEditRequest);
+    getLogger().debug("Try to update user '{}'.", userEditRequest);
 
     if (isEmpty(userEditRequest)) {
       String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
-      getLogger().debug("User edit request is empty. Redirecting to {}", redirect);
+      getLogger().debug("User update request is empty. Redirecting to {}", redirect);
       return redirect;
     }
 
@@ -194,8 +175,8 @@ public class UserEditController extends AbstractController
     model.clear();
     String msg = getMessageSource().getMessage(
         "i18n.user.edited",
-        new Object[]{updatedUser.getDisplayName()}, //  TODO
-        String.format("User '%s' was successfully added.", updatedUser.getDisplayName()), //  TODO
+        new Object[]{updatedUser.getName()}, //  TODO
+        String.format("User '%s' was successfully updated.", updatedUser.getName()), //  TODO
         resolveLocale(request));
     RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
@@ -224,7 +205,7 @@ public class UserEditController extends AbstractController
       DomainUserEditRequest userEditRequest) {
     String userName = userEditRequest.getOldSamAccountName();
     DomainUser user = userEditRequest.getUser();
-    Dn ou = userEditRequest.getOuDn();
+    Dn ou = userEditRequest.getNewOuDn();
     try {
       Dn parentDn = getProperties().getParentDn(user.getDistinguishedName());
       Dn ouDn = getProperties().getBaseDn(ou);
@@ -282,12 +263,12 @@ public class UserEditController extends AbstractController
         break;
       }
       case EC_EMPTY_OU_RDN: {
-        bindingResult.rejectValue("ou", "code",
+        bindingResult.rejectValue("newOu", "code",
             "Organizational unit is empty.");
         break;
       }
       case EC_OU_NOT_FOUND: {
-        bindingResult.rejectValue("ou", "code",
+        bindingResult.rejectValue("newOu", "code",
             "Organizational unit was not found.");
         break;
       }

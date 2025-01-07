@@ -16,8 +16,6 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import org.bremersee.dccon.controller.ControllerConstants;
-
 /**
  * The interface SortOrderConstants.
  *

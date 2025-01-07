@@ -96,6 +96,11 @@ public class DomainGroupServiceImpl implements DomainGroupService {
     domainGroupValidator.doUpdateValidation(groupName, domainGroup);
     return Optional.of(domainGroupRepository.update(domainGroup));
   }
+  @Override
+  public DomainGroup updateGroup(String groupName, DomainGroup domainGroup, Dn newOu) {
+    domainGroupValidator.doUpdateValidation(groupName, domainGroup);
+    return domainGroupRepository.update(groupName, domainGroup, newOu);
+  }
 
   @Override
   public Boolean deleteGroup(String groupName) {

@@ -74,9 +74,15 @@ public interface DomainGroupService {
    * @param domainGroup the domain group
    * @return the domain group
    */
+  @Deprecated
   Optional<DomainGroup> updateGroup(
       @NotNull String groupName,
       @NotNull @Valid DomainGroup domainGroup);
+
+  DomainGroup updateGroup(
+      @NotNull String groupName,
+      @NotNull @Valid DomainGroup domainGroup,
+      @Nullable Dn newOu);
 
   /**
    * Delete group.

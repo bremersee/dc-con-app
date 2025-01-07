@@ -17,7 +17,7 @@
 package org.bremersee.dccon.controller.ui.components;
 
 import java.util.Optional;
-import org.bremersee.dccon.controller.ControllerConstants;
+import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 

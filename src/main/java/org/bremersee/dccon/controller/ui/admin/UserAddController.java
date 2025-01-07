@@ -28,6 +28,8 @@ import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.FieldTemplateComponent;
+import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
+import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest;
@@ -60,12 +62,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  */
 @Controller
 public class UserAddController extends AbstractController
-    implements PageableComponent, RedirectComponent, FieldTemplateComponent {
+    implements PageableComponent, RedirectComponent, FieldTemplateComponent,
+    OrganizationalUnitComponent, OrganisationalUnitsComponent {
 
   private final DomainService domainService;
 
   private final DomainUserService domainUserService;
 
+  @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
   @Getter
@@ -95,29 +99,6 @@ public class UserAddController extends AbstractController
     return domainService.isRfc2307Enabled();
   }
 
-  @ModelAttribute(SCOPE)
-  public SearchScope getSearchScope(
-      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
-    return scope;
-  }
-
-  @ModelAttribute("ous")
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
-      @RequestParam(name = OU, required = false) Dn ou,
-      ModelMap model) {
-
-    Dn ouDn = Optional.ofNullable(model.get("userAddRequest"))
-        .filter(obj -> obj instanceof DomainUserAddRequest)
-        .map(DomainUserAddRequest.class::cast)
-        .map(DomainUserAddRequest::getOuDn)
-        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-        .orElseGet(() -> Optional.ofNullable(ou)
-            .filter(dn -> !dn.isEmpty())
-            .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()));
-    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
-  }
-
   @Override
   public String getDefaultSort() {
     return USER_SORT;
@@ -135,7 +116,7 @@ public class UserAddController extends AbstractController
         .orElseGet(() -> getProperties().getBaseDn(getProperties().getUser().getDefaultUserOu()));
     DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
     userAddRequest.setUser(createNewDomainUser());
-    userAddRequest.setOu(ouDn.format());
+    userAddRequest.setNewOu(ouDn.format());
     userAddRequest.setUseUsernameAsCn(getProperties().getUser().isUseUsernameAsCn());
     userAddRequest.setSendEmail(false);
     model.addAttribute("userAddRequest", userAddRequest);
@@ -165,7 +146,7 @@ public class UserAddController extends AbstractController
         SORT, Optional.ofNullable(sort).orElse(USER_SORT),
         QUERY, Optional.ofNullable(query).orElse(""),
         OU, Optional.ofNullable(userAddRequest)
-            .map(DomainUserAddRequest::getOuDn)
+            .map(DomainUserAddRequest::getNewOuDn)
             .map(Dn::format)
             .orElse(getProperties().getUser().getDefaultUserOu().format()),
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
@@ -183,7 +164,7 @@ public class UserAddController extends AbstractController
     DomainUser addedUser = addUser(
         bindingResult,
         userAddRequest.getUser(),
-        Optional.ofNullable(userAddRequest.getOu())
+        Optional.ofNullable(userAddRequest.getNewOu())
             .map(Dn::new)
             .orElseGet(() -> getProperties().getUser().getDefaultUserOu()),
         userAddRequest.getUseUsernameAsCn(),
@@ -251,12 +232,12 @@ public class UserAddController extends AbstractController
         break;
       }
       case EC_EMPTY_OU_RDN: {
-        bindingResult.rejectValue("ou", "code",
+        bindingResult.rejectValue("newOu", "code",
             "Organizational unit is empty.");
         break;
       }
       case EC_OU_NOT_FOUND: {
-        bindingResult.rejectValue("ou", "code",
+        bindingResult.rejectValue("newOu", "code",
             "Organizational unit was not found.");
         break;
       }

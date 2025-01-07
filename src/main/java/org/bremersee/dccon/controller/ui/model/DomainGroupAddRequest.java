@@ -44,15 +44,15 @@ public class DomainGroupAddRequest implements Serializable {
 
   private DomainGroup group;
 
-  private String ou;
+  private String newOu;
 
   private String groupScope;
 
   private String groupPurpose;
 
-  public DomainGroupAddRequest(DomainGroup group, String ou) {
+  public DomainGroupAddRequest(DomainGroup group, String newOu) {
     this.group = group;
-    this.ou = ou;
+    this.newOu = newOu;
     this.groupScope = Optional.ofNullable(group)
         .map(DomainGroup::getGroupType)
         .map(DomainGroupTypeContainer::getGroupType)
@@ -67,20 +67,32 @@ public class DomainGroupAddRequest implements Serializable {
         .orElse(Purpose.SECURITY.name());
   }
 
-  public Dn getOuDn() {
-    if (isEmpty(ou)) {
+  public Dn getNewOuDn() {
+    if (isEmpty(newOu)) {
       return null;
     }
-    return new Dn(ou);
+    return new Dn(newOu);
+  }
+
+  public Scope getSelectedGroupScope() {
+    return Optional.ofNullable(groupScope)
+        .map(Scope::fromString)
+        .orElse(Scope.GLOBAL);
+  }
+
+  public Purpose getSelectedGroupPurpose() {
+    return Optional.ofNullable(groupPurpose)
+        .map(Purpose::fromString)
+        .orElse(Purpose.SECURITY);
   }
 
   @Override
   public String toString() {
     return "DomainUserAddRequest {"
         + "group=" + Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null)
-        + ", ou=" + Optional.ofNullable(getOuDn()).map(Dn::format).orElse(null)
-        + ", scope=" + getGroupScope()
-        + ", purpose=" + getGroupPurpose()
+        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
+        + ", groupScope=" + getGroupScope()
+        + ", groupPurpose=" + getGroupPurpose()
         + '}';
   }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller;
+package org.bremersee.dccon.controller.ui;
 
 /**
  * The interface ControllerConstants.
