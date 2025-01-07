@@ -39,10 +39,10 @@ public interface OrganizationalUnitService {
 
   Stream<OrganizationalUnit> getOrganizationalUnitsWithBase();
 
-  Stream<OrganizationalUnit> getOrganizationalUnitsWithBaseButWithoutSelected(@Nullable Dn ou);
-
   Optional<OrganizationalUnit> getOrganizationalUnit(@Nullable Dn ou);
 
   OrganizationalUnit getBase();
+
+  boolean organisationUnitExists(@Nullable Dn ou);
 
 }

@@ -109,15 +109,25 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   }
 
   @Override
-  public Stream<OrganizationalUnit> getOrganizationalUnitsWithBaseButWithoutSelected(Dn ou) {
-    Dn ouDn = properties.getBaseDn(ou);
-    return getOrganizationalUnitsWithBase()
-        .filter(organizationalUnit -> !isSelected(organizationalUnit, ouDn));
+  public Optional<OrganizationalUnit> getOrganizationalUnit(Dn ou) {
+    return Optional.ofNullable(ou)
+        .filter(dn -> !dn.isEmpty())
+        .flatMap(repository::findOne)
+        .or(() -> Optional.ofNullable(ou)
+            .filter(dn -> dn.isSame(properties.getBaseDn()))
+            .map(baseDn -> base))
+        .map(this::withFormattedDn);
   }
 
   @Override
-  public Optional<OrganizationalUnit> getOrganizationalUnit(Dn ou) {
-    return repository.findOne(ou).map(this::withFormattedDn);
+  public boolean organisationUnitExists(Dn ou) {
+    if (isEmpty(ou) || ou.isEmpty()) {
+      return false;
+    }
+    if (properties.getBaseDn().isSame(ou)) {
+      return true;
+    }
+    return repository.exists(ou);
   }
 
   boolean isSelected(OrganizationalUnit organizationalUnit, Dn ouDn) {

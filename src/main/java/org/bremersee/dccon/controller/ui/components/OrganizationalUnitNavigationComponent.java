@@ -55,6 +55,7 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
       SearchScope scope) {
 
     Dn selectedOuDn = getProperties().getBaseDn(Optional.ofNullable(ou)
+        .filter(dn -> getOrganizationalUnitService().organisationUnitExists(dn))
         .orElseGet(this::getDefaultOrganizationalUnit));
     List<OrganizationalUnit> orgUnits = getOrganizationalUnitService()
         .getOrganizationalUnitsWithBase()
