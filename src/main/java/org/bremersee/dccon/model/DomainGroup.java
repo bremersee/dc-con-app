@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.model;
 
-import static java.util.Objects.requireNonNullElse;
+import static java.util.Objects.isNull;
 
 import java.io.Serial;
 import java.util.ArrayList;
@@ -32,11 +32,11 @@ import lombok.ToString;
  * A domain (Active Directory) group may contain user and computer accounts as well as other
  * groups.
  *
- * <p>Groups may also be used to establish email distribution lists, using group type
- * {@link DomainGroupType#DISTRIBUTION}.
+ * <p>Groups may also be used to establish email distribution lists.
  *
- * <p>This main representation has a members attribute and a membership attribute with the
- * distinguished names of the referenced entities.
+ * <p>See: <a
+ * href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups">Active
+ * Directory security groups</a>
  *
  * @author Christian Bremer
  */
@@ -69,7 +69,7 @@ public class DomainGroup extends CommonAttributes
   /**
    * The type of the domain group.
    */
-  private DomainGroupType groupType;
+  private DomainGroupTypeContainer groupType;
 
   /**
    * The members of the domain group.
@@ -101,8 +101,11 @@ public class DomainGroup extends CommonAttributes
    *
    * @return the domain group type.
    */
-  public DomainGroupType getGroupType() {
-    return requireNonNullElse(groupType, DomainGroupType.SECURITY);
+  public DomainGroupTypeContainer getGroupType() {
+    if (isNull(groupType) || isNull(groupType.getGroupTypeValue())) {
+      return new DomainGroupTypeContainer(DomainGroupType.GLOBAL_SECURITY);
+    }
+    return groupType;
   }
 
   /**

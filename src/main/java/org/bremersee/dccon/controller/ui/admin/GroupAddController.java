@@ -16,18 +16,36 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.components.DomainGroupPurposesComponent;
+import org.bremersee.dccon.controller.ui.components.DomainGroupScopesComponent;
+import org.bremersee.dccon.controller.ui.components.PageableComponent;
+import org.bremersee.dccon.controller.ui.components.RedirectComponent;
+import org.bremersee.dccon.controller.ui.model.DomainGroupAddRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupType;
+import org.bremersee.dccon.model.DomainGroupType.Purpose;
+import org.bremersee.dccon.model.DomainGroupType.Scope;
+import org.bremersee.dccon.model.DomainGroupTypeContainer;
+import org.bremersee.dccon.model.OrganizationalUnit;
+import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
-import org.bremersee.dccon.service.DomainUserService;
-import org.springframework.data.util.Pair;
+import org.bremersee.dccon.service.OrganizationalUnitService;
+import org.bremersee.exception.ServiceException;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -44,105 +62,237 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class GroupAddController extends AbstractController {
+public class GroupAddController extends AbstractController implements PageableComponent,
+    RedirectComponent, DomainGroupScopesComponent, DomainGroupPurposesComponent {
 
   private final DomainService domainService;
 
-  private final DomainUserService domainUserService;
-
   private final DomainGroupService domainGroupService;
+
+  private final OrganizationalUnitService organizationalUnitService;
 
   public GroupAddController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainService domainService,
-      DomainUserService domainUserService,
-      DomainGroupService domainGroupService) {
+      DomainGroupService domainGroupService,
+      OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
-    this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
+    this.organizationalUnitService = organizationalUnitService;
+  }
+
+  @Override
+  public String getDefaultSort() {
+    return GROUP_SORT;
+  }
+
+  @ModelAttribute("rfc2307Enabled")
+  public boolean isRfc2307Enabled() {
+    return domainService.isRfc2307Enabled();
+  }
+
+  @ModelAttribute(SCOPE)
+  public SearchScope getSearchScope(
+      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
+    return scope;
+  }
+
+  @ModelAttribute("ous")
+  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
+      @RequestParam(name = OU, required = false) Dn ou,
+      ModelMap model) {
+
+    Dn ouDn = Optional.ofNullable(model.get("groupAddRequest"))
+        .filter(obj -> obj instanceof DomainGroupAddRequest)
+        .map(DomainGroupAddRequest.class::cast)
+        .map(DomainGroupAddRequest::getOuDn)
+        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
+        .orElseGet(() -> Optional.ofNullable(ou)
+            .filter(dn -> !dn.isEmpty())
+            .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
+            .orElseGet(() -> getProperties().getGroup().getDefaultGroupOu()));
+    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
+  }
+
+  @ModelAttribute("groupScopes")
+  public List<SelectOption<String>> getGroupScopes(ModelMap model) {
+    return Optional.ofNullable(model)
+        .map(m -> m.getAttribute("groupAddRequest"))
+        .filter(obj -> obj instanceof DomainGroupAddRequest)
+        .map(DomainGroupAddRequest.class::cast)
+        .map(DomainGroupAddRequest::getGroupScope)
+        .map(Scope::fromString)
+        .map(this::getDomainGroupScopes)
+        .orElseGet(this::getDomainGroupScopes);
+  }
+
+  @ModelAttribute("groupPurposes")
+  public List<SelectOption<String>> getGroupPurposes(ModelMap model) {
+    return Optional.ofNullable(model)
+        .map(m -> m.getAttribute("groupAddRequest"))
+        .filter(obj -> obj instanceof DomainGroupAddRequest)
+        .map(DomainGroupAddRequest.class::cast)
+        .map(DomainGroupAddRequest::getGroupPurpose)
+        .map(Purpose::fromString)
+        .map(this::getDomainGroupPurposes)
+        .orElseGet(this::getDomainGroupPurposes);
   }
 
   @GetMapping(path = "/admin/group-add")
-  public String displayUserAdd(
-      @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "2147483647") int size,
-      @RequestParam(name = "sort", defaultValue = "name") SortOrders sort,
-      @RequestParam(name = "q", required = false) String query,
+  public String displayGroupAdd(
+      @RequestParam(name = OU, required = false) Dn ou,
       ModelMap model) {
 
-    addPageRequest(model, page, size, sort, query);
-    if (!model.containsAttribute("group")) {
-      DomainGroup domainGroup = new DomainGroup();
-      model.addAttribute("group", domainGroup);
-    }
+    getLogger().debug("displayGroupAdd({})", ou);
+    Dn ouDn = Optional.ofNullable(ou)
+        .filter(dn -> !dn.isEmpty())
+        .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
+        .orElseGet(() -> getProperties().getBaseDn(getProperties().getGroup().getDefaultGroupOu()));
+    DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(new DomainGroup(),
+        ouDn.format());
+    model.addAttribute("groupAddRequest", groupAddRequest);
     return "admin/group-add";
   }
 
   @PostMapping(path = "/admin/group-add")
-  public String addUser(
-      @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "2147483647") int size,
-      @RequestParam(name = "sort", defaultValue = "samAccountName") SortOrders sort,
-      @RequestParam(name = "q", required = false) String query,
-      @ModelAttribute("group") DomainGroup group,
+  public String addGroup(
+      @ModelAttribute(name = PAGE, binding = false) Integer page,
+      @ModelAttribute(name = SIZE, binding = false) Integer size,
+      @ModelAttribute(name = SORT, binding = false) String sort,
+      @ModelAttribute(name = QUERY, binding = false) String query,
+      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
+      @ModelAttribute(name = "groupAddRequest") DomainGroupAddRequest groupAddRequest,
       ModelMap model,
       HttpServletRequest request,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    return Optional.ofNullable(group)
-        .map(grp -> doAddGroup(grp, bindingResult))
-        .map(pair -> {
-          if (pair.getSecond().hasErrors()) {
-            addPageRequest(model, page, size, sort, query);
-            return "admin/group-add";
-          }
-          DomainGroup addedGroup = pair.getFirst();
-          model.clear();
-          String msg = getMessageSource().getMessage(
-              "i18n.user.added",
-              new Object[]{addedGroup.getSamAccountName()},
-              String.format("Group '%s' was successfully added.", addedGroup.getSamAccountName()),
-              resolveLocale(request));
-          final RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
-          redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-          return redirect("/admin/group-edit?name=" + encodeUrlParameter(addedGroup.getSamAccountName()),
-              page, size, sort, query);
-        })
-        .orElseGet(() -> redirect("/admin/groups", page, size, sort, query));
+    getLogger().debug("addGroup({}, {}, {}, {}, {}, {})",
+        groupAddRequest, page, size, sort, query, scope);
+    Map<String, Object> parameters = Map.of(
+        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
+        SIZE, Optional.ofNullable(size)
+            .filter(s -> s > 0)
+            .orElse(SIZE_DEFAULT_INT),
+        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
+        QUERY, Optional.ofNullable(query).orElse(""),
+        OU, Optional.ofNullable(groupAddRequest)
+            .map(DomainGroupAddRequest::getOuDn)
+            .map(Dn::format)
+            .orElse(getProperties().getGroup().getDefaultGroupOu().format()),
+        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
+    );
+
+    getLogger().debug("Try to add group '{}'.", groupAddRequest);
+
+    if (isEmpty(groupAddRequest)) {
+      String redirect = getRedirectUri("/admin/groups", PAGE_AND_OU_PARAMS, parameters);
+      getLogger().debug("Group add request is empty. Redirecting to {}", redirect);
+      return redirect;
+    }
+
+    DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(
+        Scope.fromString(groupAddRequest.getGroupScope()),
+        Purpose.fromString(groupAddRequest.getGroupPurpose()));
+    groupAddRequest.getGroup().setGroupType(new DomainGroupTypeContainer(groupType));
+    DomainGroup addedGroup = addGroup(bindingResult, groupAddRequest);
+
+    if (bindingResult.hasErrors()) {
+      getLogger().debug("Adding group failed. Some fields were invalid.");
+      return "admin/group-add";
+    }
+
+    model.clear();
+    String msg = getMessageSource().getMessage(
+        "i18n.group.added",
+        new Object[]{addedGroup.getSamAccountName()},
+        String.format("Group '%s' was successfully added.", addedGroup.getSamAccountName()),
+        resolveLocale(request));
+    RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
+    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
+
+    parameters = new HashMap<>(parameters);
+    parameters.put("group", addedGroup);
+    String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
+        PAGE_AND_OU_PARAMS, parameters);
+    getLogger().debug("Group successfully added. Redirecting to {}", redirect);
+    return redirect;
   }
 
-  private Pair<DomainGroup, BindingResult> doAddGroup(
-      DomainGroup group, BindingResult bindingResult) {
-    return Pair.of(group, bindingResult);
-    /*
-    try {
-      DomainUser addedUser = fake(); //domainUserService.addUser(user, sendEmail, locale);
-      return Pair.of(addedUser, bindingResult);
+  private DomainGroup addGroup(BindingResult bindingResult, DomainGroupAddRequest groupAddRequest) {
+    Scope groupScope = Scope.fromString(groupAddRequest.getGroupScope());
+    if (isEmpty(groupScope)) {
+      bindingResult.rejectValue("groupScope", "code",
+          "Group scope is required.");
+    }
+    Purpose groupPurpose = Purpose.fromString(groupAddRequest.getGroupPurpose());
+    if (isEmpty(groupPurpose)) {
+      bindingResult.rejectValue("groupPurpose", "code",
+          "Group type is required.");
+    }
+    if (bindingResult.hasErrors()) {
+      return groupAddRequest.getGroup();
+    }
 
-    } catch (ServiceException serviceException) {
-      String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
-      switch (errorCode) {
-        case NAME_ALREADY_EXISTS: {
-          bindingResult.rejectValue("userName", "code",
-              "User name already exists.");
-          break;
-        }
-        case PASSWORD_RESTRICTIONS: {
-          bindingResult.rejectValue("userName", "code",
-              "Password restrictions are not met.");
-          break;
-        }
-        case ADDING_USER_FAILED: {
-          bindingResult.rejectValue("userName", "code",
-              "Something went wrong. Please try again later.");
-        }
+    DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(groupScope, groupPurpose);
+    DomainGroup group = groupAddRequest.getGroup();
+    group.setGroupType(new DomainGroupTypeContainer(groupType));
+    Dn ou = Optional.ofNullable(groupAddRequest.getOu())
+        .map(Dn::new)
+        .orElseGet(() -> getProperties().getGroup().getDefaultGroupOu());
+    try {
+      return domainGroupService.addGroup(group, ou);
+
+    } catch (ServiceException e) {
+      handleException(bindingResult, e);
+    }
+    return group;
+  }
+
+  private void handleException(BindingResult bindingResult, ServiceException serviceException) {
+
+    Object bindTarget = bindingResult.getTarget();
+    getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
+
+    if (!(bindTarget instanceof DomainGroupAddRequest)) {
+      return;
+    }
+
+    String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
+    switch (errorCode) {
+      case EC_SAM_ACCOUNT_NAME_REQUIRED: {
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Group name is required.");
+        break;
+      }
+      case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Group name already exists.");
+        break;
+      }
+      case EC_EMPTY_OU_RDN: {
+        bindingResult.rejectValue("ou", "code",
+            "Organizational unit is empty.");
+        break;
+      }
+      case EC_OU_NOT_FOUND: {
+        bindingResult.rejectValue("ou", "code",
+            "Organizational unit was not found.");
+        break;
+      }
+      case EC_ADDING_GROUP_FAILED: { // TODO global
+        getLogger().error("Adding group failed.", serviceException);
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Something went wrong. Please try again later.");
+        break;
+      }
+      default: {
+        getLogger().error("Adding group failed with a not mapped exception.", serviceException);
+        throw serviceException;
       }
     }
-    return Pair.of(user, bindingResult);
-    */
   }
 
 }

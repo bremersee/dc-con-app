@@ -82,7 +82,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
 
   @Override
   public DomainGroup addGroup(DomainGroup domainGroup, Dn dn) {
-    domainGroupValidator.doAddValidation(domainGroup);
+    //domainGroupValidator.doAddValidation(domainGroup);
     return domainGroupRepository.add(domainGroup, dn);
   }
 

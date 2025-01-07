@@ -236,6 +236,10 @@ public class DomainUser extends CommonAttributes
   @JsonIgnore
   @Override
   public String getName() {
+    if (nonNull(getFirstName()) && !getFirstName().isBlank()
+        && nonNull(getLastName()) && !getLastName().isBlank()) {
+      return getFirstName() + " " + getLastName();
+    }
     if (nonNull(getDisplayName()) && !getDisplayName().isBlank()) {
       return getDisplayName();
     }

@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +34,8 @@ import org.bremersee.dccon.controller.ui.model.DomainUserEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.OrganizationalUnit;
+import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -100,6 +103,25 @@ public class UserEditController extends AbstractController
     return scope;
   }
 
+  @ModelAttribute("ous")
+  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnits(
+      @RequestParam(value = "user", required = false) String userName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      ModelMap model) {
+
+    Dn ouDn = Optional.ofNullable(model.get("userEditRequest"))
+        .filter(obj -> obj instanceof DomainUserEditRequest)
+        .map(DomainUserEditRequest.class::cast)
+        .map(DomainUserEditRequest::getOuDn)
+        .orElseGet(() -> Optional.ofNullable(userName)
+            .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
+            .map(DomainUser::getDistinguishedName)
+            .map(dn -> getProperties().getParentDn(dn))
+            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()));
+    return organizationalUnitService.getOrganizationalUnitSelectors(ouDn);
+  }
+
   @GetMapping(path = "/admin/user-edit")
   public String displayUserEdit(
       @RequestParam(value = "user", required = false) String userName,
@@ -113,12 +135,6 @@ public class UserEditController extends AbstractController
           DomainUserEditRequest req = new DomainUserEditRequest(
               user, getProperties().getParentDn(user.getDistinguishedName()));
           model.addAttribute("userEditRequest", req);
-          model.addAttribute("ou", req.getOu());
-          return req;
-        })
-        .map(req -> {
-          model.addAttribute("ous", organizationalUnitService
-              .getOrganizationalUnitSelectors(req.getOuDn()));
           return "admin/user-edit";
         })
         .orElse("admin/user-add");
@@ -169,6 +185,11 @@ public class UserEditController extends AbstractController
     processNameChanges(userEditRequest);
     DomainUser updatedUser = updateUser(bindingResult, userEditRequest);
     updateAvatar(bindingResult, userEditRequest);
+
+    if (bindingResult.hasErrors()) {
+      getLogger().debug("Updating user failed. Some fields were invalid.");
+      return "admin/user-edit";
+    }
 
     model.clear();
     String msg = getMessageSource().getMessage(

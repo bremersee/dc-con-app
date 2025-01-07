@@ -340,7 +340,7 @@
       <button type="submit" class="btn btn-primary mt-3">
         Update
       </button>
-      <a href="users.html" th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}"
+      <a href="users.html" th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q},ou=${userEditRequest.ou},scope=${scope})}"
          class="btn btn-secondary ml-3 mt-3" role="button">
         Cancel
       </a>

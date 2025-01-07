@@ -26,6 +26,8 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupType;
+import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
@@ -136,7 +138,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
    *
    * @param domainGroup the domain group
    */
-  String doAdd(DomainGroup domainGroup, Dn ou) {
+  String doAdd(DomainGroup domainGroup, Dn ouDn) {
+    Dn ou = getProperties().removeBaseDn(validateOu(ouDn));
     kinit();
     final List<String> commands = new ArrayList<>();
     ssh(commands);
@@ -144,10 +147,17 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     commands.add(getProperties().getSambaToolBinary());
     commands.add("group");
     commands.add("add");
-    commands.add(
-        quote(domainGroup.getSamAccountName())); // TODO what happens if name contains a space?
+    commands.add(quote(domainGroup.getSamAccountName()));
+    Optional.ofNullable(domainGroup.getGroupType())
+        .map(DomainGroupTypeContainer::getGroupType)
+        .map(DomainGroupType::getScope)
+        .ifPresent(scope -> commands.add("--group-scope=" + scope));
+    Optional.ofNullable(domainGroup.getGroupType())
+        .map(DomainGroupTypeContainer::getGroupType)
+        .map(DomainGroupType::getPurpose)
+        .ifPresent(purpose -> commands.add("--group-type=" + purpose));
     if (!isEmpty(ou) && !ou.isEmpty()) {
-      commands.add("--groupou=" + quote(validateOu(ou).format()));
+      commands.add("--groupou=" + quote(ou.format()));
     }
     //auth(commands);
     return CommandExecutor.exec(

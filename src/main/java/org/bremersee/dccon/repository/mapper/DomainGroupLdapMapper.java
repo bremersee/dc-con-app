@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
-import org.bremersee.dccon.model.DomainGroupType;
+import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.repository.DomainGroupRepositoryConstants;
 import org.bremersee.dccon.repository.DomainRepository;
-import org.bremersee.dccon.repository.transcoder.DomainGroupTypeTranscoder;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
@@ -46,11 +46,9 @@ import org.springframework.util.Assert;
  * @author Christian Bremer
  */
 @Component
+@Slf4j
 public class DomainGroupLdapMapper extends AbstractLdapMapper
     implements LdaptiveEntryMapper<DomainGroup>, DomainGroupRepositoryConstants {
-
-  private static final DomainGroupTypeTranscoder GROUP_TYPE_TRANSCODER
-      = new DomainGroupTypeTranscoder();
 
   private final DomainRepository domainRepository;
 
@@ -103,8 +101,8 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
     }
     mapCommonAttributes(ldapEntry, domainGroup);
 
-    domainGroup.setGroupType(getAttributeValue(ldapEntry, LDAP_GROUP_TYPE, GROUP_TYPE_TRANSCODER,
-        DomainGroupType.SECURITY));
+    Integer groupType = getAttributeValue(ldapEntry, LDAP_GROUP_TYPE, INT_VALUE_TRANSCODER, null);
+    domainGroup.setGroupType(new DomainGroupTypeContainer(groupType));
     domainGroup.setDescription(
         getAttributeValue(ldapEntry, LDAP_DESCRIPTION, STRING_VALUE_TRANSCODER, null));
     domainGroup.setGidNumber(
@@ -132,12 +130,8 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
       setAttribute(destination, LDAP_CN, source.getSamAccountName(), false, STRING_VALUE_TRANSCODER,
           modifications);
     }
-    if (!DomainGroupType.UNKNOWN.equals(source.getGroupType())
-        && isEmpty(
-        getAttributeValue(destination, LDAP_GROUP_TYPE, STRING_VALUE_TRANSCODER, null))) {
-      setAttribute(destination, LDAP_GROUP_TYPE, source.getGroupType(), false,
-          GROUP_TYPE_TRANSCODER, modifications);
-    }
+    setAttribute(destination, LDAP_GROUP_TYPE, source.getGroupType().getGroupTypeValue(),
+        false, INT_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_DESCRIPTION, source.getDescription(), false,
         STRING_VALUE_TRANSCODER, modifications);
     if (isRfc2307Enabled()) {

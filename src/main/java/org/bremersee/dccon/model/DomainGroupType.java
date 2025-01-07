@@ -16,30 +16,51 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.isNull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.util.Objects;
 import lombok.Getter;
 
 /**
- * The enum DomainGroupType.
+ * The domain group type.
+ *
+ * <p>See: <a
+ * href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups">Active
+ * Directory security groups</a>
  *
  * @author Christian Bremer
  */
 @Getter
 public enum DomainGroupType {
 
-  UNKNOWN(0),
+  UNKNOWN(null, null, null),
 
-  SECURITY(-2147483646),
+  DOMAIN_LOCAL_SECURITY(Scope.DOMAIN_LOCAL, Purpose.SECURITY, -2147483644),
 
-  DISTRIBUTION(2); // for sending mails
+  DOMAIN_LOCAL_DISTRIBUTION(Scope.DOMAIN_LOCAL, Purpose.DISTRIBUTION, 4),
+
+  GLOBAL_SECURITY(Scope.GLOBAL, Purpose.SECURITY, -2147483646),
+
+  GLOBAL_DISTRIBUTION(Scope.GLOBAL, Purpose.DISTRIBUTION, 2),
+
+  UNIVERSAL_SECURITY(Scope.UNIVERSAL, Purpose.SECURITY, -2147483640),
+
+  UNIVERSAL_DISTRIBUTION(Scope.UNIVERSAL, Purpose.DISTRIBUTION, 8);
+
+  @Getter
+  private final Scope scope;
+
+  @Getter
+  private final Purpose purpose;
 
   @JsonIgnore
-  private final int value;
+  private final Integer value;
 
-  DomainGroupType(int value) {
+  DomainGroupType(Scope scope, Purpose purpose, Integer value) {
+    this.scope = scope;
+    this.purpose = purpose;
     this.value = value;
   }
 
@@ -51,7 +72,7 @@ public enum DomainGroupType {
 
   @JsonCreator
   public static DomainGroupType fromString(String type) {
-    if (Objects.isNull(type)) {
+    if (isNull(type)) {
       return null;
     }
     try {
@@ -62,15 +83,88 @@ public enum DomainGroupType {
   }
 
   public static DomainGroupType fromValue(Integer value) {
-    if (Objects.isNull(value)) {
+    if (isNull(value)) {
       return UNKNOWN;
     }
     for (DomainGroupType type : DomainGroupType.values()) {
-      if (type.value == value) {
+      if (value.equals(type.value)) {
         return type;
       }
     }
     return UNKNOWN;
+  }
+
+  public static DomainGroupType fromScopeAndPurpose(Scope scope, Purpose purpose) {
+    if (isNull(scope) || isNull(purpose)) {
+      return UNKNOWN;
+    }
+    for (DomainGroupType type : DomainGroupType.values()) {
+      if (scope.equals(type.scope) && purpose.equals(type.purpose)) {
+        return type;
+      }
+    }
+    return UNKNOWN;
+  }
+
+  public enum Scope {
+    UNIVERSAL("Universal"),
+    GLOBAL("Global"),
+    DOMAIN_LOCAL("Domain");
+
+    private final String value;
+
+    Scope(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    @Override
+    public String toString() {
+      return value;
+    }
+
+    @JsonCreator
+    public static Scope fromString(String scope) {
+      if (isNull(scope)) {
+        return null;
+      }
+      for (Scope type : Scope.values()) {
+        if (scope.equalsIgnoreCase(type.value) || scope.equalsIgnoreCase(type.name())) {
+          return type;
+        }
+      }
+      return null;
+    }
+  }
+
+  public enum Purpose {
+    SECURITY("Security"),
+    DISTRIBUTION("Distribution");
+
+    private final String value;
+
+    Purpose(String purpose) {
+      this.value = purpose;
+    }
+
+    @JsonValue
+    @Override
+    public String toString() {
+      return value;
+    }
+
+    @JsonCreator
+    public static Purpose fromString(String value) {
+      if (isNull(value)) {
+        return null;
+      }
+      for (Purpose purpose : Purpose.values()) {
+        if (value.equalsIgnoreCase(purpose.value) || value.equalsIgnoreCase(purpose.name())) {
+          return purpose;
+        }
+      }
+      return null;
+    }
   }
 
 }

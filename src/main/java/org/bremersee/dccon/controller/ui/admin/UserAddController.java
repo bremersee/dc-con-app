@@ -107,7 +107,7 @@ public class UserAddController extends AbstractController
       ModelMap model) {
 
     Dn ouDn = Optional.ofNullable(model.get("userAddRequest"))
-        .map(obj -> obj instanceof DomainUserAddRequest)
+        .filter(obj -> obj instanceof DomainUserAddRequest)
         .map(DomainUserAddRequest.class::cast)
         .map(DomainUserAddRequest::getOuDn)
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
@@ -197,8 +197,8 @@ public class UserAddController extends AbstractController
     model.clear();
     String msg = getMessageSource().getMessage(
         "i18n.user.added",
-        new Object[]{addedUser.getDisplayName()},
-        String.format("User '%s' was successfully added.", addedUser.getDisplayName()),
+        new Object[]{addedUser.getName()},
+        String.format("User '%s' was successfully added.", addedUser.getName()),
         resolveLocale(request));
     RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
