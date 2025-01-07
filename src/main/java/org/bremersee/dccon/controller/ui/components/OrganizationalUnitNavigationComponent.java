@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.controller.ui.components;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
 
   OrganizationalUnitService getOrganizationalUnitService();
 
+  @NotNull
   Dn getDefaultOrganizationalUnit();
 
   SearchScope getDefaultSearchScope();
@@ -52,18 +54,21 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
       Dn ou,
       SearchScope scope) {
 
-    OrganizationalUnitDropdown ouDropdown = new OrganizationalUnitDropdown();
-    OrganizationalUnit selectedOu = Optional.ofNullable(ou)
-        .or(() -> Optional.ofNullable(getDefaultOrganizationalUnit()))
-        .flatMap(ouDn -> getOrganizationalUnitService().getOrganizationalUnit(ouDn))
-        .orElseGet(() -> getOrganizationalUnitService().getBase());
-    ouDropdown.setSelectedOu(selectedOu);
-    List<OrganizationalUnit> selectableOus = getOrganizationalUnitService()
-        .getOrganizationalUnitsWithBaseButWithoutSelected(new Dn(selectedOu.getDistinguishedName()))
+    Dn selectedOuDn = getProperties().getBaseDn(Optional.ofNullable(ou)
+        .orElseGet(this::getDefaultOrganizationalUnit));
+    List<OrganizationalUnit> orgUnits = getOrganizationalUnitService()
+        .getOrganizationalUnitsWithBase()
         .sorted(getOrganizationalUnitComparator())
         .toList();
-    ouDropdown.setSelectableOus(selectableOus);
-    if (isBaseOu(selectedOu)) {
+    OrganizationalUnitDropdown ouDropdown = new OrganizationalUnitDropdown();
+    for (OrganizationalUnit orgUnit : orgUnits) {
+      if (selectedOuDn.isSame(new Dn(orgUnit.getDistinguishedName()))) {
+        ouDropdown.setSelectedOu(orgUnit);
+      } else {
+        ouDropdown.getSelectableOus().add(orgUnit);
+      }
+    }
+    if (isBaseOu(ouDropdown.getSelectedOu())) {
       ouDropdown.setSelectedScope(SearchScope.SUBTREE);
       ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(SearchScope.SUBTREE));
       ouDropdown.setSelectableScope(SearchScope.ONELEVEL);
@@ -107,28 +112,5 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
         ? "One Level"
         : scope.name().substring(0, 1).toUpperCase() + scope.name().substring(1).toLowerCase();
   }
-
-  /*
-  @ModelAttribute(OU)
-  default String addSelectedOrganizationalUnitRdn(
-      @RequestParam(name = OU, required = false) Dn ou) {
-    return Optional.ofNullable(ou)
-        .map(Dn::format)
-        .orElse(requireNonNullElse(getDefaultOrganizationalUnit(), ""));
-  }
-
-  @ModelAttribute(SCOPE)
-  default String addSelectedSearchScope(
-      @RequestParam(name = OU, required = false) Dn ou,
-      @RequestParam(name = SCOPE, required = false) SearchScope scope) {
-    OrganizationalUnit selectedUnit = addSelectedOrganizationalUnit(ou);
-    if (new Dn(selectedUnit.getDistinguishedName()).getRDn().getNameValue().hasName("dc")) {
-      return getDisplayValue(SearchScope.SUBTREE);
-    }
-    return getDisplayValue(Optional.ofNullable(scope)
-        .filter(s -> s == SearchScope.SUBTREE || s == SearchScope.ONELEVEL)
-        .orElse(SearchScope.ONELEVEL));
-  }
-  */
 
 }

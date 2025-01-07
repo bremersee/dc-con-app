@@ -16,8 +16,11 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
+import static java.util.Objects.isNull;
+
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import org.bremersee.dccon.model.OrganizationalUnit;
@@ -48,4 +51,10 @@ public class OrganizationalUnitDropdown implements Serializable {
 
   private String selectableScopeDisplayValue;
 
+  public List<OrganizationalUnit> getSelectableOus() {
+    if (isNull(selectableOus)) {
+      selectableOus = new ArrayList<>();
+    }
+    return selectableOus;
+  }
 }

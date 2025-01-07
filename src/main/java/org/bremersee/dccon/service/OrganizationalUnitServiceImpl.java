@@ -16,6 +16,8 @@
 
 package org.bremersee.dccon.service;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +64,15 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .build();
   }
 
+  OrganizationalUnit withFormattedDn(OrganizationalUnit organizationalUnit) {
+    if (isEmpty(organizationalUnit) || isEmpty(organizationalUnit.getDistinguishedName())) {
+      return organizationalUnit;
+    }
+    return organizationalUnit.toBuilder()
+        .distinguishedName(new Dn(organizationalUnit.getDistinguishedName()).format())
+        .build();
+  }
+
   List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(
       Stream<OrganizationalUnit> ous, Dn ou) {
     Dn ouDn = properties.getBaseDn(ou);
@@ -89,7 +100,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnits() {
-    return repository.findAll();
+    return repository.findAll().map(this::withFormattedDn);
   }
 
   @Override
@@ -106,10 +117,11 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public Optional<OrganizationalUnit> getOrganizationalUnit(Dn ou) {
-    return repository.findOne(ou);
+    return repository.findOne(ou).map(this::withFormattedDn);
   }
 
-  private boolean isSelected(OrganizationalUnit organizationalUnit, Dn ouDn) {
+  boolean isSelected(OrganizationalUnit organizationalUnit, Dn ouDn) {
+
     return ouDn.isSame(new Dn(organizationalUnit.getDistinguishedName()));
   }
 
