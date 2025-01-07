@@ -29,7 +29,7 @@ import org.ldaptive.SearchScope;
  * @author Christian Bremer
  */
 @Data
-public class OrganizationalUnitSelector implements Serializable {
+public class OrganizationalUnitDropdown implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;

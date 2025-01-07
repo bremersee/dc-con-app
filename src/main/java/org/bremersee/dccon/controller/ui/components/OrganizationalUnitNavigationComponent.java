@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
-import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
+import org.bremersee.dccon.controller.ui.model.OrganizationalUnitDropdown;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.ldaptive.SearchScope;
@@ -35,7 +35,7 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface OrganizationalUnitSelectorComponent extends DomainControllerPropertiesProvider,
+public interface OrganizationalUnitNavigationComponent extends DomainControllerPropertiesProvider,
     CurrentPageNameProvider {
 
   OrganizationalUnitService getOrganizationalUnitService();
@@ -44,31 +44,31 @@ public interface OrganizationalUnitSelectorComponent extends DomainControllerPro
 
   SearchScope getDefaultSearchScope();
 
-  default void addOrganizationalUnitSelector(ModelMap model, OrganizationalUnitSelector selector) {
-    model.addAttribute(OU_SELECTOR, selector);
+  default void addOrganizationalUnitDropdown(ModelMap model, OrganizationalUnitDropdown selector) {
+    model.addAttribute(OU_DROPDOWN, selector);
   }
 
-  default OrganizationalUnitSelector getOrganizationalUnitSelector(
+  default OrganizationalUnitDropdown getOrganizationalUnitDropdown(
       Dn ou,
       SearchScope scope) {
 
-    OrganizationalUnitSelector ouSelector = new OrganizationalUnitSelector();
+    OrganizationalUnitDropdown ouDropdown = new OrganizationalUnitDropdown();
     OrganizationalUnit selectedOu = Optional.ofNullable(ou)
         .or(() -> Optional.ofNullable(getDefaultOrganizationalUnit()))
         .flatMap(ouDn -> getOrganizationalUnitService().getOrganizationalUnit(ouDn))
         .orElseGet(() -> getOrganizationalUnitService().getBase());
-    ouSelector.setSelectedOu(selectedOu);
+    ouDropdown.setSelectedOu(selectedOu);
     List<OrganizationalUnit> selectableOus = getOrganizationalUnitService()
         .getOrganizationalUnitsWithBaseButWithoutSelected(new Dn(selectedOu.getDistinguishedName()))
         .sorted(getOrganizationalUnitComparator())
         .toList();
-    ouSelector.setSelectableOus(selectableOus);
+    ouDropdown.setSelectableOus(selectableOus);
     if (isBaseOu(selectedOu)) {
-      ouSelector.setSelectedScope(SearchScope.SUBTREE);
-      ouSelector.setSelectedScopeDisplayValue(getDisplayValue(SearchScope.SUBTREE));
-      ouSelector.setSelectableScope(SearchScope.ONELEVEL);
-      ouSelector.setSelectableScopeDisplayValue(getDisplayValue(SearchScope.ONELEVEL));
-      ouSelector.setScopeSelectable(false);
+      ouDropdown.setSelectedScope(SearchScope.SUBTREE);
+      ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(SearchScope.SUBTREE));
+      ouDropdown.setSelectableScope(SearchScope.ONELEVEL);
+      ouDropdown.setSelectableScopeDisplayValue(getDisplayValue(SearchScope.ONELEVEL));
+      ouDropdown.setScopeSelectable(false);
     } else {
       SearchScope selectedScope = Optional.ofNullable(scope)
           .or(() -> Optional.ofNullable(getDefaultSearchScope()))
@@ -77,13 +77,13 @@ public interface OrganizationalUnitSelectorComponent extends DomainControllerPro
       SearchScope selectableScope = selectedScope == SearchScope.SUBTREE
           ? SearchScope.ONELEVEL
           : SearchScope.SUBTREE;
-      ouSelector.setSelectedScope(selectedScope);
-      ouSelector.setSelectedScopeDisplayValue(getDisplayValue(selectedScope));
-      ouSelector.setSelectableScope(selectableScope);
-      ouSelector.setSelectableScopeDisplayValue(getDisplayValue(selectableScope));
-      ouSelector.setScopeSelectable(true);
+      ouDropdown.setSelectedScope(selectedScope);
+      ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(selectedScope));
+      ouDropdown.setSelectableScope(selectableScope);
+      ouDropdown.setSelectableScopeDisplayValue(getDisplayValue(selectableScope));
+      ouDropdown.setScopeSelectable(true);
     }
-    return ouSelector;
+    return ouDropdown;
   }
 
   default boolean isBaseOu(OrganizationalUnit ou) {

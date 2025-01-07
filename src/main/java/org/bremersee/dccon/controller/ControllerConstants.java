@@ -43,7 +43,7 @@ public interface ControllerConstants {
 
   String QUERY_DEFAULT = "";
 
-  String OU_SELECTOR = "ouSelector";
+  String OU_DROPDOWN = "ouDropdown";
 
   String OU = "ou";
 

@@ -21,9 +21,9 @@ import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
-import org.bremersee.dccon.controller.ui.components.OrganizationalUnitSelectorComponent;
+import org.bremersee.dccon.controller.ui.components.OrganizationalUnitNavigationComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.model.OrganizationalUnitSelector;
+import org.bremersee.dccon.controller.ui.model.OrganizationalUnitDropdown;
 import org.bremersee.dccon.model.DomainUserPage;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -46,7 +46,7 @@ import org.springframework.web.servlet.LocaleResolver;
 @Controller
 //@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class UsersController extends AbstractController
-    implements PageableComponent, OrganizationalUnitSelectorComponent {
+    implements PageableComponent, OrganizationalUnitNavigationComponent {
 
   private final DomainUserService domainUserService;
 
@@ -93,11 +93,11 @@ public class UsersController extends AbstractController
       @RequestParam(name = SCOPE, required = false) SearchScope scope,
       ModelMap model) {
 
-    OrganizationalUnitSelector ouSelector = getOrganizationalUnitSelector(ou, scope);
-    addOrganizationalUnitSelector(model, ouSelector);
+    OrganizationalUnitDropdown ouDropdown = getOrganizationalUnitDropdown(ou, scope);
+    addOrganizationalUnitDropdown(model, ouDropdown);
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
     DomainUserPage userPage = new DomainUserPage(
-        domainUserService.getUsers(pageable, query, ou, ouSelector.getSelectedScope()));
+        domainUserService.getUsers(pageable, query, ou, ouDropdown.getSelectedScope()));
     model.addAttribute("users", userPage);
     return "admin/users";
   }

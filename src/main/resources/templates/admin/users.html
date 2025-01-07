@@ -74,7 +74,7 @@
       </div>
       <div class="col col-auto mt-sm-2 mt-md-0">
         <a id="addUser" href="#" title="Add user" class="btn btn-outline-primary"
-           th:href="@{user-add(page=${page},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{user-add(page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
         </a>
       </div>
@@ -96,7 +96,7 @@
 
   <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(users.content)}">
     <a th:each="entry : ${users.content}" href="#"
-       th:href="@{user-edit(user=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}"
+       th:href="@{user-edit(user=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1"
@@ -119,27 +119,27 @@
     <ul class="pagination justify-content-center">
       <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 3)}">
         <a class="page-link" href="#" aria-label="First"
-           th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           <span aria-hidden="true">&laquo;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number - 5)}">
         <a class="page-link" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(page=${users.number - 5},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number - 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number - 2)}">
         <a class="page-link" href="#" th:text="${users.number - 1}"
-           th:href="@{${currentPage}(page=${users.number - 2},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number - 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           1
         </a>
       </li>
       <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 1)}">
         <a class="page-link" href="#" th:text="${users.number}"
-           th:href="@{${currentPage}(page=${users.number - 1},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           2
         </a>
       </li>
@@ -151,28 +151,28 @@
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number + 1)}">
         <a class="page-link" href="#" th:text="${users.number + 2}"
-           th:href="@{${currentPage}(page=${users.number + 1},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number + 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           4
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number + 2)}">
         <a class="page-link" href="#" th:text="${users.number + 3}"
-           th:href="@{${currentPage}(page=${users.number + 2},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number + 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           5
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number + 5)}">
         <a class="page-link" href="#" aria-label="Next"
-           th:href="@{${currentPage}(page=${users.number + 5},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${users.number + 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(users, users.number + 3)}">
         <a class="page-link" href="#" aria-label="Last"
-           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(users) - 1},size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectedScope})}">
+           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(users) - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
           <span aria-hidden="true">&raquo;</span>
         </a>
       </li>
@@ -187,8 +187,8 @@
     const currentPage = /*[[${currentPage}]]*/ "users";
     const size = /*[[${size}]]*/ "";
     const sort = /*[[${sort}]]*/ "";
-    const ou = /*[[${ouSelector.selectedOu.distinguishedName}]]*/ "";
-    const scope = /*[[${ouSelector.selectedScope}]]*/ "";
+    const ou = /*[[${ouDropdown.selectedOu.distinguishedName}]]*/ "";
+    const scope = /*[[${ouDropdown.selectedScope}]]*/ "";
 
     function moveCursorToEnd(input) {
       const length = input.value.length;

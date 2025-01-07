@@ -64,14 +64,14 @@
         <li class="nav-item">
           <a class="nav-link" href="#">Link</a>
         </li>
-        <li class="nav-item dropdown" th:if="${ouSelector != null}">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" th:text="${'OU: ' + ouSelector.selectedOu.name}">
+        <li class="nav-item dropdown" th:if="${ouDropdown != null}">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" th:text="${'OU: ' + ouDropdown.selectedOu.name}">
             OU: Users
           </a>
-          <ul class="dropdown-menu" th:if="${not #lists.isEmpty(ouSelector.selectableOus)}">
-            <li th:each="entry : ${ouSelector.selectableOus}">
+          <ul class="dropdown-menu" th:if="${not #lists.isEmpty(ouDropdown.selectableOus)}">
+            <li th:each="entry : ${ouDropdown.selectableOus}">
               <a class="dropdown-item" href="#" th:text="'OU: ' + ${entry.nameTree}"
-                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouSelector.selectedScope})}">
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouDropdown.selectedScope})}">
                 OU: Groups
               </a>
             </li>
@@ -82,16 +82,16 @@
             -->
           </ul>
         </li>
-        <li class="nav-item dropdown" th:if="${ouSelector != null}">
+        <li class="nav-item dropdown" th:if="${ouDropdown != null}">
           <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown"
-             th:classappend="${ouSelector.scopeSelectable} ? 'dropdown-toggle' : 'disabled'"
-             aria-expanded="false" th:text="${'Scope: ' + ouSelector.selectedScopeDisplayValue}">
+             th:classappend="${ouDropdown.scopeSelectable} ? 'dropdown-toggle' : 'disabled'"
+             aria-expanded="false" th:text="${'Scope: ' + ouDropdown.selectedScopeDisplayValue}">
             Scope: Subtree
           </a>
-          <ul class="dropdown-menu" th:if="${ouSelector.scopeSelectable}">
+          <ul class="dropdown-menu" th:if="${ouDropdown.scopeSelectable}">
             <li>
-              <a class="dropdown-item" href="#" th:text="${ouSelector.selectableScopeDisplayValue}"
-                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouSelector.selectedOu.distinguishedName},scope=${ouSelector.selectableScope})}">
+              <a class="dropdown-item" href="#" th:text="${ouDropdown.selectableScopeDisplayValue}"
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectableScope})}">
                 One level
               </a>
             </li>
