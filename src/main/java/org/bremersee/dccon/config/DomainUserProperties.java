@@ -47,6 +47,8 @@ public class DomainUserProperties {
 
   private String defaultCompany;
 
+  private boolean disableCompany; // TODO subclass for ui that i can directly use in controller?
+
   private String defaultDisplayName = "{{user.firstName}} {{user.lastName}}";
 
   private String defaultEmail = "{{user.samAccountName}}@{{properties.domainName}}";

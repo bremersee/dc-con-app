@@ -46,27 +46,24 @@
   </div>
 </nav>
 <main role="main" class="container">
-
-  <div class="pb-3">
-    <h3>Edit User</h3>
-  </div>
-
   <!--suppress ThymeleafVariablesResolveInspection -->
   <div th:if="${rmsg != null}"
-       class="alert alert-success"
+       class="alert alert-success mb-4"
        th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
        th:text="${rmsg != null} ? ${rmsg.msg} : ''">
     Status message
   </div>
 
   <div th:if="${userEditRequest != null}">
-    <div>
-      <div class="d-flex justify-content-center mb-4">
-        <img id="selectedAvatar" src="../../static/mp.jpg"
-             th:src="@{'/api/users/' + ${userEditRequest.oldSamAccountName} + '/avatar?d=mp&s=200'}"
-             class="rounded-circle" alt="avatar"
-             style="width: 200px; height: 200px; object-fit: cover;"  />
-      </div>
+    <div class="d-flex justify-content-center mb-2">
+      <img id="avatarImage" src="../../static/mp.jpg"
+           th:src="@{'/api/users/' + ${userEditRequest.oldSamAccountName} + '/avatar?d=mp&s=200'}"
+           class="rounded-circle" alt="avatar"
+           style="width: 200px; height: 200px; object-fit: cover;"  />
+    </div>
+    <div class="d-flex justify-content-center mb-4">
+      <h3 class="small">Edit user</h3>
+      <h3 th:text="${userEditRequest.oldName}">Administrator</h3>
     </div>
 
     <div>
@@ -86,8 +83,8 @@
         <input type="hidden" name="distinguishedName" th:field="*{user.distinguishedName}"/>
 
         <div class="mb-3">
-          <label for="avatar" class="form-label">Avatar</label>
-          <input type="file" accept="image/jpeg" class="form-control" id="avatar" name="avatar"
+          <label for="newAvatar" class="form-label">Avatar</label>
+          <input type="file" accept="image/jpeg" class="form-control" id="newAvatar" name="avatar"
                  th:field="*{avatar}" />
         </div>
 
@@ -352,14 +349,14 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
-    const selectedAvatar = document.getElementById("selectedAvatar");
-    const avatarInput = document.getElementById("avatar");
+    const avatarImage = document.getElementById("avatarImage");
+    const avatarInput = document.getElementById("newAvatar");
     avatarInput.onchange = function(event) {
       const fileInput = event.target;
       if (fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-          selectedAvatar.src = e.target.result;
+          avatarImage.src = e.target.result;
         };
         reader.readAsDataURL(fileInput.files[0]);
       }

@@ -21,6 +21,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -28,18 +29,20 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupType;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
-import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.ldaptive.dn.NameValue;
+import org.ldaptive.dn.RDn;
 import org.ldaptive.filter.AndFilter;
 import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.Filter;
@@ -57,14 +60,12 @@ import org.springframework.stereotype.Component;
 @Primary
 @Component("domainGroupRepository")
 @ProfileRequired("ldap")
-@MockComponent(value = DomainUserRepositoryMock.class, methodsOf = DomainGroupRepository.class)
+@MockComponent(value = DomainGroupRepositoryMock.class, methodsOf = DomainGroupRepository.class)
 @Slf4j
 public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     implements DomainGroupRepository {
 
   private final LdaptiveEntryMapper<DomainGroup> domainGroupLdapMapper;
-
-  private final Dn builtinDn;
 
   /**
    * Instantiates a new domain group repository.
@@ -79,7 +80,6 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       DomainRepository domainRepository) {
     super(properties, ldapTemplateProvider.getIfAvailable(), domainRepository);
     this.domainGroupLdapMapper = domainGroupLdapMapper;
-    builtinDn = properties.getBaseDn(new Dn("CN=Builtin"));
   }
 
   Filter getFindAllFilter(String query) {
@@ -124,7 +124,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
     if (getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
-          DomainUser.class.getSimpleName(),
+          DomainGroup.class.getSimpleName(),
           domainGroup.getSamAccountName(),
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
@@ -182,16 +182,141 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
             EC_SAM_ACCOUNT_NOT_FOUND));
   }
 
+  @Override
   public DomainGroup update(String groupName, DomainGroup domainGroup, Dn newOu) {
-    // TODO
-    return null;
+    log.debug("update({}, {}, {})", groupName, domainGroup.getSamAccountName(), newOu);
+    if (isEmpty(domainGroup.getSamAccountName())) {
+      throw ServiceException.badRequest(
+          "Group name (samAccountName) is required.",
+          EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
+    if (!groupName.equalsIgnoreCase(domainGroup.getSamAccountName())
+        && getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainGroup.class.getSimpleName(),
+          domainGroup.getSamAccountName(),
+          EC_SAM_ACCOUNT_ALREADY_EXISTS);
+    }
+    Dn currentParentDn = getProperties().getParentDn(domainGroup.getDistinguishedName());
+    DomainGroup existingDomainGroup = findOne(groupName, currentParentDn, SearchScope.ONELEVEL)
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            DomainGroup.class.getSimpleName(),
+            domainGroup.getSamAccountName(),
+            EC_SAM_ACCOUNT_NOT_FOUND));
+    Dn oldDn = new Dn(existingDomainGroup.getDistinguishedName());
+    Dn newDn = getNewDn(existingDomainGroup, domainGroup, newOu);
+    if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainGroup.class.getSimpleName(),
+          getProperties().removeBaseDn(newDn),
+          EC_DN_ALREADY_EXISTS);
+    }
+
+    DomainGroup updatedDomainGroup = renameAndMove(existingDomainGroup, domainGroup, newDn);
+    return getLdapTemplate().save(updatedDomainGroup, domainGroupLdapMapper);
+  }
+
+  Dn getNewDn(DomainGroup oldDomainGroup, DomainGroup newDomainGroup, Dn newOu) {
+    Dn newParentDn;
+    if (!isEmpty(newOu) && !newOu.isEmpty()) {
+      newParentDn = getProperties().getBaseDn(validateOu(newOu));
+    } else {
+      newParentDn = getProperties().getParentDn(oldDomainGroup.getDistinguishedName());
+    }
+
+    RDn oldRdn = new Dn(oldDomainGroup.getDistinguishedName()).getRDn();
+    String newCn = newDomainGroup.getSamAccountName();
+    Dn newDn = new Dn(new RDn(new NameValue(oldRdn.getNameValue().getName(), newCn)));
+    newDn.add(newParentDn);
+    return newDn;
+  }
+
+  DomainGroup renameAndMove(DomainGroup oldDomainGroup, DomainGroup newDomainGroup, Dn newDn) {
+    String oldCn = new Dn(oldDomainGroup.getDistinguishedName())
+        .getRDn().getNameValue().getStringValue();
+    String newCn = newDn
+        .getRDn().getNameValue().getStringValue();
+    boolean cnChanged = !Objects.equals(oldCn, newCn);
+    Dn oldParentDn = getProperties().getParentDn(oldDomainGroup.getDistinguishedName());
+
+    String oldSamAccountName = oldDomainGroup.getSamAccountName();
+    String newSamAccountName = newDomainGroup.getSamAccountName();
+    boolean samAccountNameChanged = !Objects.equals(oldSamAccountName, newSamAccountName);
+
+    String oldEmail = oldDomainGroup.getEmail();
+    String newEmail = newDomainGroup.getEmail();
+    boolean emailChanged = !Objects.equals(oldEmail, newEmail);
+
+    if (cnChanged || samAccountNameChanged || emailChanged) {
+      kinit();
+      List<String> commands = new ArrayList<>();
+      ssh(commands);
+      sudo(commands);
+      commands.add(getProperties().getSambaToolBinary());
+      commands.add("group");
+      commands.add("rename");
+      commands.add(quote(oldSamAccountName));
+      if (samAccountNameChanged) {
+        commands.add("--samaccountname=" + quote(newSamAccountName));
+      }
+      if (cnChanged) {
+        commands.add("--force-new-cn=" + quote(newCn));
+      }
+      if (emailChanged) {
+        commands.add(" --mail-address=" + quote(oldEmail));
+      }
+      auth(commands);
+      CommandExecutor.exec(
+          commands,
+          null,
+          getProperties().getSambaToolExecDir(),
+          (CommandExecutorResponseValidator) response -> this
+              .findOne(
+                  newSamAccountName,
+                  oldParentDn,
+                  SearchScope.ONELEVEL)
+              .orElseThrow(() -> ServiceException
+                  .internalServerError(String.format("Updating names of group '%s' failed. %s",
+                          newDomainGroup.getSamAccountName(),
+                          CommandExecutorResponse.toExceptionMessage(response)),
+                      EC_UPDATING_GROUP_FAILED)));
+    }
+    Dn newParentDn = getProperties().getParentDn(newDn.format());
+    if (!oldParentDn.isSame(newParentDn)) {
+      String ou = getProperties().removeBaseDn(newParentDn).format();
+      kinit();
+      List<String> commands = new ArrayList<>();
+      ssh(commands);
+      sudo(commands);
+      commands.add(getProperties().getSambaToolBinary());
+      commands.add("group");
+      commands.add("move");
+      commands.add(quote(newSamAccountName));
+      commands.add(quote(ou));
+      auth(commands);
+
+      CommandExecutor.exec(
+          commands,
+          null,
+          getProperties().getSambaToolExecDir(),
+          (CommandExecutorResponseValidator) response -> getDomainRepository()
+              .findDnOfSamAccountName(newSamAccountName)
+              .filter(groupDn -> new Dn(groupDn).isSame(newDn))
+              .orElseThrow(() -> ServiceException
+                  .internalServerError(String.format("Moving group '%s' to '%s' failed. %s",
+                          newSamAccountName, ou,
+                          CommandExecutorResponse.toExceptionMessage(response)),
+                      EC_UPDATING_GROUP_FAILED)));
+    }
+    newDomainGroup.setDistinguishedName(newDn.format());
+    return newDomainGroup;
   }
 
   // TODO
-  public boolean hasAllNisAttributes(DomainGroup domainUser) {
-    return !isEmpty(domainUser)
-        && !isEmpty(getNisDomain(domainUser))
-        && !isEmpty(domainUser.getGidNumber());
+  public boolean hasAllNisAttributes(DomainGroup domainGroup) {
+    return !isEmpty(domainGroup)
+        && !isEmpty(getNisDomain(domainGroup))
+        && !isEmpty(domainGroup.getGidNumber());
   }
 
   @ProfileRequired({"cli", "ldap"})

@@ -40,6 +40,8 @@ public class DomainUserEditRequest {
 
   private String oldLastName;
 
+  private String oldName;
+
   private boolean renameNamesAutomatically = true;
 
   private DomainUser user;
@@ -54,6 +56,7 @@ public class DomainUserEditRequest {
     this.oldSamAccountName = user.getSamAccountName();
     this.oldFirstName = user.getFirstName();
     this.oldLastName = user.getLastName();
+    this.oldName = user.getName();
     this.user = user;
     this.newOu = newOu.format();
   }

@@ -19,16 +19,13 @@ package org.bremersee.dccon.service;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
-import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.repository.OrganizationalUnitRepository;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Service;
@@ -73,31 +70,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .build();
   }
 
-  List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(
-      Stream<OrganizationalUnit> ous, Dn ou) {
-    Dn ouDn = properties.getBaseDn(ou);
-    return ous
-        .map(organizationalUnit -> new SelectOption<>(
-            new Dn(organizationalUnit.getDistinguishedName()).format(),
-            organizationalUnit,
-            organizationalUnit.getNameTree(),
-            isSelected(organizationalUnit, ouDn),
-            false,
-            false))
-        .sorted()
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(Dn ou) {
-    return getOrganizationalUnitSelectors(getOrganizationalUnits(), ou);
-  }
-
-  @Override
-  public List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectorsWithBase(Dn ou) {
-    return getOrganizationalUnitSelectors(getOrganizationalUnitsWithBase(), ou);
-  }
-
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnits() {
     return repository.findAll().map(this::withFormattedDn);
@@ -128,11 +100,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
       return true;
     }
     return repository.exists(ou);
-  }
-
-  boolean isSelected(OrganizationalUnit organizationalUnit, Dn ouDn) {
-
-    return ouDn.isSame(new Dn(organizationalUnit.getDistinguishedName()));
   }
 
 }

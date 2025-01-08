@@ -98,7 +98,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
   @Override
   public DomainGroup updateGroup(String groupName, DomainGroup domainGroup, Dn newOu) {
-    domainGroupValidator.doUpdateValidation(groupName, domainGroup);
+    log.debug("updateGroup({}, {}, {})", groupName, domainGroup.getSamAccountName(), newOu);
     return domainGroupRepository.update(groupName, domainGroup, newOu);
   }
 

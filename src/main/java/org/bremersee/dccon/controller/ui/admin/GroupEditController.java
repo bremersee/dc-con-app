@@ -170,7 +170,7 @@ public class GroupEditController extends AbstractController implements PageableC
 
     parameters = new HashMap<>(parameters);
     parameters.put("group", updatedGroup);
-    String redirect = getRedirectUri("group-edit?group={{group.samAccountName}}",
+    String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
         PAGE_AND_OU_PARAMS, parameters);
     getLogger().debug("Group successfully updated. Redirecting to {}", redirect);
     return redirect;

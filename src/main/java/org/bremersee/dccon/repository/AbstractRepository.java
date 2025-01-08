@@ -268,11 +268,12 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
           .sizeLimit(1)
           .build();
     }
+    Dn ouDn = getProperties().getBaseDn(validateOu(ouRdn));
     return SearchRequest.builder()
-        .dn(getProperties().getBaseDn(ouRdn).format())
+        .dn(ouDn.format())
         .filter(requireNonNullElseGet(filter, () -> findOneFilter(uniqueName)))
         .scope(Optional.ofNullable(scope)
-            .filter(searchScope -> !isEmpty(ouRdn))
+            .filter(searchScope -> !ouDn.isSame(getProperties().getBaseDn()))
             .orElse(SearchScope.SUBTREE))
         .binaryAttributes(getBinaryAttributes())
         .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
@@ -285,11 +286,12 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
       Filter filter,
       SearchScope scope,
       String... returnAttributes) {
+    Dn ouDn = getProperties().getBaseDn(validateOu(ouRdn));
     return SearchRequest.builder()
-        .dn(getProperties().getBaseDn(ouRdn).format())
+        .dn(ouDn.format())
         .filter(filter)
         .scope(Optional.ofNullable(scope)
-            .filter(searchScope -> !isEmpty(ouRdn))
+            .filter(searchScope -> !ouDn.isSame(getProperties().getBaseDn()))
             .orElse(SearchScope.SUBTREE))
         .binaryAttributes(getBinaryAttributes())
         .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)

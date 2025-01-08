@@ -16,11 +16,9 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.OrganizationalUnit;
-import org.bremersee.dccon.model.SelectOption;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 
@@ -30,10 +28,6 @@ import org.springframework.lang.Nullable;
  * @author Christian Bremer
  */
 public interface OrganizationalUnitService {
-
-  List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectors(@Nullable Dn ou);
-
-  List<SelectOption<OrganizationalUnit>> getOrganizationalUnitSelectorsWithBase(@Nullable Dn ou);
 
   Stream<OrganizationalUnit> getOrganizationalUnits();
 

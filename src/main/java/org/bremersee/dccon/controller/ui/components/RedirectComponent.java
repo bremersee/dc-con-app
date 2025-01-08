@@ -20,9 +20,12 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import com.samskivert.mustache.Mustache;
 import jakarta.validation.constraints.NotNull;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
+import org.bremersee.dccon.controller.ui.LoggerProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -32,14 +35,12 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface RedirectComponent extends ControllerConstants {
+public interface RedirectComponent extends ControllerConstants, LoggerProvider {
 
   String PAGE_PARAMS = PAGE + "={{" + PAGE + "}}"
       + "&" + SIZE + "={{" + SIZE + "}}"
       + "&" + SORT + "={{" + SORT + "}}"
-      + "&" + QUERY + "={{" + QUERY + "}}"
-      + "&" + OU + "={{" + OU + "}}"
-      + "&" + SCOPE + "={{" + SCOPE + "}}";
+      + "&" + QUERY + "={{" + QUERY + "}}";
 
   String PAGE_AND_OU_PARAMS = PAGE_PARAMS
       + "&" + OU + "={{" + OU + "}}"
@@ -68,12 +69,14 @@ public interface RedirectComponent extends ControllerConstants {
       sb.append(template);
     }
     template = sb.toString();
-    return Mustache
+    String redirect = Mustache
         .compiler()
-        .escapeHTML(true)
+        .withEscaper(raw -> URLEncoder.encode(raw, StandardCharsets.UTF_8))
         .defaultValue("")
         .compile(template)
         .execute(Objects.requireNonNullElseGet(parameters, Map::of));
+    getLogger().debug("Redirect URI: {}", redirect);
+    return redirect;
   }
 
 }

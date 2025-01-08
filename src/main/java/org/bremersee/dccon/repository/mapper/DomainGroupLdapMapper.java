@@ -155,6 +155,7 @@ public class DomainGroupLdapMapper extends AbstractLdapMapper
       setAttribute(destination, LDAP_NIS_NAME, source.getSamAccountName(), false,
           STRING_VALUE_TRANSCODER, modifications);
     }
+    // TODO only
     if (isEmpty(
         getAttributeValue(destination, LDAP_SAM_ACCOUNT_NAME, STRING_VALUE_TRANSCODER, null))) {
       setAttribute(destination, LDAP_SAM_ACCOUNT_NAME, source.getSamAccountName(), false,

@@ -19,9 +19,8 @@ package org.bremersee.dccon.controller.ui.admin;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,12 +31,12 @@ import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
-import org.bremersee.dccon.controller.ui.model.DomainUserEditRequest;
+import org.bremersee.dccon.controller.ui.model.DomainGroupEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
-import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
-import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
@@ -49,7 +48,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -59,31 +57,31 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class UserEditController extends AbstractController implements PageableComponent,
+public class GroupEditMembersController extends AbstractController implements PageableComponent,
     RedirectComponent, OrganizationalUnitComponent, OrganisationalUnitsComponent {
 
   private final DomainService domainService;
 
-  private final DomainUserService domainUserService;
+  private final DomainGroupService domainGroupService;
 
   @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
-  public UserEditController(
+  public GroupEditMembersController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainService domainService,
-      DomainUserService domainUserService,
+      DomainGroupService domainGroupService,
       OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
-    this.domainUserService = domainUserService;
+    this.domainGroupService = domainGroupService;
     this.organizationalUnitService = organizationalUnitService;
   }
 
   @Override
   public String getDefaultSort() {
-    return USER_SORT;
+    return GROUP_SORT;
   }
 
   @ModelAttribute("rfc2307Enabled")
@@ -91,147 +89,108 @@ public class UserEditController extends AbstractController implements PageableCo
     return domainService.isRfc2307Enabled();
   }
 
-  @ModelAttribute("avatarExists")
-  public boolean avatarExists(@RequestParam(value = "user", required = false) String userName) {
-    return Optional.ofNullable(userName)
-        .map(user -> domainUserService.existsAvatarInActiveDirectory(user, null, null))
-        .orElse(false);
+  @ModelAttribute("members")
+  public Object addMemberSelectOptions() {
+    // TODO
+    return List.of();
   }
 
-  @GetMapping(path = "/admin/user-edit")
-  public String displayUserEdit(
-      @RequestParam(value = "user", required = false) String userName,
+  @GetMapping(path = "/admin/group-edit-members")
+  public String displayGroupEditMembers(
+      @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
       ModelMap model) {
 
-    return Optional.ofNullable(userName)
-        .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
-        .map(user -> {
-          DomainUserEditRequest req = new DomainUserEditRequest(
-              user, getProperties().getParentDn(user.getDistinguishedName()));
-          model.addAttribute("userEditRequest", req);
-          return "admin/user-edit";
+    return Optional.ofNullable(groupName)
+        .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
+        .map(group -> {
+          model.addAttribute("group", group);
+          return "admin/group-edit-members";
         })
         .orElseGet(() -> {
-          String msg = String.format("User '%s' not found.", userName);
+          String msg = String.format("Group '%s' not found.", groupName);
           model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          return "admin/user-edit";
+          return "admin/group-edit-members";
         });
   }
 
-  @PostMapping(path = "/admin/user-edit")
-  public String updateUser(
+  @PostMapping(path = "/admin/group-edit-members")
+  public String updateGroupMembers(
       @ModelAttribute(name = PAGE, binding = false) Integer page,
       @ModelAttribute(name = SIZE, binding = false) Integer size,
       @ModelAttribute(name = SORT, binding = false) String sort,
       @ModelAttribute(name = QUERY, binding = false) String query,
+      @ModelAttribute(name = OU, binding = false) String ou,
       @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
-      @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
+      @ModelAttribute(name = "group") DomainGroup group,
       ModelMap model,
       HttpServletRequest request,
       BindingResult bindingResult,
-      RedirectAttributes redirectAttributes) throws IOException {
+      RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("updateUser({}, {}, {}, {}, {}, {})",
-        userEditRequest, page, size, sort, query, scope);
+    String name = Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null);
+    getLogger().debug("updateGroupMembers({}, {}, {}, {}, {}, {})",
+        name, page, size, sort, query, scope);
     Map<String, Object> parameters = Map.of(
         PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
         SIZE, Optional.ofNullable(size)
             .filter(s -> s > 0)
             .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
+        SORT, Optional.ofNullable(sort).orElse(GROUP_SORT),
         QUERY, Optional.ofNullable(query).orElse(""),
-        OU, Optional.ofNullable(userEditRequest)
-            .map(DomainUserEditRequest::getNewOuDn)
-            .map(Dn::format)
-            .or(() -> Optional.ofNullable(userEditRequest)
-                .map(DomainUserEditRequest::getUser)
-                .map(DomainUser::getDistinguishedName)
-                .map(dn -> getProperties().getParentDn(dn))
-                .map(Dn::format))
-            .orElse(getProperties().getUser().getDefaultUserOu().format()),
+        OU, Optional.ofNullable(ou)
+            .orElse(getProperties().getGroup().getDefaultGroupOu().format()),
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
     );
 
-    getLogger().debug("Try to update user '{}'.", userEditRequest);
+    getLogger().debug("Try to update members of group '{}'.", name);
 
-    if (isEmpty(userEditRequest)) {
-      String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
-      getLogger().debug("User update request is empty. Redirecting to {}", redirect);
+    if (isEmpty(group)) {
+      String redirect = getRedirectUri("/admin/groups", PAGE_AND_OU_PARAMS, parameters);
+      getLogger().debug("Group is empty. Redirecting to {}", redirect);
       return redirect;
     }
 
-    processNameChanges(userEditRequest);
-    DomainUser updatedUser = updateUser(bindingResult, userEditRequest);
-    updateAvatar(bindingResult, userEditRequest);
+    // TODO
+    //DomainGroup updatedGroup = updateGroup(bindingResult, groupEditRequest);
 
     if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating user failed. Some fields were invalid.");
-      return "admin/user-edit";
+      getLogger().debug("Updating group failed. Some fields were invalid.");
+      return "admin/group-edit";
     }
 
     model.clear();
     String msg = getMessageSource().getMessage(
-        "i18n.user.edited",
-        new Object[]{updatedUser.getName()}, //  TODO
-        String.format("User '%s' was successfully updated.", updatedUser.getName()), //  TODO
+        "i18n.group.edited",
+        new Object[]{group.getName()}, //  TODO
+        String.format("Members pf roup '%s' were successfully updated.", group.getName()), //  TODO
         resolveLocale(request));
     RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
     parameters = new HashMap<>(parameters);
-    parameters.put("user", updatedUser);
-    String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
+    parameters.put("group", group);
+    String redirect = getRedirectUri("group-edit-members?name={{group.samAccountName}}",
         PAGE_AND_OU_PARAMS, parameters);
-    getLogger().debug("User successfully updated. Redirecting to {}", redirect);
+    getLogger().debug("Group successfully updated. Redirecting to {}", redirect);
     return redirect;
   }
 
-  private void processNameChanges(DomainUserEditRequest userEditRequest) {
-    DomainUser user = userEditRequest.getUser();
-    if (userEditRequest.isRenameNamesAutomatically()) {
-      getProperties().getUser().replaceNames(
-          user, userEditRequest.getOldSamAccountName(), user.getSamAccountName());
-      getProperties().getUser().replaceNames(
-          user, userEditRequest.getOldFirstName(), user.getFirstName());
-      getProperties().getUser().replaceNames(
-          user, userEditRequest.getOldLastName(), user.getLastName());
-    }
-  }
-
-  private DomainUser updateUser(BindingResult bindingResult,
-      DomainUserEditRequest userEditRequest) {
-    String userName = userEditRequest.getOldSamAccountName();
-    DomainUser user = userEditRequest.getUser();
-    Dn ou = userEditRequest.getNewOuDn();
+  private DomainGroup updateGroup(BindingResult bindingResult, DomainGroupEditRequest groupEditRequest) {
+    String groupName = groupEditRequest.getOldSamAccountName();
+    DomainGroup group = groupEditRequest.getGroup();
+    Dn ou = groupEditRequest.getNewOuDn();
     try {
-      Dn parentDn = getProperties().getParentDn(user.getDistinguishedName());
+      Dn parentDn = getProperties().getParentDn(group.getDistinguishedName());
       Dn ouDn = getProperties().getBaseDn(ou);
       Dn newOu = parentDn.isSame(ouDn) ? null : ouDn;
-      return domainUserService.updateUser(userName, user, newOu);
+      return domainGroupService.updateGroup(groupName, group, newOu);
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
     }
-    return user;
-  }
-
-  private void updateAvatar(BindingResult bindingResult, DomainUserEditRequest userEditRequest)
-      throws IOException {
-    try {
-      if (userEditRequest.isRemoveAvatar()) {
-        domainUserService.removeUserAvatar(userEditRequest.getUser().getSamAccountName());
-      } else if (!isEmpty(userEditRequest.getAvatar()) && !userEditRequest.getAvatar().isEmpty()) {
-        MultipartFile file = userEditRequest.getAvatar();
-        try (InputStream in = file.getInputStream()) {
-          domainUserService.updateUserAvatar(userEditRequest.getUser().getSamAccountName(), in);
-        }
-      }
-
-    } catch (ServiceException e) {
-      handleException(bindingResult, e);
-    }
+    return group;
   }
 
   private void handleException(BindingResult bindingResult, ServiceException serviceException) {
@@ -239,25 +198,25 @@ public class UserEditController extends AbstractController implements PageableCo
     getLogger().debug("handleException of bind target '{}'",
         bindingResult.getTarget(), serviceException);
 
-    if (!(bindingResult.getTarget() instanceof DomainUserEditRequest)) {
+    if (!(bindingResult.getTarget() instanceof DomainGroupEditRequest)) {
       return;
     }
-    DomainUser user = ((DomainUserEditRequest) bindingResult.getTarget()).getUser();
+    DomainGroup group = ((DomainGroupEditRequest) bindingResult.getTarget()).getGroup();
 
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
-        bindingResult.rejectValue("user.samAccountName", "code",
-            "Username is required.");
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Groupname is required.");
         break;
       }
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-        bindingResult.rejectValue("user.samAccountName", "code",
-            "Username already exists.");
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Groupname already exists.");
         break;
       }
       case EC_DN_ALREADY_EXISTS: {
-        bindingResult.rejectValue("user.samAccountName", "code",
+        bindingResult.rejectValue("group.samAccountName", "code",
             "Distinguished name already exists.");
         break;
       }
@@ -271,14 +230,14 @@ public class UserEditController extends AbstractController implements PageableCo
             "Organizational unit was not found.");
         break;
       }
-      case EC_UPDATING_USER_FAILED: { // TODO global
-        getLogger().error("Editing user failed.", serviceException);
-        bindingResult.rejectValue("user.samAccountName", "code",
+      case EC_UPDATING_GROUP_FAILED: { // TODO global
+        getLogger().error("Editing group failed.", serviceException);
+        bindingResult.rejectValue("group.samAccountName", "code",
             "Something went wrong. Please try again later.");
         break;
       }
       default: {
-        getLogger().error("Editing user failed with a not mapped exception.", serviceException);
+        getLogger().error("Editing group failed with a not mapped exception.", serviceException);
         throw serviceException;
       }
     }
