@@ -84,8 +84,6 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
 
   String LDAP_USER_PREFERRED_LANGUAGE = "preferredLanguage";
 
-  String LDAP_USER_PRIMARY_GROUP_ID = "primaryGroupID"; // integer, TODO resolve
-
   int LDAP_USER_PRIMARY_GROUP_ID_DOMAIN_USERS_VALUE = 513;
 
   String LDAP_USER_PROFILE_PATH = "profilePath";
@@ -151,7 +149,7 @@ public interface DomainUserRepositoryConstants extends RepositoryConstants {
       LDAP_OBJECT_SID,
       LDAP_USER_OFFICE_NAME,
       LDAP_USER_PREFERRED_LANGUAGE,
-      LDAP_USER_PRIMARY_GROUP_ID,
+      LDAP_PRIMARY_GROUP_ID,
       LDAP_USER_PROFILE_PATH,
       LDAP_USER_PWD_LAST_SET,
       LDAP_SAM_ACCOUNT_NAME,

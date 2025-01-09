@@ -84,7 +84,7 @@
     </ul>
 
     <div class="mx-0 mx-sm-1 mx-md-3" th:if="${not #lists.isEmpty(possibleMembers.members)}">
-      <div id="objectClassSwitch"
+      <div id="memberTypeSwitch"
            class="mb-3 p-3 border border-1 d-flex justify-content-center form-switch">
         <div class="form-check form-check-inline ms-4">
           <input class="form-check-input" type="checkbox" id="userSwitch" value="user" role="switch"
@@ -136,19 +136,19 @@
         <div id="memberList" class="list-group list-group-flush">
           <div class="list-group-item list-group-item-action" aria-current="true"
                th:each="member,iter : ${possibleMembers.members}"
-               th:classappend="'object-class-' + ${member.objectClass}">
+               th:classappend="'member-type-' + ${member.memberType}">
             <div class="d-flex w-100 justify-content-between">
               <div>
                 <label th:for="'member-' + ${iter.index}" for="member-0" class="h5">
-                <span class="text-primary" th:if="${#strings.equals(member.objectClass, 'user')}">
+                <span class="text-primary" th:if="${#strings.equals(member.memberType, 'user')}">
                   <span class="fas fa-user" aria-hidden="true"></span>
                 </span>
                 <span class="text-success"
-                        th:if="${#strings.equals(member.objectClass, 'group')}">
+                        th:if="${#strings.equals(member.memberType, 'group')}">
                   <span class="fas fa-user-group" aria-hidden="true"></span>
                 </span>
                 <span class="text-warning"
-                        th:if="${#strings.equals(member.objectClass, 'computer')}">
+                        th:if="${#strings.equals(member.memberType, 'computer')}">
                   <span class="fas fa-computer" aria-hidden="true"></span>
                 </span>
                   <span class="ms-1" th:text="${member.displayName}">Anna</span>
@@ -162,7 +162,7 @@
                        th:value="${member.distinguishedNameBase64}"/>
               </div>
             </div>
-            <small class="text-secondary" th:text="${member.dnWithoutBaseAndSpaces}">CN</small>
+            <small class="text-secondary" th:text="${member.distinguishedNameTree}">CN</small>
           </div>
         </div>
 
@@ -183,13 +183,13 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
-    $('#objectClassSwitch :checkbox').on("change", function () {
+    $('#memberTypeSwitch :checkbox').on("change", function () {
       const checkbox = $(this);
       const value = checkbox.val();
       if (checkbox.is(':checked')) {
-        $('#memberList .object-class-' + value).show();
+        $('#memberList .member-type-' + value).show();
       } else {
-        $('#memberList .object-class-' + value).hide();
+        $('#memberList .member-type-' + value).hide();
       }
     });
   });

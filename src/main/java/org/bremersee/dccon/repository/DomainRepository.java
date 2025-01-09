@@ -55,6 +55,8 @@ public interface DomainRepository extends RepositoryConstants, ErrorCode {
 
   Optional<String> findDnOfSamAccountName(String samAccountName);
 
+  String getDomainSid();
+
   /**
    * Specifies whether NIS extensions (rfc2307) are installed on the AD Domain Controller. See <a
    * href="https://wiki.samba.org/index.php/Setting_up_RFC2307_in_AD">Setting up RFC2307 in AD</a>

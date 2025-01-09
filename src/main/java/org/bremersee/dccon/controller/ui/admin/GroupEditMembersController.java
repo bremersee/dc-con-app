@@ -88,8 +88,13 @@ public class GroupEditMembersController extends AbstractController implements Pa
   }
 
   @ModelAttribute("possibleMembers")
-  public DomainGroupMembers addMemberSelectOptions() {
-    return domainGroupService.getAllPossibleMembers();
+  public DomainGroupMembers addMemberSelectOptions(
+      @RequestParam(value = "name", required = false) String groupName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) SearchScope searchScope) {
+    return Optional.ofNullable(groupName)
+        .map(name -> domainGroupService.findPossibleMembers(groupName, ou, searchScope))
+        .orElseGet(DomainGroupMembers::empty);
   }
 
   @GetMapping(path = "/admin/group-edit-members")

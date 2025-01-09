@@ -36,11 +36,6 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper = true)
 @NoArgsConstructor
-public class DomainComputer extends CommonAttributes implements SamAccount {
-
-  /**
-   * The computer's active directory name.
-   */
-  private String samAccountName;
+public class DomainComputer extends SamAccount {
 
 }

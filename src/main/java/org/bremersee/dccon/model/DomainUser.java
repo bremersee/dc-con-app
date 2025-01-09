@@ -22,8 +22,6 @@ import static java.util.Objects.nonNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serial;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,8 +49,7 @@ import lombok.ToString;
 @ToString(callSuper = true, exclude = {"password"})
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class DomainUser extends CommonAttributes
-    implements SamAccount, NisDomainMember {
+public class DomainUser extends SamAccount implements NisDomainMember {
 
   @Serial
   private static final long serialVersionUID = 2L;
@@ -143,11 +140,6 @@ public class DomainUser extends CommonAttributes
   Integer logonCount;
 
   /**
-   * User's group membership.
-   */
-  List<String> membership;
-
-  /**
    * User's mobile phone number.
    */
   String mobile;
@@ -179,29 +171,14 @@ public class DomainUser extends CommonAttributes
   String preferredLanguage;
 
   /**
-   * User's primary group ID.
-   */
-  Integer primaryGroupId;
-
-  /**
    * User's profile path.
    */
   String profilePath;
 
   /**
-   * User's username.
-   */
-  String samAccountName;
-
-  /**
    * User's logon script path.
    */
   String scriptPath;
-
-  /**
-   * User's windows/samba SID.
-   */
-  Sid sid;
 
   /**
    * User's telephone number.
@@ -255,18 +232,6 @@ public class DomainUser extends CommonAttributes
       return defaultLocale;
     }
     return locale;
-  }
-
-  /**
-   * User's group membership.
-   *
-   * @return the group membership
-   */
-  public List<String> getMembership() {
-    if (membership == null) {
-      membership = new ArrayList<>();
-    }
-    return membership;
   }
 
   /**

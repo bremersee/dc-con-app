@@ -88,6 +88,8 @@ public interface RepositoryConstants {
    */
   String LDAP_OBJECT_SID = "objectSid";
 
+  String LDAP_PRIMARY_GROUP_ID = "primaryGroupID";
+
   /**
    * The constant SAM_ACCOUNT_NAME. Attribute of the group name.
    */

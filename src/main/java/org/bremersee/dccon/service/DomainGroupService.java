@@ -19,7 +19,9 @@ package org.bremersee.dccon.service;
 import java.util.Optional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMember;
 import org.bremersee.dccon.model.DomainGroupMembers;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -49,7 +51,24 @@ public interface DomainGroupService {
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
-  DomainGroupMembers getAllPossibleMembers();
+
+
+  DomainGroupMembers findPossibleMembers(
+      @NotNull String samAccountName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
+
+  Stream<DomainGroup> getMembership(
+      @NotNull String samAccountName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
+
+  DomainGroupMembers queryPossibleMembers(
+      @NotNull String samAccountName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope,
+      @Nullable String query);
+
 
   /**
    * Add domain group.

@@ -74,6 +74,7 @@ public class DomainUserEditRequest {
         + "oldSamAccountName=" + oldSamAccountName
         + ", oldFirstName=" + oldFirstName
         + ", oldLastName=" + oldLastName
+        + ", oldName=" + oldName
         + ", user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
         + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
         + '}';

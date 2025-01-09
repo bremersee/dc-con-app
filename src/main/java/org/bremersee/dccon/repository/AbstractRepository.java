@@ -88,8 +88,6 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
     Assert.notNull(properties, "Domain controller properties must not be present.");
     this.properties = properties;
     this.ldapTemplate = ldapTemplate;
-
-    // TODO create a method with searchDn and scope so that filter applies only to baseDn?
     this.ignoredDnFilter = dn -> isEmpty(dn) || Arrays
         .stream(DomainControllerProperties.IGNORED_DN)
         .map(this.properties::getBaseDn)

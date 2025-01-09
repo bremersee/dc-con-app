@@ -45,7 +45,26 @@ public interface DomainGroupRepository {
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
-  Stream<DomainGroupMember> findAllMembers();
+
+  Stream<DomainGroup> getMembership(
+      @NotNull String samAccountName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
+
+
+  Stream<DomainGroupMember> findPossibleMembers(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
+
+  Stream<DomainGroupMember> queryPossibleMembers(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope,
+      @Nullable String query);
+
+  Stream<DomainGroupMember> getMembers(String groupName, Dn ou, SearchScope searchScope);
+
 
   /**
    * Find group be name.

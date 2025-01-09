@@ -50,18 +50,18 @@ public class DomainGroupMemberSelectOptions implements Serializable {
     unknownPresent = this.selectOptions.stream()
         .filter(m -> nonNull(m.getDisplayValue()))
         .anyMatch(m -> DomainGroupMemberType.UNKNOWN
-            .equals(m.getDisplayValue().getObjectClass()));
+            .equals(m.getDisplayValue().getMemberType()));
     userPresent = this.selectOptions.stream()
         .filter(m -> nonNull(m.getDisplayValue()))
         .anyMatch(m -> DomainGroupMemberType.USER
-            .equals(m.getDisplayValue().getObjectClass()));
+            .equals(m.getDisplayValue().getMemberType()));
     groupPresent = this.selectOptions.stream()
         .filter(m -> nonNull(m.getDisplayValue()))
         .anyMatch(m -> DomainGroupMemberType.GROUP
-            .equals(m.getDisplayValue().getObjectClass()));
+            .equals(m.getDisplayValue().getMemberType()));
     computerPresent = this.selectOptions.stream()
         .filter(m -> nonNull(m.getDisplayValue()))
         .anyMatch(m -> DomainGroupMemberType.COMPUTER
-            .equals(m.getDisplayValue().getObjectClass()));
+            .equals(m.getDisplayValue().getMemberType()));
   }
 }

@@ -69,6 +69,11 @@ public class DomainRepositoryMock extends AbstractDomainRepository
   }
 
   @Override
+  public String getDomainSid() {
+    return "";
+  }
+
+  @Override
   public boolean isRfc2307Enabled() {
     return true;
   }

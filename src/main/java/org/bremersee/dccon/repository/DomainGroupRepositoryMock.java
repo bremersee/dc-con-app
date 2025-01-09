@@ -71,6 +71,28 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
             || isQueryResult(domainGroup, query.toLowerCase()));
   }
 
+  @Override
+  public Stream<DomainGroupMember> findPossibleMembers(String groupName, Dn ou,
+      SearchScope searchScope) {
+    return Stream.empty();
+  }
+
+  @Override
+  public Stream<DomainGroup> getMembership(String samAccountName, Dn ou, SearchScope searchScope) {
+    return Stream.empty();
+  }
+
+  @Override
+  public Stream<DomainGroupMember> queryPossibleMembers(String groupName, Dn ou,
+      SearchScope searchScope, String query) {
+    return Stream.empty();
+  }
+
+  @Override
+  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, SearchScope searchScope) {
+    return Stream.empty();
+  }
+
   private boolean isQueryResult(final DomainGroup domainGroup, final String query) {
     return query != null && domainGroup != null
         && (contains(domainGroup.getSamAccountName(), query)
@@ -79,11 +101,6 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroupMember> findAllMembers() {
-    return Stream.empty();
-  }
-
-    @Override
   public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
     return Optional.ofNullable(store.getGroupRepo().get(groupName.toLowerCase()));
   }

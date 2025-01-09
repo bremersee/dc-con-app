@@ -151,7 +151,7 @@
                   aria-describedby="primaryGroupIdValidation"
                   th:classappend="${#fields.hasErrors('user.primaryGroupId')} ? 'is-invalid' : ''"
                   th:field="*{user.primaryGroupId}">
-            <option th:each="o : ${groups}" th:value="${o.groupId}" th:text="${o.name}">
+            <option th:each="o : ${groups}" th:value="${o.primaryGroupId}" th:text="${o.samAccountName}">
               Domain Users
             </option>
           </select>

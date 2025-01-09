@@ -107,7 +107,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     if (isEmpty(ldapEntry)) {
       return;
     }
-    mapCommonAttributes(ldapEntry, domainUser);
+    mapSamAccount(ldapEntry, domainUser);
 
     domainUser.setAccountExpires(getAttributeValue(ldapEntry,
         LDAP_USER_ACCOUNT_EXPIRES, AD_TIME_VALUE_TRANSCODER, null));
@@ -138,30 +138,18 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     domainUser.setLogonCount(
         getAttributeValue(ldapEntry, LDAP_USER_LOGON_COUNT, INT_VALUE_TRANSCODER, null));
     domainUser.setEmail(getAttributeValue(ldapEntry, LDAP_MAIL, STRING_VALUE_TRANSCODER, null));
-    domainUser.setMembership(LdaptiveEntryMapper
-        .getAttributeValuesAsList(ldapEntry, LDAP_MEMBER_OF_GROUP, STRING_VALUE_TRANSCODER)
-        .stream()
-        .sorted(String::compareToIgnoreCase)
-        .toList());
     domainUser.setMobile(
         getAttributeValue(ldapEntry, LDAP_USER_MOBILE, STRING_VALUE_TRANSCODER, null));
     domainUser.setNisDomain(
         getAttributeValue(ldapEntry, LDAP_NIS_DOMAIN, STRING_VALUE_TRANSCODER, null));
-    domainUser.setSid(
-        getAttributeValue(ldapEntry, LDAP_OBJECT_SID, SID_VALUE_TRANSCODER, null));
     domainUser.setPhysicalDeliveryOfficeName(
         getAttributeValue(ldapEntry, LDAP_USER_OFFICE_NAME, STRING_VALUE_TRANSCODER, null));
     domainUser.setPreferredLanguage(
         getAttributeValue(ldapEntry, LDAP_USER_PREFERRED_LANGUAGE, STRING_VALUE_TRANSCODER, null));
-    domainUser.setPrimaryGroupId(
-        getAttributeValue(ldapEntry, LDAP_USER_PRIMARY_GROUP_ID, INT_VALUE_TRANSCODER,
-            LDAP_USER_PRIMARY_GROUP_ID_DOMAIN_USERS_VALUE));
     domainUser.setProfilePath(
         getAttributeValue(ldapEntry, LDAP_USER_PROFILE_PATH, STRING_VALUE_TRANSCODER, null));
     domainUser.setPasswordLastSet(
         getAttributeValue(ldapEntry, LDAP_USER_PWD_LAST_SET, AD_TIME_VALUE_TRANSCODER, null));
-    domainUser.setSamAccountName(
-        getAttributeValue(ldapEntry, LDAP_SAM_ACCOUNT_NAME, STRING_VALUE_TRANSCODER, null));
     domainUser.setScriptPath(
         getAttributeValue(ldapEntry, LDAP_USER_SCRIPT_PATH, STRING_VALUE_TRANSCODER, null));
     domainUser.setLastName(
@@ -190,6 +178,8 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
       final LdapEntry destination) {
 
     final List<AttributeModification> modifications = new ArrayList<>();
+
+    mapSamAccount(source, destination, modifications);
 
     setAttribute(destination, LDAP_USER_COMPANY, source.getCompany(), false,
         STRING_VALUE_TRANSCODER, modifications);
@@ -248,14 +238,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
         false, STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_USER_PREFERRED_LANGUAGE, source.getPreferredLanguage(), false,
         STRING_VALUE_TRANSCODER, modifications);
-    if (!isEmpty(source.getPrimaryGroupId())) {
-      setAttribute(destination, LDAP_USER_PRIMARY_GROUP_ID, source.getPrimaryGroupId(), false,
-          INT_VALUE_TRANSCODER, modifications);
-    }
     setAttribute(destination, LDAP_USER_PROFILE_PATH, source.getProfilePath(), false,
-        STRING_VALUE_TRANSCODER, modifications);
-    // pwd last set is read only
-    setAttribute(destination, LDAP_SAM_ACCOUNT_NAME, source.getSamAccountName(), false,
         STRING_VALUE_TRANSCODER, modifications);
     setAttribute(destination, LDAP_USER_SCRIPT_PATH, source.getScriptPath(), false,
         STRING_VALUE_TRANSCODER, modifications);

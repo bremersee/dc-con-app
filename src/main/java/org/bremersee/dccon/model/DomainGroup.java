@@ -45,8 +45,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class DomainGroup extends CommonAttributes
-    implements SamAccount, NameProvider, NisDomainMember {
+public class DomainGroup extends SamAccount implements NisDomainMember {
 
   @Serial
   private static final long serialVersionUID = 2L;
@@ -77,24 +76,9 @@ public class DomainGroup extends CommonAttributes
   private List<String> members;
 
   /**
-   * The group's group membership.
-   */
-  private List<String> membership;
-
-  /**
    * Group's Unix/RFC2307 NIS domain.
    */
   private String nisDomain;
-
-  /**
-   * The group's name.
-   */
-  private String samAccountName;
-
-  /**
-   * Group's windows/samba SID.
-   */
-  private Sid sid;
 
   /**
    * Returns the type of the domain group.
@@ -120,33 +104,16 @@ public class DomainGroup extends CommonAttributes
     return members;
   }
 
-  /**
-   * The group's group membership.
-   *
-   * @return the group membership
-   */
-  public List<String> getMembership() {
-    if (membership == null) {
-      membership = new ArrayList<>();
-    }
-    return membership;
+  @Override
+  public Integer getPrimaryGroupId() {
+    return Optional.ofNullable(getSid())
+        .map(Sid::getSuffix)
+        .orElse(super.getPrimaryGroupId());
   }
 
-  public Integer getGroupId() {
-    return Optional.ofNullable(getSid())
-        .map(Sid::getValue)
-        .map(value -> {
-          int index = value.lastIndexOf('-');
-          if (index == -1) {
-            return null;
-          }
-          try {
-            return Integer.parseInt(value.substring(index + 1));
-          } catch (RuntimeException e) {
-            return null;
-          }
-        })
-        .orElse(null);
+  @Override
+  public void setPrimaryGroupId(Integer primaryGroupId) {
+    // ignored
   }
 
 }

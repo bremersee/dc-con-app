@@ -45,9 +45,6 @@ import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -108,13 +105,6 @@ public class UserEditController extends AbstractController implements PageableCo
         .orElse(false);
   }
 
-  @ModelAttribute("groups")
-  public List<DomainGroup> groups() {
-    Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(GROUP_SORT));
-    return domainGroupService.getGroups(pageable, null, null, null)
-        .getContent();
-  }
-
   @GetMapping(path = "/admin/user-edit")
   public String displayUserEdit(
       @RequestParam(value = "user", required = false) String userName,
@@ -123,11 +113,14 @@ public class UserEditController extends AbstractController implements PageableCo
       ModelMap model) {
 
     return Optional.ofNullable(userName)
-        .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
+        .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
         .map(user -> {
           DomainUserEditRequest req = new DomainUserEditRequest(
               user, getProperties().getParentDn(user.getDistinguishedName()));
           model.addAttribute("userEditRequest", req);
+          List<DomainGroup> groups = domainGroupService.getMembership(userName, ou, searchScope)
+              .toList();
+          model.addAttribute("groups", groups);
           return "admin/user-edit";
         })
         .orElseGet(() -> {
@@ -143,6 +136,7 @@ public class UserEditController extends AbstractController implements PageableCo
       @ModelAttribute(name = SIZE, binding = false) Integer size,
       @ModelAttribute(name = SORT, binding = false) String sort,
       @ModelAttribute(name = QUERY, binding = false) String query,
+      @ModelAttribute(name = OU, binding = false) Dn ou,
       @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
       @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
       ModelMap model,
@@ -150,8 +144,8 @@ public class UserEditController extends AbstractController implements PageableCo
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) throws IOException {
 
-    getLogger().debug("updateUser({}, {}, {}, {}, {}, {})",
-        userEditRequest, page, size, sort, query, scope);
+    getLogger().debug("updateUser({}, {}, {}, {}, {}, {}, {})",
+        userEditRequest, page, size, sort, query, ou, scope);
     Map<String, Object> parameters = Map.of(
         PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
         SIZE, Optional.ofNullable(size)
@@ -166,6 +160,8 @@ public class UserEditController extends AbstractController implements PageableCo
                 .map(DomainUserEditRequest::getUser)
                 .map(DomainUser::getDistinguishedName)
                 .map(dn -> getProperties().getParentDn(dn))
+                .map(Dn::format))
+            .or(() -> Optional.ofNullable(ou)
                 .map(Dn::format))
             .orElse(getProperties().getUser().getDefaultUserOu().format()),
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
@@ -184,7 +180,12 @@ public class UserEditController extends AbstractController implements PageableCo
     updateAvatar(bindingResult, userEditRequest);
 
     if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating user failed. Some fields were invalid.");
+      getLogger().debug("Updating user failed. Some fields were invalid. Getting membership "
+          + "with {}, {}, {}", userEditRequest.getOldSamAccountName(), ou, scope);
+      List<DomainGroup> groups = domainGroupService
+          .getMembership(userEditRequest.getOldSamAccountName(), ou, scope)
+          .toList();
+      model.addAttribute("groups", groups);
       return "admin/user-edit";
     }
 
@@ -259,7 +260,6 @@ public class UserEditController extends AbstractController implements PageableCo
     if (!(bindingResult.getTarget() instanceof DomainUserEditRequest)) {
       return;
     }
-    DomainUser user = ((DomainUserEditRequest) bindingResult.getTarget()).getUser();
 
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {

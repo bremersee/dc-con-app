@@ -29,15 +29,19 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.PasswordInformationParser;
+import org.bremersee.dccon.repository.transcoder.SidValueTranscoder;
+import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
+import org.ldaptive.ad.SecurityIdentifier;
 import org.ldaptive.dn.Dn;
 import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.PresenceFilter;
@@ -141,6 +145,20 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
     return getLdapTemplate().findOne(searchRequest)
         .map(LdapEntry::getDn)
         .filter(getIgnoredDnFilter());
+  }
+
+  @Override
+  public String getDomainSid() {
+    String baseDn = getProperties().getBaseDn().format();
+    String[] returnAttributes = new String[] {
+        LDAP_OBJECT_SID
+    };
+    return getLdapTemplate()
+        .findOne(SearchRequest.objectScopeSearchRequest(baseDn, returnAttributes))
+        .map(ldapEntry -> ldapEntry.getAttribute(LDAP_OBJECT_SID))
+        .map(LdapAttribute::getBinaryValue)
+        .map(SecurityIdentifier::toString)
+        .orElseThrow(() -> new IllegalStateException("Could not find domain sid")); // TODO
   }
 
   @Override

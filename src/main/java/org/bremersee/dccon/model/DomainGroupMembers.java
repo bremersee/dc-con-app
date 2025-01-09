@@ -70,7 +70,7 @@ public class DomainGroupMembers {
 
   private DomainGroupMembers add(DomainGroupMember member) {
     members.add(member);
-    switch (member.getObjectClass()) {
+    switch (member.getMemberType()) {
       case UNKNOWN -> unknownPresent = true;
       case USER -> userPresent = true;
       case GROUP -> groupPresent = true;
@@ -94,6 +94,10 @@ public class DomainGroupMembers {
     }
     return members.sorted()
         .reduce(new DomainGroupMembers(), DomainGroupMembers::add, DomainGroupMembers::addAll);
+  }
+
+  public static DomainGroupMembers empty() {
+    return new DomainGroupMembers();
   }
 
 }

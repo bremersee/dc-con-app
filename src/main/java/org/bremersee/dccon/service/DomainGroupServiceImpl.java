@@ -19,6 +19,7 @@ package org.bremersee.dccon.service;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
@@ -81,9 +82,27 @@ public class DomainGroupServiceImpl implements DomainGroupService {
         .build();
   }
 
-  public DomainGroupMembers getAllPossibleMembers() {
-    return DomainGroupMembers.from(domainGroupRepository.findAllMembers());
+
+  @Override
+  public DomainGroupMembers findPossibleMembers(String samAccountName, Dn ou,
+      SearchScope searchScope) {
+    return DomainGroupMembers.from(domainGroupRepository
+        .findPossibleMembers(samAccountName, ou, searchScope));
   }
+
+  @Override
+  public Stream<DomainGroup> getMembership(String samAccountName, Dn ou,
+      SearchScope searchScope) {
+    return domainGroupRepository.getMembership(samAccountName, ou, searchScope);
+  }
+
+  @Override
+  public DomainGroupMembers queryPossibleMembers(String samAccountName, Dn ou,
+      SearchScope searchScope, String query) {
+    return DomainGroupMembers.from(domainGroupRepository
+        .queryPossibleMembers(samAccountName, ou, searchScope, query));
+  }
+
 
   @Override
   public DomainGroup addGroup(DomainGroup domainGroup, Dn dn) {
@@ -101,6 +120,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
     domainGroupValidator.doUpdateValidation(groupName, domainGroup);
     return Optional.of(domainGroupRepository.update(domainGroup));
   }
+
   @Override
   public DomainGroup updateGroup(String groupName, DomainGroup domainGroup, Dn newOu) {
     log.debug("updateGroup({}, {}, {})", groupName, domainGroup.getSamAccountName(), newOu);

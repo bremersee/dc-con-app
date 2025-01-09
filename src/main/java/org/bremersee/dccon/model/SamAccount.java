@@ -16,17 +16,71 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.requireNonNull;
+
+import java.io.Serial;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
  * The interface SamAccount.
  *
  * @author Christian Bremer
  */
-public interface SamAccount extends NameProvider {
+@Getter
+@Setter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SamAccount extends CommonAttributes implements NameProvider {
 
-  String getSamAccountName();
+  @Serial
+  private static final long serialVersionUID = 1;
+
+  String samAccountName;
+
+  Sid sid;
+
+  Integer primaryGroupId;
+
+  List<String> membership;
+
+  public SamAccount(
+      String distinguishedName,
+      OffsetDateTime created,
+      OffsetDateTime modified,
+      String samAccountName,
+      Sid sid,
+      Integer primaryGroupId,
+      List<String> membership) {
+    super(distinguishedName, created, modified);
+    this.samAccountName = requireNonNull(samAccountName, "samAccountName is required.");
+    this.sid = sid;
+    this.primaryGroupId = primaryGroupId;
+    this.membership = membership;
+  }
+
+  /**
+   * User's group membership.
+   *
+   * @return the group membership
+   */
+  public List<String> getMembership() {
+    if (Objects.isNull(membership)) {
+      membership = new ArrayList<>();
+    }
+    return membership;
+  }
 
   @Override
-  default String getName() {
+  public String getName() {
     return getSamAccountName();
   }
 

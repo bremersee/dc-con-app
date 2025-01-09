@@ -45,7 +45,7 @@ import org.ldaptive.LdapEntry;
 @ExtendWith(SoftAssertionsExtension.class)
 class DomainGroupLdapMapperTest {
 
-  private static DomainGroupLdapMapper mapper;
+  private static DomainGroupDefaultLdapMapper mapper;
 
   /**
    * Init.
@@ -53,7 +53,7 @@ class DomainGroupLdapMapperTest {
   @BeforeAll
   static void init() {
     DomainControllerProperties properties = new DomainControllerProperties();
-    mapper = new DomainGroupLdapMapper(
+    mapper = new DomainGroupDefaultLdapMapper(
         properties,
         new DomainRepositoryMock(properties, new RepositoryMockStore()));
   }

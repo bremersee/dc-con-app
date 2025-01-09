@@ -16,12 +16,15 @@
 
 package org.bremersee.dccon.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.AccessMode;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -88,6 +91,24 @@ public class Sid implements Serializable {
       accessMode = AccessMode.READ_ONLY)
   public Boolean getSystemEntity() {
     return Boolean.TRUE.equals(systemEntity);
+  }
+
+  @Hidden
+  @JsonIgnore
+  public Integer getSuffix() {
+    return Optional.ofNullable(value)
+        .map(v -> {
+          int index = v.lastIndexOf('-');
+          if (index == -1) {
+            return null;
+          }
+          try {
+            return Integer.parseInt(v.substring(index + 1));
+          } catch (RuntimeException e) {
+            return null;
+          }
+        })
+        .orElse(null);
   }
 
 }
