@@ -140,17 +140,21 @@
             <div class="d-flex w-100 justify-content-between">
               <div>
                 <label th:for="'member-' + ${iter.index}" for="member-0" class="h5">
-                <span class="text-primary" th:if="${#strings.equals(member.memberType, 'user')}">
-                  <span class="fas fa-user" aria-hidden="true"></span>
-                </span>
-                <span class="text-success"
+                  <span class="text-primary" th:if="${#strings.equals(member.memberType, 'user')}">
+                    <span class="fas fa-user" aria-hidden="true"></span>
+                  </span>
+                  <span class="text-success"
                         th:if="${#strings.equals(member.memberType, 'group')}">
-                  <span class="fas fa-user-group" aria-hidden="true"></span>
-                </span>
-                <span class="text-warning"
+                    <span class="fas fa-user-group" aria-hidden="true"></span>
+                  </span>
+                  <span class="text-warning"
                         th:if="${#strings.equals(member.memberType, 'computer')}">
-                  <span class="fas fa-computer" aria-hidden="true"></span>
-                </span>
+                    <span class="fas fa-computer" aria-hidden="true"></span>
+                  </span>
+                  <span class="text-danger"
+                        th:if="${#strings.equals(member.memberType, 'unknown')}">
+                    <span class="fas fa-question-circle" aria-hidden="true"></span>
+                  </span>
                   <span class="ms-1" th:text="${member.displayName}">Anna</span>
                 </label>
               </div>
