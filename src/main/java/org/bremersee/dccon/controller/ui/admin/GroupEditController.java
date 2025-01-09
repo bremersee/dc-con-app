@@ -214,6 +214,11 @@ public class GroupEditController extends AbstractController implements PageableC
             "Groupname already exists.");
         break;
       }
+      case EC_GID_NUMBER_ALREADY_EXISTS: {
+        bindingResult.rejectValue("group.gidNumber", "code",
+            "Unix GID number already exists.");
+        break;
+      }
       case EC_DN_ALREADY_EXISTS: {
         bindingResult.rejectValue("group.samAccountName", "code",
             "Distinguished name already exists.");

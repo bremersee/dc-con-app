@@ -24,7 +24,6 @@ import static org.bremersee.dccon.repository.DomainUserRepositoryConstants.LDAP_
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -124,42 +123,77 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   @Override
+  public Stream<DomainGroup> resolveMembership(
+      String samAccountName, Dn ou, SearchScope searchScope) {
+    log.debug("resolveMembership({}, {}, {})", samAccountName, ou, searchScope);
+    Set<String> groupDns = new HashSet<>();
+    return getMembership(samAccountName, ou, searchScope)
+        .filter(group -> !groupDns
+            .contains(new Dn(group.getDistinguishedName()).format()))
+        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
+        .flatMap(group -> Stream
+            .concat(Stream.of(group), resolveMembership(group.getMembership(), groupDns)));
+  }
+
+  private Stream<DomainGroup> resolveMembership(List<String> memberOf, Set<String> groupDns) {
+    return memberOf.stream()
+        .filter(dn -> !groupDns.contains(new Dn(dn).format()))
+        .flatMap(dn -> findOne(dn, null, null).stream())
+        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
+        .flatMap(nextGroup -> Stream
+            .concat(Stream.of(nextGroup), resolveMembership(nextGroup.getMembership(), groupDns)));
+  }
+
+  /*
+  public Stream<DomainGroup> resolveMembership(
+      String samAccountName, Dn ou, SearchScope searchScope) {
+    log.debug("resolveMembership({}, {}, {})", samAccountName, ou, searchScope);
+
+    List<DomainGroup> groups = getMembership(samAccountName, ou, searchScope)
+        .collect(Collectors.toCollection(ArrayList::new));
+    Set<String> groupDns = groups.stream()
+        .map(DomainGroup::getDistinguishedName)
+        .map(Dn::new)
+        .map(Dn::format)
+        .collect(Collectors.toCollection(HashSet::new));
+    for (DomainGroup group : groups) {
+      resolveMembership(group, groups, groupDns);
+    }
+    return groups.stream();
+  }
+  private void resolveMembership(
+      DomainGroup group, List<DomainGroup> groups, Set<String> groupDns) {
+    if (isEmpty(group)) {
+      return;
+    }
+    String groupDn = new Dn(group.getDistinguishedName()).format();
+    if (!groupDns.contains(groupDn)) {
+      groupDns.add(groupDn);
+      groups.add(group);
+      for (String dn : group.getMembership()) {
+        DomainGroup nextGroup = findOne(dn, null, null).orElse(null);
+        resolveMembership(nextGroup, groups, groupDns);
+      }
+    }
+  }
+  */
+
+  @Override
   public Stream<DomainGroup> getMembership(
       String samAccountName, Dn ou, SearchScope searchScope) {
     log.debug("getMembership({}, {}, {})", samAccountName, ou, searchScope);
     SamAccount samAccount = findSamAccount(samAccountName, ou, searchScope)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             SamAccount.class.getSimpleName(), samAccountName, EC_SAM_ACCOUNT_NOT_FOUND));
-    Optional<DomainGroup> primaryGroup = findByPrimaryGroupId(samAccount.getPrimaryGroupId());
+    Optional<DomainGroup> primaryGroup = findOneByPrimaryGroupId(samAccount.getPrimaryGroupId());
     Stream<DomainGroup> groups = samAccount.getMembership().stream()
         .flatMap(dn -> findOne(dn, null, null).stream())
-        .sorted(Comparator.comparing(DomainGroup::getSamAccountName));
+        .sorted();
     if (primaryGroup.isPresent()
         && primaryGroup.get().getSamAccountName().equalsIgnoreCase(samAccountName)) {
       return groups;
     }
     return Stream.concat(primaryGroup.stream(), groups);
-  }
-
-  public Optional<DomainGroup> findByPrimaryGroupId(Integer primaryGroupId) {
-    log.debug("findByPrimaryGroupId({})", primaryGroupId);
-    return Optional.ofNullable(primaryGroupId)
-        .map(id -> domainRepository.getDomainSid() + "-" + primaryGroupId)
-        .flatMap(sid -> {
-          Filter filter = new AndFilter(
-              objectClassFilter(),
-              new EqualityFilter(LDAP_OBJECT_SID, sid));
-          SearchRequest searchRequest = SearchRequest.builder()
-              .dn(getProperties().getBaseDn().format())
-              .filter(filter)
-              .scope(SearchScope.SUBTREE)
-              .binaryAttributes(getBinaryAttributes())
-              .returnAttributes(getReturnAttributes())
-              .build();
-          return getLdapTemplate()
-              .findOne(searchRequest, domainGroupLdapMapper)
-              .filter(getIgnoredObjectFilter());
-        });
   }
 
   @Override
@@ -282,6 +316,68 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         .filter(getIgnoredObjectFilter(ou, searchScope));
   }
 
+  public Optional<DomainGroup> findOneByPrimaryGroupId(Integer primaryGroupId) {
+    log.debug("findByPrimaryGroupId({})", primaryGroupId);
+    return Optional.ofNullable(primaryGroupId)
+        .map(id -> domainRepository.getDomainSid() + "-" + primaryGroupId)
+        .flatMap(sid -> {
+          Filter filter = new AndFilter(
+              objectClassFilter(),
+              new EqualityFilter(LDAP_OBJECT_SID, sid));
+          SearchRequest searchRequest = SearchRequest.builder()
+              .dn(getProperties().getBaseDn().format())
+              .filter(filter)
+              .scope(SearchScope.SUBTREE)
+              .binaryAttributes(getBinaryAttributes())
+              .returnAttributes(getReturnAttributes())
+              .build();
+          return getLdapTemplate()
+              .findOne(searchRequest, domainGroupLdapMapper)
+              .filter(getIgnoredObjectFilter());
+        });
+  }
+
+  public Optional<DomainGroup> findOneByGidNumber(Integer gidNumber) {
+    log.debug("findByGidNumber({})", gidNumber);
+    return Optional.ofNullable(gidNumber)
+        .flatMap(gid -> {
+          Filter filter = new AndFilter(
+              objectClassFilter(),
+              new EqualityFilter(LDAP_GID_NUMBER, gid.toString()));
+          SearchRequest searchRequest = SearchRequest.builder()
+              .dn(getProperties().getBaseDn().format())
+              .filter(filter)
+              .scope(SearchScope.SUBTREE)
+              .binaryAttributes(getBinaryAttributes())
+              .returnAttributes(getReturnAttributes())
+              .build();
+          return getLdapTemplate()
+              .findOne(searchRequest, domainGroupLdapMapper)
+              .filter(getIgnoredObjectFilter());
+        });
+  }
+
+  public boolean existsByGidNumber(Integer gidNumber) {
+    log.debug("existsByGidNumber({})", gidNumber);
+    return Optional.ofNullable(gidNumber)
+        .map(gid -> {
+          Filter filter = new AndFilter(
+              objectClassFilter(),
+              new EqualityFilter(LDAP_GID_NUMBER, gid.toString()));
+          SearchRequest searchRequest = SearchRequest.builder()
+              .dn(getProperties().getBaseDn().format())
+              .filter(filter)
+              .scope(SearchScope.SUBTREE)
+              .returnAttributes(new String[]{LDAP_GID_NUMBER})
+              .build();
+          return getLdapTemplate()
+              .findOne(searchRequest)
+              .filter(getIgnoredEntryFilter())
+              .isPresent();
+        })
+        .orElse(false);
+  }
+
   @ProfileRequired({"cli", "ldap"})
   @Override
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
@@ -290,6 +386,12 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           DomainGroup.class.getSimpleName(),
           domainGroup.getSamAccountName(),
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
+    }
+    if (existsByGidNumber(domainGroup.getGidNumber())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          String.format("Unix GID Number %s", domainGroup.getGidNumber()),
+          domainGroup.getSamAccountName(),
+          EC_GID_NUMBER_ALREADY_EXISTS);
     }
     String dn = doAdd(domainGroup, ou);
     domainGroup.setDistinguishedName(dn);
@@ -374,7 +476,14 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           getProperties().removeBaseDn(newDn),
           EC_DN_ALREADY_EXISTS);
     }
-
+    if (!isEmpty(domainGroup.getGidNumber())
+        && !Objects.equals(domainGroup.getGidNumber(), existingDomainGroup.getGidNumber())
+        && existsByGidNumber(domainGroup.getGidNumber())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          String.format("Unix GID Number %s", domainGroup.getGidNumber()),
+          domainGroup.getSamAccountName(),
+          EC_GID_NUMBER_ALREADY_EXISTS);
+    }
     DomainGroup updatedDomainGroup = renameAndMove(existingDomainGroup, domainGroup, newDn);
     return getLdapTemplate().save(updatedDomainGroup, domainGroupLdapMapper);
   }

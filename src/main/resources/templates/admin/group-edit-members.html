@@ -58,7 +58,6 @@
   </div>
 
   <div th:if="${group != null}">
-
     <div class="d-flex justify-content-center mb-4">
       <h3 class="small">Edit group</h3>
       <h3 th:text="${group.samAccountName}">Domain Users</h3>
@@ -79,6 +78,11 @@
       <li class="nav-item">
         <a class="nav-link disabled" href="#">
           Membership
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Danger Zone
         </a>
       </li>
     </ul>

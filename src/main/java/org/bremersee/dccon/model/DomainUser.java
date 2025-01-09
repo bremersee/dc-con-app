@@ -193,12 +193,12 @@ public class DomainUser extends SamAccount implements NisDomainMember {
   /**
    * User's Unix/RFC2307 username.
    */
-  String uid;
+  String uid; // TODO unique
 
   /**
    * User's Unix/RFC2307 numeric UID.
    */
-  Integer uidNumber;
+  Integer uidNumber; // TODO unique; beim adden weglassen und samba-tool benutzen, wenn gesetzt?
 
   /**
    * User's Unix/RFC2307 home directory.
@@ -208,7 +208,7 @@ public class DomainUser extends SamAccount implements NisDomainMember {
   /**
    * User's principal name.
    */
-  String userPrincipalName;
+  String userPrincipalName; // TODO unique, added -> other samAccountName
 
   @JsonIgnore
   @Override

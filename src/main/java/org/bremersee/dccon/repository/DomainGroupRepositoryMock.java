@@ -72,6 +72,12 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
+  public Stream<DomainGroup> resolveMembership(String samAccountName, Dn ou,
+      SearchScope searchScope) {
+    return Stream.empty();
+  }
+
+  @Override
   public Stream<DomainGroupMember> findPossibleMembers(String groupName, Dn ou,
       SearchScope searchScope) {
     return Stream.empty();

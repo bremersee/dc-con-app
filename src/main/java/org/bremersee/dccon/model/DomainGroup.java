@@ -21,12 +21,14 @@ import static java.util.Objects.isNull;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.lang.NonNull;
 
 /**
  * A domain (Active Directory) group may contain user and computer accounts as well as other
@@ -45,7 +47,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class DomainGroup extends SamAccount implements NisDomainMember {
+public class DomainGroup extends SamAccount implements NisDomainMember, Comparable<DomainGroup> {
 
   @Serial
   private static final long serialVersionUID = 2L;
@@ -116,4 +118,10 @@ public class DomainGroup extends SamAccount implements NisDomainMember {
     // ignored
   }
 
+  @Override
+  public int compareTo(@NonNull DomainGroup o) {
+    String s1 = Objects.requireNonNullElse(getSamAccountName(), "");
+    String s2 = Objects.requireNonNullElse(o.getSamAccountName(), "");
+    return s1.compareToIgnoreCase(s2);
+  }
 }

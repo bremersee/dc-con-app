@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
@@ -45,6 +46,11 @@ public interface DomainGroupRepository {
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
+
+  Stream<DomainGroup> resolveMembership(
+      @NotNull String samAccountName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   Stream<DomainGroup> getMembership(
       @NotNull String samAccountName,

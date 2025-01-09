@@ -66,7 +66,23 @@
       <h3 th:text="${userEditRequest.oldName}">Administrator</h3>
     </div>
 
-    <div>
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">Data</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Membership
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Danger Zone
+        </a>
+      </li>
+    </ul>
+
+    <div class="mx-0 mx-sm-1 mx-md-3">
       <form th:action="@{user-edit}" th:object="${userEditRequest}" action="#" method="post"
             enctype="multipart/form-data">
         <input type="hidden" name="page" th:value="${page}"/>
@@ -97,6 +113,7 @@
         </div>
 
 
+        <!-- TODO move some actions to danger zone -->
         <div class="mb-3">
           <label for="newOu" class="form-label">Organizational Unit</label>
           <select id="newOu" class="form-select" aria-label="Organizational Unit"

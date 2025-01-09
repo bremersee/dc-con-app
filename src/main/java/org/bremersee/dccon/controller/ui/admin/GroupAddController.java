@@ -226,6 +226,11 @@ public class GroupAddController extends AbstractController implements PageableCo
             "Group name already exists.");
         break;
       }
+      case EC_GID_NUMBER_ALREADY_EXISTS: {
+        bindingResult.rejectValue("group.gidNumber", "code",
+            "Unix GID number already exists.");
+        break;
+      }
       case EC_EMPTY_OU_RDN: {
         bindingResult.rejectValue("ou", "code",
             "Organizational unit is empty.");

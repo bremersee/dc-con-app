@@ -58,7 +58,6 @@
   </div>
 
   <div th:if="${groupEditRequest != null}">
-
     <div class="d-flex justify-content-center mb-4">
       <h3 class="small">Edit group</h3>
       <h3 th:text="${groupEditRequest.oldSamAccountName}">Domain Users</h3>
@@ -77,6 +76,11 @@
       <li class="nav-item">
         <a class="nav-link disabled" href="#">
           Membership
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Danger Zone
         </a>
       </li>
     </ul>
@@ -163,8 +167,12 @@
           <label for="gidNumber" class="form-label">
             Group's Unix/RFC2307 GID number
           </label>
-          <input type="number" class="form-control" id="gidNumber"
-                 name="gidNumber" th:field="*{group.gidNumber}" />
+          <input type="number" class="form-control" id="gidNumber" name="gidNumber"
+                 aria-describedby="gidNumberValidation" th:field="*{group.gidNumber}"
+                 th:classappend="${#fields.hasErrors('group.gidNumber')} ? 'is-invalid' : ''"/>
+          <div id="gidNumberValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('group.gidNumber')} ? ${#fields.errors('group.gidNumber')[0]} : ''">
+          </div>
         </div>
 
         <div class="mb-3">
