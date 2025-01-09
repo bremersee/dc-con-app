@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMember;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -78,6 +79,11 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
+  public Stream<DomainGroupMember> findAllMembers() {
+    return Stream.empty();
+  }
+
+    @Override
   public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
     return Optional.ofNullable(store.getGroupRepo().get(groupName.toLowerCase()));
   }

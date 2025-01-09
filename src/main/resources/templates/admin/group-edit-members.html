@@ -67,7 +67,7 @@
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
         <a class="nav-link" href="group-edit.html"
-        th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           Data
         </a>
       </li>
@@ -83,25 +83,117 @@
       </li>
     </ul>
 
-    <form th:action="@{group-edit-members}" th:object="${group}" action="#" method="post"
-          class="mx-3">
+    <div class="mx-0 mx-sm-1 mx-md-3" th:if="${not #lists.isEmpty(possibleMembers.members)}">
+      <div id="objectClassSwitch"
+           class="mb-3 p-3 border border-1 d-flex justify-content-center form-switch">
+        <div class="form-check form-check-inline ms-4">
+          <input class="form-check-input" type="checkbox" id="userSwitch" value="user" role="switch"
+                 checked>
+          <label class="form-check-label" for="userSwitch">
+            <span class="text-primary">
+              <span class="fas fa-user" aria-hidden="true"></span>
+            </span>
+          </label>
+        </div>
+        <div class="form-check form-check-inline ms-4">
+          <input class="form-check-input" type="checkbox" id="groupSwitch" value="group"
+                 role="switch" checked>
+          <label class="form-check-label" for="groupSwitch">
+            <span class="text-success">
+              <span class="fas fa-user-group" aria-hidden="true"></span>
+            </span>
+          </label>
+        </div>
+        <div class="form-check form-check-inline ms-4">
+          <input class="form-check-input" type="checkbox" id="computerSwitch" value="computer"
+                 role="switch" checked>
+          <label class="form-check-label" for="computerSwitch">
+            <span class="text-warning">
+              <span class="fas fa-computer" aria-hidden="true"></span>
+            </span>
+          </label>
+        </div>
+      </div>
 
-      <input type="hidden" name="page" th:value="${page}"/>
-      <input type="hidden" name="size" th:value="${size}"/>
-      <input type="hidden" name="sort" th:value="${sort}"/>
-      <input type="hidden" name="q" th:value="${q}"/>
-      <input type="hidden" name="ou" th:value="${ou}"/>
-      <input type="hidden" name="scope" th:value="${scope}"/>
+      <form th:action="@{group-edit-members}" th:object="${group}" action="#" method="post">
 
-      <button type="submit" class="btn btn-primary mt-3">
-        Update
-      </button>
-      <a href="groups.html" th:href="@{groups(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}"
-         class="btn btn-secondary ml-3 mt-3" role="button">
-        Cancel
-      </a>
-    </form>
+        <input type="hidden" name="page" th:value="${page}"/>
+        <input type="hidden" name="size" th:value="${size}"/>
+        <input type="hidden" name="sort" th:value="${sort}"/>
+        <input type="hidden" name="q" th:value="${q}"/>
+        <input type="hidden" name="ou" th:value="${ou}"/>
+        <input type="hidden" name="scope" th:value="${scope}"/>
+
+        <input type="hidden" name="distinguishedName" th:field="*{distinguishedName}"/>
+        <input type="hidden" name="description" th:field="*{description}"/>
+        <input type="hidden" name="email" th:field="*{email}"/>
+        <input type="hidden" name="gidNumber" th:field="*{gidNumber}"/>
+        <input type="hidden" name="groupTypeValue" th:field="*{groupType.groupType.value}"/>
+        <input type="hidden" name="nisDomain" th:field="*{nisDomain}"/>
+        <input type="hidden" name="samAccountName" th:field="*{samAccountName}"/>
+        <input type="hidden" name="sidValue" th:field="*{sid.value}"/>
+
+        <div id="memberList" class="list-group list-group-flush">
+          <div class="list-group-item list-group-item-action" aria-current="true"
+               th:each="member,iter : ${possibleMembers.members}"
+               th:classappend="'object-class-' + ${member.objectClass}">
+            <div class="d-flex w-100 justify-content-between">
+              <div>
+                <label th:for="'member-' + ${iter.index}" for="member-0" class="h5">
+                <span class="text-primary" th:if="${#strings.equals(member.objectClass, 'user')}">
+                  <span class="fas fa-user" aria-hidden="true"></span>
+                </span>
+                <span class="text-success"
+                        th:if="${#strings.equals(member.objectClass, 'group')}">
+                  <span class="fas fa-user-group" aria-hidden="true"></span>
+                </span>
+                <span class="text-warning"
+                        th:if="${#strings.equals(member.objectClass, 'computer')}">
+                  <span class="fas fa-computer" aria-hidden="true"></span>
+                </span>
+                  <span class="ms-1" th:text="${member.displayName}">Anna</span>
+                </label>
+              </div>
+              <div class="form-switch h5">
+                <input th:id="'member-' + ${iter.index}" id="member-0"
+                       th:name="'member-' + ${iter.index}" name="members"
+                       type="checkbox" class="form-check-input" role="switch"
+                       th:field="*{members}"
+                       th:value="${member.distinguishedNameBase64}"/>
+              </div>
+            </div>
+            <small class="text-secondary" th:text="${member.dnWithoutBaseAndSpaces}">CN</small>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">
+          Update
+        </button>
+        <a href="groups.html"
+           th:href="@{groups(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}"
+           class="btn btn-secondary ml-3 mt-3" role="button">
+          Cancel
+        </a>
+      </form>
+    </div>
+
   </div>
 </main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    $('#objectClassSwitch :checkbox').on("change", function () {
+      const checkbox = $(this);
+      const value = checkbox.val();
+      if (checkbox.is(':checked')) {
+        $('#memberList .object-class-' + value).show();
+      } else {
+        $('#memberList .object-class-' + value).hide();
+      }
+    });
+  });
+  //]]>
+</script>
 </body>
 </html>

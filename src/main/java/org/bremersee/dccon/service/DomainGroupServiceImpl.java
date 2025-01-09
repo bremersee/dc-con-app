@@ -22,6 +22,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMembers;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.service.validator.DomainGroupValidator;
 import org.bremersee.pagebuilder.PageBuilder;
@@ -78,6 +79,10 @@ public class DomainGroupServiceImpl implements DomainGroupService {
         .sourceEntries(domainGroupRepository.findAll(query, ou, scope))
         .pageable(applyDefaults(pageable, null, true, null))
         .build();
+  }
+
+  public DomainGroupMembers getAllPossibleMembers() {
+    return DomainGroupMembers.from(domainGroupRepository.findAllMembers());
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 
@@ -26,6 +27,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -56,6 +59,10 @@ public class DomainGroupMember implements Serializable, Comparable<DomainGroupMe
   @JsonProperty(value = "distinguishedName", required = true)
   private String distinguishedName;
 
+  @Hidden
+  @JsonIgnore
+  private String distinguishedNameBase64;
+
   @Schema(description = "The object class of the member.")
   @JsonProperty(value = "objectClass", defaultValue = "unknown")
   private DomainGroupMemberType objectClass;
@@ -68,35 +75,65 @@ public class DomainGroupMember implements Serializable, Comparable<DomainGroupMe
   @JsonProperty("displayName")
   private String displayName;
 
-  @Hidden
-  @JsonIgnore
-  private String sortValue;
+  // TODO add organization unit?
 
   @Builder(toBuilder = true)
   public DomainGroupMember(
       String distinguishedName,
       DomainGroupMemberType objectClass,
       String name,
-      String displayName,
-      String sortValue) {
+      String displayName) {
     this.distinguishedName = requireNonNull(distinguishedName, "Distinguished name is required.");
+    this.distinguishedNameBase64 = Base64.getEncoder()
+        .encodeToString(this.distinguishedName.getBytes(StandardCharsets.UTF_8));
     this.objectClass = requireNonNullElse(objectClass, DomainGroupMemberType.UNKNOWN);
     this.name = requireNonNullElse(name, this.distinguishedName);
     this.displayName = requireNonNullElse(displayName, this.name);
-    this.sortValue = requireNonNullElse(sortValue, this.displayName);
+  }
+
+  public DomainGroupMember(DomainUser domainUser) {
+    this(
+        domainUser.getDistinguishedName(),
+        DomainGroupMemberType.USER,
+        domainUser.getSamAccountName(),
+        domainUser.getName());
+  }
+
+  public DomainGroupMember(DomainGroup domainGroup) {
+    this(
+        domainGroup.getDistinguishedName(),
+        DomainGroupMemberType.GROUP,
+        domainGroup.getSamAccountName(),
+        domainGroup.getName());
+  }
+
+  // TODO add computer
+
+  @Hidden
+  @JsonIgnore
+  public String getDistinguishedNameBase64() {
+    return distinguishedNameBase64;
+  }
+
+  @Hidden
+  @JsonIgnore
+  public String getDnWithoutBaseAndSpaces() {
+    String dn = getDistinguishedName();
+    if (isNull(dn)) {
+      return null;
+    }
+    int index = dn.toLowerCase().indexOf(",dc");
+    if (index > 0) {
+      dn = dn.substring(0, index);
+    }
+    return dn.replace(",", ", ");
   }
 
   @Override
   public int compareTo(@NonNull DomainGroupMember selectOption) {
-    String s0 = requireNonNullElse(getSortValue(), "");
-    String s1 = requireNonNullElse(selectOption.getSortValue(), "");
+    String s0 = requireNonNullElse(getDisplayName(), "");
+    String s1 = requireNonNullElse(selectOption.getDisplayName(), "");
     int c = s0.compareTo(s1);
-    if (c != 0) {
-      return c;
-    }
-    s0 = requireNonNullElse(getDisplayName(), "");
-    s1 = requireNonNullElse(selectOption.getDisplayName(), "");
-    c = s0.compareTo(s1);
     if (c != 0) {
       return c;
     }

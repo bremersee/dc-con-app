@@ -19,10 +19,10 @@ package org.bremersee.dccon.controller.ui.admin;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -31,19 +31,17 @@ import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
-import org.bremersee.dccon.controller.ui.model.DomainGroupEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMembers;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
-import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,10 +87,9 @@ public class GroupEditMembersController extends AbstractController implements Pa
     return domainService.isRfc2307Enabled();
   }
 
-  @ModelAttribute("members")
-  public Object addMemberSelectOptions() {
-    // TODO
-    return List.of();
+  @ModelAttribute("possibleMembers")
+  public DomainGroupMembers addMemberSelectOptions() {
+    return domainGroupService.getAllPossibleMembers();
   }
 
   @GetMapping(path = "/admin/group-edit-members")
@@ -105,6 +102,9 @@ public class GroupEditMembersController extends AbstractController implements Pa
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
         .map(group -> {
+          group.setMembers(group.getMembers().stream()
+              .map(dn -> Base64.getEncoder().encodeToString(dn.getBytes(StandardCharsets.UTF_8)))
+              .toList());
           model.addAttribute("group", group);
           return "admin/group-edit-members";
         })
@@ -126,7 +126,6 @@ public class GroupEditMembersController extends AbstractController implements Pa
       @ModelAttribute(name = "group") DomainGroup group,
       ModelMap model,
       HttpServletRequest request,
-      BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
     String name = Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null);
@@ -144,7 +143,7 @@ public class GroupEditMembersController extends AbstractController implements Pa
         SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
     );
 
-    getLogger().debug("Try to update members of group '{}'.", name);
+    getLogger().debug("Try to update members of group '{}'.", group);
 
     if (isEmpty(group)) {
       String redirect = getRedirectUri("/admin/groups", PAGE_AND_OU_PARAMS, parameters);
@@ -152,19 +151,16 @@ public class GroupEditMembersController extends AbstractController implements Pa
       return redirect;
     }
 
-    // TODO
-    //DomainGroup updatedGroup = updateGroup(bindingResult, groupEditRequest);
-
-    if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating group failed. Some fields were invalid.");
-      return "admin/group-edit";
-    }
+    group.setMembers(group.getMembers().stream()
+        .map(base64 -> new String(Base64.getDecoder().decode(base64), StandardCharsets.UTF_8))
+        .toList());
+    domainGroupService.updateGroup(group.getSamAccountName(), group, null);
 
     model.clear();
     String msg = getMessageSource().getMessage(
         "i18n.group.edited",
-        new Object[]{group.getName()}, //  TODO
-        String.format("Members pf roup '%s' were successfully updated.", group.getName()), //  TODO
+        new Object[]{group.getName()},
+        String.format("Members of group '%s' were successfully updated.", group.getName()),
         resolveLocale(request));
     RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
@@ -173,73 +169,8 @@ public class GroupEditMembersController extends AbstractController implements Pa
     parameters.put("group", group);
     String redirect = getRedirectUri("group-edit-members?name={{group.samAccountName}}",
         PAGE_AND_OU_PARAMS, parameters);
-    getLogger().debug("Group successfully updated. Redirecting to {}", redirect);
+    getLogger().debug("Members of group successfully updated. Redirecting to {}", redirect);
     return redirect;
   }
 
-  private DomainGroup updateGroup(BindingResult bindingResult, DomainGroupEditRequest groupEditRequest) {
-    String groupName = groupEditRequest.getOldSamAccountName();
-    DomainGroup group = groupEditRequest.getGroup();
-    Dn ou = groupEditRequest.getNewOuDn();
-    try {
-      Dn parentDn = getProperties().getParentDn(group.getDistinguishedName());
-      Dn ouDn = getProperties().getBaseDn(ou);
-      Dn newOu = parentDn.isSame(ouDn) ? null : ouDn;
-      return domainGroupService.updateGroup(groupName, group, newOu);
-
-    } catch (ServiceException e) {
-      handleException(bindingResult, e);
-    }
-    return group;
-  }
-
-  private void handleException(BindingResult bindingResult, ServiceException serviceException) {
-
-    getLogger().debug("handleException of bind target '{}'",
-        bindingResult.getTarget(), serviceException);
-
-    if (!(bindingResult.getTarget() instanceof DomainGroupEditRequest)) {
-      return;
-    }
-    DomainGroup group = ((DomainGroupEditRequest) bindingResult.getTarget()).getGroup();
-
-    String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
-    switch (errorCode) {
-      case EC_SAM_ACCOUNT_NAME_REQUIRED: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Groupname is required.");
-        break;
-      }
-      case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Groupname already exists.");
-        break;
-      }
-      case EC_DN_ALREADY_EXISTS: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Distinguished name already exists.");
-        break;
-      }
-      case EC_EMPTY_OU_RDN: {
-        bindingResult.rejectValue("newOu", "code",
-            "Organizational unit is empty.");
-        break;
-      }
-      case EC_OU_NOT_FOUND: {
-        bindingResult.rejectValue("newOu", "code",
-            "Organizational unit was not found.");
-        break;
-      }
-      case EC_UPDATING_GROUP_FAILED: { // TODO global
-        getLogger().error("Editing group failed.", serviceException);
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Something went wrong. Please try again later.");
-        break;
-      }
-      default: {
-        getLogger().error("Editing group failed with a not mapped exception.", serviceException);
-        throw serviceException;
-      }
-    }
-  }
 }

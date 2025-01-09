@@ -58,6 +58,7 @@ public enum DomainGroupMemberType {
   public static DomainGroupMemberType fromObjectClasses(Collection<String> objectClasses) {
     return Stream.ofNullable(objectClasses)
         .flatMap(Collection::stream)
+        .sorted()
         .map(DomainGroupMemberType::fromString)
         .filter(Objects::nonNull)
         .findFirst()

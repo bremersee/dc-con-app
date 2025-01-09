@@ -20,6 +20,7 @@ import java.util.Optional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMembers;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,8 @@ public interface DomainGroupService {
       @Nullable String query,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
+
+  DomainGroupMembers getAllPossibleMembers();
 
   /**
    * Add domain group.

@@ -27,6 +27,8 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMember;
+import org.bremersee.dccon.model.DomainGroupMemberType;
 import org.bremersee.dccon.model.DomainGroupType;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.model.Sid;
@@ -38,6 +40,8 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.LdapAttribute;
+import org.ldaptive.LdapEntry;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -109,6 +113,64 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         .findAll(searchRequest, domainGroupLdapMapper)
         .filter(getIgnoredObjectFilter(ou, searchScope))
         .peek(group -> log.debug("Found group: {}", group.getDistinguishedName()));
+  }
+
+  @Override
+  public Stream<DomainGroupMember> findAllMembers() {
+    log.debug("findAllMembers()");
+    String[] returnAttributes = {
+        LDAP_OBJECT_CLASS,
+        LDAP_SAM_ACCOUNT_NAME,
+        DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME,
+        DomainUserRepositoryConstants.LDAP_USER_SN,
+        DomainUserRepositoryConstants.LDAP_USER_DISPLAY_NAME,
+        LDAP_NAME
+    };
+    Filter findAllMembersFilter = new OrFilter(
+        new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_GROUP),
+        new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_USER) // computers are also users
+    );
+    SearchRequest searchRequest = searchAllRequest(getProperties().getBaseDn(),
+        findAllMembersFilter, SearchScope.SUBTREE, returnAttributes);
+    return getLdapTemplate().findAll(searchRequest)
+        .stream()
+        .filter(getIgnoredEntryFilter())
+        .map(this::map);
+  }
+
+  private DomainGroupMember map(LdapEntry entry) {
+    return DomainGroupMember.builder()
+        .distinguishedName(entry.getDn())
+        .objectClass(Optional
+            .ofNullable(entry.getAttribute(LDAP_OBJECT_CLASS))
+            .map(LdapAttribute::getStringValues)
+            .map(DomainGroupMemberType::fromObjectClasses)
+            .orElse(DomainGroupMemberType.UNKNOWN))
+        .name(getMemberName(entry))
+        .displayName(getMemberDisplayName(entry))
+        .build();
+  }
+
+  private String getMemberName(LdapEntry member) {
+    return Optional.ofNullable(member.getAttribute(LDAP_SAM_ACCOUNT_NAME))
+        .map(LdapAttribute::getStringValue)
+        .orElseGet(() -> LdaptiveEntryMapper.getRdn(member.getDn()));
+  }
+
+  private String getMemberDisplayName(LdapEntry member) {
+    return Optional.ofNullable(
+            member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_GIVEN_NAME))
+        .map(LdapAttribute::getStringValue)
+        .flatMap(firstName -> Optional
+            .ofNullable(member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_SN))
+            .map(LdapAttribute::getStringValue)
+            .map(lastName -> firstName + " " + lastName))
+        .or(() -> Optional.ofNullable(
+                member.getAttribute(DomainUserRepositoryConstants.LDAP_USER_DISPLAY_NAME))
+            .map(LdapAttribute::getStringValue))
+        .or(() -> Optional.ofNullable(member.getAttribute(LDAP_NAME))
+            .map(LdapAttribute::getStringValue))
+        .orElseGet(() -> LdaptiveEntryMapper.getRdn(member.getDn()));
   }
 
   @Override

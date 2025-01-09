@@ -20,6 +20,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainGroupMember;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
@@ -43,6 +44,8 @@ public interface DomainGroupRepository {
       @Nullable String query,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
+
+  Stream<DomainGroupMember> findAllMembers();
 
   /**
    * Find group be name.

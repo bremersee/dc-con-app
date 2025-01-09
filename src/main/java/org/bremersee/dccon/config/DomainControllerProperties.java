@@ -53,6 +53,8 @@ public class DomainControllerProperties implements Serializable {
   @Serial
   private static final long serialVersionUID = 3L;
 
+  public static final int MIN_QUERY_LENGTH = 3; // TODO add to repos and javascript
+
   public static final Dn MOCK_BASE_DN = new Dn("dc=samdom,dc=example,dc=org");
 
   public static final Dn[] IGNORED_DN = new Dn[]{
