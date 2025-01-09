@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,13 +36,18 @@ import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainUserEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
+import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -66,6 +72,8 @@ public class UserEditController extends AbstractController implements PageableCo
 
   private final DomainUserService domainUserService;
 
+  private final DomainGroupService domainGroupService;
+
   @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
@@ -74,10 +82,12 @@ public class UserEditController extends AbstractController implements PageableCo
       LocaleResolver localeResolver,
       DomainService domainService,
       DomainUserService domainUserService,
+      DomainGroupService domainGroupService,
       OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
     this.domainUserService = domainUserService;
+    this.domainGroupService = domainGroupService;
     this.organizationalUnitService = organizationalUnitService;
   }
 
@@ -96,6 +106,13 @@ public class UserEditController extends AbstractController implements PageableCo
     return Optional.ofNullable(userName)
         .map(user -> domainUserService.existsAvatarInActiveDirectory(user, null, null))
         .orElse(false);
+  }
+
+  @ModelAttribute("groups")
+  public List<DomainGroup> groups() {
+    Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(GROUP_SORT));
+    return domainGroupService.getGroups(pageable, null, null, null)
+        .getContent();
   }
 
   @GetMapping(path = "/admin/user-edit")

@@ -158,11 +158,6 @@ public class DomainUser extends CommonAttributes
   String nisDomain;
 
   /**
-   * User's primary group ID.
-   */
-  Integer primaryGroupId;
-
-  /**
    * User's password.
    */
   String password;
@@ -182,6 +177,11 @@ public class DomainUser extends CommonAttributes
    * ISO-639 and ISO-3166 also work.
    */
   String preferredLanguage;
+
+  /**
+   * User's primary group ID.
+   */
+  Integer primaryGroupId;
 
   /**
    * User's profile path.

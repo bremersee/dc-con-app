@@ -122,7 +122,7 @@ public class DomainGroupMember implements Serializable, Comparable<DomainGroupMe
     if (isNull(dn)) {
       return null;
     }
-    int index = dn.toLowerCase().indexOf(",dc");
+    int index = dn.toLowerCase().indexOf(",dc=");
     if (index > 0) {
       dn = dn.substring(0, index);
     }

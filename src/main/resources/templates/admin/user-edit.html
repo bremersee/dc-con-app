@@ -146,6 +146,21 @@
         </div>
 
         <div class="mb-3">
+          <label for="primaryGroupId" class="form-label">Primary group</label>
+          <select id="primaryGroupId" class="form-select" aria-label="Primary group"
+                  aria-describedby="primaryGroupIdValidation"
+                  th:classappend="${#fields.hasErrors('user.primaryGroupId')} ? 'is-invalid' : ''"
+                  th:field="*{user.primaryGroupId}">
+            <option th:each="o : ${groups}" th:value="${o.groupId}" th:text="${o.name}">
+              Domain Users
+            </option>
+          </select>
+          <div id="primaryGroupIdValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.primaryGroupId')} ? ${#fields.errors('user.primaryGroupId')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
           <label for="firstName" class="form-label">First Name</label>
           <input type="text" class="form-control" id="firstName" name="firstName"
                  aria-describedby="firstNameValidation" th:field="*{user.firstName}"
