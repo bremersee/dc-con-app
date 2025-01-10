@@ -118,7 +118,7 @@ public class UserEditController extends AbstractController implements PageableCo
           DomainUserEditRequest req = new DomainUserEditRequest(
               user, getProperties().getParentDn(user.getDistinguishedName()));
           model.addAttribute("userEditRequest", req);
-          List<DomainGroup> groups = domainGroupService.getMembership(userName, ou, searchScope)
+          List<DomainGroup> groups = domainGroupService.getMemberships(userName, ou, searchScope)
               .toList();
           model.addAttribute("groups", groups);
           return "admin/user-edit";
@@ -180,10 +180,10 @@ public class UserEditController extends AbstractController implements PageableCo
     updateAvatar(bindingResult, userEditRequest);
 
     if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating user failed. Some fields were invalid. Getting membership "
+      getLogger().debug("Updating user failed. Some fields were invalid. Getting memberships "
           + "with {}, {}, {}", userEditRequest.getOldSamAccountName(), ou, scope);
       List<DomainGroup> groups = domainGroupService
-          .getMembership(userEditRequest.getOldSamAccountName(), ou, scope)
+          .getMemberships(userEditRequest.getOldSamAccountName(), ou, scope)
           .toList();
       model.addAttribute("groups", groups);
       return "admin/user-edit";

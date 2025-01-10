@@ -84,15 +84,15 @@ public class DomainGroupServiceImpl implements DomainGroupService {
 
 
   @Override
-  public Stream<DomainGroup> resolveMembership(String samAccountName, Dn ou,
+  public Stream<DomainGroup> resolveMemberships(String samAccountName, Dn ou,
       SearchScope searchScope) {
-    return domainGroupRepository.resolveMembership(samAccountName, ou, searchScope);
+    return domainGroupRepository.resolveMemberships(samAccountName, ou, searchScope);
   }
 
   @Override
-  public Stream<DomainGroup> getMembership(String samAccountName, Dn ou,
+  public Stream<DomainGroup> getMemberships(String samAccountName, Dn ou,
       SearchScope searchScope) {
-    return domainGroupRepository.getMembership(samAccountName, ou, searchScope);
+    return domainGroupRepository.getMemberships(samAccountName, ou, searchScope);
   }
 
 

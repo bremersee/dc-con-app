@@ -102,7 +102,7 @@ abstract class AbstractLdapMapper implements RepositoryConstants {
       // samAccount is a domain user or computer
       destination.setPrimaryGroupId(primaryGroupId);
     }
-    destination.setMembership(
+    destination.setMemberships(
         getAttributeValuesAsList(source, LDAP_MEMBER_OF_GROUP, STRING_VALUE_TRANSCODER));
   }
 

@@ -222,7 +222,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     setAttribute(destination, LDAP_MAIL, source.getEmail(), false, STRING_VALUE_TRANSCODER,
         modifications);
     // Members must be set in domain group entity.
-    // setAttributes(destination, MEMBER_OF, source.getMembership(), false, userGroupValueTranscoder, modifications);
+    // setAttributes(destination, MEMBER_OF, source.getMemberships(), false, userGroupValueTranscoder, modifications);
     setAttribute(destination, LDAP_USER_MOBILE, source.getMobile(), false, STRING_VALUE_TRANSCODER,
         modifications);
     // NOT_ALLOWED_ON_RDN, diagnosticMessage=00002016: Modify of 'name' not permitted, must use 'rename' operation instead

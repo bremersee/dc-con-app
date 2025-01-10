@@ -31,11 +31,11 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * The membership of a domain user or group.
+ * The memberships of a domain user or group.
  *
  * @author Christian Bremer
  */
-@Schema(description = "A membership of a domain user or group.")
+@Schema(description = "A memberships of a domain user or group.")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @ToString

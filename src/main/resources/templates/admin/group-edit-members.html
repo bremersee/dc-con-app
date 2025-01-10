@@ -76,8 +76,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link disabled" href="#">
-          Membership
+        <a class="nav-link" href="group-edit-memberships-direct.html"
+           th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          Memberships
         </a>
       </li>
       <li class="nav-item">

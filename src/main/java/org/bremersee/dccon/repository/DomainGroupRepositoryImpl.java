@@ -123,33 +123,33 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroup> resolveMembership(
+  public Stream<DomainGroup> resolveMemberships(
       String samAccountName, Dn ou, SearchScope searchScope) {
-    log.debug("resolveMembership({}, {}, {})", samAccountName, ou, searchScope);
+    log.debug("resolveMemberships({}, {}, {})", samAccountName, ou, searchScope);
     Set<String> groupDns = new HashSet<>();
-    return getMembership(samAccountName, ou, searchScope)
+    return getMemberships(samAccountName, ou, searchScope)
         .filter(group -> !groupDns
             .contains(new Dn(group.getDistinguishedName()).format()))
         .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
         .flatMap(group -> Stream
-            .concat(Stream.of(group), resolveMembership(group.getMembership(), groupDns)));
+            .concat(Stream.of(group), resolveMemberships(group.getMemberships(), groupDns)));
   }
 
-  private Stream<DomainGroup> resolveMembership(List<String> memberOf, Set<String> groupDns) {
+  private Stream<DomainGroup> resolveMemberships(List<String> memberOf, Set<String> groupDns) {
     return memberOf.stream()
         .filter(dn -> !groupDns.contains(new Dn(dn).format()))
         .flatMap(dn -> findOne(dn, null, null).stream())
         .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
         .flatMap(nextGroup -> Stream
-            .concat(Stream.of(nextGroup), resolveMembership(nextGroup.getMembership(), groupDns)));
+            .concat(Stream.of(nextGroup), resolveMemberships(nextGroup.getMemberships(), groupDns)));
   }
 
   /*
-  public Stream<DomainGroup> resolveMembership(
+  public Stream<DomainGroup> resolveMemberships(
       String samAccountName, Dn ou, SearchScope searchScope) {
-    log.debug("resolveMembership({}, {}, {})", samAccountName, ou, searchScope);
+    log.debug("resolveMemberships({}, {}, {})", samAccountName, ou, searchScope);
 
-    List<DomainGroup> groups = getMembership(samAccountName, ou, searchScope)
+    List<DomainGroup> groups = getMemberships(samAccountName, ou, searchScope)
         .collect(Collectors.toCollection(ArrayList::new));
     Set<String> groupDns = groups.stream()
         .map(DomainGroup::getDistinguishedName)
@@ -157,11 +157,11 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         .map(Dn::format)
         .collect(Collectors.toCollection(HashSet::new));
     for (DomainGroup group : groups) {
-      resolveMembership(group, groups, groupDns);
+      resolveMemberships(group, groups, groupDns);
     }
     return groups.stream();
   }
-  private void resolveMembership(
+  private void resolveMemberships(
       DomainGroup group, List<DomainGroup> groups, Set<String> groupDns) {
     if (isEmpty(group)) {
       return;
@@ -170,23 +170,23 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     if (!groupDns.contains(groupDn)) {
       groupDns.add(groupDn);
       groups.add(group);
-      for (String dn : group.getMembership()) {
+      for (String dn : group.getMemberships()) {
         DomainGroup nextGroup = findOne(dn, null, null).orElse(null);
-        resolveMembership(nextGroup, groups, groupDns);
+        resolveMemberships(nextGroup, groups, groupDns);
       }
     }
   }
   */
 
   @Override
-  public Stream<DomainGroup> getMembership(
+  public Stream<DomainGroup> getMemberships(
       String samAccountName, Dn ou, SearchScope searchScope) {
-    log.debug("getMembership({}, {}, {})", samAccountName, ou, searchScope);
+    log.debug("getMemberships({}, {}, {})", samAccountName, ou, searchScope);
     SamAccount samAccount = findSamAccount(samAccountName, ou, searchScope)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             SamAccount.class.getSimpleName(), samAccountName, EC_SAM_ACCOUNT_NOT_FOUND));
     Optional<DomainGroup> primaryGroup = findOneByPrimaryGroupId(samAccount.getPrimaryGroupId());
-    Stream<DomainGroup> groups = samAccount.getMembership().stream()
+    Stream<DomainGroup> groups = samAccount.getMemberships().stream()
         .flatMap(dn -> findOne(dn, null, null).stream())
         .sorted();
     if (primaryGroup.isPresent()

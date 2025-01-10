@@ -80,11 +80,11 @@ public class DomainGroupMember extends SamAccount implements Serializable,
       String samAccountName,
       Sid sid,
       Integer primaryGroupId,
-      List<String> membership,
+      List<String> memberships,
       DomainGroupMemberType objectClass,
       String displayName,
       boolean selected) {
-    super(distinguishedName, created, modified, samAccountName, sid, primaryGroupId, membership);
+    super(distinguishedName, created, modified, samAccountName, sid, primaryGroupId, memberships);
     this.distinguishedNameBase64 = Base64.getEncoder()
         .encodeToString(this.distinguishedName.getBytes(StandardCharsets.UTF_8));
     this.memberType = requireNonNullElse(objectClass, DomainGroupMemberType.UNKNOWN);
@@ -100,7 +100,7 @@ public class DomainGroupMember extends SamAccount implements Serializable,
         domainUser.getSamAccountName(),
         domainUser.getSid(),
         domainUser.getPrimaryGroupId(),
-        domainUser.getMembership(),
+        domainUser.getMemberships(),
         DomainGroupMemberType.USER,
         domainUser.getName(),
         selected);
@@ -114,7 +114,7 @@ public class DomainGroupMember extends SamAccount implements Serializable,
         domainGroup.getSamAccountName(),
         domainGroup.getSid(),
         domainGroup.getPrimaryGroupId(),
-        domainGroup.getMembership(),
+        domainGroup.getMemberships(),
         DomainGroupMemberType.GROUP,
         domainGroup.getName(),
         selected);

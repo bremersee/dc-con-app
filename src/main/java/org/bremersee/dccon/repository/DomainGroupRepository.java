@@ -47,12 +47,12 @@ public interface DomainGroupRepository {
       @Nullable SearchScope searchScope);
 
 
-  Stream<DomainGroup> resolveMembership(
+  Stream<DomainGroup> resolveMemberships(
       @NotNull String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
-  Stream<DomainGroup> getMembership(
+  Stream<DomainGroup> getMemberships(
       @NotNull String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);

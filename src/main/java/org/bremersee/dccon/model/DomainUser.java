@@ -39,9 +39,6 @@ import lombok.ToString;
  * password. A user's access to domain resources is based on permissions assigned to the user
  * account.
  *
- * <p>This main representation has a membership attribute with the distinguished names of the
- * groups.
- *
  * @author Christian Bremer
  */
 @Getter

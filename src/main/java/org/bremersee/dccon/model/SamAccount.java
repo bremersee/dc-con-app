@@ -50,7 +50,7 @@ public class SamAccount extends CommonAttributes implements NameProvider {
 
   Integer primaryGroupId;
 
-  List<String> membership;
+  List<String> memberships;
 
   public SamAccount(
       String distinguishedName,
@@ -59,24 +59,24 @@ public class SamAccount extends CommonAttributes implements NameProvider {
       String samAccountName,
       Sid sid,
       Integer primaryGroupId,
-      List<String> membership) {
+      List<String> memberships) {
     super(distinguishedName, created, modified);
     this.samAccountName = requireNonNull(samAccountName, "samAccountName is required.");
     this.sid = sid;
     this.primaryGroupId = primaryGroupId;
-    this.membership = membership;
+    this.memberships = memberships;
   }
 
   /**
-   * User's group membership.
+   * User's group memberships.
    *
-   * @return the group membership
+   * @return the group memberships
    */
-  public List<String> getMembership() {
-    if (Objects.isNull(membership)) {
-      membership = new ArrayList<>();
+  public List<String> getMemberships() {
+    if (Objects.isNull(memberships)) {
+      memberships = new ArrayList<>();
     }
-    return membership;
+    return memberships;
   }
 
   @Override

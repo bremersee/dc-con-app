@@ -37,25 +37,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
 
 /**
- * The type UsersController.
+ * The type GroupsController.
  *
  * @author Christian Bremer
  */
 @Controller
-public class UserEditMembershipController extends AbstractController implements PageableComponent,
+public class GroupEditMembershipsController extends AbstractController implements PageableComponent,
     RedirectComponent, OrganizationalUnitComponent {
-
-  private final DomainUserService domainUserService;
 
   private final DomainGroupService domainGroupService;
 
-  public UserEditMembershipController(
+  public GroupEditMembershipsController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
-      DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
     super(domainControllerProperties, localeResolver);
-    this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
   }
 
@@ -64,35 +60,56 @@ public class UserEditMembershipController extends AbstractController implements 
     return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/user-edit-membership")
-  public String displayUserEditMembership(
-      @RequestParam(value = "user", required = false) String userName,
-      @RequestParam(value = "resolved", required = false) Boolean resolved,
+  @GetMapping(path = "/admin/group-edit-memberships-direct")
+  public String displayGroupEditMembershipsDirect(
+      @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
       ModelMap model) {
 
-    return Optional.ofNullable(userName)
-        .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
-        .map(user -> {
-          model.addAttribute("user", user);
-          boolean isResolved = Boolean.TRUE.equals(resolved);
-          model.addAttribute("resolved", isResolved);
-          Stream<DomainGroup> membership;
-          if (isResolved) {
-            // resolved group memberships
-            membership = domainGroupService.resolveMembership(userName, ou, searchScope);
+    return displayGroupEditMemberships(true, groupName, ou, searchScope, model);
+  }
+
+  @GetMapping(path = "/admin/group-edit-memberships-resolved")
+  public String displayGroupEditMembershipsResolved(
+      @RequestParam(value = "name", required = false) String groupName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      ModelMap model) {
+
+    return displayGroupEditMemberships(false, groupName, ou, searchScope, model);
+  }
+
+  private String displayGroupEditMemberships(
+      boolean direct,
+      String groupName,
+      Dn ou,
+      SearchScope searchScope,
+      ModelMap model) {
+
+    return Optional.ofNullable(groupName)
+        .flatMap(name -> domainGroupService.getGroup(groupName, ou, searchScope))
+        .map(group -> {
+          model.addAttribute("group", group);
+          Stream<DomainGroup> memberships;
+          String page;
+          if (direct) {
+            memberships = domainGroupService.getMemberships(groupName, ou, searchScope);
+            page = "admin/group-edit-memberships-direct";
           } else {
-            // direct group memberships
-            membership = domainGroupService.getMembership(userName, ou, searchScope);
+            memberships = domainGroupService.resolveMemberships(groupName, ou, searchScope);
+            page = "admin/group-edit-memberships-resolved";
           }
-          model.addAttribute("membership", membership.sorted().toList());
-          return "admin/user-edit-membership";
+          model.addAttribute("memberships", memberships.sorted().toList());
+          return page;
         })
         .orElseGet(() -> {
-          String msg = String.format("User '%s' not found.", userName);
+          String msg = String.format("Group '%s' not found.", groupName);
           model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          return "admin/user-edit-membership";
+          if (direct) {
+            return "admin/group-edit-memberships-direct";
+          }
+          return "admin/group-edit-memberships-resolved";
         });
   }
 

@@ -71,12 +71,13 @@
         <a class="nav-link active" aria-current="page" href="#">Data</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link disabled" href="#">
-          Membership
+        <a class="nav-link" href="user-edit-memberships-direct.html"
+           th:href="@{user-edit-memberships-direct(user=${userEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          Memberships
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link disabled" href="#">
+        <a class="nav-link" href="#">
           Danger Zone
         </a>
       </li>
