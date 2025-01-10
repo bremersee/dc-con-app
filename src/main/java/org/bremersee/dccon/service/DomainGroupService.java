@@ -52,8 +52,7 @@ public interface DomainGroupService {
       @Nullable SearchScope searchScope);
 
 
-
-  DomainGroupMembers findPossibleMembers(
+  Stream<DomainGroup> resolveMembership(
       @NotNull String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
@@ -63,11 +62,22 @@ public interface DomainGroupService {
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
+
+  DomainGroupMembers findPossibleMembers(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
+
   DomainGroupMembers queryPossibleMembers(
-      @NotNull String samAccountName,
+      @NotNull String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope,
       @Nullable String query);
+
+  DomainGroupMembers getMembers(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
 
   /**

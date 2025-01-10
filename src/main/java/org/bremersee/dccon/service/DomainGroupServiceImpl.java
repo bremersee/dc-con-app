@@ -84,10 +84,9 @@ public class DomainGroupServiceImpl implements DomainGroupService {
 
 
   @Override
-  public DomainGroupMembers findPossibleMembers(String samAccountName, Dn ou,
+  public Stream<DomainGroup> resolveMembership(String samAccountName, Dn ou,
       SearchScope searchScope) {
-    return DomainGroupMembers.from(domainGroupRepository
-        .findPossibleMembers(samAccountName, ou, searchScope));
+    return domainGroupRepository.resolveMembership(samAccountName, ou, searchScope);
   }
 
   @Override
@@ -96,11 +95,25 @@ public class DomainGroupServiceImpl implements DomainGroupService {
     return domainGroupRepository.getMembership(samAccountName, ou, searchScope);
   }
 
+
   @Override
-  public DomainGroupMembers queryPossibleMembers(String samAccountName, Dn ou,
+  public DomainGroupMembers findPossibleMembers(String groupName, Dn ou,
+      SearchScope searchScope) {
+    return DomainGroupMembers.from(domainGroupRepository
+        .findPossibleMembers(groupName, ou, searchScope));
+  }
+
+  @Override
+  public DomainGroupMembers queryPossibleMembers(String groupName, Dn ou,
       SearchScope searchScope, String query) {
     return DomainGroupMembers.from(domainGroupRepository
-        .queryPossibleMembers(samAccountName, ou, searchScope, query));
+        .queryPossibleMembers(groupName, ou, searchScope, query));
+  }
+
+  @Override
+  public DomainGroupMembers getMembers(String groupName, Dn ou, SearchScope searchScope) {
+    return DomainGroupMembers.from(domainGroupRepository
+        .getMembers(groupName, ou, searchScope));
   }
 
 

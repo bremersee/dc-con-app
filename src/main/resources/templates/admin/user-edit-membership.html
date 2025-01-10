@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Users</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success mb-4"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div th:if="${userEditRequest != null}">
+    <div class="d-flex justify-content-center mb-2">
+      <img id="avatarImage" src="../../static/mp.jpg"
+           th:src="@{'/api/users/' + ${userEditRequest.oldSamAccountName} + '/avatar?d=mp&s=200'}"
+           class="rounded-circle" alt="avatar"
+           style="width: 200px; height: 200px; object-fit: cover;"  />
+    </div>
+    <div class="d-flex justify-content-center mb-4">
+      <h3 class="small">Edit user</h3>
+      <h3 th:text="${userEditRequest.oldName}">Administrator</h3>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">Data</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Membership
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">
+          Danger Zone
+        </a>
+      </li>
+    </ul>
+
+    <div class="mx-0 mx-sm-1 mx-md-3">
+      <form th:action="@{user-edit}" th:object="${userEditRequest}" action="#" method="post"
+            enctype="multipart/form-data">
+        <input type="hidden" name="page" th:value="${page}"/>
+        <input type="hidden" name="size" th:value="${size}"/>
+        <input type="hidden" name="sort" th:value="${sort}"/>
+        <input type="hidden" name="q" th:value="${q}"/>
+        <input type="hidden" name="ou" th:value="${ou}"/>
+        <input type="hidden" name="scope" th:value="${scope}"/>
+
+        <input type="hidden" name="oldSamAccountName" th:field="*{oldSamAccountName}"/>
+        <input type="hidden" name="oldFirstName" th:field="*{oldFirstName}"/>
+        <input type="hidden" name="oldLastName" th:field="*{oldLastName}"/>
+
+        <input type="hidden" name="distinguishedName" th:field="*{user.distinguishedName}"/>
+
+        <div class="mb-3">
+          <label for="newAvatar" class="form-label">Avatar</label>
+          <input type="file" accept="image/jpeg" class="form-control" id="newAvatar" name="avatar"
+                 th:field="*{avatar}" />
+        </div>
+
+        <div class="form-check form-switch mb-3" th:if="${avatarExists}">
+          <input class="form-check-input" type="checkbox" role="switch" id="removeAvatar"
+                 name="removeAvatar" th:field="*{removeAvatar}" />
+          <label class="form-check-label" for="removeAvatar">
+            Remove avatar
+          </label>
+        </div>
+
+
+        <div class="mb-3">
+          <label for="newOu" class="form-label">Organizational Unit</label>
+          <select id="newOu" class="form-select" aria-label="Organizational Unit"
+                  aria-describedby="newOuValidation"
+                  th:classappend="${#fields.hasErrors('newOu')} ? 'is-invalid' : ''"
+                  th:field="*{newOu}">
+            <option th:each="o : ${ous}" th:value="${o.distinguishedName}" th:text="${o.nameTree}">
+              Users
+            </option>
+          </select>
+          <div id="newOuValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('newOu')} ? ${#fields.errors('newOu')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="samAccountName" class="form-label">Username</label>
+          <input type="text" class="form-control" id="samAccountName" name="samAccountName"
+                 aria-describedby="samAccountNameValidation" required th:field="*{user.samAccountName}"
+                 th:classappend="${#fields.hasErrors('user.samAccountName')} ? 'is-invalid' : ''"/>
+          <div id="samAccountNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.samAccountName')} ? ${#fields.errors('user.samAccountName')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="enabled" name="enabled"
+                 th:field="*{user.accountControl.enabled}" />
+          <label class="form-check-label" for="enabled" th:text="#{i18n.enabled}">
+            Enabled
+          </label>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="passwordExpirationEnabled" name="passwordExpirationEnabled"
+                 th:field="*{user.accountControl.passwordExpirationEnabled}" />
+          <label class="form-check-label" for="passwordExpirationEnabled">
+            Password expiration enabled
+          </label>
+        </div>
+
+        <div class="mb-3">
+          <label for="userPrincipalName" class="form-label">Principal name</label>
+          <input type="text" class="form-control" id="userPrincipalName" name="userPrincipalName"
+                 aria-describedby="userPrincipalNameValidation" required th:field="*{user.userPrincipalName}"
+                 th:classappend="${#fields.hasErrors('user.userPrincipalName')} ? 'is-invalid' : ''"/>
+          <div id="userPrincipalNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.userPrincipalName')} ? ${#fields.errors('user.userPrincipalName')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="primaryGroupId" class="form-label">Primary group</label>
+          <select id="primaryGroupId" class="form-select" aria-label="Primary group"
+                  aria-describedby="primaryGroupIdValidation"
+                  th:classappend="${#fields.hasErrors('user.primaryGroupId')} ? 'is-invalid' : ''"
+                  th:field="*{user.primaryGroupId}">
+            <option th:each="o : ${groups}" th:value="${o.primaryGroupId}" th:text="${o.samAccountName}">
+              Domain Users
+            </option>
+          </select>
+          <div id="primaryGroupIdValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.primaryGroupId')} ? ${#fields.errors('user.primaryGroupId')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="firstName" class="form-label">First Name</label>
+          <input type="text" class="form-control" id="firstName" name="firstName"
+                 aria-describedby="firstNameValidation" th:field="*{user.firstName}"
+                 th:classappend="${#fields.hasErrors('user.firstName')} ? 'is-invalid' : ''"/>
+          <div id="firstNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.firstName')} ? ${#fields.errors('user.firstName')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="lastName" class="form-label">Last Name</label>
+          <input type="text" class="form-control" id="lastName" name="lastName"
+                 aria-describedby="lastNameValidation" th:field="*{user.lastName}"
+                 th:classappend="${#fields.hasErrors('user.lastName')} ? 'is-invalid' : ''"/>
+          <div id="lastNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.lastName')} ? ${#fields.errors('user.lastName')[0]} : ''">
+          </div>
+          <div class="form-check form-switch small text-secondary mt-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="renameLastNameAutomatically"
+                   name="renameLastNameAutomatically"
+                   th:field="*{renameNamesAutomatically}"/>
+            <label for="renameLastNameAutomatically" class="form-label">
+              Rename names automatically
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="displayName" class="form-label">Display Name</label>
+          <input type="text" class="form-control" id="displayName" name="displayName"
+                 th:field="*{user.displayName}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="initials" class="form-label">Initials</label>
+          <input type="text" class="form-control" id="initials" name="initials"
+                 th:field="*{user.initials}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="preferredLanguage" class="form-label">Preferred language</label>
+          <input type="text" class="form-control" id="preferredLanguage" name="preferredLanguage"
+                 aria-describedby="preferredLanguageValidation" th:field="*{user.preferredLanguage}"
+                 th:classappend="${#fields.hasErrors('user.preferredLanguage')} ? 'is-invalid' : ''"/>
+          <div id="preferredLanguageHelp" class="form-text">
+            User's preferred language. ISO 639-1 language codes. The combinations like de-DE and
+            en-US with ISO-639 and ISO-3166 also work.
+          </div>
+          <div id="preferredLanguageValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.preferredLanguage')} ? ${#fields.errors('user.preferredLanguage')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email"
+                 aria-describedby="emailValidation" th:field="*{user.email}"
+                 th:classappend="${#fields.hasErrors('user.email')} ? 'is-invalid' : ''"/>
+          <div id="emailValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.email')} ? ${#fields.errors('user.email')[0]} : ''">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="mobile" class="form-label">Mobile phone number</label>
+          <input type="text" class="form-control" id="mobile" name="mobile"
+                 th:field="*{user.mobile}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="telephoneNumber" class="form-label">Telephone number</label>
+          <input type="text" class="form-control" id="telephoneNumber" name="telephoneNumber"
+                 th:field="*{user.telephoneNumber}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <input type="text" class="form-control" id="description" name="description"
+                 th:field="*{user.description}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="homeDirectory" class="form-label">Home directory</label>
+          <input type="text" class="form-control" id="homeDirectory" name="homeDirectory"
+                 th:field="*{user.homeDirectory}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="homeDrive" class="form-label">Home Drive Letter</label>
+          <input type="text" class="form-control" id="homeDrive" name="homeDrive"
+                 th:field="*{user.homeDrive}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="profilePath" class="form-label">Profile path</label>
+          <input type="text" class="form-control" id="profilePath" name="profilePath"
+                 th:field="*{user.profilePath}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="scriptPath" class="form-label">Logon script path</label>
+          <input type="text" class="form-control" id="scriptPath" name="scriptPath"
+                 th:field="*{user.scriptPath}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="company" class="form-label">Company</label>
+          <input type="text" class="form-control" id="company" name="company"
+                 th:field="*{user.company}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="title" class="form-label">Job title</label>
+          <input type="text" class="form-control" id="title" name="title"
+                 th:field="*{user.title}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="department" class="form-label">Department</label>
+          <input type="text" class="form-control" id="department" name="department"
+                 th:field="*{user.department}" />
+        </div>
+
+        <div class="mb-3">
+          <label for="physicalDeliveryOfficeName" class="form-label">
+            Office location
+          </label>
+          <input type="text" class="form-control" id="physicalDeliveryOfficeName"
+                 name="physicalDeliveryOfficeName" th:field="*{user.physicalDeliveryOfficeName}" />
+        </div>
+
+        <div th:if="${rfc2307Enabled}">
+          <div class="mb-3">
+            <label for="uid" class="form-label">User's Unix/RFC2307 username</label>
+            <input type="text" class="form-control" id="uid" name="uid"
+                   aria-describedby="uidValidation" th:field="*{user.uid}"
+                   th:classappend="${#fields.hasErrors('user.uid')} ? 'is-invalid' : ''"/>
+            <div id="uidValidation" class="invalid-feedback"
+                 th:text="${#fields.hasErrors('user.uid')} ? ${#fields.errors('user.uid')[0]} : ''">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="uidNumber" class="form-label">User's Unix/RFC2307 UID number</label>
+            <input type="text" class="form-control" id="uidNumber" name="uidNumber"
+                   aria-describedby="uidNumberValidation" th:field="*{user.uidNumber}"
+                   th:classappend="${#fields.hasErrors('user.uidNumber')} ? 'is-invalid' : ''"/>
+            <div id="uidNumberValidation" class="invalid-feedback"
+                 th:text="${#fields.hasErrors('user.uidNumber')} ? ${#fields.errors('user.uidNumber')[0]} : ''">
+            </div>
+          </div>
+
+          <div class="mb-3"> <!-- TODO select ? -->
+            <label for="gidNumber" class="form-label">
+              User's Unix/RFC2307 primary group ID
+            </label>
+            <input type="number" class="form-control" id="gidNumber"
+                   name="gidNumber" th:field="*{user.gidNumber}" />
+          </div>
+
+          <div class="mb-3">
+            <label for="loginShell" class="form-label">User's Unix/RFC2307 login shell</label>
+            <input type="text" class="form-control" id="loginShell" name="loginShell"
+                   th:field="*{user.loginShell}" />
+          </div>
+
+          <div class="mb-3">
+            <label for="unixHomeDirectory" class="form-label">
+              User's Unix/RFC2307 home directory
+            </label>
+            <input type="text" class="form-control" id="unixHomeDirectory" name="unixHomeDirectory"
+                   th:field="*{user.unixHomeDirectory}" />
+          </div>
+
+          <div class="mb-3">
+            <label for="gecos" class="form-label">
+              User's Unix/RFC2307 GECOS field
+            </label>
+            <input type="text" class="form-control" id="gecos" name="gecos"
+                   th:field="*{user.gecos}" />
+          </div>
+
+          <div class="mb-3">
+            <label for="nisDomain" class="form-label">
+              User's Unix/RFC2307 NIS domain
+            </label>
+            <input type="text" class="form-control" id="nisDomain"
+                   name="nisDomain" th:field="*{user.nisDomain}" />
+          </div>
+        </div> <!-- end of rfc2307Enabled -->
+
+        <button type="submit" class="btn btn-primary mt-3">
+          Update
+        </button>
+        <a href="users.html" th:href="@{/admin/users(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}"
+           class="btn btn-secondary ml-3 mt-3" role="button">
+          Cancel
+        </a>
+      </form>
+    </div>
+  </div>
+</main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const avatarImage = document.getElementById("avatarImage");
+    const avatarInput = document.getElementById("newAvatar");
+    avatarInput.onchange = function(event) {
+      const fileInput = event.target;
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          avatarImage.src = e.target.result;
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      }
+    }
+  });
+  //]]>
+</script>
+</body>
+</html>

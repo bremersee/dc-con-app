@@ -69,7 +69,10 @@ public interface DomainGroupRepository {
       @Nullable SearchScope searchScope,
       @Nullable String query);
 
-  Stream<DomainGroupMember> getMembers(String groupName, Dn ou, SearchScope searchScope);
+  Stream<DomainGroupMember> getMembers(
+      @NotNull String groupName,
+      @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
 
   /**
