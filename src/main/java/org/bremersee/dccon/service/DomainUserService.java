@@ -114,6 +114,18 @@ public interface DomainUserService {
    *
    * @param userName the username
    * @param newPassword the new password
+   * @param sendEmail specifies whether to send an email or not
+   */
+  void updateUserPassword(
+      @NotNull String userName,
+      String newPassword,
+      boolean sendEmail);
+
+  /**
+   * Update user password.
+   *
+   * @param userName the username
+   * @param newPassword the new password
    * @param sendEmail specifies whether to send an email or not (default is {@code false})
    */
   void updateUserPassword(

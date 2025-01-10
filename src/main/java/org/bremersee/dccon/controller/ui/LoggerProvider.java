@@ -16,6 +16,8 @@
 
 package org.bremersee.dccon.controller.ui;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +28,10 @@ import org.slf4j.LoggerFactory;
  */
 public interface LoggerProvider {
 
+  Map<Class<?>, Logger> LOGGER_MAP = new HashMap<>();
+
   default Logger getLogger() {
-    return LoggerFactory.getLogger(getClass());
+    return LOGGER_MAP.computeIfAbsent(getClass(), LoggerFactory::getLogger);
   }
 
 }

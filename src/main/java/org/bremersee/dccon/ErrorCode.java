@@ -31,6 +31,8 @@ public interface ErrorCode {
 
   String EC_ILLEGAL_DN = EC_PREFIX + "33cd9d6a-51ed-4124-921c-ea81962b8c74";
 
+  String EC_ILLEGAL_SYSTEM_ENTITY_OPERATION = EC_PREFIX + "30c87232-ac6e-4530-b36e-5c58ece4d9e8";
+
   String EC_EMPTY_OU_RDN = EC_PREFIX + "e8d52299-664f-4585-a58f-29a69e579729";
 
   String EC_OU_NOT_FOUND = EC_PREFIX + "000f4ac1-8fea-4c4d-a13d-6f28d4987157";

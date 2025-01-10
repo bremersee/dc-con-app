@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Direct memberships of group</title>
+  <title>Misc for Groups</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -56,10 +56,10 @@
 
   <div th:if="${group != null}">
     <div class="d-flex justify-content-center">
-      <h3 class="small">Direct memberships of</h3>
+      <h3 class="small">Misc of</h3>
     </div>
     <div class="d-flex justify-content-center mb-4">
-      <h3 th:text="${group.name}">Domain Users</h3>
+      <h3 th:text="${group.name}">Administrator</h3>
     </div>
 
     <ul class="nav nav-tabs mb-4">
@@ -76,15 +76,13 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="#">
+        <a class="nav-link" href="group-edit-memberships-direct.html"
+           th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#"
-           th:classappend="${group.sid.systemEntity} ? 'disabled' : ''"
-           th:attr="aria-disabled=${group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+        <a class="nav-link active" aria-current="page" href="#">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -92,39 +90,38 @@
 
     <div class="mx-0 mx-sm-1 mx-md-3">
 
-      <div class="d-flex justify-content-center mb-3">
-        <ul class="nav nav-pills">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">
-              Direct
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="group-edit-memberships-resolved.html"
-               th:href="@{group-edit-memberships-resolved(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-              Resolved
-            </a>
-          </li>
-        </ul>
-      </div>
+      <div class="mb-4 p-3 border border-1 border-danger" th:if="${not group.sid.systemEntity}">
+        <div class="h5 mb-3">
+          <span>Delete Group </span>
+          <span class="badge text-bg-secondary" th:text="${group.samAccountName}">anna</span>
+        </div>
+        <form th:action="@{group-edit-misc-delete-group}" action="#" method="post">
+          <input type="hidden" name="page" th:value="${page}"/>
+          <input type="hidden" name="size" th:value="${size}"/>
+          <input type="hidden" name="sort" th:value="${sort}"/>
+          <input type="hidden" name="q" th:value="${q}"/>
+          <input type="hidden" name="ou" th:value="${ou}"/>
+          <input type="hidden" name="scope" th:value="${scope}"/>
+          <input type="hidden" name="name" th:value="${group.samAccountName}"/>
 
-      <div th:if="${#lists.isEmpty(memberships)}"
-           class="alert alert-info" role="alert">
-        No groups were found.
-      </div>
-
-      <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(memberships)}">
-        <a th:each="entry : ${memberships}" href="#"
-           th:href="@{group-edit(name=${entry.distinguishedName},page=${page},size=${size},sort=${sort},q=${q})}"
-           class="list-group-item list-group-item-action">
-          <div class="d-flex w-100 justify-content-between">
-            <h6 class="mb-1" th:text="${entry.samAccountName}">
-              Administrators
-            </h6>
-            <span class="far fa-edit" aria-hidden="true"></span>
+          <div class="mb-3">
+            <input type="text" class="form-control" id="verificationName" name="verificationName"
+                   aria-describedby="verificationNameValidation" required
+                   th:classappend="${dmsg == null} ? '' : 'is-invalid'"/>
+            <label for="verificationName" id="verificationNameHelp" class="form-text">
+              Please enter the group name for deletion.
+            </label>
+            <div id="verificationNameValidation" class="invalid-feedback" th:if="${dmsg != null}"
+                 th:text="${dmsg.msg}">
+            </div>
           </div>
-        </a>
+
+          <button type="submit" class="btn btn-danger mt-3 mb-3">
+            Delete
+          </button>
+        </form>
       </div>
+
     </div>
   </div>
 </main>
@@ -132,6 +129,19 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $(document).ready(function () {
+      const passwordDiv = $('#passwordDiv');
+      const passwordInput = $('#password');
+      $('#generateRandomPassword').on("change", function () {
+        const checkbox = $(this);
+        if (checkbox.is(':checked')) {
+          passwordInput.val('');
+          passwordDiv.hide();
+        } else {
+          passwordDiv.show();
+        }
+      });
+    });
   });
   //]]>
 </script>

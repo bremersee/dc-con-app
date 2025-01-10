@@ -16,7 +16,15 @@
 
 package org.bremersee.dccon.controller.ui;
 
+import java.util.Locale;
+import java.util.Optional;
+import org.bremersee.dccon.controller.ui.model.RedirectMessage;
+import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
+import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.LocaleResolver;
 
 /**
  * The interface MessageProvider.
@@ -24,5 +32,27 @@ import org.springframework.context.MessageSourceAware;
  * @author Christian Bremer
  */
 public interface MessageProvider extends MessageSourceAware {
+
+  LocaleResolver getLocaleResolver();
+
+  MessageSource getMessageSource();
+
+  default Locale getResolvedLocale() {
+    return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
+        .filter(attrs -> attrs instanceof ServletRequestAttributes)
+        .map(attrs -> (ServletRequestAttributes) attrs)
+        .map(ServletRequestAttributes::getRequest)
+        .map(req -> getLocaleResolver().resolveLocale(req))
+        .orElse(Locale.ENGLISH);
+  }
+
+  default String getMessage(String defaultMessage, String code, Object... args) {
+    return getMessageSource().getMessage(code, args, defaultMessage, getResolvedLocale());
+  }
+
+  default RedirectMessage getRedirectMessage(RedirectMessageType type,
+      String defaultMessage, String code, Object... args) {
+    return new RedirectMessage(getMessage(defaultMessage, code, args), type);
+  }
 
 }

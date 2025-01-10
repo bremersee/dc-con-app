@@ -16,25 +16,17 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import static java.util.Objects.requireNonNullElse;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
-import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
-import org.ldaptive.SearchScope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
-import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.web.servlet.LocaleResolver;
 
 /**
@@ -43,15 +35,15 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Getter
-public class AbstractController implements DomainControllerPropertiesProvider, SortOrderConstants,
-    LoggerProvider, MessageProvider, ErrorCode {
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+public abstract class AbstractController implements DomainControllerPropertiesProvider,
+    SortOrderConstants, LoggerProvider, MessageProvider, ErrorCode {
 
   private final DomainControllerProperties properties;
 
+  @Getter
   private final LocaleResolver localeResolver;
 
+  @Getter
   @Setter
   private MessageSource messageSource;
 
@@ -60,48 +52,19 @@ public class AbstractController implements DomainControllerPropertiesProvider, S
       LocaleResolver localeResolver) {
     this.properties = properties;
     this.localeResolver = localeResolver;
+    Assert.notNull(getLogger(), "Logger is required.");
   }
 
   protected Locale resolveLocale(HttpServletRequest request) {
     return localeResolver.resolveLocale(request);
   }
 
-  protected void addPageRequest(ModelMap model, int page, int size, SortOrders sort, String query) {
-    if (!model.containsAttribute("page")) {
-      model.addAttribute("page", page);
+  protected void logRedirectTo(String msg, String redirect) {
+    if (isEmpty(msg)) {
+      getLogger().debug("Redirecting to {}", redirect);
+    } else {
+      getLogger().debug("{} Redirecting to {}", msg, redirect);
     }
-    if (!model.containsAttribute("size")) {
-      model.addAttribute("size", size);
-    }
-    if (!model.containsAttribute("sort")) {
-      model.addAttribute("sort", sort.getSortOrdersText());
-    }
-    if (!model.containsAttribute("q")) {
-      model.addAttribute("q", requireNonNullElse(query, ""));
-    }
-  }
-
-  protected void addSearchScope(ModelMap model, SearchScope scope) {
-    if (!model.containsAttribute("scope")) {
-      model.addAttribute("ou", Optional.ofNullable(scope)
-          .map(Enum::name)
-          .map(String::toLowerCase)
-          .orElse(""));
-    }
-  }
-
-  protected String redirect(String path, int page, int size, SortOrders sort, String query) {
-    String pathAppender = path.contains("?") ? "&" : "?";
-    if (isEmpty(query)) {
-      return String.format("redirect:%s%spage=%s&size=%s&sort=%s",
-          path, pathAppender, page, size, sort.getSortOrdersText());
-    }
-    return String.format("redirect:%s%spage=%s&size=%s&sort=%s&q=%s",
-        path, pathAppender, page, size, sort.getSortOrdersText(), encodeUrlParameter(query));
-  }
-
-  protected String encodeUrlParameter(String parameter) {
-    return URLEncoder.encode(parameter, StandardCharsets.UTF_8);
   }
 
 }

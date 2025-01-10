@@ -49,6 +49,18 @@
 </nav>
 <main role="main" class="container">
 
+  <div class="d-flex justify-content-center mb-4">
+    <h3>Groups</h3>
+  </div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
   <div class="mb-3 p-3 border border-1">
     <div class="row justify-content-between">
       <div class="col col-auto">
@@ -79,14 +91,6 @@
         </a>
       </div>
     </div>
-  </div>
-
-  <!--suppress ThymeleafVariablesResolveInspection -->
-  <div th:if="${rmsg != null}"
-       class="alert alert-success"
-       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
-       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
-    Status message
   </div>
 
   <div th:if="${#lists.isEmpty(groups.content)}"

@@ -149,6 +149,16 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
+  public void updateUserPassword(String userName, String newPassword, boolean sendEmail) {
+    domainUserRepository.savePassword(userName, newPassword);
+    if (sendEmail) {
+      emailService.sendEmailWithCredentials(
+          userName,
+          newPassword);
+    }
+  }
+
+  @Override
   public void updateUserPassword(
       String userName,
       Password newPassword,

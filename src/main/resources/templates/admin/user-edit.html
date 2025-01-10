@@ -61,6 +61,7 @@
            class="rounded-circle" alt="avatar"
            style="width: 200px; height: 200px; object-fit: cover;"  />
     </div>
+
     <div class="d-flex justify-content-center mb-4">
       <h3 class="small">Edit user</h3>
       <h3 th:text="${userEditRequest.oldName}">Administrator</h3>
@@ -68,17 +69,20 @@
 
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="#">Data</a>
+        <a class="nav-link active" aria-current="page" href="#">
+          <span class="fa fa-user-edit" aria-hidden="true"></span>
+        </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="user-edit-memberships-direct.html"
            th:href="@{user-edit-memberships-direct(user=${userEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          Memberships
+          <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">
-          Danger Zone
+        <a class="nav-link" href="user-edit-misc.html"
+           th:href="@{user-edit-misc(user=${userEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-shapes" aria-hidden="true"></span>
         </a>
       </li>
     </ul>

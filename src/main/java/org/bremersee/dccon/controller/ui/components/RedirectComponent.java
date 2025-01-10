@@ -22,10 +22,14 @@ import com.samskivert.mustache.Mustache;
 import jakarta.validation.constraints.NotNull;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.bremersee.dccon.controller.ui.LoggerProvider;
+import org.ldaptive.SearchScope;
+import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -45,6 +49,40 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   String PAGE_AND_OU_PARAMS = PAGE_PARAMS
       + "&" + OU + "={{" + OU + "}}"
       + "&" + SCOPE + "={{" + SCOPE + "}}";
+
+  default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
+      String query) {
+    return Map.of(
+        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
+        SIZE, Optional.ofNullable(size)
+            .filter(s -> s > 0)
+            .orElse(SIZE_DEFAULT_INT),
+        SORT, Optional.ofNullable(sort).orElse(""),
+        QUERY, Optional.ofNullable(query).orElse("")
+    );
+  }
+
+  default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
+      String query, Dn ou, SearchScope scope) {
+    return Map.of(
+        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
+        SIZE, Optional.ofNullable(size)
+            .filter(s -> s > 0)
+            .orElse(SIZE_DEFAULT_INT),
+        SORT, Optional.ofNullable(sort).orElse(""),
+        QUERY, Optional.ofNullable(query).orElse(""),
+        OU, Optional.ofNullable(ou)
+            .map(Dn::format)
+            .orElse(""),
+        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
+    );
+  }
+
+  default Map<String, Object> addToMap(Map<String, Object> map, String key, Object value) {
+    Map<String, Object> result = new HashMap<>(map);
+    result.put(key, value);
+    return result;
+  }
 
   default String getRedirectUri(
       @NotNull String path,

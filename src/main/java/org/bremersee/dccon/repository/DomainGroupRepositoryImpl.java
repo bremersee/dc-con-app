@@ -38,7 +38,6 @@ import org.bremersee.dccon.model.DomainGroupMember;
 import org.bremersee.dccon.model.DomainGroupType;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.model.SamAccount;
-import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -141,7 +140,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         .flatMap(dn -> findOne(dn, null, null).stream())
         .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
         .flatMap(nextGroup -> Stream
-            .concat(Stream.of(nextGroup), resolveMemberships(nextGroup.getMemberships(), groupDns)));
+            .concat(Stream.of(nextGroup),
+                resolveMemberships(nextGroup.getMemberships(), groupDns)));
   }
 
   /*
@@ -596,9 +596,14 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   public boolean delete(String groupName) {
     log.debug("delete({})", groupName);
     return findOne(groupName, null, null)
-        .filter(group -> Optional.ofNullable(group.getSid())
-            .map(Sid::getSystemEntity)
-            .orElse(false))
+        .filter(group -> !isEmpty(group.getSid()))
+        .filter(group -> Optional.of(group.getSid())
+            .map(sid -> !sid.getSystemEntity())
+            .orElseThrow(() -> ServiceException.badRequest(
+                String.format(
+                    "'%s' is a system group. Deletion failed.",
+                    group.getSamAccountName()),
+                EC_ILLEGAL_SYSTEM_ENTITY_OPERATION)))
         .map(group -> doDelete(group.getSamAccountName()))
         .orElse(false);
   }

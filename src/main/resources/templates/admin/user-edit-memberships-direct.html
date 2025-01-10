@@ -55,6 +55,13 @@
   </div>
 
   <div th:if="${user != null}">
+    <div class="d-flex justify-content-center mb-2">
+      <img id="avatarImage" src="../../static/mp.jpg"
+           th:src="@{'/api/users/' + ${user.samAccountName} + '/avatar?d=mp&s=200'}"
+           class="rounded-circle" alt="avatar"
+           style="width: 200px; height: 200px; object-fit: cover;"  />
+    </div>
+
     <div class="d-flex justify-content-center">
       <h3 class="small">Direct memberships of</h3>
     </div>
@@ -66,17 +73,18 @@
       <li class="nav-item">
         <a class="nav-link" href="user-edit.html"
            th:href="@{user-edit(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          Data
+          <span class="fa fa-user-edit" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link active" aria-current="page" href="#">
-          Memberships
+          <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">
-          Danger Zone
+        <a class="nav-link" href="user-edit-misc.html"
+           th:href="@{user-edit-misc(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-shapes" aria-hidden="true"></span>
         </a>
       </li>
     </ul>
@@ -105,8 +113,8 @@
       </div>
 
       <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(memberships)}">
-        <a th:each="entry : ${memberships}" href="#"
-           th:href="@{group-edit(name=${entry.distinguishedName},page=${page},size=${size},sort=${sort},q=${q})}"
+        <a th:each="entry : ${memberships}" href="group-edit-members.html"
+           th:href="@{group-edit-members(name=${entry.distinguishedName})}"
            class="list-group-item list-group-item-action">
           <div class="d-flex w-100 justify-content-between">
             <h6 class="mb-1" th:text="${entry.samAccountName}">

@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -486,10 +485,10 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           EC_UID_NUMBER_ALREADY_EXISTS);
     }
     String dn = doAdd(domainUser, ou, useUsernameAsCn);
+    domainUser.setDistinguishedName(dn);
     if (!isEmpty(domainUser.getPassword())) {
       doSavePassword(dn, domainUser.getPassword());
     }
-    domainUser.setDistinguishedName(dn);
     return getLdapTemplate().save(domainUser, domainUserLdapMapper);
     /*
     DomainUser updatedDomainUser = getLdapTemplate().save(domainUser, domainUserLdapMapper);
@@ -558,7 +557,8 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
             domainUser.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
     if (!isEmpty(domainUser.getUserPrincipalName())
-        && !domainUser.getUserPrincipalName().equalsIgnoreCase(existingDomainUser.getUserPrincipalName())
+        && !domainUser.getUserPrincipalName()
+        .equalsIgnoreCase(existingDomainUser.getUserPrincipalName())
         && existsByPrincipalName(domainUser.getUserPrincipalName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName() + ".userPrincipalName",
@@ -750,9 +750,14 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   public boolean delete(String userName) {
     log.debug("delete({})", userName);
     return findOne(userName, null, null)
-        .filter(user -> Optional.ofNullable(user.getSid())
-            .map(Sid::getSystemEntity)
-            .orElse(false))
+        .filter(user -> !isEmpty(user.getSid()))
+        .filter(user -> Optional.of(user.getSid())
+            .map(sid -> !sid.getSystemEntity())
+            .orElseThrow(() -> ServiceException.badRequest(
+                String.format(
+                    "User '%s' is a system account. Deletion failed.",
+                    user.getSamAccountName()),
+                EC_ILLEGAL_SYSTEM_ENTITY_OPERATION)))
         .map(user -> doDelete(user.getSamAccountName()))
         .orElse(false);
   }
