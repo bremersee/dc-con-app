@@ -135,11 +135,6 @@
         <label for="displayName" class="form-label">Display Name</label>
         <input type="text" class="form-control" id="displayName" name="displayName"
                th:field="*{user.displayName}" />
-        <div class="form-check form-switch small text-secondary mt-2">
-          <input class="form-check-input" type="checkbox" role="switch"
-                 id="displayNameLink" name="displayNameLink" checked />
-          <label for="displayNameLink" class="form-label">Link with first and last name</label>
-        </div>
       </div>
 
       <div class="mb-3">
@@ -165,7 +160,7 @@
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <!-- TODO server side validation after template execution -->
-        <input type="email" class="form-control" id="email" name="email"
+        <input type="text" class="form-control" id="email" name="email"
                aria-describedby="emailValidation" th:field="*{user.email}"
                th:classappend="${#fields.hasErrors('user.email')} ? 'is-invalid' : ''"/>
         <div id="emailValidation" class="invalid-feedback"
@@ -203,11 +198,6 @@
         <label for="homeDirectory" class="form-label">Home directory</label>
         <input type="text" class="form-control" id="homeDirectory" name="homeDirectory"
                th:field="*{user.homeDirectory}" />
-        <div class="form-check form-switch small text-secondary mt-2">
-          <input class="form-check-input" type="checkbox" role="switch"
-                 id="homeDirectoryAuto" name="homeDirectoryAuto" checked />
-          <label for="homeDirectoryAuto" class="form-label">Automatic</label>
-        </div>
       </div>
 
       <div class="mb-3">
@@ -256,24 +246,23 @@
 
       <div th:if="${rfc2307Enabled}">
         <div class="mb-3">
-          <label for="uid" class="form-label">
-            User's Unix/RFC2307 username
-          </label>
+          <label for="uid" class="form-label">User's Unix/RFC2307 username</label>
           <input type="text" class="form-control" id="uid" name="uid"
-                 th:field="*{user.uid}" />
-          <div class="form-check form-switch small text-secondary mt-2">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   id="uidLink" name="uidLink" checked />
-            <label for="uidLink" class="form-label">Link with windows username</label>
+                 aria-describedby="uidValidation" th:field="*{user.uid}"
+                 th:classappend="${#fields.hasErrors('user.uid')} ? 'is-invalid' : ''"/>
+          <div id="uidValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.uid')} ? ${#fields.errors('user.uid')[0]} : ''">
           </div>
         </div>
 
         <div class="mb-3">
-          <label for="uidNumber" class="form-label">
-            User's Unix/RFC2307 UID number
-          </label>
-          <input type="number" class="form-control" id="uidNumber"
-                 name="uidNumber" th:field="*{user.uidNumber}" />
+          <label for="uidNumber" class="form-label">User's Unix/RFC2307 UID number</label>
+          <input type="text" class="form-control" id="uidNumber" name="uidNumber"
+                 aria-describedby="uidNumberValidation" th:field="*{user.uidNumber}"
+                 th:classappend="${#fields.hasErrors('user.uidNumber')} ? 'is-invalid' : ''"/>
+          <div id="uidNumberValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.uidNumber')} ? ${#fields.errors('user.uidNumber')[0]} : ''">
+          </div>
         </div>
 
         <div class="mb-3"> <!-- TODO select ? -->
@@ -288,11 +277,6 @@
           <label for="loginShell" class="form-label">User's Unix/RFC2307 login shell</label>
           <input type="text" class="form-control" id="loginShell" name="loginShell"
                  th:field="*{user.loginShell}" />
-          <div class="form-check form-switch small text-secondary mt-2">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   id="loginShellAuto" name="loginShellAuto" checked />
-            <label for="loginShellAuto" class="form-label">Automatic</label>
-          </div>
         </div>
 
         <div class="mb-3">
@@ -301,11 +285,6 @@
           </label>
           <input type="text" class="form-control" id="unixHomeDirectory" name="unixHomeDirectory"
                  th:field="*{user.unixHomeDirectory}" />
-          <div class="form-check form-switch small text-secondary mt-2">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   id="unixHomeDirectoryAuto" name="unixHomeDirectoryAuto" checked />
-            <label for="unixHomeDirectoryAuto" class="form-label">Automatic</label>
-          </div>
         </div>
 
         <div class="mb-3">
@@ -314,11 +293,6 @@
           </label>
           <input type="text" class="form-control" id="gecos" name="gecos"
                  th:field="*{user.gecos}" />
-          <div class="form-check form-switch small text-secondary mt-2">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   id="gecosLink" name="gecosLink" checked />
-            <label for="gecosLink" class="form-label">Link with display name</label>
-          </div>
         </div>
 
         <div class="mb-3">

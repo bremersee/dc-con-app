@@ -113,7 +113,6 @@
         </div>
 
 
-        <!-- TODO move some actions to danger zone -->
         <div class="mb-3">
           <label for="newOu" class="form-label">Organizational Unit</label>
           <select id="newOu" class="form-select" aria-label="Organizational Unit"
@@ -159,7 +158,11 @@
         <div class="mb-3">
           <label for="userPrincipalName" class="form-label">Principal name</label>
           <input type="text" class="form-control" id="userPrincipalName" name="userPrincipalName"
-                 th:field="*{user.userPrincipalName}" />
+                 aria-describedby="userPrincipalNameValidation" required th:field="*{user.userPrincipalName}"
+                 th:classappend="${#fields.hasErrors('user.userPrincipalName')} ? 'is-invalid' : ''"/>
+          <div id="userPrincipalNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('user.userPrincipalName')} ? ${#fields.errors('user.userPrincipalName')[0]} : ''">
+          </div>
         </div>
 
         <div class="mb-3">
@@ -312,19 +315,23 @@
 
         <div th:if="${rfc2307Enabled}">
           <div class="mb-3">
-            <label for="uid" class="form-label">
-              User's Unix/RFC2307 username
-            </label>
+            <label for="uid" class="form-label">User's Unix/RFC2307 username</label>
             <input type="text" class="form-control" id="uid" name="uid"
-                   th:field="*{user.uid}" />
+                   aria-describedby="uidValidation" th:field="*{user.uid}"
+                   th:classappend="${#fields.hasErrors('user.uid')} ? 'is-invalid' : ''"/>
+            <div id="uidValidation" class="invalid-feedback"
+                 th:text="${#fields.hasErrors('user.uid')} ? ${#fields.errors('user.uid')[0]} : ''">
+            </div>
           </div>
 
           <div class="mb-3">
-            <label for="uidNumber" class="form-label">
-              User's Unix/RFC2307 UID number
-            </label>
-            <input type="number" class="form-control" id="uidNumber"
-                   name="uidNumber" th:field="*{user.uidNumber}" />
+            <label for="uidNumber" class="form-label">User's Unix/RFC2307 UID number</label>
+            <input type="text" class="form-control" id="uidNumber" name="uidNumber"
+                   aria-describedby="uidNumberValidation" th:field="*{user.uidNumber}"
+                   th:classappend="${#fields.hasErrors('user.uidNumber')} ? 'is-invalid' : ''"/>
+            <div id="uidNumberValidation" class="invalid-feedback"
+                 th:text="${#fields.hasErrors('user.uidNumber')} ? ${#fields.errors('user.uidNumber')[0]} : ''">
+            </div>
           </div>
 
           <div class="mb-3"> <!-- TODO select ? -->

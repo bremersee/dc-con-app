@@ -273,6 +273,21 @@ public class UserEditController extends AbstractController implements PageableCo
             "Username already exists.");
         break;
       }
+      case EC_PRINCIPAL_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.userPrincipalName", "code",
+            "User principal name already exists.");
+        break;
+      }
+      case EC_UID_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.uid", "code",
+            "User's unix uid already exists.");
+        break;
+      }
+      case EC_UID_NUMBER_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.uidNumber", "code",
+            "User's unix uid number already exists.");
+        break;
+      }
       case EC_DN_ALREADY_EXISTS: {
         bindingResult.rejectValue("user.samAccountName", "code",
             "Distinguished name already exists.");

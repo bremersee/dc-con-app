@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
@@ -75,6 +76,8 @@ public class UserAddController extends AbstractController
   @Getter
   private final TemplateEngine templateEngine;
 
+  private final Pattern emailPattern;
+
   public UserAddController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
@@ -87,6 +90,7 @@ public class UserAddController extends AbstractController
     this.domainUserService = domainUserService;
     this.organizationalUnitService = organizationalUnitService;
     this.templateEngine = templateEngine;
+    this.emailPattern = Pattern.compile(domainControllerProperties.getEmailRegex());
   }
 
   @ModelAttribute("passwordPattern")
@@ -161,6 +165,14 @@ public class UserAddController extends AbstractController
     }
 
     processTemplates(bindingResult, userAddRequest.getUser());
+    if (!emailPattern.matcher(userAddRequest.getUser().getEmail()).matches()) {
+      bindingResult.rejectValue("user.email", "code",
+          "Email is invalid.");
+    }
+    if (bindingResult.hasErrors()) {
+      getLogger().debug("Adding user failed. Some fields were invalid.");
+      return "admin/user-add";
+    }
     DomainUser addedUser = addUser(
         bindingResult,
         userAddRequest.getUser(),
@@ -224,6 +236,16 @@ public class UserAddController extends AbstractController
         bindingResult.rejectValue("user.samAccountName", "code",
             "Username already exists.");
         getProperties().getUser().replaceInvalidUsernameWithDefaults(user, isRfc2307Enabled());
+        break;
+      }
+      case EC_UID_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.uid", "code",
+            "User's unix uid already exists.");
+        break;
+      }
+      case EC_UID_NUMBER_ALREADY_EXISTS: {
+        bindingResult.rejectValue("user.uidNumber", "code",
+            "User's unix uid number already exists.");
         break;
       }
       case EC_PASSWORD_RESTRICTIONS: {

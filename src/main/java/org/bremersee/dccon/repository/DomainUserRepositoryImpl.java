@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
@@ -156,6 +157,88 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     return getLdapTemplate()
         .findOne(searchRequest, domainUserLdapMapper)
         .filter(getIgnoredObjectFilter(ou, searchScope));
+  }
+
+  public Optional<DomainUser> findOneByUid(String uid) {
+    log.debug("findOneByUid({})", uid);
+    if (isEmpty(uid)) {
+      return Optional.empty();
+    }
+    Filter filter = new OrFilter(
+        new EqualityFilter(LDAP_USER_UID, uid),
+        new EqualityFilter(LDAP_NIS_NAME, uid));
+    return findOneByFilter(filter);
+  }
+
+  public Optional<DomainUser> findOneByUidNumber(Integer uidNumber) {
+    log.debug("findOneByUidNumber({})", uidNumber);
+    if (isEmpty(uidNumber)) {
+      return Optional.empty();
+    }
+    return findOneByFilter(
+        new EqualityFilter(LDAP_USER_USER_PRINCIPAL_NAME, uidNumber.toString()));
+  }
+
+  public Optional<DomainUser> findOneByPrincipalName(String principalName) {
+    log.debug("findOneByPrincipalName({})", principalName);
+    if (isEmpty(principalName)) {
+      return Optional.empty();
+    }
+    return findOneByFilter(new EqualityFilter(LDAP_USER_USER_PRINCIPAL_NAME, principalName));
+  }
+
+  private Optional<DomainUser> findOneByFilter(Filter filter) {
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getBaseDn().format())
+        .filter(new AndFilter(objectClassFilter(), filter))
+        .scope(SearchScope.SUBTREE)
+        .binaryAttributes(getBinaryAttributes())
+        .returnAttributes(getReturnAttributes())
+        .build();
+    return getLdapTemplate()
+        .findOne(searchRequest, domainUserLdapMapper)
+        .filter(getIgnoredObjectFilter());
+  }
+
+  public boolean existsByUid(String uid) {
+    log.debug("existsByUid({})", uid);
+    if (isEmpty(uid)) {
+      return false;
+    }
+    Filter filter = new OrFilter(
+        new EqualityFilter(LDAP_USER_UID, uid),
+        new EqualityFilter(LDAP_NIS_NAME, uid));
+    return existsByFilter(filter);
+  }
+
+  public boolean existsByUidNumber(Integer uidNumber) {
+    log.debug("existsByUidNumber({})", uidNumber);
+    if (isEmpty(uidNumber)) {
+      return false;
+    }
+    return existsByFilter(
+        new EqualityFilter(LDAP_USER_USER_PRINCIPAL_NAME, uidNumber.toString()));
+  }
+
+  public boolean existsByPrincipalName(String principalName) {
+    log.debug("existsByPrincipalName({})", principalName);
+    if (isEmpty(principalName)) {
+      return false;
+    }
+    return existsByFilter(new EqualityFilter(LDAP_USER_USER_PRINCIPAL_NAME, principalName));
+  }
+
+  private boolean existsByFilter(Filter filter) {
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(getProperties().getBaseDn().format())
+        .filter(new AndFilter(objectClassFilter(), filter))
+        .scope(SearchScope.SUBTREE)
+        .returnAttributes(LDAP_OBJECT_CLASS)
+        .build();
+    return getLdapTemplate()
+        .findOne(searchRequest)
+        .filter(getIgnoredEntryFilter())
+        .isPresent();
   }
 
   @Override
@@ -374,7 +457,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           "Username (samAccountName) is required.",
           EC_SAM_ACCOUNT_NAME_REQUIRED);
     }
-    if (getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
+    if (getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())
+        || existsByPrincipalName(getProperties()
+        .createDefaultUserPrincipalName(domainUser.getSamAccountName()))) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           domainUser.getSamAccountName(),
@@ -387,6 +472,18 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
               "The password of user '%s' does not meet the complexity criteria!",
               domainUser.getSamAccountName()),
           EC_PASSWORD_RESTRICTIONS);
+    }
+    if (existsByUid(domainUser.getUid())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName() + ".uid",
+          domainUser.getUid(),
+          EC_UID_ALREADY_EXISTS);
+    }
+    if (existsByUidNumber(domainUser.getUidNumber())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName() + ".uidNumber",
+          domainUser.getUidNumber(),
+          EC_UID_NUMBER_ALREADY_EXISTS);
     }
     String dn = doAdd(domainUser, ou, useUsernameAsCn);
     if (!isEmpty(domainUser.getPassword())) {
@@ -460,6 +557,30 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
             DomainUser.class.getSimpleName(),
             domainUser.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
+    if (!isEmpty(domainUser.getUserPrincipalName())
+        && !domainUser.getUserPrincipalName().equalsIgnoreCase(existingDomainUser.getUserPrincipalName())
+        && existsByPrincipalName(domainUser.getUserPrincipalName())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName() + ".userPrincipalName",
+          domainUser.getUserPrincipalName(),
+          EC_PRINCIPAL_ALREADY_EXISTS);
+    }
+    if (!isEmpty(domainUser.getUid())
+        && !domainUser.getUid().equalsIgnoreCase(existingDomainUser.getUid())
+        && existsByUid(domainUser.getUid())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName() + ".uid",
+          domainUser.getUid(),
+          EC_UID_ALREADY_EXISTS);
+    }
+    if (!isEmpty(domainUser.getUidNumber())
+        && !Objects.equals(domainUser.getUidNumber(), existingDomainUser.getUidNumber())
+        && existsByUidNumber(domainUser.getUidNumber())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainUser.class.getSimpleName() + ".uidNumber",
+          domainUser.getUidNumber(),
+          EC_UID_NUMBER_ALREADY_EXISTS);
+    }
     Dn oldDn = new Dn(existingDomainUser.getDistinguishedName());
     Dn newDn = getNewDn(existingDomainUser, domainUser, newOu);
     if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {

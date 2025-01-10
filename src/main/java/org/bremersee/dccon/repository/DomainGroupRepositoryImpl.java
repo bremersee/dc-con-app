@@ -389,8 +389,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     }
     if (existsByGidNumber(domainGroup.getGidNumber())) {
       throw ServiceException.alreadyExistsWithErrorCode(
-          String.format("Unix GID Number %s", domainGroup.getGidNumber()),
-          domainGroup.getSamAccountName(),
+          DomainGroup.class.getSimpleName() + ".gidNumber",
+          domainGroup.getGidNumber(),
           EC_GID_NUMBER_ALREADY_EXISTS);
     }
     String dn = doAdd(domainGroup, ou);
@@ -468,6 +468,14 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
             DomainGroup.class.getSimpleName(),
             domainGroup.getSamAccountName(),
             EC_SAM_ACCOUNT_NOT_FOUND));
+    if (!isEmpty(domainGroup.getGidNumber())
+        && !Objects.equals(domainGroup.getGidNumber(), existingDomainGroup.getGidNumber())
+        && existsByGidNumber(domainGroup.getGidNumber())) {
+      throw ServiceException.alreadyExistsWithErrorCode(
+          DomainGroup.class.getSimpleName() + ".gidNumber",
+          domainGroup.getGidNumber(),
+          EC_GID_NUMBER_ALREADY_EXISTS);
+    }
     Dn oldDn = new Dn(existingDomainGroup.getDistinguishedName());
     Dn newDn = getNewDn(existingDomainGroup, domainGroup, newOu);
     if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
@@ -475,14 +483,6 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           DomainGroup.class.getSimpleName(),
           getProperties().removeBaseDn(newDn),
           EC_DN_ALREADY_EXISTS);
-    }
-    if (!isEmpty(domainGroup.getGidNumber())
-        && !Objects.equals(domainGroup.getGidNumber(), existingDomainGroup.getGidNumber())
-        && existsByGidNumber(domainGroup.getGidNumber())) {
-      throw ServiceException.alreadyExistsWithErrorCode(
-          String.format("Unix GID Number %s", domainGroup.getGidNumber()),
-          domainGroup.getSamAccountName(),
-          EC_GID_NUMBER_ALREADY_EXISTS);
     }
     DomainGroup updatedDomainGroup = renameAndMove(existingDomainGroup, domainGroup, newDn);
     return getLdapTemplate().save(updatedDomainGroup, domainGroupLdapMapper);
