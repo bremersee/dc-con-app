@@ -140,6 +140,19 @@
         </div>
 
         <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="renameLastNameAutomatically"
+                 name="renameLastNameAutomatically"
+                 th:field="*{renameNamesAutomatically}"/>
+          <label for="renameLastNameAutomatically" class="form-label">
+            Rename names automatically
+          </label>
+          <div id="passwordHelp" class="form-text">
+            If you change the last name for example, the display name will be adjusted automatically.
+          </div>
+        </div>
+
+        <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" role="switch" id="enabled" name="enabled"
                  th:field="*{user.accountControl.enabled}" />
           <label class="form-check-label" for="enabled" th:text="#{i18n.enabled}">
@@ -198,15 +211,6 @@
                  th:classappend="${#fields.hasErrors('user.lastName')} ? 'is-invalid' : ''"/>
           <div id="lastNameValidation" class="invalid-feedback"
                th:text="${#fields.hasErrors('user.lastName')} ? ${#fields.errors('user.lastName')[0]} : ''">
-          </div>
-          <div class="form-check form-switch small text-secondary mt-2">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   id="renameLastNameAutomatically"
-                   name="renameLastNameAutomatically"
-                   th:field="*{renameNamesAutomatically}"/>
-            <label for="renameLastNameAutomatically" class="form-label">
-              Rename names automatically
-            </label>
           </div>
         </div>
 

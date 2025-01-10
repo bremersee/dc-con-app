@@ -41,9 +41,11 @@ public class DomainUserAddRequest implements Serializable {
 
   private String newOu;
 
-  private Boolean useUsernameAsCn;
+  private boolean useUsernameAsCn = true;
 
-  private Boolean sendEmail;
+  private boolean sendEmail;
+
+  private boolean generateRandomPassword;
 
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
@@ -52,21 +54,14 @@ public class DomainUserAddRequest implements Serializable {
     return new Dn(newOu);
   }
 
-  public Boolean getUseUsernameAsCn() {
-    return isNull(useUsernameAsCn) || useUsernameAsCn;
-  }
-
-  public Boolean getSendEmail() {
-    return Boolean.TRUE.equals(sendEmail);
-  }
-
   @Override
   public String toString() {
     return "DomainUserAddRequest {"
         + "user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
         + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + ", useUsernameAsCn=" + getUseUsernameAsCn()
-        + ", sendEmail=" + getSendEmail()
+        + ", useUsernameAsCn=" + useUsernameAsCn
+        + ", sendEmail=" + sendEmail
+        + ", generateRandomPassword=" + generateRandomPassword
         + '}';
   }
 }

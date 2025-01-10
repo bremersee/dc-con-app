@@ -165,9 +165,21 @@ public class UserAddController extends AbstractController
     }
 
     processTemplates(bindingResult, userAddRequest.getUser());
-    if (!emailPattern.matcher(userAddRequest.getUser().getEmail()).matches()) {
+
+    if (!isEmpty(userAddRequest.getUser().getEmail())
+        && !emailPattern.matcher(userAddRequest.getUser().getEmail()).matches()) {
       bindingResult.rejectValue("user.email", "code",
           "Email is invalid.");
+    }
+    if (userAddRequest.isSendEmail() && isEmpty(userAddRequest.getUser().getEmail())) {
+      bindingResult.rejectValue("user.email", "code",
+          "If you want to send an invitation email, you have to enter an email address.");
+    }
+    if (userAddRequest.isGenerateRandomPassword()) {
+      userAddRequest.getUser().setPassword(null);
+    } else if (isEmpty(userAddRequest.getUser().getPassword())) {
+      bindingResult.rejectValue("user.password", "code",
+          "Password is required.");
     }
     if (bindingResult.hasErrors()) {
       getLogger().debug("Adding user failed. Some fields were invalid.");
@@ -179,8 +191,8 @@ public class UserAddController extends AbstractController
         Optional.ofNullable(userAddRequest.getNewOu())
             .map(Dn::new)
             .orElseGet(() -> getProperties().getUser().getDefaultUserOu()),
-        userAddRequest.getUseUsernameAsCn(),
-        userAddRequest.getSendEmail());
+        userAddRequest.isUseUsernameAsCn(),
+        userAddRequest.isSendEmail());
 
     if (bindingResult.hasErrors()) {
       getLogger().debug("Adding user failed. Some fields were invalid.");

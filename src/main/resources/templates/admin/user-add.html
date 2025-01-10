@@ -304,14 +304,13 @@
         </div>
       </div> <!-- end of rfc2307Enabled -->
 
-      <div class="mb-3">
+      <div id="passwordDiv" class="mb-3">
         <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" name="password"
                aria-describedby="passwordValidation" th:field="*{user.password}"
                th:classappend="${#fields.hasErrors('user.password')} ? 'is-invalid' : ''"
                pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,75}$"
                th:pattern="${passwordPattern}"/>
-        <!-- TODO it's not required if send email -->
         <div id="passwordHelp" class="form-text">
           Please enter a new password. It must be between 8 and 75 characters in length and must
           include at least one upper case letter, one lower case letter, and one numeric digit.
@@ -321,6 +320,15 @@
         </div>
       </div>
 
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="generateRandomPassword"
+               name="generateRandomPassword"
+               th:field="*{generateRandomPassword}"/>
+        <label for="generateRandomPassword" class="form-label">
+          Generate random password
+        </label>
+      </div>
       <button type="submit" class="btn btn-primary mt-3">
         Add
       </button>
@@ -332,5 +340,23 @@
     </form>
   </div>
 </main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const passwordDiv = $('#passwordDiv');
+    const passwordInput = $('#password');
+    $('#generateRandomPassword').on("change", function () {
+      const checkbox = $(this);
+      if (checkbox.is(':checked')) {
+        passwordInput.val('');
+        passwordDiv.hide();
+      } else {
+        passwordDiv.show();
+      }
+    });
+  });
+  //]]>
+</script>
 </body>
 </html>
