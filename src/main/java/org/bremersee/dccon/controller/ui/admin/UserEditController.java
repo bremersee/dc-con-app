@@ -26,11 +26,9 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainUserEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
@@ -60,8 +58,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class UserEditController extends AbstractController implements PageableComponent,
-    RedirectComponent, OrganizationalUnitComponent, OrganisationalUnitsComponent {
+public class UserEditController extends AbstractEditController implements PageableComponent,
+    OrganizationalUnitComponent, OrganisationalUnitsComponent {
 
   private final DomainService domainService;
 
@@ -121,19 +119,11 @@ public class UserEditController extends AbstractController implements PageableCo
           model.addAttribute("groups", groups);
           return "admin/user-edit";
         })
-        .orElseGet(() -> {
-          String msg = String.format("User '%s' not found.", userName);
-          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          return "admin/user-edit";
-        });
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
   }
 
   @PostMapping(path = "/admin/user-edit")
   public String updateUser(
-      @ModelAttribute(name = PAGE, binding = false) Integer page,
-      @ModelAttribute(name = SIZE, binding = false) Integer size,
-      @ModelAttribute(name = SORT, binding = false) String sort,
-      @ModelAttribute(name = QUERY, binding = false) String query,
       @ModelAttribute(name = OU, binding = false) Dn ou,
       @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
       @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
@@ -141,27 +131,7 @@ public class UserEditController extends AbstractController implements PageableCo
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) throws IOException {
 
-    getLogger().debug("updateUser({}, {}, {}, {}, {}, {}, {})",
-        userEditRequest, page, size, sort, query, ou, scope);
-
-    Dn currentOu = Optional.ofNullable(userEditRequest)
-        .map(DomainUserEditRequest::getNewOuDn)
-        .or(() -> Optional.ofNullable(userEditRequest)
-            .map(DomainUserEditRequest::getUser)
-            .map(DomainUser::getDistinguishedName)
-            .map(dn -> getProperties().getParentDn(dn)))
-        .or(() -> Optional.ofNullable(ou))
-        .orElse(getProperties().getUser().getDefaultUserOu());
-    Map<String, Object> parameters = getParamterMap(page, size, sort, query, currentOu, scope);
-
-    getLogger().debug("Try to update user '{}' with parameters '{}' and user edit request '{}'.",
-        userEditRequest, parameters, userEditRequest);
-
-    if (isEmpty(userEditRequest)) {
-      String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
-      logRedirectTo("User update request is empty. Redirecting to {}", redirect);
-      return redirect;
-    }
+    getLogger().debug("updateUser({})", userEditRequest);
 
     processNameChanges(userEditRequest);
     DomainUser updatedUser = updateUser(bindingResult, userEditRequest);
@@ -183,9 +153,9 @@ public class UserEditController extends AbstractController implements PageableCo
         "todo", updatedUser.getName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    parameters = addToParameterMap(parameters, "user", updatedUser);
+    Map<String, Object> parameters = getParamterMap(userEditRequest.getNewOuDn());
     String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
-        PAGE_AND_OU_PARAMS, parameters);
+        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "user", updatedUser));
     logRedirectTo("User successfully updated.", redirect);
     return redirect;
   }
@@ -255,6 +225,21 @@ public class UserEditController extends AbstractController implements PageableCo
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
         bindingResult.rejectValue("user.samAccountName", "code",
             "Username already exists.");
+        break;
+      }
+      case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
+        bindingResult.rejectValue("user.samAccountName", "code",
+            "Username contains illegal characters.");
+        break;
+      }
+      case EC_ILLEGAL_FIRST_NAME: {
+        bindingResult.rejectValue("user.firstName", "code",
+            "First name contains illegal characters.");
+        break;
+      }
+      case EC_ILLEGAL_LAST_NAME: {
+        bindingResult.rejectValue("user.lastName", "code",
+            "Last name contains illegal characters.");
         break;
       }
       case EC_PRINCIPAL_ALREADY_EXISTS: {

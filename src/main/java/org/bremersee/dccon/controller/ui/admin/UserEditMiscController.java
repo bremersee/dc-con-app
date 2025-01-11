@@ -21,10 +21,8 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import java.util.Map;
 import java.util.Optional;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.service.DomainService;
@@ -46,8 +44,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class UserEditMiscController extends AbstractController implements PageableComponent,
-    RedirectComponent, OrganizationalUnitComponent {
+public class UserEditMiscController extends AbstractEditController implements PageableComponent,
+    OrganizationalUnitComponent {
 
   private final DomainService domainService;
 
@@ -74,7 +72,7 @@ public class UserEditMiscController extends AbstractController implements Pageab
   }
 
   @GetMapping(path = "/admin/user-edit-misc")
-  public String displayUserEditDangerZone(
+  public String displayUserEditMisc(
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
@@ -86,30 +84,19 @@ public class UserEditMiscController extends AbstractController implements Pageab
           model.addAttribute("user", user);
           return "admin/user-edit-misc";
         })
-        .orElseGet(() -> {
-          String msg = String.format("User '%s' not found.", userName);
-          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          return "admin/user-edit-misc";
-        });
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
   }
 
   @PostMapping(path = "/admin/user-edit-misc-reset-password")
   public String resetPassword(
-      @RequestParam(value = PAGE, required = false) Integer page,
-      @RequestParam(value = SIZE, required = false) Integer size,
-      @RequestParam(value = SORT, required = false) String sort,
-      @RequestParam(value = QUERY, required = false) String query,
-      @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope scope,
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = "password", required = false) String newPassword,
       @RequestParam(value = "generateRandomPassword", defaultValue = "false") boolean generateRandomPassword,
-      @RequestParam(value = "sendEmail", defaultValue = "false") boolean sendEmail,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("resetPassword({}, {}, {}, {}, {}, {}, {}, {}, {})",
-        page, size, sort, query, scope, userName, "****", generateRandomPassword, sendEmail);
-    Map<String, Object> parameters = getParamterMap(page, size, sort, query, ou, scope);
+    getLogger().debug("resetPassword({}, ****, {})", userName, generateRandomPassword);
+
+    Map<String, Object> parameters = getParamterMap();
 
     if (isEmpty(userName)) {
       String defaultMsg = "Resetting password failed. Username is required.";
@@ -120,7 +107,8 @@ public class UserEditMiscController extends AbstractController implements Pageab
       return redirect;
     }
 
-    Map<String, Object> parametersWithUsername = addToParameterMap(parameters, "userName", userName);
+    Map<String, Object> parametersWithUsername = putToParameterMap(parameters, "userName",
+        userName);
 
     String password;
     if (generateRandomPassword) {
@@ -137,7 +125,7 @@ public class UserEditMiscController extends AbstractController implements Pageab
       password = newPassword;
     }
 
-    domainUserService.updateUserPassword(userName, password, sendEmail);
+    domainUserService.updateUserPassword(userName, password, generateRandomPassword);
 
     String defaultMsg = "Password was successfully changed.";
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, defaultMsg, "todo");
@@ -150,19 +138,13 @@ public class UserEditMiscController extends AbstractController implements Pageab
 
   @PostMapping(path = "/admin/user-edit-misc-delete-user")
   public String deleteUser(
-      @RequestParam(value = PAGE, required = false) Integer page,
-      @RequestParam(value = SIZE, required = false) Integer size,
-      @RequestParam(value = SORT, required = false) String sort,
-      @RequestParam(value = QUERY, required = false) String query,
-      @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope scope,
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = "verificationName", required = false) String verificationName,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("deleteUser({}, {}, {}, {}, {}, {}, {})",
-        page, size, sort, query, scope, userName, verificationName);
-    Map<String, Object> parameters = getParamterMap(page, size, sort, query, ou, scope);
+    getLogger().debug("deleteUser({}, {})", userName, verificationName);
+
+    Map<String, Object> parameters = getParamterMap();
 
     if (isEmpty(userName)) {
       String defaultMsg = "Deleting user failed. Username is required.";
@@ -173,7 +155,8 @@ public class UserEditMiscController extends AbstractController implements Pageab
       return redirect;
     }
 
-    Map<String, Object> parametersWithUsername = addToParameterMap(parameters, "userName", userName);
+    Map<String, Object> parametersWithUsername = putToParameterMap(parameters, "userName",
+        userName);
 
     if (!userName.equalsIgnoreCase(verificationName)) {
       String defaultMsg = "Deleting user failed. The given username doesn't match.";

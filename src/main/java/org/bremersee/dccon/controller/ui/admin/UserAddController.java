@@ -18,9 +18,6 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,14 +34,11 @@ import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
-import org.bremersee.dccon.model.OrganizationalUnit;
-import org.bremersee.dccon.model.SelectOption;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.dccon.service.TemplateEngine;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -129,40 +123,12 @@ public class UserAddController extends AbstractController
 
   @PostMapping(path = "/admin/user-add")
   public String addUser(
-      @ModelAttribute(name = PAGE, binding = false) Integer page,
-      @ModelAttribute(name = SIZE, binding = false) Integer size,
-      @ModelAttribute(name = SORT, binding = false) String sort,
-      @ModelAttribute(name = QUERY, binding = false) String query,
-      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
       @ModelAttribute(name = "userAddRequest") DomainUserAddRequest userAddRequest,
       ModelMap model,
-      HttpServletRequest request,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("addUser({}, {}, {}, {}, {}, {})",
-        userAddRequest, page, size, sort, query, scope);
-    Map<String, Object> parameters = Map.of(
-        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
-        SIZE, Optional.ofNullable(size)
-            .filter(s -> s > 0)
-            .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
-        QUERY, Optional.ofNullable(query).orElse(""),
-        OU, Optional.ofNullable(userAddRequest)
-            .map(DomainUserAddRequest::getNewOuDn)
-            .map(Dn::format)
-            .orElse(getProperties().getUser().getDefaultUserOu().format()),
-        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
-    );
-
-    getLogger().debug("Try to add user '{}'.", userAddRequest);
-
-    if (isEmpty(userAddRequest)) {
-      String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
-      getLogger().debug("User add request is empty. Redirecting to {}", redirect);
-      return redirect;
-    }
+    getLogger().debug("addUser({})", userAddRequest);
 
     processTemplates(bindingResult, userAddRequest.getUser());
 
@@ -200,19 +166,15 @@ public class UserAddController extends AbstractController
     }
 
     model.clear();
-    String msg = getMessageSource().getMessage(
-        "i18n.user.added",
-        new Object[]{addedUser.getName()},
-        String.format("User '%s' was successfully added.", addedUser.getName()),
-        resolveLocale(request));
-    RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
+    String msg = String.format("User '%s' was successfully added.", addedUser.getName());
+    RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
+        "i18n.user.added", addedUser.getName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    parameters = new HashMap<>(parameters);
-    parameters.put("user", addedUser);
+    Map<String, Object> parameters = getParamterMap(userAddRequest.getNewOuDn());
     String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
-        PAGE_AND_OU_PARAMS, parameters);
-    getLogger().debug("User successfully added. Redirecting to {}", redirect);
+        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "user", addedUser));
+    logRedirectTo("User successfully added.", redirect);
     return redirect;
   }
 
@@ -242,6 +204,21 @@ public class UserAddController extends AbstractController
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
         bindingResult.rejectValue("user.samAccountName", "code",
             "Username is required.");
+        break;
+      }
+      case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
+        bindingResult.rejectValue("user.samAccountName", "code",
+            "Username contains illegal characters.");
+        break;
+      }
+      case EC_ILLEGAL_FIRST_NAME: {
+        bindingResult.rejectValue("user.firstName", "code",
+            "First name contains illegal characters.");
+        break;
+      }
+      case EC_ILLEGAL_LAST_NAME: {
+        bindingResult.rejectValue("user.lastName", "code",
+            "Last name contains illegal characters.");
         break;
       }
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {

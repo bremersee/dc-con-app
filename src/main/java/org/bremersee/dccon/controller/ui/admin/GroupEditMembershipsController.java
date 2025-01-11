@@ -19,15 +19,10 @@ package org.bremersee.dccon.controller.ui.admin;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.components.RedirectComponent;
-import org.bremersee.dccon.controller.ui.model.RedirectMessage;
-import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
-import org.bremersee.dccon.service.DomainUserService;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
@@ -42,8 +37,8 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class GroupEditMembershipsController extends AbstractController implements PageableComponent,
-    RedirectComponent, OrganizationalUnitComponent {
+public class GroupEditMembershipsController extends AbstractEditController
+    implements PageableComponent, OrganizationalUnitComponent {
 
   private final DomainGroupService domainGroupService;
 
@@ -100,17 +95,10 @@ public class GroupEditMembershipsController extends AbstractController implement
             memberships = domainGroupService.resolveMemberships(groupName, ou, searchScope);
             page = "admin/group-edit-memberships-resolved";
           }
-          model.addAttribute("memberships", memberships.sorted().toList());
+          model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> {
-          String msg = String.format("Group '%s' not found.", groupName);
-          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          if (direct) {
-            return "admin/group-edit-memberships-direct";
-          }
-          return "admin/group-edit-memberships-resolved";
-        });
+        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "admin/groups"));
   }
 
 }

@@ -395,6 +395,14 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   @ProfileRequired({"cli", "ldap"})
   @Override
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
+    if (isEmpty(domainGroup.getSamAccountName())) {
+      throw ServiceException.badRequest(
+          "Group name (samAccountName) is required.", EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
+    if (domainGroup.getSamAccountName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Group name (samAccountName) contains illegal characters.", EC_ILLEGAL_SAM_ACCOUNT_NAME);
+    }
     if (getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainGroup.class.getSimpleName(),
@@ -466,8 +474,11 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     log.debug("update({}, {}, {})", groupName, domainGroup.getSamAccountName(), newOu);
     if (isEmpty(domainGroup.getSamAccountName())) {
       throw ServiceException.badRequest(
-          "Group name (samAccountName) is required.",
-          EC_SAM_ACCOUNT_NAME_REQUIRED);
+          "Group name (samAccountName) is required.", EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
+    if (domainGroup.getSamAccountName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Group name (samAccountName) contains illegal characters.", EC_ILLEGAL_SAM_ACCOUNT_NAME);
     }
     if (!groupName.equalsIgnoreCase(domainGroup.getSamAccountName())
         && getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {

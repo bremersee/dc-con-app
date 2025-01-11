@@ -56,7 +56,7 @@
 
   <div th:if="${group != null}">
     <div class="d-flex justify-content-center">
-      <h3 class="small">Resolved memberships of</h3>
+      <h3 class="small">Resolved memberships of group</h3>
     </div>
     <div class="d-flex justify-content-center mb-4">
       <h3 th:text="${group.name}">Administrator</h3>
@@ -65,13 +65,13 @@
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
         <a class="nav-link" href="group-edit.html"
-           th:href="@{group-edit(name=${group.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-edit" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${group.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-members(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-people-group" aria-hidden="true"></span>
         </a>
       </li>
@@ -84,7 +84,7 @@
         <a class="nav-link" href="#"
            th:classappend="${group.sid.systemEntity} ? 'disabled' : ''"
            th:attr="aria-disabled=${group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${group.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-misc(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -96,7 +96,7 @@
         <ul class="nav nav-pills">
           <li class="nav-item">
             <a class="nav-link" href="group-edit-memberships-direct.html"
-               th:href="@{group-edit-memberships-direct(name=${group.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+               th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
               Direct
             </a>
           </li>
@@ -114,8 +114,8 @@
       </div>
 
       <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(memberships)}">
-        <a th:each="entry : ${memberships}" href="#"
-           th:href="@{group-edit(name=${entry.distinguishedName})}"
+        <a th:each="entry : ${memberships}" href="group-edit-members.html"
+           th:href="@{group-edit-members(name=${entry.samAccountName},ou=${entry.parentDn})}"
            class="list-group-item list-group-item-action">
           <div class="d-flex w-100 justify-content-between">
             <h6 class="mb-1" th:text="${entry.samAccountName}">

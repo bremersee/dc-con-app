@@ -16,9 +16,12 @@
 
 package org.bremersee.dccon.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -64,6 +67,19 @@ public abstract class CommonAttributes implements Serializable, DistinguishedNam
     this.distinguishedName = distinguishedName;
     this.created = created;
     this.modified = modified;
+  }
+
+  @Hidden
+  @JsonIgnore
+  public String getParentDn() {
+    if (Objects.isNull(distinguishedName)) {
+      return null;
+    }
+    int index = distinguishedName.indexOf(',');
+    if (index < 0) {
+      return null;
+    }
+    return distinguishedName.substring(index + 1);
   }
 
 }

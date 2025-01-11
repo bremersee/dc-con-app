@@ -48,8 +48,7 @@
 <main role="main" class="container">
 
   <div class="d-flex justify-content-center mb-4">
-    <h3 class="small">Erstelle</h3>
-    <h3>Benutzer</h3>
+    <h3>Add user</h3>
   </div>
 
   <div>
@@ -159,7 +158,6 @@
 
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
-        <!-- TODO server side validation after template execution -->
         <input type="text" class="form-control" id="email" name="email"
                aria-describedby="emailValidation" th:field="*{user.email}"
                th:classappend="${#fields.hasErrors('user.email')} ? 'is-invalid' : ''"/>

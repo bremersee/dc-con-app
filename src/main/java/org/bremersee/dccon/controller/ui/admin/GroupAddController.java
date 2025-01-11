@@ -18,8 +18,6 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,7 +41,6 @@ import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -112,40 +109,12 @@ public class GroupAddController extends AbstractController implements PageableCo
 
   @PostMapping(path = "/admin/group-add")
   public String addGroup(
-      @ModelAttribute(name = PAGE, binding = false) Integer page,
-      @ModelAttribute(name = SIZE, binding = false) Integer size,
-      @ModelAttribute(name = SORT, binding = false) String sort,
-      @ModelAttribute(name = QUERY, binding = false) String query,
-      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
       @ModelAttribute(name = "groupAddRequest") DomainGroupAddRequest groupAddRequest,
       ModelMap model,
-      HttpServletRequest request,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("addGroup({}, {}, {}, {}, {}, {})",
-        groupAddRequest, page, size, sort, query, scope);
-    Map<String, Object> parameters = Map.of(
-        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
-        SIZE, Optional.ofNullable(size)
-            .filter(s -> s > 0)
-            .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
-        QUERY, Optional.ofNullable(query).orElse(""),
-        OU, Optional.ofNullable(groupAddRequest)
-            .map(DomainGroupAddRequest::getNewOuDn)
-            .map(Dn::format)
-            .orElse(getProperties().getGroup().getDefaultGroupOu().format()),
-        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
-    );
-
-    getLogger().debug("Try to add group '{}'.", groupAddRequest);
-
-    if (isEmpty(groupAddRequest)) {
-      String redirect = getRedirectUri("/admin/groups", PAGE_AND_OU_PARAMS, parameters);
-      getLogger().debug("Group add request is empty. Redirecting to {}", redirect);
-      return redirect;
-    }
+    getLogger().debug("addGroup({})", groupAddRequest);
 
     DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(
         Scope.fromString(groupAddRequest.getGroupScope()),
@@ -159,29 +128,25 @@ public class GroupAddController extends AbstractController implements PageableCo
     }
 
     model.clear();
-    String msg = getMessageSource().getMessage(
-        "i18n.group.added",
-        new Object[]{addedGroup.getSamAccountName()},
+    RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
         String.format("Group '%s' was successfully added.", addedGroup.getSamAccountName()),
-        resolveLocale(request));
-    RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
+        "i18n.group.added", addedGroup.getSamAccountName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    parameters = new HashMap<>(parameters);
-    parameters.put("group", addedGroup);
+    Map<String, Object> parameters = getParamterMap(groupAddRequest.getNewOuDn());
     String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
-        PAGE_AND_OU_PARAMS, parameters);
-    getLogger().debug("Group successfully added. Redirecting to {}", redirect);
+        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "group", addedGroup));
+    logRedirectTo("Group successfully added.", redirect);
     return redirect;
   }
 
   private DomainGroup addGroup(BindingResult bindingResult, DomainGroupAddRequest groupAddRequest) {
     if (isEmpty(groupAddRequest.getGroupScope())) {
-      bindingResult.rejectValue("groupScope", "code",
+      bindingResult.rejectValue("groupScope", "todo",
           "Group scope is required.");
     }
     if (isEmpty(groupAddRequest.getGroupPurpose())) {
-      bindingResult.rejectValue("groupPurpose", "code",
+      bindingResult.rejectValue("groupPurpose", "todo",
           "Group type is required.");
     }
     if (bindingResult.hasErrors()) {
@@ -219,6 +184,11 @@ public class GroupAddController extends AbstractController implements PageableCo
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
         bindingResult.rejectValue("group.samAccountName", "code",
             "Group name is required.");
+        break;
+      }
+      case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
+        bindingResult.rejectValue("group.samAccountName", "code",
+            "Group name contains illegal characters.");
         break;
       }
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {

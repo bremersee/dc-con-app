@@ -19,6 +19,7 @@ package org.bremersee.dccon.controller.ui.components;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import com.samskivert.mustache.Mustache;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -28,10 +29,14 @@ import java.util.Objects;
 import java.util.Optional;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.bremersee.dccon.controller.ui.LoggerProvider;
+import org.bremersee.dccon.converter.DnConverter;
+import org.bremersee.dccon.converter.SearchScopeConverter;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * The interface RedirectComponent.
@@ -53,35 +58,99 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
       String query) {
     return Map.of(
-        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
+        PAGE, Optional.ofNullable(page)
+            .filter(p -> p >= 0)
+            .orElse(findPageParameterValue()),
         SIZE, Optional.ofNullable(size)
             .filter(s -> s > 0)
-            .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(""),
-        QUERY, Optional.ofNullable(query).orElse("")
+            .orElse(findSizeParameterValue()),
+        SORT, Optional.ofNullable(sort)
+            .or(() -> findParameterValue(SORT))
+            .orElse(""),
+        QUERY, Optional.ofNullable(query)
+            .or(() -> findParameterValue(QUERY))
+            .orElse("")
     );
   }
 
   default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
       String query, Dn ou, SearchScope scope) {
-    return Map.of(
-        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
-        SIZE, Optional.ofNullable(size)
-            .filter(s -> s > 0)
-            .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(""),
-        QUERY, Optional.ofNullable(query).orElse(""),
-        OU, Optional.ofNullable(ou)
+    Map<String, Object> paramterMap = new HashMap<>(getParamterMap(page, size, sort, query));
+    paramterMap.put(
+        OU,
+        Optional.ofNullable(ou)
+            .or(this::findOuParameterValue)
+            .filter(dn -> !dn.isEmpty())
             .map(Dn::format)
-            .orElse(""),
-        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
-    );
+            .orElse(""));
+    paramterMap.put(
+        SCOPE,
+        Optional.ofNullable(scope)
+            .or(this::findScopeParameterValue)
+            .orElse(SearchScope.ONELEVEL));
+    return paramterMap;
   }
 
-  default Map<String, Object> addToParameterMap(Map<String, Object> map, String key, Object value) {
+  default Map<String, Object> getParamterMap(Dn ou) {
+    return getParamterMap(null, null, null, null, ou, null);
+  }
+
+  default Map<String, Object> getParamterMap() {
+    return getParamterMap(null);
+  }
+
+  default Map<String, Object> putToParameterMap(Map<String, Object> map, String key, Object value) {
     Map<String, Object> result = new HashMap<>(map);
     result.put(key, value);
     return result;
+  }
+
+  default Optional<HttpServletRequest> findHttpServletRequest() {
+    return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
+        .filter(attrs -> attrs instanceof ServletRequestAttributes)
+        .map(attrs -> (ServletRequestAttributes) attrs)
+        .map(ServletRequestAttributes::getRequest);
+  }
+
+  default Optional<String> findParameterValue(String parameterName) {
+    return findHttpServletRequest()
+        .map(req -> req.getParameter(parameterName));
+  }
+
+  default Integer findPageParameterValue() {
+    return findParameterValue(PAGE)
+        .map(value -> {
+          try {
+            return Integer.parseInt(value);
+          } catch (NumberFormatException e) {
+            return null;
+          }
+        })
+        .filter(value -> value >= 0)
+        .orElse(PAGE_DEFAULT_INT);
+  }
+
+  default Integer findSizeParameterValue() {
+    return findParameterValue(SIZE)
+        .map(value -> {
+          try {
+            return Integer.parseInt(value);
+          } catch (NumberFormatException e) {
+            return null;
+          }
+        })
+        .filter(value -> value >= 1)
+        .orElse(SIZE_DEFAULT_INT);
+  }
+
+  default Optional<Dn> findOuParameterValue() {
+    return findParameterValue(OU)
+        .map(dn -> new DnConverter().convert(dn));
+  }
+
+  default Optional<SearchScope> findScopeParameterValue() {
+    return findParameterValue(SCOPE)
+        .map(scope -> new SearchScopeConverter().convert(scope));
   }
 
   default String getRedirectUri(

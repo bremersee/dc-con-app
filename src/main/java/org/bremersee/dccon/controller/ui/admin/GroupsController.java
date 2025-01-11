@@ -95,7 +95,8 @@ public class GroupsController extends AbstractController
     OrganizationalUnitDropdown ouDropdown = getOrganizationalUnitDropdown(ou, scope);
     addOrganizationalUnitDropdown(model, ouDropdown);
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
-    DomainGroupPage groupPage = new DomainGroupPage(domainGroupService.getGroups(pageable, query, ou, ouDropdown.getSelectedScope()));
+    DomainGroupPage groupPage = new DomainGroupPage(domainGroupService.getGroups(
+        pageable, query, ou, ouDropdown.getSelectedScope()));
     model.addAttribute("groups", groupPage);
     return "admin/groups";
   }

@@ -451,11 +451,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   @Override
   public DomainUser add(DomainUser domainUser, Dn ou, Boolean useUsernameAsCn) {
     log.debug("add({}, {}, {})", domainUser.getSamAccountName(), ou, useUsernameAsCn);
-    if (isEmpty(domainUser.getSamAccountName())) {
-      throw ServiceException.badRequest(
-          "Username (samAccountName) is required.",
-          EC_SAM_ACCOUNT_NAME_REQUIRED);
-    }
+    validateDomainUserNames(domainUser);
     if (getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())
         || existsByPrincipalName(getProperties()
         .createDefaultUserPrincipalName(domainUser.getSamAccountName()))) {
@@ -538,11 +534,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   @Override
   public DomainUser update(String userName, DomainUser domainUser, Dn newOu) {
     log.debug("update({}, {}, {})", userName, domainUser.getSamAccountName(), newOu);
-    if (isEmpty(domainUser.getSamAccountName())) {
-      throw ServiceException.badRequest(
-          "Username (samAccountName) is required.",
-          EC_SAM_ACCOUNT_NAME_REQUIRED);
-    }
+    validateDomainUserNames(domainUser);
     if (!userName.equalsIgnoreCase(domainUser.getSamAccountName())
         && getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
@@ -592,6 +584,25 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
 
     DomainUser updatedDomainUser = renameAndMove(existingDomainUser, domainUser, newDn);
     return getLdapTemplate().save(updatedDomainUser, domainUserLdapMapper);
+  }
+
+  void validateDomainUserNames(DomainUser domainUser) {
+    if (isEmpty(domainUser.getSamAccountName())) {
+      throw ServiceException.badRequest(
+          "Username (samAccountName) is required.", EC_SAM_ACCOUNT_NAME_REQUIRED);
+    }
+    if (domainUser.getSamAccountName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Username (samAccountName) contains illegal characters.", EC_ILLEGAL_SAM_ACCOUNT_NAME);
+    }
+    if (!isEmpty(domainUser.getFirstName()) && domainUser.getFirstName().contains(",")) {
+      throw ServiceException.badRequest(
+          "First name contains illegal characters.", EC_ILLEGAL_FIRST_NAME);
+    }
+    if (!isEmpty(domainUser.getLastName()) && domainUser.getLastName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Last name contains illegal characters.", EC_ILLEGAL_LAST_NAME);
+    }
   }
 
   Dn getNewDn(DomainUser oldDomainUser, DomainUser newDomainUser, Dn newOu) {

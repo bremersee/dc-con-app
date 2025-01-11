@@ -21,14 +21,12 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import java.util.Map;
 import java.util.Optional;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
-import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainService;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
@@ -46,8 +44,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class GroupEditMiscController extends AbstractController implements PageableComponent,
-    RedirectComponent, OrganizationalUnitComponent {
+public class GroupEditMiscController extends AbstractEditController implements PageableComponent,
+    OrganizationalUnitComponent {
 
   private final DomainService domainService;
 
@@ -74,7 +72,7 @@ public class GroupEditMiscController extends AbstractController implements Pagea
   }
 
   @GetMapping(path = "/admin/group-edit-misc")
-  public String displayGroupEditDangerZone(
+  public String displayGroupEditMisc(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
@@ -86,28 +84,18 @@ public class GroupEditMiscController extends AbstractController implements Pagea
           model.addAttribute("group", group);
           return "admin/group-edit-misc";
         })
-        .orElseGet(() -> {
-          String msg = String.format("Group '%s' not found.", groupName);
-          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          return "admin/group-edit-misc";
-        });
+        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "admin/groups"));
   }
 
   @PostMapping(path = "/admin/group-edit-misc-delete-group")
   public String deleteGroup(
-      @RequestParam(value = PAGE, required = false) Integer page,
-      @RequestParam(value = SIZE, required = false) Integer size,
-      @RequestParam(value = SORT, required = false) String sort,
-      @RequestParam(value = QUERY, required = false) String query,
-      @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope scope,
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = "verificationName", required = false) String verificationName,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("deleteGroup({}, {}, {}, {}, {}, {}, {})",
-        page, size, sort, query, scope, groupName, verificationName);
-    Map<String, Object> parameters = getParamterMap(page, size, sort, query, ou, scope);
+    getLogger().debug("deleteGroup({}, {})", groupName, verificationName);
+
+    Map<String, Object> parameters = getParamterMap();
 
     if (isEmpty(groupName)) {
       String defaultMsg = "Deleting group failed. Group name is required.";
@@ -118,14 +106,15 @@ public class GroupEditMiscController extends AbstractController implements Pagea
       return redirect;
     }
 
-    Map<String, Object> parametersWithGroupname = addToParameterMap(parameters, "groupName", groupName);
+    Map<String, Object> parametersWithGroupName = putToParameterMap(parameters,
+        "groupName", groupName);
 
     if (!groupName.equalsIgnoreCase(verificationName)) {
       String defaultMsg = "Deleting group failed. The given group name doesn't match.";
-      RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.DANGER, defaultMsg, "todo");
-      redirectAttributes.addFlashAttribute("dmsg", rmsg);
+      RedirectMessage dmsg = getRedirectMessage(RedirectMessageType.DANGER, defaultMsg, "todo");
+      redirectAttributes.addFlashAttribute("dmsg", dmsg);
       String redirect = getRedirectUri("group-edit-misc?name={{groupName}}",
-          PAGE_AND_OU_PARAMS, parametersWithGroupname);
+          PAGE_AND_OU_PARAMS, parametersWithGroupName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;
     }
@@ -135,7 +124,7 @@ public class GroupEditMiscController extends AbstractController implements Pagea
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, defaultMsg, "todo");
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
       String redirect = getRedirectUri("group-edit-misc?name={{groupName}}",
-          PAGE_AND_OU_PARAMS, parametersWithGroupname);
+          PAGE_AND_OU_PARAMS, parametersWithGroupName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;
     }
@@ -144,7 +133,7 @@ public class GroupEditMiscController extends AbstractController implements Pagea
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, defaultMsg, "todo");
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
     String redirect = getRedirectUri("groups",
-        PAGE_AND_OU_PARAMS, parametersWithGroupname);
+        PAGE_AND_OU_PARAMS, parametersWithGroupName);
     logRedirectTo(defaultMsg, redirect);
     return redirect;
   }

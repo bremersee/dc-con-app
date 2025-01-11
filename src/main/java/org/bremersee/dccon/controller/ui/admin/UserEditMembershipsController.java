@@ -19,12 +19,8 @@ package org.bremersee.dccon.controller.ui.admin;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.components.RedirectComponent;
-import org.bremersee.dccon.controller.ui.model.RedirectMessage;
-import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainUserService;
@@ -42,8 +38,8 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class UserEditMembershipsController extends AbstractController implements PageableComponent,
-    RedirectComponent, OrganizationalUnitComponent {
+public class UserEditMembershipsController extends AbstractEditController
+    implements PageableComponent, OrganizationalUnitComponent {
 
   private final DomainUserService domainUserService;
 
@@ -104,17 +100,10 @@ public class UserEditMembershipsController extends AbstractController implements
             memberships = domainGroupService.resolveMemberships(userName, ou, searchScope);
             page = "admin/user-edit-memberships-resolved";
           }
-          model.addAttribute("memberships", memberships.sorted().toList());
+          model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> {
-          String msg = String.format("User '%s' not found.", userName);
-          model.addAttribute("rmsg", new RedirectMessage(msg, RedirectMessageType.WARNING));
-          if (direct) {
-            return "admin/user-edit-memberships-direct";
-          }
-          return "admin/user-edit-memberships-resolved";
-        });
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
   }
 
 }
