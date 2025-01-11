@@ -120,7 +120,7 @@ public class UserEditMiscController extends AbstractController implements Pageab
       return redirect;
     }
 
-    Map<String, Object> parametersWithUsername = addToMap(parameters, "userName", userName);
+    Map<String, Object> parametersWithUsername = addToParameterMap(parameters, "userName", userName);
 
     String password;
     if (generateRandomPassword) {
@@ -173,7 +173,7 @@ public class UserEditMiscController extends AbstractController implements Pageab
       return redirect;
     }
 
-    Map<String, Object> parametersWithUsername = addToMap(parameters, "userName", userName);
+    Map<String, Object> parametersWithUsername = addToParameterMap(parameters, "userName", userName);
 
     if (!userName.equalsIgnoreCase(verificationName)) {
       String defaultMsg = "Deleting user failed. The given username doesn't match.";

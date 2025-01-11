@@ -78,7 +78,7 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
     );
   }
 
-  default Map<String, Object> addToMap(Map<String, Object> map, String key, Object value) {
+  default Map<String, Object> addToParameterMap(Map<String, Object> map, String key, Object value) {
     Map<String, Object> result = new HashMap<>(map);
     result.put(key, value);
     return result;

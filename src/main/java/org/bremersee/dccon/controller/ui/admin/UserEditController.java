@@ -18,10 +18,8 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -140,38 +138,28 @@ public class UserEditController extends AbstractController implements PageableCo
       @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
       @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
       ModelMap model,
-      HttpServletRequest request,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) throws IOException {
 
     getLogger().debug("updateUser({}, {}, {}, {}, {}, {}, {})",
         userEditRequest, page, size, sort, query, ou, scope);
-    Map<String, Object> parameters = Map.of(
-        PAGE, Optional.ofNullable(page).orElse(PAGE_DEFAULT_INT),
-        SIZE, Optional.ofNullable(size)
-            .filter(s -> s > 0)
-            .orElse(SIZE_DEFAULT_INT),
-        SORT, Optional.ofNullable(sort).orElse(USER_SORT),
-        QUERY, Optional.ofNullable(query).orElse(""),
-        OU, Optional.ofNullable(userEditRequest)
-            .map(DomainUserEditRequest::getNewOuDn)
-            .map(Dn::format)
-            .or(() -> Optional.ofNullable(userEditRequest)
-                .map(DomainUserEditRequest::getUser)
-                .map(DomainUser::getDistinguishedName)
-                .map(dn -> getProperties().getParentDn(dn))
-                .map(Dn::format))
-            .or(() -> Optional.ofNullable(ou)
-                .map(Dn::format))
-            .orElse(getProperties().getUser().getDefaultUserOu().format()),
-        SCOPE, Optional.ofNullable(scope).orElse(SearchScope.ONELEVEL)
-    );
 
-    getLogger().debug("Try to update user '{}'.", userEditRequest);
+    Dn currentOu = Optional.ofNullable(userEditRequest)
+        .map(DomainUserEditRequest::getNewOuDn)
+        .or(() -> Optional.ofNullable(userEditRequest)
+            .map(DomainUserEditRequest::getUser)
+            .map(DomainUser::getDistinguishedName)
+            .map(dn -> getProperties().getParentDn(dn)))
+        .or(() -> Optional.ofNullable(ou))
+        .orElse(getProperties().getUser().getDefaultUserOu());
+    Map<String, Object> parameters = getParamterMap(page, size, sort, query, currentOu, scope);
+
+    getLogger().debug("Try to update user '{}' with parameters '{}' and user edit request '{}'.",
+        userEditRequest, parameters, userEditRequest);
 
     if (isEmpty(userEditRequest)) {
       String redirect = getRedirectUri("/admin/users", PAGE_AND_OU_PARAMS, parameters);
-      getLogger().debug("User update request is empty. Redirecting to {}", redirect);
+      logRedirectTo("User update request is empty. Redirecting to {}", redirect);
       return redirect;
     }
 
@@ -190,19 +178,15 @@ public class UserEditController extends AbstractController implements PageableCo
     }
 
     model.clear();
-    String msg = getMessageSource().getMessage(
-        "i18n.user.edited",
-        new Object[]{updatedUser.getName()}, //  TODO
-        String.format("User '%s' was successfully updated.", updatedUser.getName()), //  TODO
-        resolveLocale(request));
-    RedirectMessage rmsg = new RedirectMessage(msg, RedirectMessageType.SUCCESS);
+    String defaultMsg = String.format("User '%s' was successfully updated.", updatedUser.getName());
+    RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, defaultMsg,
+        "todo", updatedUser.getName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    parameters = new HashMap<>(parameters);
-    parameters.put("user", updatedUser);
+    parameters = addToParameterMap(parameters, "user", updatedUser);
     String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
         PAGE_AND_OU_PARAMS, parameters);
-    getLogger().debug("User successfully updated. Redirecting to {}", redirect);
+    logRedirectTo("User successfully updated.", redirect);
     return redirect;
   }
 

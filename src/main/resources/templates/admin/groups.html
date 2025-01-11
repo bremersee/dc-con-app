@@ -100,10 +100,10 @@
 
   <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(groups.content)}">
     <a th:each="entry : ${groups.content}" href="#"
-       th:href="@{group-edit(name=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
+       th:href="@{group-edit(name=${entry.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1" th:text="${entry.samAccountName}">
+        <h6 class="mb-1" th:text="${entry.name}">
           Administrators
         </h6>
         <span class="far fa-edit" aria-hidden="true"></span>

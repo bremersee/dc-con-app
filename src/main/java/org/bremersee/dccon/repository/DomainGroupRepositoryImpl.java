@@ -125,20 +125,19 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   public Stream<DomainGroup> resolveMemberships(
       String samAccountName, Dn ou, SearchScope searchScope) {
     log.debug("resolveMemberships({}, {}, {})", samAccountName, ou, searchScope);
-    Set<String> groupDns = new HashSet<>();
+    Set<Dn> groupDns = new HashSet<>();
     return getMemberships(samAccountName, ou, searchScope)
-        .filter(group -> !groupDns
-            .contains(new Dn(group.getDistinguishedName()).format()))
-        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
+        .filter(group -> !groupDns.contains(new Dn(group.getDistinguishedName())))
+        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName())))
         .flatMap(group -> Stream
             .concat(Stream.of(group), resolveMemberships(group.getMemberships(), groupDns)));
   }
 
-  private Stream<DomainGroup> resolveMemberships(List<String> memberOf, Set<String> groupDns) {
+  private Stream<DomainGroup> resolveMemberships(List<String> memberOf, Set<Dn> groupDns) {
     return memberOf.stream()
-        .filter(dn -> !groupDns.contains(new Dn(dn).format()))
+        .filter(dn -> !groupDns.contains(new Dn(dn)))
         .flatMap(dn -> findOne(dn, null, null).stream())
-        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName()).format()))
+        .peek(group -> groupDns.add(new Dn(group.getDistinguishedName())))
         .flatMap(nextGroup -> Stream
             .concat(Stream.of(nextGroup),
                 resolveMemberships(nextGroup.getMemberships(), groupDns)));
@@ -181,19 +180,34 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   @Override
   public Stream<DomainGroup> getMemberships(
       String samAccountName, Dn ou, SearchScope searchScope) {
+
     log.debug("getMemberships({}, {}, {})", samAccountName, ou, searchScope);
     SamAccount samAccount = findSamAccount(samAccountName, ou, searchScope)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             SamAccount.class.getSimpleName(), samAccountName, EC_SAM_ACCOUNT_NOT_FOUND));
-    Optional<DomainGroup> primaryGroup = findOneByPrimaryGroupId(samAccount.getPrimaryGroupId());
     Stream<DomainGroup> groups = samAccount.getMemberships().stream()
         .flatMap(dn -> findOne(dn, null, null).stream())
         .sorted();
-    if (primaryGroup.isPresent()
-        && primaryGroup.get().getSamAccountName().equalsIgnoreCase(samAccountName)) {
+    Optional<DomainGroup> primaryGroup = findOneByPrimaryGroupId(samAccount.getPrimaryGroupId());
+    if (primaryGroup.isPresent() && equals(primaryGroup.get(), samAccount)) {
       return groups;
     }
     return Stream.concat(primaryGroup.stream(), groups);
+  }
+
+  // TODO move to object? use Dn in model! Ah, nee, dn to string ist scheiße -> Override!
+  private boolean equals(SamAccount samAccount1, SamAccount samAccount2) {
+    boolean result = Objects.equals(samAccount1, samAccount2);
+    if (result) {
+      return true;
+    }
+    result = Objects.equals(samAccount1.getSamAccountName(), samAccount2.getSamAccountName());
+    if (result) {
+      return true;
+    }
+    return Objects.equals(
+        samAccount1.getSamAccountName().toLowerCase(),
+        samAccount2.getSamAccountName().toLowerCase());
   }
 
   @Override
@@ -289,7 +303,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     String[] returnAttributes = DomainGroupLdapMapper.SAM_ACCOUNT_ATTRIBUTES;
     SearchRequest searchRequest;
     if (getProperties().isDn(samAccountName)) {
-      searchRequest = searchOneRequest(samAccountName, returnAttributes);
+      searchRequest = SearchRequest.objectScopeSearchRequest(samAccountName, returnAttributes);
     } else {
       Dn ouDn;
       SearchScope scope;

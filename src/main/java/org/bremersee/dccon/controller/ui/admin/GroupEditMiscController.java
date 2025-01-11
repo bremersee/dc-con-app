@@ -118,7 +118,7 @@ public class GroupEditMiscController extends AbstractController implements Pagea
       return redirect;
     }
 
-    Map<String, Object> parametersWithGroupname = addToMap(parameters, "groupName", groupName);
+    Map<String, Object> parametersWithGroupname = addToParameterMap(parameters, "groupName", groupName);
 
     if (!groupName.equalsIgnoreCase(verificationName)) {
       String defaultMsg = "Deleting group failed. The given group name doesn't match.";
