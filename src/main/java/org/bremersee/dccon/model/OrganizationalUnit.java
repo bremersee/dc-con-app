@@ -70,6 +70,7 @@ public class OrganizationalUnit extends CommonAttributes
   }
 
   public String getNameTree() {
+    // TODO set the name tree when dn is set, otherwise it is lower case + method
     String dn = getDistinguishedName();
     if (isNull(dn)) {
       return null;

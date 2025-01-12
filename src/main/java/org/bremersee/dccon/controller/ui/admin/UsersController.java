@@ -83,7 +83,7 @@ public class UsersController extends AbstractController
     return "users";
   }
 
-  @RequestMapping(path = "/admin/users", method = {RequestMethod.GET, RequestMethod.POST})
+  @RequestMapping(path = "/admin/users", method = RequestMethod.GET)
   public String displayUsers(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,

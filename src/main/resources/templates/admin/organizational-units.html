@@ -50,7 +50,7 @@
 <main role="main" class="container">
 
   <div class="d-flex justify-content-center mb-4">
-    <h3>Groups</h3>
+    <h3>Organizational Units</h3>
   </div>
 
   <!--suppress ThymeleafVariablesResolveInspection -->
@@ -73,7 +73,7 @@
                      th:value="${q}">
               <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
                 <a id="searchInputReset" href="#" title="Reset search"
-                   th:href="@{groups(page='0',size=${size},sort=${sort},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
+                   th:href="@{organizational-units(page=${page},size=${size})}"
                    th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
                    th:disabled="${#strings.isEmpty(q)}"
                    th:aria-disabled="${#strings.isEmpty(q)}">
@@ -85,25 +85,25 @@
         </div>
       </div>
       <div class="col col-auto mt-sm-2 mt-md-0">
-        <a id="addGroup" href="#" title="Add group" class="btn btn-outline-primary"
-           th:href="@{group-add(page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+        <a id="addOu" href="#" title="Add organizational unit" class="btn btn-outline-primary"
+           th:href="@{organizational-unit-add(page=${page},size=${size},q=${q})}">
           <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
         </a>
       </div>
     </div>
   </div>
 
-  <div th:if="${#lists.isEmpty(groups.content)}"
+  <div th:if="${#lists.isEmpty(ouPage.content)}"
        class="alert alert-info" role="alert">
-    No groups were found.
+    No organizational units were found.
   </div>
 
-  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(groups.content)}">
-    <a th:each="entry : ${groups.content}" href="#"
-       th:href="@{group-edit(name=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
+  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(ouPage.content)}">
+    <a th:each="entry : ${ouPage.content}" href="#"
+       th:href="@{organizational-unit-edit(name=${entry.distinguishedName},page=${page},size=${size},q=${q})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1" th:text="${entry.name}">
+        <h6 class="mb-1" th:text="${entry.nameTree}">
           Administrators
         </h6>
         <span class="far fa-edit" aria-hidden="true"></span>
@@ -111,64 +111,64 @@
     </a>
   </div>
 
-  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(groups) > 1}">
+  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(ouPage) > 1}">
     <ul class="pagination justify-content-center">
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(groups, groups.number - 3)}">
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number - 3)}">
         <a class="page-link" href="#" aria-label="First"
-           th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+           th:href="@{${currentPage}(page=0,size=${size},q=${q})}">
           <span aria-hidden="true">&laquo;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number - 5)}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number - 5)}">
         <a class="page-link" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(page=${groups.number - 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+           th:href="@{${currentPage}(page=${ouPage.number - 5},size=${size},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number - 2)}">
-        <a class="page-link" href="#" th:text="${groups.number - 1}"
-           th:href="@{${currentPage}(page=${groups.number - 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number - 2)}">
+        <a class="page-link" href="#" th:text="${ouPage.number - 1}"
+           th:href="@{${currentPage}(page=${ouPage.number - 2},size=${size},q=${q})}">
           1
         </a>
       </li>
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(groups, groups.number - 1)}">
-        <a class="page-link" href="#" th:text="${groups.number}"
-           th:href="@{${currentPage}(page=${groups.number - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number - 1)}">
+        <a class="page-link" href="#" th:text="${ouPage.number}"
+           th:href="@{${currentPage}(page=${ouPage.number - 1},size=${size},q=${q})}">
           2
         </a>
       </li>
       <li class="page-item disabled">
-        <a class="page-link" href="#" th:text="${groups.number + 1}">
+        <a class="page-link" href="#" th:text="${ouPage.number + 1}">
           3
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number + 1)}">
-        <a class="page-link" href="#" th:text="${groups.number + 2}"
-           th:href="@{${currentPage}(page=${groups.number + 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number + 1)}">
+        <a class="page-link" href="#" th:text="${ouPage.number + 2}"
+           th:href="@{${currentPage}(page=${ouPage.number + 1},size=${size},q=${q})}">
           4
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number + 2)}">
-        <a class="page-link" href="#" th:text="${groups.number + 3}"
-           th:href="@{${currentPage}(page=${groups.number + 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number + 2)}">
+        <a class="page-link" href="#" th:text="${ouPage.number + 3}"
+           th:href="@{${currentPage}(page=${ouPage.number + 2},size=${size},q=${q})}">
           5
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number + 5)}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number + 5)}">
         <a class="page-link" href="#" aria-label="Next"
-           th:href="@{${currentPage}(page=${groups.number + 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+           th:href="@{${currentPage}(page=${ouPage.number + 5},size=${size},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(groups, groups.number + 3)}">
+          th:if="${@paginationHelper.isValidPageNumber(ouPage, ouPage.number + 3)}">
         <a class="page-link" href="#" aria-label="Last"
-           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(groups) - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">
+           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(ouPage) - 1},size=${size},q=${q})}">
           <span aria-hidden="true">&raquo;</span>
         </a>
       </li>
@@ -180,11 +180,8 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
-    const currentPage = /*[[${currentPage}]]*/ "groups";
+    const currentPage = /*[[${currentPage}]]*/ "organizational-units";
     const size = /*[[${size}]]*/ "";
-    const sort = /*[[${sort}]]*/ "";
-    const ou = /*[[${ouDropdown.selectedOu.distinguishedName}]]*/ "";
-    const scope = /*[[${ouDropdown.selectedScope}]]*/ "";
 
     function moveCursorToEnd(input) {
       const length = input.value.length;
@@ -199,10 +196,7 @@
         window.location.href = currentPage
             + "?page=0"
             + "&size=" + size
-            + "&sort=" + encodeURIComponent(sort)
-            + "&q=" + encodeURIComponent(value)
-            + "&ou=" + encodeURIComponent(ou)
-            + "&scope=" + scope;
+            + "&q=" + encodeURIComponent(value);
       },
       wait: 750,
       highlight: true,

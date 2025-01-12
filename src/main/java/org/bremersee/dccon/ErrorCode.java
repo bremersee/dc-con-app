@@ -37,9 +37,15 @@ public interface ErrorCode {
 
   String EC_OU_NOT_FOUND = EC_PREFIX + "000f4ac1-8fea-4c4d-a13d-6f28d4987157";
 
+  String EC_OU_NAME_REQUIRED = EC_PREFIX + "3ea46148-d4df-46fd-b4f6-099241868428";
+
+  String EC_ILLEGAL_OU_NAME = EC_PREFIX + "ba5e538a-aaeb-480f-a066-8bc8ee362829";
+
   String EC_OU_ALREADY_EXISTS = EC_PREFIX + "93368104-44a7-47c8-8fdc-3faffd0ee0a6";
 
   String EC_ADDING_OU_FAILED = EC_PREFIX + "ec5b79b6-8c01-41b9-9ed9-60261affdaaf";
+
+  String EC_UPDATING_OU_FAILED = EC_PREFIX + "91b7b4bb-59ca-4fa8-a4b2-e46e001bd542";
 
   String EC_DELETING_OU_FAILED = EC_PREFIX + "1344e1dc-6a00-4463-a95a-ae1d7f360341";
 

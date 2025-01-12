@@ -82,7 +82,7 @@ public class ComputersController extends AbstractController
     return "computers";
   }
 
-  @RequestMapping(path = "/admin/computers", method = {RequestMethod.GET, RequestMethod.POST})
+  @RequestMapping(path = "/admin/computers", method = RequestMethod.GET)
   public String displayComputers(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,

@@ -16,9 +16,11 @@
 
 package org.bremersee.dccon.service;
 
+import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.Getter;
@@ -27,7 +29,10 @@ import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.repository.OrganizationalUnitRepository;
+import org.bremersee.pagebuilder.PageBuilder;
 import org.ldaptive.dn.Dn;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -71,13 +76,38 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   }
 
   @Override
+  public Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query) {
+    Stream<OrganizationalUnit> ous = getOrganizationalUnits();
+    if (isEmpty(query) || query.length() <= 2) {
+      return new PageBuilder<OrganizationalUnit, OrganizationalUnit>()
+          .sourceEntries(ous)
+          .pageable(applyDefaults(pageable, null, true, null))
+          .build();
+    }
+    String lowerQuery = query.toLowerCase();
+    return new PageBuilder<OrganizationalUnit, OrganizationalUnit>()
+        .sourceEntries(ous.filter(ou -> contains(ou, lowerQuery)))
+        .pageable(applyDefaults(pageable, null, true, null))
+        .build();
+  }
+
+  private boolean contains(OrganizationalUnit ou, String query) {
+    if (!isEmpty(ou.getName()) && ou.getName().toLowerCase().contains(query)) {
+      return true;
+    }
+    return !isEmpty(ou.getDescription()) && ou.getDescription().toLowerCase().contains(query);
+  }
+
+  @Override
   public Stream<OrganizationalUnit> getOrganizationalUnits() {
-    return repository.findAll().map(this::withFormattedDn);
+    return repository.findAll()
+        .map(this::withFormattedDn)
+        .sorted(Comparator.comparing(OrganizationalUnit::getNameTree));
   }
 
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithBase() {
-    return Stream.concat(getOrganizationalUnits(), Stream.of(base));
+    return Stream.concat(Stream.of(base), getOrganizationalUnits());
   }
 
   @Override
@@ -100,6 +130,21 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
       return true;
     }
     return repository.exists(ou);
+  }
+
+  @Override
+  public OrganizationalUnit add(OrganizationalUnit organizationalUnit, Dn parentOu) {
+    return repository.add(organizationalUnit, parentOu);
+  }
+
+  @Override
+  public OrganizationalUnit update(OrganizationalUnit organizationalUnit, Dn newParentOu) {
+    return repository.update(organizationalUnit, newParentOu);
+  }
+
+  @Override
+  public boolean delete(Dn ou) {
+    return repository.delete(ou);
   }
 
 }

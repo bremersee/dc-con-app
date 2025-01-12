@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Users</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-1">
+      <a class="btn btn-outline-secondary" href="organizational-units.html"
+         th:href="@{organizational-units(page=${page},size=${size},q=${q})}">
+        <span class="fa fa-backward"></span>
+      </a>
+    </div>
+    <div class="col d-flex justify-content-center">
+      <h3>Edit organizational unit</h3>
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+  <div>
+    <form th:action="@{organizational-unit-edit}" th:object="${ouEditRequest}" action="#"
+          method="post">
+      <input type="hidden" name="page" th:value="${page}"/>
+      <input type="hidden" name="size" th:value="${size}"/>
+      <input type="hidden" name="q" th:value="${q}"/>
+
+      <input type="hidden" name="ou" th:field="*{ou}"/>
+      <input type="hidden" name="systemOu" th:field="*{systemOu}"/>
+
+      <div class="mb-3">
+        <label for="parentOu" class="form-label">Parent Organizational Unit</label>
+        <select id="parentOu" class="form-select" aria-label="Organizational Unit"
+                aria-describedby="parentOuValidation"
+                th:classappend="${#fields.hasErrors('parentOu')} ? 'is-invalid' : ''"
+                th:field="*{parentOu}">
+          <option th:each="o : ${ous}" th:value="${o.distinguishedName}" th:text="${o.nameTree}">
+            Users
+          </option>
+        </select>
+        <div id="parentOuValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('parentOu')} ? ${#fields.errors('parentOu')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name"
+               aria-describedby="nameValidation" required th:field="*{name}"
+               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"/>
+        <div id="nameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('name')} ? ${#fields.errors('name')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="description" name="description"
+               aria-describedby="descriptionValidation" required th:field="*{description}"
+               th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"/>
+        <div id="descriptionValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('description')} ? ${#fields.errors('description')[0]} : ''">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-3">
+        Update
+      </button>
+      <a href="organizational-units.html"
+         th:href="@{organizational-units(page=${page},size=${size},q=${q})}"
+         class="btn btn-secondary ml-3 mt-3" role="button">
+        Cancel
+      </a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

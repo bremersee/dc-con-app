@@ -17,7 +17,6 @@
 package org.bremersee.dccon.controller.ui.components;
 
 import jakarta.validation.constraints.NotNull;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
@@ -59,7 +58,6 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
         .orElseGet(this::getDefaultOrganizationalUnit));
     List<OrganizationalUnit> orgUnits = getOrganizationalUnitService()
         .getOrganizationalUnitsWithBase()
-        .sorted(getOrganizationalUnitComparator())
         .toList();
     OrganizationalUnitDropdown ouDropdown = new OrganizationalUnitDropdown();
     for (OrganizationalUnit orgUnit : orgUnits) {
@@ -94,18 +92,6 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
 
   default boolean isBaseOu(OrganizationalUnit ou) {
     return getProperties().getBaseDn().isSame(new Dn(ou.getDistinguishedName()));
-  }
-
-  default Comparator<OrganizationalUnit> getOrganizationalUnitComparator() {
-    return (o1, o2) -> {
-      if (isBaseOu(o1)) {
-        return -1;
-      }
-      if (isBaseOu(o2)) {
-        return 1;
-      }
-      return o1.getNameTree().compareToIgnoreCase(o2.getNameTree());
-    };
   }
 
   default String getDisplayValue(SearchScope scope) {

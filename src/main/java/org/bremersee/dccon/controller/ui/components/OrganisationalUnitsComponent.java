@@ -13,7 +13,6 @@ public interface OrganisationalUnitsComponent {
   @ModelAttribute("ous")
   default List<OrganizationalUnit> addOrganisationalUnits() {
     return getOrganizationalUnitService().getOrganizationalUnits()
-        .sorted(Comparator.comparing(OrganizationalUnit::getNameTree))
         .toList();
   }
 

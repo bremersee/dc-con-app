@@ -113,22 +113,6 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
   }
 
   @Override
-  public OrganizationalUnit update(OrganizationalUnit organizationalUnit) {
-    return Optional.ofNullable(organizationalUnit.getDistinguishedName())
-        .map(Dn::new)
-        .flatMap(this::findOne)
-        .map(exiting -> {
-          exiting.setDescription(organizationalUnit.getDescription());
-          return exiting;
-        })
-        .map(this::copy)
-        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
-            OrganizationalUnit.class.getSimpleName(),
-            organizationalUnit.getName(),
-            EC_OU_NOT_FOUND));
-  }
-
-  @Override
   public OrganizationalUnit add(OrganizationalUnit organizationalUnit, Dn parentOu) {
     Dn ou = new Dn(new RDn(new NameValue(LDAP_OU, organizationalUnit.getName())));
     if (nonNull(parentOu) && !parentOu.isEmpty()) {
@@ -156,6 +140,27 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
         .build();
     store.getOuRepo().add(newOu);
     return newOu;
+  }
+
+  public OrganizationalUnit update(OrganizationalUnit organizationalUnit) {
+    return Optional.ofNullable(organizationalUnit.getDistinguishedName())
+        .map(Dn::new)
+        .flatMap(this::findOne)
+        .map(exiting -> {
+          exiting.setDescription(organizationalUnit.getDescription());
+          return exiting;
+        })
+        .map(this::copy)
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            OrganizationalUnit.class.getSimpleName(),
+            organizationalUnit.getName(),
+            EC_OU_NOT_FOUND));
+  }
+
+  @Override
+  public OrganizationalUnit update(OrganizationalUnit organizationalUnit,
+      Dn newParentOu) {
+    return null;
   }
 
   @Override

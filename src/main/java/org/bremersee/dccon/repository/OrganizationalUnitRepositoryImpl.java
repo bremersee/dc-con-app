@@ -21,6 +21,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
@@ -111,8 +112,9 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
         SearchScope.SUBTREE,
         getReturnAttributes());
     return Stream.concat(
-        stream,
-        getLdapTemplate().findAll(searchRequest, ouLdapMapper));
+            stream,
+            getLdapTemplate().findAll(searchRequest, ouLdapMapper))
+        .filter(getIgnoredObjectFilter());
   }
 
   @Override
@@ -125,7 +127,8 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     log.debug("findOne, dn = {}", dn);
     new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
     SearchRequest searchRequest = searchOneRequest(dn);
-    return getLdapTemplate().findOne(searchRequest, ouLdapMapper);
+    return getLdapTemplate()
+        .findOne(searchRequest, ouLdapMapper);
   }
 
   @Override
@@ -133,21 +136,17 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     return findOne(ou).isPresent();
   }
 
-  @Override
-  public OrganizationalUnit update(OrganizationalUnit organizationalUnit) {
-    return Optional.ofNullable(organizationalUnit.getDistinguishedName())
-        .map(Dn::new)
-        .flatMap(this::findOne)
-        .map(ou -> getLdapTemplate().save(organizationalUnit, ouLdapMapper))
-        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
-            OrganizationalUnit.class.getSimpleName(),
-            organizationalUnit.getName(),
-            EC_OU_NOT_FOUND));
-  }
-
   @ProfileRequired({"cli", "ldap"})
   @Override
   public OrganizationalUnit add(OrganizationalUnit organizationalUnit, Dn parentOu) {
+    if (isEmpty(organizationalUnit.getName())) {
+      throw ServiceException.badRequest(
+          "Name of organizational unit is required.", EC_OU_NAME_REQUIRED);
+    }
+    if (organizationalUnit.getName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Name of organizational unit contains illegal characters.", EC_ILLEGAL_OU_NAME);
+    }
     Dn dn = new Dn(new RDn(new NameValue(LDAP_OU, organizationalUnit.getName())));
     if (!isEmpty(parentOu) && !parentOu.isEmpty()) {
       dn.add(validateOu(parentOu));
@@ -183,6 +182,127 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
 
   @ProfileRequired({"cli", "ldap"})
   @Override
+  public OrganizationalUnit update(
+      OrganizationalUnit organizationalUnit,
+      Dn newParentOu) {
+
+    log.debug("update({}, {})", organizationalUnit.getName(), newParentOu);
+
+    if (isEmpty(organizationalUnit.getName())) {
+      throw ServiceException.badRequest(
+          "Name of organizational unit is required.", EC_OU_NAME_REQUIRED);
+    }
+    if (organizationalUnit.getName().contains(",")) {
+      throw ServiceException.badRequest(
+          "Name of organizational unit contains illegal characters.", EC_ILLEGAL_OU_NAME);
+    }
+
+    OrganizationalUnit existing = findOne(new Dn(organizationalUnit.getDistinguishedName()))
+        .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
+            OrganizationalUnit.class.getSimpleName(),
+            organizationalUnit.getDistinguishedName(),
+            EC_OU_NOT_FOUND));
+
+    Dn existingDn = new Dn(existing.getDistinguishedName());
+    log.debug("Existing ou dn: {}", existingDn);
+    Dn wantedDn = new Dn(new RDn(new NameValue(LDAP_OU, organizationalUnit.getName())));
+    if (isEmpty(newParentOu) || newParentOu.isEmpty()) {
+      wantedDn.add(existingDn.getParent());
+    } else {
+      wantedDn.add(newParentOu);
+    }
+    log.debug("Wanted ou dn:   {}", wantedDn);
+    if (!existingDn.isSame(wantedDn)) {
+      if (existing.getSystemOu()) {
+        throw ServiceException.badRequest(
+            "Organizational unit is a critical system object. Moving and renaming is permitted.",
+            EC_ILLEGAL_SYSTEM_ENTITY_OPERATION);
+      }
+      if (exists(wantedDn)) {
+        throw ServiceException.alreadyExistsWithErrorCode(
+            OrganizationalUnit.class.getSimpleName(),
+            organizationalUnit.getName(),
+            EC_OU_ALREADY_EXISTS);
+      }
+    }
+
+    Dn currentDn = new Dn(existing.getDistinguishedName());
+    String tmpName = null;
+    if (!existing.getName().equalsIgnoreCase(organizationalUnit.getName())) {
+      tmpName = UUID.randomUUID().toString();
+      currentDn = rename(currentDn, tmpName);
+    }
+    if (!existingDn.getParent().isSame(wantedDn.getParent())) {
+      currentDn = move(currentDn, wantedDn.getParent());
+    }
+    if (!isEmpty(tmpName)) {
+      currentDn = rename(currentDn, organizationalUnit.getName());
+    }
+    organizationalUnit.setDistinguishedName(currentDn.format());
+    return getLdapTemplate().save(organizationalUnit, ouLdapMapper);
+  }
+
+  Dn move(Dn oldDn, Dn newParentOu) {
+    Dn newDn = new Dn(new RDn(
+        new NameValue(LDAP_OU, oldDn.getRDn().getNameValue().getStringValue())));
+    newDn.add(newParentOu);
+    kinit();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("ou");
+    commands.add("move");
+    commands.add(quote(oldDn.format()));
+    commands.add(quote(newParentOu.format()));
+    auth(commands);
+    return CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        response -> {
+          return findOne(newDn)
+              .map(OrganizationalUnit::getDistinguishedName)
+              .map(Dn::new)
+              .orElseThrow(() -> ServiceException.internalServerError(String.format(
+                      "Moving organization unit '%s' to '%s' failed: %s",
+                      oldDn.format(), newParentOu.format(),
+                      CommandExecutorResponse.toExceptionMessage(response)),
+                  ErrorCode.EC_UPDATING_OU_FAILED));
+        });
+  }
+
+  Dn rename(Dn ou, String newName) {
+    Dn newDn = new Dn(new RDn(new NameValue(LDAP_OU, newName)));
+    newDn.add(ou.getParent());
+    kinit();
+    List<String> commands = new ArrayList<>();
+    ssh(commands);
+    sudo(commands);
+    commands.add(getProperties().getSambaToolBinary());
+    commands.add("ou");
+    commands.add("rename");
+    commands.add(quote(ou.format()));
+    commands.add(quote(newDn.format()));
+    auth(commands);
+    return CommandExecutor.exec(
+        commands,
+        null,
+        getProperties().getSambaToolExecDir(),
+        response -> {
+          return findOne(newDn)
+              .map(OrganizationalUnit::getDistinguishedName)
+              .map(Dn::new)
+              .orElseThrow(() -> ServiceException.internalServerError(String.format(
+                      "Renaming organization unit '%s' to '%s' failed: %s",
+                      ou.format(), newName,
+                      CommandExecutorResponse.toExceptionMessage(response)),
+                  ErrorCode.EC_UPDATING_OU_FAILED));
+        });
+  }
+
+  @ProfileRequired({"cli", "ldap"})
+  @Override
   public boolean delete(Dn ou) {
     return findOne(ou)
         .filter(this::isDeletable)
@@ -196,7 +316,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
 
   boolean doDelete(Dn ou) {
     kinit();
-    final List<String> commands = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
     commands.add(getProperties().getSambaToolBinary());

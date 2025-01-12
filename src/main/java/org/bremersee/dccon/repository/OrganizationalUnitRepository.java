@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -40,7 +41,7 @@ public interface OrganizationalUnitRepository extends OrganizationalUnitReposito
 
   OrganizationalUnit add(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn parentOu);
 
-  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit);
+  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn newParentOu);
 
   boolean delete(@NotNull Dn ou);
 

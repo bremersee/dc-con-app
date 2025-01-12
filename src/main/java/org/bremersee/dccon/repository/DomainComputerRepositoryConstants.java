@@ -30,7 +30,7 @@ public interface DomainComputerRepositoryConstants extends RepositoryConstants {
       LDAP_PRIMARY_GROUP_ID,
       LDAP_SAM_ACCOUNT_NAME,
       LDAP_COMPUTER_SERVICE_PRINCIPAL_NAME,
-      LDAP_CRITICAL_SYSTEM_OBJECT
+      LDAP_IS_CRITICAL_SYSTEM_OBJECT
   };
 
 }

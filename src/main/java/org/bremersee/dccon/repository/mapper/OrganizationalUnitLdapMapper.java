@@ -88,7 +88,9 @@ public class OrganizationalUnitLdapMapper extends AbstractLdapMapper
 
     setAttribute(destination, LDAP_DESCRIPTION, source.getDescription(), false,
         STRING_VALUE_TRANSCODER, modifications);
-    if (isEmpty(getAttributeValue(destination, LDAP_NAME, STRING_VALUE_TRANSCODER, null))) {
+    boolean isSystemOu = getAttributeValue(destination, LDAP_IS_CRITICAL_SYSTEM_OBJECT,
+        BOOLEAN_VALUE_TRANSCODER, false);
+    if (!isSystemOu) {
       setAttribute(destination, LDAP_NAME, source.getName(), false, STRING_VALUE_TRANSCODER,
           modifications);
     }

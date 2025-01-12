@@ -73,7 +73,7 @@
                      th:value="${q}">
               <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
                 <a id="searchInputReset" href="#" title="Reset search"
-                   th:href="@{users(page=${page},size=${size},sort=${sort})}"
+                   th:href="@{users(page='0',size=${size},sort=${sort},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
                    th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
                    th:disabled="${#strings.isEmpty(q)}"
                    th:aria-disabled="${#strings.isEmpty(q)}">

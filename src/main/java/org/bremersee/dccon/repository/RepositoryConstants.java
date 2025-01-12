@@ -59,8 +59,6 @@ public interface RepositoryConstants {
 
   String LDAP_DESCRIPTION = "description";
 
-  String LDAP_CRITICAL_SYSTEM_OBJECT = "isCriticalSystemObject";
-
   /**
    * The constant GID_NUMBER (rfc2307).
    */
@@ -98,4 +96,5 @@ public interface RepositoryConstants {
   String LDAP_SAM_ACCOUNT_NAME = "sAMAccountName";
 
   String LDAP_IS_CRITICAL_SYSTEM_OBJECT = "isCriticalSystemObject";
+
 }

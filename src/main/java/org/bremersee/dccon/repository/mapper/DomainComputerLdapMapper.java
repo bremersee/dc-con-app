@@ -72,7 +72,7 @@ public class DomainComputerLdapMapper extends AbstractLdapMapper
     domainComputer.setServicePrincipalNames(getAttributeValuesAsList(ldapEntry,
         LDAP_COMPUTER_SERVICE_PRINCIPAL_NAME, STRING_VALUE_TRANSCODER));
     domainComputer.setCriticalSystemObject(getAttributeValue(ldapEntry,
-        LDAP_CRITICAL_SYSTEM_OBJECT, BOOLEAN_VALUE_TRANSCODER, null));
+        LDAP_IS_CRITICAL_SYSTEM_OBJECT, BOOLEAN_VALUE_TRANSCODER, null));
   }
 
   @Override

@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller.ui;
+package org.bremersee.dccon.model;
+
+import org.bremersee.pagebuilder.model.JsonPageDto;
+import org.springframework.data.domain.Page;
 
 /**
- * The interface SortOrderConstants.
+ * The type OrganizationUnitPage.
  *
  * @author Christian Bremer
  */
-public interface SortOrderConstants extends ControllerConstants {
+public class OrganizationUnitPage extends JsonPageDto<OrganizationalUnit> {
 
-  String USER_SORT = "lastName;firstName;samAccountName";
+  public OrganizationUnitPage() {
+  }
 
-  String GROUP_SORT = "samAccountName";
-
-  String COMPUTER_SORT = "name";
-
-  String OU_SORT = "nameTree";
-
+  public OrganizationUnitPage(
+      Page<? extends OrganizationalUnit> page) {
+    super(page);
+  }
 }

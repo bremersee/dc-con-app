@@ -16,10 +16,13 @@
 
 package org.bremersee.dccon.service;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.ldaptive.dn.Dn;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
 /**
@@ -28,6 +31,8 @@ import org.springframework.lang.Nullable;
  * @author Christian Bremer
  */
 public interface OrganizationalUnitService {
+
+  Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query);
 
   Stream<OrganizationalUnit> getOrganizationalUnits();
 
@@ -38,5 +43,11 @@ public interface OrganizationalUnitService {
   OrganizationalUnit getBase();
 
   boolean organisationUnitExists(@Nullable Dn ou);
+
+  OrganizationalUnit add(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn parentOu);
+
+  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn newParentOu);
+
+  boolean delete(@NotNull Dn ou);
 
 }
