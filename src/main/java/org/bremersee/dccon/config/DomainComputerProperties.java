@@ -16,22 +16,25 @@
 
 package org.bremersee.dccon.config;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 
 /**
- * The type DomainComputerProperties.
+ * The type DomainGroupProperties.
  *
  * @author Christian Bremer
  */
 @Data
 public class DomainComputerProperties {
 
-  public static final Dn DEFAULT_COMPUTER_OU = new Dn("CN=Computers");
+  public static final Dn DEFAULT_OU = new Dn("CN=Computers");
 
-  private Dn defaultComputerOu = DEFAULT_COMPUTER_OU;
+  @NotNull
+  private Dn defaultOu = DEFAULT_OU;
 
-  private SearchScope defaultComputerSearchScope = SearchScope.ONELEVEL;
+  @NotNull
+  private SearchScope defaultSearchScope = SearchScope.ONELEVEL;
 
 }

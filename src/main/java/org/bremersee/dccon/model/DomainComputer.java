@@ -16,8 +16,14 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.isNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,11 +37,53 @@ import lombok.ToString;
  */
 @Schema(description = "Domain computer.")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class DomainComputer extends SamAccount {
 
+  String name;
+
+  String dnsHostName;
+
+  List<String> networkAddresses;
+
+  String operatingSystem;
+
+  String operatingSystemVersion;
+
+  String description;
+
+  List<String> servicePrincipalNames;
+
+  Boolean criticalSystemObject;
+
+  public List<String> getNetworkAddresses() {
+    if (isNull(networkAddresses)) {
+      networkAddresses = new ArrayList<>();
+    }
+    return networkAddresses;
+  }
+
+  public List<String> getServicePrincipalNames() {
+    if (isNull(servicePrincipalNames)) {
+      servicePrincipalNames = new ArrayList<>();
+    }
+    return servicePrincipalNames;
+  }
+
+  public Boolean getCriticalSystemObject() {
+    return Boolean.TRUE.equals(criticalSystemObject);
+  }
+
+  @Hidden
+  @JsonIgnore
+  public String getSamAccountNameWithoutTrailingDollarSign() {
+    if (isNull(samAccountName) || samAccountName.isEmpty()) {
+      return null;
+    }
+    return samAccountName.substring(0, samAccountName.length() - 1);
+  }
 }

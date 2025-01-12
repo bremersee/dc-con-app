@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Misc for Groups</title>
+  <title>Computers</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -54,35 +54,29 @@
     Status message
   </div>
 
-  <div th:if="${group != null}">
+  <div th:if="${computer != null}">
     <div class="d-flex justify-content-center">
-      <h3 class="small">Group</h3>
+      <h3 class="small">Direct memberships of computer</h3>
     </div>
     <div class="d-flex justify-content-center mb-4">
-      <h3 th:text="${group.name}">Administrator</h3>
+      <h3 th:text="${computer.name}">Administrator</h3>
     </div>
 
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link" href="group-edit.html"
-           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-edit" aria-hidden="true"></span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-people-group" aria-hidden="true"></span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="group-edit-memberships-direct.html"
-           th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-folder-tree" aria-hidden="true"></span>
+        <a class="nav-link" href="computer-edit.html"
+           th:href="@{computer-edit(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-computer" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link active" aria-current="page" href="#">
+          <span class="fa fa-folder-tree" aria-hidden="true"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="computer-edit-misc.html"
+           th:href="@{computer-edit-misc(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -90,38 +84,39 @@
 
     <div class="mx-0 mx-sm-1 mx-md-3">
 
-      <div class="mb-4 p-3 border border-1 border-danger" th:if="${not group.sid.systemEntity}">
-        <div class="h5 mb-3">
-          <span>Delete Group </span>
-          <span class="badge text-bg-secondary" th:text="${group.samAccountName}">anna</span>
-        </div>
-        <form th:action="@{group-edit-misc-delete-group}" action="#" method="post">
-          <input type="hidden" name="page" th:value="${page}"/>
-          <input type="hidden" name="size" th:value="${size}"/>
-          <input type="hidden" name="sort" th:value="${sort}"/>
-          <input type="hidden" name="q" th:value="${q}"/>
-          <input type="hidden" name="ou" th:value="${ou}"/>
-          <input type="hidden" name="scope" th:value="${scope}"/>
-          <input type="hidden" name="name" th:value="${group.samAccountName}"/>
-
-          <div class="mb-3">
-            <input type="text" class="form-control" id="verificationName" name="verificationName"
-                   aria-describedby="verificationNameValidation" required
-                   th:classappend="${dmsg == null} ? '' : 'is-invalid'"/>
-            <label for="verificationName" id="verificationNameHelp" class="form-text">
-              Please enter the group name for deletion.
-            </label>
-            <div id="verificationNameValidation" class="invalid-feedback" th:if="${dmsg != null}"
-                 th:text="${dmsg.msg}">
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-danger mt-3 mb-3">
-            Delete
-          </button>
-        </form>
+      <div class="d-flex justify-content-center mb-3">
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">
+              Direct
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="computer-edit-memberships-resolved.html"
+               th:href="@{computer-edit-memberships-resolved(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+              Resolved
+            </a>
+          </li>
+        </ul>
       </div>
 
+      <div th:if="${#lists.isEmpty(memberships)}"
+           class="alert alert-info" role="alert">
+        No groups were found.
+      </div>
+
+      <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(memberships)}">
+        <a th:each="entry : ${memberships}" href="computer-edit-members.html"
+           th:href="@{group-edit-members(name=${entry.samAccountName},ou=${entry.parentDn})}"
+           class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1" th:text="${entry.samAccountName}">
+              Administrators
+            </h6>
+            <span class="far fa-edit" aria-hidden="true"></span>
+          </div>
+        </a>
+      </div>
     </div>
   </div>
 </main>

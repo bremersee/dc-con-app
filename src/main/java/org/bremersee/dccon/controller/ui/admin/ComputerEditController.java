@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,10 +25,12 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.model.DomainGroupEditRequest;
+import org.bremersee.dccon.controller.ui.model.DomainComputerEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
+import org.bremersee.dccon.model.DomainComputer;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.service.DomainComputerService;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -50,24 +53,28 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class GroupEditController extends AbstractEditController implements PageableComponent,
+public class ComputerEditController extends AbstractEditController implements PageableComponent,
     OrganizationalUnitComponent, OrganisationalUnitsComponent {
 
   private final DomainService domainService;
+
+  private final DomainComputerService domainComputerService;
 
   private final DomainGroupService domainGroupService;
 
   @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
-  public GroupEditController(
+  public ComputerEditController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainService domainService,
+      DomainComputerService domainComputerService,
       DomainGroupService domainGroupService,
       OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
     this.domainService = domainService;
+    this.domainComputerService = domainComputerService;
     this.domainGroupService = domainGroupService;
     this.organizationalUnitService = organizationalUnitService;
   }
@@ -82,68 +89,79 @@ public class GroupEditController extends AbstractEditController implements Pagea
     return domainService.isRfc2307Enabled();
   }
 
-  @GetMapping(path = "/admin/group-edit")
-  public String displayGroupEdit(
-      @RequestParam(value = "name", required = false) String groupName,
+  @GetMapping(path = "/admin/computer-edit")
+  public String displayComputerEdit(
+      @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
       ModelMap model) {
 
-    return Optional.ofNullable(groupName)
-        .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
-        .map(group -> {
-          DomainGroupEditRequest req = new DomainGroupEditRequest(
-              group, getProperties().getParentDn(group.getDistinguishedName()));
-          model.addAttribute("groupEditRequest", req);
-          return "admin/group-edit";
+    return Optional.ofNullable(computerName)
+        .flatMap(name -> domainComputerService.getComputer(name, ou, searchScope))
+        .map(computer -> {
+          DomainComputerEditRequest req = new DomainComputerEditRequest(
+              computer, getProperties().getParentDn(computer.getDistinguishedName()));
+          model.addAttribute("computerEditRequest", req);
+          List<DomainGroup> groups = domainGroupService
+              .getMemberships(computerName, ou, searchScope)
+              .toList();
+          model.addAttribute("groups", groups);
+          return "admin/computer-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "Computer", "todo", computerName,
+            "computers"));
   }
 
-  @PostMapping(path = "/admin/group-edit")
-  public String updateGroup(
-      @ModelAttribute(name = "groupEditRequest") DomainGroupEditRequest groupEditRequest,
+  @PostMapping(path = "/admin/computer-edit")
+  public String updateComputer(
+      @ModelAttribute(name = OU, binding = false) Dn ou,
+      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
+      @ModelAttribute(name = "computerEditRequest") DomainComputerEditRequest computerEditRequest,
       ModelMap model,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("updateGroup({})", groupEditRequest);
+    getLogger().debug("updateComputer({})", computerEditRequest);
 
-    DomainGroup updatedGroup = updateGroup(bindingResult, groupEditRequest);
+    DomainComputer updatedComputer = updateComputer(bindingResult, computerEditRequest);
 
     if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating group failed. Some fields were invalid.");
-      return "admin/group-edit";
+      getLogger().debug("Updating computer failed. Some fields were invalid.");
+      List<DomainGroup> groups = domainGroupService
+          .getMemberships(computerEditRequest.getComputer().getSamAccountName(), ou, scope)
+          .toList();
+      model.addAttribute("groups", groups);
+      return "admin/computer-edit";
     }
 
     model.clear();
-    String msg = String.format("Group '%s' was successfully updated.", updatedGroup.getName());
+    String msg = String.format("Computer '%s' was successfully updated.",
+        updatedComputer.getName());
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-        "i18n.group.edited", updatedGroup.getName());
+        "i18n.computer.edited", updatedComputer.getName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    Map<String, Object> parameters = getParamterMap(groupEditRequest.getNewOuDn());
-    String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
-        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "group", updatedGroup));
-    logRedirectTo("Group successfully updated.", redirect);
+    Map<String, Object> parameters = getParamterMap(computerEditRequest.getNewOuDn());
+    String redirect = getRedirectUri("computer-edit?name={{computer.samAccountName}}",
+        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "computer", updatedComputer));
+    logRedirectTo("Computer successfully updated.", redirect);
     return redirect;
   }
 
-  private DomainGroup updateGroup(BindingResult bindingResult,
-      DomainGroupEditRequest groupEditRequest) {
-    String groupName = groupEditRequest.getOldSamAccountName();
-    DomainGroup group = groupEditRequest.getGroup();
-    Dn ou = groupEditRequest.getNewOuDn();
+  private DomainComputer updateComputer(BindingResult bindingResult,
+      DomainComputerEditRequest computerEditRequest) {
+    DomainComputer computer = computerEditRequest.getComputer();
+    Dn ou = computerEditRequest.getNewOuDn();
     try {
-      Dn parentDn = getProperties().getParentDn(group.getDistinguishedName());
+      Dn parentDn = getProperties().getParentDn(computer.getDistinguishedName());
       Dn ouDn = getProperties().getBaseDn(ou);
       Dn newOu = parentDn.isSame(ouDn) ? null : ouDn;
-      return domainGroupService.updateGroup(groupName, group, newOu);
+      return domainComputerService.updateComputer(computer, newOu);
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
     }
-    return group;
+    return computer;
   }
 
   private void handleException(BindingResult bindingResult, ServiceException serviceException) {
@@ -151,34 +169,29 @@ public class GroupEditController extends AbstractEditController implements Pagea
     getLogger().debug("Handle exception of bind target '{}'",
         bindingResult.getTarget(), serviceException);
 
-    if (!(bindingResult.getTarget() instanceof DomainGroupEditRequest)) {
+    if (!(bindingResult.getTarget() instanceof DomainComputerEditRequest)) {
       return;
     }
 
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Group name is required.");
+        bindingResult.rejectValue("computer.samAccountName", "code",
+            "Computer name is required.");
         break;
       }
       case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Group name contains illegal characters.");
+        bindingResult.rejectValue("computer.samAccountName", "code",
+            "Computer name contains illegal characters.");
         break;
       }
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Group name already exists.");
-        break;
-      }
-      case EC_GID_NUMBER_ALREADY_EXISTS: {
-        bindingResult.rejectValue("group.gidNumber", "code",
-            "Unix GID number already exists.");
+        bindingResult.rejectValue("computer.samAccountName", "code",
+            "Computer name already exists.");
         break;
       }
       case EC_DN_ALREADY_EXISTS: {
-        bindingResult.rejectValue("group.samAccountName", "code",
+        bindingResult.rejectValue("computer.samAccountName", "code",
             "Distinguished name already exists.");
         break;
       }
@@ -192,14 +205,8 @@ public class GroupEditController extends AbstractEditController implements Pagea
             "Organizational unit was not found.");
         break;
       }
-      case EC_UPDATING_GROUP_FAILED: { // TODO global
-        getLogger().error("Editing group failed.", serviceException);
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Something went wrong. Please try again later.");
-        break;
-      }
       default: {
-        getLogger().error("Editing group failed with a not mapped exception.", serviceException);
+        getLogger().error("Editing computer failed with a not mapped exception.", serviceException);
         throw serviceException;
       }
     }

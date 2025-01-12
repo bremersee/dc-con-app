@@ -16,12 +16,12 @@
 
 package org.bremersee.dccon.service;
 
-import java.util.Optional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
-import org.bremersee.dccon.model.DomainGroupMember;
 import org.bremersee.dccon.model.DomainGroupMembers;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -53,29 +53,29 @@ public interface DomainGroupService {
 
 
   Stream<DomainGroup> resolveMemberships(
-      @NotNull String samAccountName,
+      @NotEmpty String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
   Stream<DomainGroup> getMemberships(
-      @NotNull String samAccountName,
+      @NotEmpty String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
 
   DomainGroupMembers findPossibleMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
   DomainGroupMembers queryPossibleMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope,
       @Nullable String query);
 
   DomainGroupMembers getMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -95,7 +95,7 @@ public interface DomainGroupService {
    * @return the group
    */
   Optional<DomainGroup> getGroup(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -108,11 +108,11 @@ public interface DomainGroupService {
    */
   @Deprecated
   Optional<DomainGroup> updateGroup(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @NotNull @Valid DomainGroup domainGroup);
 
   DomainGroup updateGroup(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @NotNull @Valid DomainGroup domainGroup,
       @Nullable Dn newOu);
 
@@ -122,6 +122,6 @@ public interface DomainGroupService {
    * @param groupName the group name
    * @return {@code true} if the group was removed; {@code false} if the group didn't exist
    */
-  Boolean deleteGroup(@NotNull String groupName);
+  Boolean deleteGroup(@NotEmpty String groupName);
 
 }

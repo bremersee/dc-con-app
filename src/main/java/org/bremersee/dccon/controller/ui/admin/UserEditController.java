@@ -119,7 +119,7 @@ public class UserEditController extends AbstractEditController implements Pageab
           model.addAttribute("groups", groups);
           return "admin/user-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
   }
 
   @PostMapping(path = "/admin/user-edit")

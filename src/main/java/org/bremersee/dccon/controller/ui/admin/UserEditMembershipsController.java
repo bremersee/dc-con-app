@@ -103,7 +103,7 @@ public class UserEditMembershipsController extends AbstractEditController
           model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
   }
 
 }

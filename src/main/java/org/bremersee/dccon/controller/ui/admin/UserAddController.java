@@ -111,7 +111,7 @@ public class UserAddController extends AbstractController
     Dn ouDn = Optional.ofNullable(ou)
         .filter(dn -> !dn.isEmpty())
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-        .orElseGet(() -> getProperties().getBaseDn(getProperties().getUser().getDefaultUserOu()));
+        .orElseGet(() -> getProperties().getBaseDn(getProperties().getUser().getDefaultOu()));
     DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
     userAddRequest.setUser(createNewDomainUser());
     userAddRequest.setNewOu(ouDn.format());
@@ -156,7 +156,7 @@ public class UserAddController extends AbstractController
         userAddRequest.getUser(),
         Optional.ofNullable(userAddRequest.getNewOu())
             .map(Dn::new)
-            .orElseGet(() -> getProperties().getUser().getDefaultUserOu()),
+            .orElseGet(() -> getProperties().getUser().getDefaultOu()),
         userAddRequest.isUseUsernameAsCn(),
         userAddRequest.isSendEmail());
 

@@ -17,6 +17,7 @@
 package org.bremersee.dccon.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
 import java.util.Optional;
@@ -75,7 +76,8 @@ public interface DomainUserService {
    * @param userName the user name
    * @return the domain user
    */
-  Optional<DomainUser> getUser(@NotNull String userName, @Nullable Dn ou, @Nullable SearchScope searchScope);
+  Optional<DomainUser> getUser(@NotEmpty String userName, @Nullable Dn ou,
+      @Nullable SearchScope searchScope);
 
   /**
    * Gets user avatar.
@@ -86,7 +88,7 @@ public interface DomainUserService {
    * @return the user avatar
    */
   Optional<byte[]> getUserAvatar(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope,
       @Nullable AvatarDefault avatarDefault,
@@ -101,11 +103,11 @@ public interface DomainUserService {
    */
   @Deprecated
   Optional<DomainUser> updateUser(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @NotNull @Valid DomainUser domainUser);
 
   DomainUser updateUser(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @NotNull DomainUser domainUser,
       @Nullable Dn newOu);
 
@@ -117,7 +119,7 @@ public interface DomainUserService {
    * @param sendEmail specifies whether to send an email or not
    */
   void updateUserPassword(
-      @NotNull String userName,
+      @NotEmpty String userName,
       String newPassword,
       boolean sendEmail);
 
@@ -129,7 +131,7 @@ public interface DomainUserService {
    * @param sendEmail specifies whether to send an email or not (default is {@code false})
    */
   void updateUserPassword(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @NotNull @Valid Password newPassword,
       @Nullable Boolean sendEmail);
 
@@ -139,14 +141,14 @@ public interface DomainUserService {
    * @param userName the user name
    * @param avatar the avatar
    */
-  void updateUserAvatar(@NotNull String userName, @NotNull InputStream avatar);
+  void updateUserAvatar(@NotEmpty String userName, @NotNull InputStream avatar);
 
   /**
    * Remove user avatar.
    *
    * @param userName the user name
    */
-  void removeUserAvatar(@NotNull String userName);
+  void removeUserAvatar(@NotEmpty String userName);
 
   /**
    * Delete user.
@@ -154,10 +156,10 @@ public interface DomainUserService {
    * @param userName the user name
    * @return {@code true} if the user was removed; {@code false} if the user didn't exist
    */
-  Boolean deleteUser(@NotNull String userName);
+  Boolean deleteUser(@NotEmpty String userName);
 
   boolean existsAvatarInActiveDirectory(
-      @NotNull String user,
+      @NotEmpty String user,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 

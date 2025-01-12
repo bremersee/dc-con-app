@@ -100,7 +100,7 @@ public class GroupAddController extends AbstractController implements PageableCo
     Dn ouDn = Optional.ofNullable(ou)
         .filter(dn -> !dn.isEmpty())
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
-        .orElseGet(() -> getProperties().getBaseDn(getProperties().getGroup().getDefaultGroupOu()));
+        .orElseGet(() -> getProperties().getBaseDn(getProperties().getGroup().getDefaultOu()));
     DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(
         new DomainGroup(), ouDn.format());
     model.addAttribute("groupAddRequest", groupAddRequest);
@@ -160,7 +160,7 @@ public class GroupAddController extends AbstractController implements PageableCo
     group.setGroupType(new DomainGroupTypeContainer(groupType));
     Dn ou = Optional.ofNullable(groupAddRequest.getNewOu())
         .map(Dn::new)
-        .orElseGet(() -> getProperties().getGroup().getDefaultGroupOu());
+        .orElseGet(() -> getProperties().getGroup().getDefaultOu());
     try {
       return domainGroupService.addGroup(group, ou);
 

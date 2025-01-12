@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Misc for Groups</title>
+  <title>Misc for Computers</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -54,30 +54,24 @@
     Status message
   </div>
 
-  <div th:if="${group != null}">
+  <div th:if="${computer != null}">
     <div class="d-flex justify-content-center">
-      <h3 class="small">Group</h3>
+      <h3 class="small">Computer</h3>
     </div>
     <div class="d-flex justify-content-center mb-4">
-      <h3 th:text="${group.name}">Administrator</h3>
+      <h3 th:text="${computer.name}">Administrator</h3>
     </div>
 
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link" href="group-edit.html"
-           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-edit" aria-hidden="true"></span>
+        <a class="nav-link" href="computer-edit.html"
+           th:href="@{computer-edit(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-computer" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-people-group" aria-hidden="true"></span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="group-edit-memberships-direct.html"
-           th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+        <a class="nav-link" href="computer-edit-memberships-direct.html"
+           th:href="@{computer-edit-memberships-direct(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
@@ -90,26 +84,26 @@
 
     <div class="mx-0 mx-sm-1 mx-md-3">
 
-      <div class="mb-4 p-3 border border-1 border-danger" th:if="${not group.sid.systemEntity}">
+      <div class="mb-4 p-3 border border-1 border-danger" th:if="${not computer.criticalSystemObject}">
         <div class="h5 mb-3">
-          <span>Delete Group </span>
-          <span class="badge text-bg-secondary" th:text="${group.samAccountName}">anna</span>
+          <span>Delete Computer </span>
+          <span class="badge text-bg-secondary" th:text="${computer.samAccountName}">zander</span>
         </div>
-        <form th:action="@{group-edit-misc-delete-group}" action="#" method="post">
+        <form th:action="@{computer-edit-misc-delete-computer}" action="#" method="post">
           <input type="hidden" name="page" th:value="${page}"/>
           <input type="hidden" name="size" th:value="${size}"/>
           <input type="hidden" name="sort" th:value="${sort}"/>
           <input type="hidden" name="q" th:value="${q}"/>
           <input type="hidden" name="ou" th:value="${ou}"/>
           <input type="hidden" name="scope" th:value="${scope}"/>
-          <input type="hidden" name="name" th:value="${group.samAccountName}"/>
+          <input type="hidden" name="name" th:value="${computer.samAccountName}"/>
 
           <div class="mb-3">
             <input type="text" class="form-control" id="verificationName" name="verificationName"
                    aria-describedby="verificationNameValidation" required
                    th:classappend="${dmsg == null} ? '' : 'is-invalid'"/>
             <label for="verificationName" id="verificationNameHelp" class="form-text">
-              Please enter the group name for deletion.
+              Please enter the computer name for deletion.
             </label>
             <div id="verificationNameValidation" class="invalid-feedback" th:if="${dmsg != null}"
                  th:text="${dmsg.msg}">

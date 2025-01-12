@@ -16,16 +16,18 @@
 
 package org.bremersee.dccon.repository;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.Optional;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The avatar provider.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface AvatarProvider {
 
   /**
@@ -74,7 +76,7 @@ public interface AvatarProvider {
    * @param user the user
    * @return the boolean
    */
-  default boolean existsAvatar(@NotNull String user) {
+  default boolean existsAvatar(@NotEmpty String user) {
     return findAvatar(user, AvatarDefault.NOT_FOUND, DEFAULT_AVATAR_SIZE).isPresent();
   }
 
@@ -87,7 +89,7 @@ public interface AvatarProvider {
    * @return the optional avatar
    */
   Optional<byte[]> findAvatar(
-      @NotNull String user,
+      @NotEmpty String user,
       @Nullable AvatarDefault avatarDefault,
       @Nullable Integer size);
 

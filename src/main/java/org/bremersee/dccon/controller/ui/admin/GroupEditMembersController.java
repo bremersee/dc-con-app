@@ -106,7 +106,7 @@ public class GroupEditMembersController extends AbstractEditController implement
           model.addAttribute("group", group);
           return "admin/group-edit-members";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "admin/groups"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
   }
 
   @PostMapping(path = "/admin/group-edit-members")

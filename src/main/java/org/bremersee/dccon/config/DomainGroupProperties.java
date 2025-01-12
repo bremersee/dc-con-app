@@ -30,9 +30,9 @@ import org.ldaptive.dn.Dn;
 public class DomainGroupProperties {
 
   @NotNull
-  private Dn defaultGroupOu = DomainUserProperties.DEFAULT_USER_OU;
+  private Dn defaultOu = DomainUserProperties.DEFAULT_OU;
 
   @NotNull
-  private SearchScope defaultGroupSearchScope = SearchScope.ONELEVEL;
+  private SearchScope defaultSearchScope = SearchScope.ONELEVEL;
 
 }

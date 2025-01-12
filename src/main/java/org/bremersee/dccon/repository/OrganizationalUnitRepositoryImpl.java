@@ -24,8 +24,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
-import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainComputerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainUserProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.repository.automock.MockComponent;
@@ -82,16 +82,16 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     return new OrFilter(
         new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue()),
         new EqualityFilter(LDAP_DN,
-            getProperties().getBaseDn(DomainUserProperties.DEFAULT_USER_OU).format()),
+            getProperties().getBaseDn(DomainUserProperties.DEFAULT_OU).format()),
         new EqualityFilter(LDAP_DN,
-            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_COMPUTER_OU).format()));
+            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_OU).format()));
   }
 
   @Override
   public Stream<OrganizationalUnit> findAll() {
     SearchRequest computersSearchRequest = SearchRequest
         .objectScopeSearchRequest(
-            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_COMPUTER_OU).format(),
+            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_OU).format(),
             getReturnAttributes());
     Stream<OrganizationalUnit> stream = getLdapTemplate()
         .findOne(computersSearchRequest, ouLdapMapper)
@@ -99,7 +99,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
 
     SearchRequest usersSearchRequest = SearchRequest
         .objectScopeSearchRequest(
-            getProperties().getBaseDn(DomainUserProperties.DEFAULT_USER_OU).format(),
+            getProperties().getBaseDn(DomainUserProperties.DEFAULT_OU).format(),
             getReturnAttributes());
     stream = Stream.concat(
         stream,

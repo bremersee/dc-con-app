@@ -21,8 +21,8 @@ import static java.util.Objects.nonNull;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainComputerProperties;
+import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.config.DomainControllerProperties.DomainProperties;
 import org.bremersee.dccon.config.DomainUserProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
@@ -58,7 +58,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
-        .distinguishedName(getProperties().getBaseDn(DomainUserProperties.DEFAULT_USER_OU).format())
+        .distinguishedName(getProperties().getBaseDn(DomainUserProperties.DEFAULT_OU).format())
         .name("Users")
         .description("Default container for upgraded user accounts")
         .systemOu(true)
@@ -67,7 +67,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .distinguishedName(
-            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_COMPUTER_OU).format())
+            getProperties().getBaseDn(DomainComputerProperties.DEFAULT_OU).format())
         .name("Computers")
         .description("Default container for upgraded computer accounts")
         .systemOu(true)

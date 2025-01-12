@@ -20,7 +20,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import com.samskivert.mustache.Mustache;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -154,7 +154,7 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   }
 
   default String getRedirectUri(
-      @NotNull String path,
+      @NotEmpty String path,
       @Nullable String mustacheTemplate,
       @Nullable Map<String, Object> parameters) {
 

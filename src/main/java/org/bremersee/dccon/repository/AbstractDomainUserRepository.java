@@ -64,7 +64,7 @@ abstract class AbstractDomainUserRepository extends AbstractRepository
 
   @Override
   Dn getDefaultOu() {
-    return getProperties().getUser().getDefaultUserOu();
+    return getProperties().getUser().getDefaultOu();
   }
 
   @Override

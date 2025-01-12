@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;
@@ -39,11 +39,11 @@ public class RedirectMessage implements Serializable {
   public RedirectMessage() {
   }
 
-  public RedirectMessage(@NotNull String msg) {
+  public RedirectMessage(@NotEmpty String msg) {
     this.msg = msg;
   }
 
-  public RedirectMessage(@NotNull String msg, RedirectMessageType msgType) {
+  public RedirectMessage(@NotEmpty String msg, RedirectMessageType msgType) {
     if (msgType != null) {
       this.msgType = msgType;
     }

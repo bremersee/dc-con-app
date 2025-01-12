@@ -16,9 +16,9 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
 import java.util.Optional;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DnsZone;
 import org.springframework.validation.annotation.Validated;
 
@@ -69,7 +69,7 @@ public interface DnsZoneRepository {
    * @param zoneName the zone name
    * @return {@code true} if the dns zone exists, otherwise {@code false}
    */
-  boolean exists(@NotNull String zoneName);
+  boolean exists(@NotEmpty String zoneName);
 
   /**
    * Find dns zone.
@@ -77,7 +77,7 @@ public interface DnsZoneRepository {
    * @param zoneName the zone name
    * @return the dns zone
    */
-  Optional<DnsZone> findOne(@NotNull String zoneName);
+  Optional<DnsZone> findOne(@NotEmpty String zoneName);
 
   /**
    * Save dns zone.
@@ -85,7 +85,7 @@ public interface DnsZoneRepository {
    * @param zoneName the zone name
    * @return the dns zone
    */
-  DnsZone save(@NotNull String zoneName);
+  DnsZone save(@NotEmpty String zoneName);
 
   /**
    * Delete dns zone.
@@ -93,7 +93,7 @@ public interface DnsZoneRepository {
    * @param zoneName the zone name
    * @return {@code true} is the repository was deleted, otherwise {@code false}
    */
-  boolean delete(@NotNull String zoneName);
+  boolean delete(@NotEmpty String zoneName);
 
 
 }

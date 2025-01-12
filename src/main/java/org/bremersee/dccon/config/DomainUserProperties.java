@@ -32,13 +32,13 @@ import org.ldaptive.dn.Dn;
 @Data
 public class DomainUserProperties {
 
-  public static final Dn DEFAULT_USER_OU = new Dn("CN=Users");
+  public static final Dn DEFAULT_OU = new Dn("CN=Users");
 
   @NotNull
-  private Dn defaultUserOu = DEFAULT_USER_OU;
+  private Dn defaultOu = DEFAULT_OU;
 
   @NotNull
-  private SearchScope defaultUserSearchScope = SearchScope.ONELEVEL;
+  private SearchScope defaultSearchScope = SearchScope.ONELEVEL;
 
   /**
    * Specifies whether the username should be used for attribute 'cn' or firstname and lastname.

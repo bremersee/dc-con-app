@@ -177,7 +177,7 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
       final DomainUser source,
       final LdapEntry destination) {
 
-    final List<AttributeModification> modifications = new ArrayList<>();
+    List<AttributeModification> modifications = new ArrayList<>();
 
     mapSamAccount(source, destination, modifications);
 
@@ -268,16 +268,6 @@ public class DomainUserLdapMapper extends AbstractLdapMapper
     }
 
     return modifications.toArray(new AttributeModification[0]);
-  }
-
-  private String getName(DomainUser domainUser) {
-    if (isEmpty(domainUser)) {
-      return null;
-    }
-    if (!isEmpty(domainUser.getDisplayName())) {
-      return domainUser.getDisplayName();
-    }
-    return domainUser.getSamAccountName();
   }
 
 }

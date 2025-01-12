@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
 import java.util.Optional;
@@ -23,12 +24,14 @@ import org.bremersee.dccon.model.AvatarDefault;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The avatar repository.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface AvatarRepository {
 
   /**
@@ -68,7 +71,7 @@ public interface AvatarRepository {
    * @return the boolean
    */
   default boolean existsAvatar(
-      @NotNull String user,
+      @NotEmpty String user,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope) {
 
@@ -77,7 +80,7 @@ public interface AvatarRepository {
   }
 
   boolean existsAvatarInActiveDirectory(
-      @NotNull String user,
+      @NotEmpty String user,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -90,7 +93,7 @@ public interface AvatarRepository {
    * @return the optional avatar
    */
   Optional<byte[]> findAvatar(
-      @NotNull String user,
+      @NotEmpty String user,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope,
       @Nullable AvatarDefault avatarDefault,
@@ -102,13 +105,13 @@ public interface AvatarRepository {
    * @param userName the username
    * @param avatar the avatar
    */
-  void saveAvatar(@NotNull String userName, @NotNull InputStream avatar);
+  void saveAvatar(@NotEmpty String userName, @NotNull InputStream avatar);
 
   /**
    * Remove avatar.
    *
    * @param userName the username
    */
-  void removeAvatar(@NotNull String userName);
+  void removeAvatar(@NotEmpty String userName);
 
 }

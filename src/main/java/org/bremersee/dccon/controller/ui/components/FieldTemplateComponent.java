@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller.ui.components;
 
 import static java.util.Objects.requireNonNullElse;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public interface FieldTemplateComponent {
 
   default String processTemplatedField(
       @NotNull BindingResult bindingResult,
-      @NotNull String fieldName,
+      @NotEmpty String fieldName,
       @Nullable String value,
       @Nullable Map<String, Object> context) {
 

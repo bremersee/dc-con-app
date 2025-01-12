@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -51,7 +52,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
    * @return the user
    */
   Optional<DomainUser> findOne(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -61,7 +62,8 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
    * @param domainUser the domain user
    * @return the domain user
    */
-  DomainUser add(@NotNull DomainUser domainUser, @Nullable Dn ou, @Nullable Boolean useUsernameAsCn);
+  DomainUser add(@NotNull DomainUser domainUser, @Nullable Dn ou,
+      @Nullable Boolean useUsernameAsCn);
 
   /**
    * Update domain user.
@@ -72,7 +74,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
   @Deprecated
   DomainUser update(@NotNull DomainUser domainUser);
 
-  DomainUser update(@NotNull String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
+  DomainUser update(@NotEmpty String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
 
   /**
    * Save password.
@@ -80,7 +82,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
    * @param userName the user name
    * @param newPassword the new password
    */
-  void savePassword(@NotNull String userName, @NotNull String newPassword);
+  void savePassword(@NotEmpty String userName, @NotEmpty String newPassword);
 
   /**
    * Delete user.
@@ -88,6 +90,6 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
    * @param userName the user name
    * @return {@code true} if the user was removed; {@code false} if the user didn't exist
    */
-  boolean delete(@NotNull String userName);
+  boolean delete(@NotEmpty String userName);
 
 }

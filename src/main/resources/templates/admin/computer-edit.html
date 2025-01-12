@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Users</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div th:if="${computerEditRequest != null}">
+    <div class="d-flex justify-content-center">
+      <h3 class="small">Edit computer</h3>
+    </div>
+    <div class="d-flex justify-content-center mb-4">
+      <h3 th:text="${computerEditRequest.computer.name}">Domain Controller</h3>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">
+          <span class="fa fa-computer" aria-hidden="true"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="computer-edit-memberships-direct.html"
+           th:href="@{computer-edit-memberships-direct(name=${computerEditRequest.computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-folder-tree" aria-hidden="true"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#"
+           th:classappend="${computerEditRequest.computer.criticalSystemObject} ? 'disabled' : ''"
+           th:attr="aria-disabled=${computerEditRequest.computer.criticalSystemObject}"
+           th:href="@{computer-edit-misc(name=${computerEditRequest.computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-trash-alt" aria-hidden="true"></span>
+        </a>
+      </li>
+    </ul>
+
+    <form th:action="@{computer-edit}" th:object="${computerEditRequest}" action="#" method="post"
+          class="mx-0 mx-sm-1 mx-md-3">
+
+      <input type="hidden" name="page" th:value="${page}"/>
+      <input type="hidden" name="size" th:value="${size}"/>
+      <input type="hidden" name="sort" th:value="${sort}"/>
+      <input type="hidden" name="q" th:value="${q}"/>
+      <input type="hidden" name="ou" th:value="${ou}"/>
+      <input type="hidden" name="scope" th:value="${scope}"/>
+
+      <input type="hidden" name="distinguishedName" th:field="*{computer.distinguishedName}"/>
+
+      <div class="mb-3">
+        <label for="newOu" class="form-label">Organizational Unit</label>
+        <select id="newOu" class="form-select" aria-label="Organizational Unit"
+                aria-describedby="newOuValidation"
+                th:classappend="${#fields.hasErrors('newOu')} ? 'is-invalid' : ''"
+                th:field="*{newOu}">
+          <option th:each="o : ${ous}" th:value="${o.distinguishedName}" th:text="${o.nameTree}">
+            Users
+          </option>
+        </select>
+        <div id="newOuValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('newOu')} ? ${#fields.errors('newOu')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="samAccountName" class="form-label">Computer ID</label>
+        <input type="text" class="form-control" id="samAccountName" name="samAccountName" readonly
+               th:field="*{computer.samAccountName}"/>
+      </div>
+
+      <div class="mb-3">
+        <label for="name" class="form-label">Computer name</label>
+        <input type="text" class="form-control" id="name" name="name" readonly
+               th:field="*{computer.name}"/>
+      </div>
+
+      <div class="mb-3">
+        <label for="primaryGroupId" class="form-label">Primary group</label>
+        <select id="primaryGroupId" class="form-select" aria-label="Primary group"
+                aria-describedby="primaryGroupIdValidation"
+                th:classappend="${#fields.hasErrors('computer.primaryGroupId')} ? 'is-invalid' : ''"
+                th:field="*{computer.primaryGroupId}">
+          <option th:each="o : ${groups}" th:value="${o.primaryGroupId}" th:text="${o.samAccountName}">
+            Domain Users
+          </option>
+        </select>
+        <div id="primaryGroupIdValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('computer.primaryGroupId')} ? ${#fields.errors('computer.primaryGroupId')[0]} : ''">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="dnsHostName" class="form-label">Computer host name</label>
+        <input type="text" class="form-control" id="dnsHostName" name="dnsHostName" readonly
+               th:field="*{computer.dnsHostName}"/>
+      </div>
+
+      <div class="mb-3">
+        <label for="operatingSystem" class="form-label">Operating system</label>
+        <input type="text" class="form-control" id="operatingSystem" name="operatingSystem" readonly
+               th:field="*{computer.operatingSystem}"/>
+      </div>
+
+      <div class="mb-3">
+        <label for="operatingSystemVersion" class="form-label">Version of the operating system</label>
+        <input type="text" class="form-control" id="operatingSystemVersion" name="operatingSystemVersion" readonly
+               th:field="*{computer.operatingSystemVersion}"/>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="description" name="description"
+               th:field="*{computer.description}" />
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-3">
+        Update
+      </button>
+      <a href="computers.html" th:href="@{computers(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}"
+         class="btn btn-secondary ml-3 mt-3" role="button">
+        Cancel
+      </a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

@@ -40,15 +40,12 @@ public class DomainGroupEditRequest implements Serializable {
 
   private DomainGroup group;
 
-  private String oldDn;
-
   private String oldSamAccountName;
 
   private String newOu;
 
   public DomainGroupEditRequest(DomainGroup group, Dn newOu) {
     this.group = group;
-    this.oldDn = group.getDistinguishedName();
     this.oldSamAccountName = group.getSamAccountName();
     this.newOu = newOu.format();
   }

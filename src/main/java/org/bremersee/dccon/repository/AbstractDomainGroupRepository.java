@@ -43,7 +43,7 @@ abstract class AbstractDomainGroupRepository extends AbstractRepository
 
   @Override
   Dn getDefaultOu() {
-    return getProperties().getGroup().getDefaultGroupOu();
+    return getProperties().getGroup().getDefaultOu();
   }
 
   @Override

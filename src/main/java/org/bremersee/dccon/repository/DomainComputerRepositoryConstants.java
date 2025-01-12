@@ -1,0 +1,36 @@
+package org.bremersee.dccon.repository;
+
+public interface DomainComputerRepositoryConstants extends RepositoryConstants {
+
+  String LDAP_COMPUTER_DNS_HOST_NAME = "dNSHostName";
+
+  String LDAP_COMPUTER_NETWORK_ADDRESS = "networkAddress";
+
+  String LDAP_COMPUTER_OPERATING_SYSTEM = "operatingSystem";
+
+  String LDAP_COMPUTER_OPERATING_SYSTEM_VERSION = "operatingSystemVersion";
+
+  String LDAP_COMPUTER_SERVICE_PRINCIPAL_NAME = "servicePrincipalName";
+
+  String[] LDAP_COMPUTER_BINARY_ATTRIBUTES = {
+      LDAP_OBJECT_SID
+  };
+
+  String[] LDAP_COMPUTER_MAPPED_ATTRIBUTES = {
+      LDAP_WHEN_CREATED,
+      LDAP_WHEN_CHANGED,
+      LDAP_DESCRIPTION,
+      LDAP_COMPUTER_DNS_HOST_NAME,
+      LDAP_MEMBER_OF_GROUP,
+      LDAP_NAME,
+      LDAP_COMPUTER_NETWORK_ADDRESS,
+      LDAP_OBJECT_SID,
+      LDAP_COMPUTER_OPERATING_SYSTEM,
+      LDAP_COMPUTER_OPERATING_SYSTEM_VERSION,
+      LDAP_PRIMARY_GROUP_ID,
+      LDAP_SAM_ACCOUNT_NAME,
+      LDAP_COMPUTER_SERVICE_PRINCIPAL_NAME,
+      LDAP_CRITICAL_SYSTEM_OBJECT
+  };
+
+}

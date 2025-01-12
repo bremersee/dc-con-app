@@ -16,8 +16,8 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
@@ -48,29 +48,29 @@ public interface DomainGroupRepository {
 
 
   Stream<DomainGroup> resolveMemberships(
-      @NotNull String samAccountName,
+      @NotEmpty String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
   Stream<DomainGroup> getMemberships(
-      @NotNull String samAccountName,
+      @NotEmpty String samAccountName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
 
   Stream<DomainGroupMember> findPossibleMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
   Stream<DomainGroupMember> queryPossibleMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope,
       @Nullable String query);
 
   Stream<DomainGroupMember> getMembers(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -82,7 +82,7 @@ public interface DomainGroupRepository {
    * @return the group
    */
   Optional<DomainGroup> findOne(
-      @NotNull String groupName,
+      @NotEmpty String groupName,
       @Nullable Dn ou,
       @Nullable SearchScope searchScope);
 
@@ -103,7 +103,8 @@ public interface DomainGroupRepository {
   @Deprecated
   DomainGroup update(@NotNull DomainGroup domainGroup);
 
-  DomainGroup update(@NotNull String groupName, @NotNull DomainGroup domainGroup, @Nullable Dn newOu);
+  DomainGroup update(@NotEmpty String groupName, @NotNull DomainGroup domainGroup,
+      @Nullable Dn newOu);
 
   /**
    * Delete group.
@@ -111,6 +112,6 @@ public interface DomainGroupRepository {
    * @param groupName the group name
    * @return {@code true} if the group was removed; {@code false} if the group didn't exist
    */
-  boolean delete(@NotNull String groupName);
+  boolean delete(@NotEmpty String groupName);
 
 }

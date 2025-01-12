@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.repository;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -70,17 +69,17 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
   }
 
   @Override
-  public boolean exists(@NotNull String zoneName) {
+  public boolean exists(String zoneName) {
     return repo.containsKey(zoneName.toLowerCase());
   }
 
   @Override
-  public Optional<DnsZone> findOne(@NotNull String zoneName) {
+  public Optional<DnsZone> findOne(String zoneName) {
     return Optional.ofNullable(build(repo.get(zoneName.toLowerCase())));
   }
 
   @Override
-  public DnsZone save(@NotNull String zoneName) {
+  public DnsZone save(String zoneName) {
     return build(repo.computeIfAbsent(zoneName.toLowerCase(), key -> DnsZone.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
@@ -89,7 +88,7 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
   }
 
   @Override
-  public boolean delete(@NotNull String zoneName) {
+  public boolean delete(String zoneName) {
     return repo.remove(zoneName.toLowerCase()) != null;
   }
 

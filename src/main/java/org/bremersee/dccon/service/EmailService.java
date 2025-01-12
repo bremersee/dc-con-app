@@ -16,15 +16,16 @@
 
 package org.bremersee.dccon.service;
 
-import jakarta.validation.constraints.NotNull;
-import java.util.Locale;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The email service.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface EmailService {
 
   /**
@@ -34,7 +35,7 @@ public interface EmailService {
    * @param clearPassword the clear password
    */
   void sendEmailWithCredentials(
-      @NotNull String userName,
+      @NotEmpty String userName,
       @Nullable String clearPassword);
 
 }

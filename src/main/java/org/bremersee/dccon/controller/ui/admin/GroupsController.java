@@ -64,12 +64,12 @@ public class GroupsController extends AbstractController
 
   @Override
   public Dn getDefaultOrganizationalUnit() {
-    return getProperties().getGroup().getDefaultGroupOu();
+    return getProperties().getGroup().getDefaultOu();
   }
 
   @Override
   public SearchScope getDefaultSearchScope() {
-    return getProperties().getGroup().getDefaultGroupSearchScope();
+    return getProperties().getGroup().getDefaultSearchScope();
   }
 
   @Override

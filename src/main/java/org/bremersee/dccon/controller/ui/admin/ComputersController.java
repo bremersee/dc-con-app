@@ -24,8 +24,8 @@ import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitNavigationComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitDropdown;
-import org.bremersee.dccon.model.DomainUserPage;
-import org.bremersee.dccon.service.DomainUserService;
+import org.bremersee.dccon.model.DomainComputerPage;
+import org.bremersee.dccon.service.DomainComputerService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
@@ -44,50 +44,49 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-//@Scope(WebApplicationContext.SCOPE_REQUEST)
-public class UsersController extends AbstractController
+public class ComputersController extends AbstractController
     implements PageableComponent, OrganizationalUnitNavigationComponent {
 
-  private final DomainUserService domainUserService;
+  private final DomainComputerService domainComputerService;
 
   @Getter
   private final OrganizationalUnitService organizationalUnitService;
 
-  public UsersController(
-      DomainControllerProperties properties,
+  public ComputersController(
+      DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
-      DomainUserService domainUserService,
+      DomainComputerService domainComputerService,
       OrganizationalUnitService organizationalUnitService) {
-    super(properties, localeResolver);
-    this.domainUserService = domainUserService;
+    super(domainControllerProperties, localeResolver);
+    this.domainComputerService = domainComputerService;
     this.organizationalUnitService = organizationalUnitService;
   }
 
   @Override
   public Dn getDefaultOrganizationalUnit() {
-    return getProperties().getUser().getDefaultOu();
+    return getProperties().getComputer().getDefaultOu();
   }
 
   @Override
   public SearchScope getDefaultSearchScope() {
-    return getProperties().getUser().getDefaultSearchScope();
+    return getProperties().getComputer().getDefaultSearchScope();
   }
 
   @Override
   public String getDefaultSort() {
-    return USER_SORT;
+    return COMPUTER_SORT;
   }
 
   @Override
   public String getCurrentPageName() {
-    return "users";
+    return "computers";
   }
 
-  @RequestMapping(path = "/admin/users", method = {RequestMethod.GET, RequestMethod.POST})
-  public String displayUsers(
+  @RequestMapping(path = "/admin/computers", method = {RequestMethod.GET, RequestMethod.POST})
+  public String displayComputers(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = USER_SORT) SortOrders sort,
+      @RequestParam(name = SORT, defaultValue = COMPUTER_SORT) SortOrders sort,
       @RequestParam(name = QUERY, required = false) String query,
       @RequestParam(name = OU, required = false) Dn ou,
       @RequestParam(name = SCOPE, required = false) SearchScope scope,
@@ -96,10 +95,10 @@ public class UsersController extends AbstractController
     OrganizationalUnitDropdown ouDropdown = getOrganizationalUnitDropdown(ou, scope);
     addOrganizationalUnitDropdown(model, ouDropdown);
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
-    DomainUserPage userPage = new DomainUserPage(
-        domainUserService.getUsers(pageable, query, ou, ouDropdown.getSelectedScope()));
-    model.addAttribute("users", userPage);
-    return "admin/users";
+    DomainComputerPage computerPage = new DomainComputerPage(domainComputerService.getComputers(
+        pageable, query, ou, ouDropdown.getSelectedScope()));
+    model.addAttribute("computers", computerPage);
+    return "admin/computers";
   }
 
 }

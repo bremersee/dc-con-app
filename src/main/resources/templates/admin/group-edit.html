@@ -73,13 +73,13 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${groupEditRequest.oldDn},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-members(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-people-group" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="group-edit-memberships-direct.html"
-           th:href="@{group-edit-memberships-direct(name=${groupEditRequest.oldDn},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-memberships-direct(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
@@ -87,7 +87,7 @@
         <a class="nav-link" href="#"
            th:classappend="${groupEditRequest.group.sid.systemEntity} ? 'disabled' : ''"
            th:attr="aria-disabled=${groupEditRequest.group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${groupEditRequest.oldDn},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-misc(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -103,7 +103,6 @@
       <input type="hidden" name="ou" th:value="${ou}"/>
       <input type="hidden" name="scope" th:value="${scope}"/>
 
-      <input type="hidden" name="oldDn" th:field="*{oldDn}"/>
       <input type="hidden" name="oldSamAccountName" th:field="*{oldSamAccountName}"/>
 
       <input type="hidden" name="distinguishedName" th:field="*{group.distinguishedName}"/>

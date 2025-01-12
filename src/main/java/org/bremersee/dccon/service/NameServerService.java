@@ -16,10 +16,11 @@
 
 package org.bremersee.dccon.service;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsZone;
@@ -45,7 +46,8 @@ public interface NameServerService {
    * @param unknownFilter the unknown filter (default is {@link UnknownFilter#NO_UNKNOWN}
    * @return found dns nodes
    */
-  Page<DnsNode> query(@NotNull Pageable pageable, @NotNull String query, @Nullable UnknownFilter unknownFilter);
+  Page<DnsNode> query(@NotNull Pageable pageable, @NotEmpty String query,
+      @Nullable UnknownFilter unknownFilter);
 
   /**
    * Get dhcp leases.
@@ -80,7 +82,7 @@ public interface NameServerService {
    * @param zoneName the zone name
    * @return {@code true} if the dns zone was removed; {@code false} if the dns zone didn't exist
    */
-  Boolean deleteDnsZone(@NotNull String zoneName);
+  Boolean deleteDnsZone(@NotEmpty String zoneName);
 
 
   /**
@@ -93,7 +95,7 @@ public interface NameServerService {
    * @return the dns nodes
    */
   Page<DnsNode> getDnsNodes(
-      @NotNull String zoneName,
+      @NotEmpty String zoneName,
       @NotNull Pageable pageable,
       @Nullable String query,
       @Nullable UnknownFilter unknownFilter);
@@ -106,7 +108,7 @@ public interface NameServerService {
    * @return the dns node
    */
   Optional<DnsNode> save(
-      @NotNull String zoneName,
+      @NotEmpty String zoneName,
       @NotNull @Valid DnsNode dnsNode);
 
   /**
@@ -118,8 +120,8 @@ public interface NameServerService {
    * @return the dns node
    */
   Optional<DnsNode> getDnsNode(
-      @NotNull String zoneName,
-      @NotNull String nodeName,
+      @NotEmpty String zoneName,
+      @NotEmpty String nodeName,
       @Nullable UnknownFilter unknownFilter);
 
   /**
@@ -130,8 +132,8 @@ public interface NameServerService {
    * @return {@code true} if the dns node was removed; {@code false} if dns node didn't exist
    */
   Boolean deleteDnsNode(
-      @NotNull String zoneName,
-      @NotNull String nodeName);
+      @NotEmpty String zoneName,
+      @NotEmpty String nodeName);
 
   /**
    * Delete all dns nodes.
@@ -140,7 +142,7 @@ public interface NameServerService {
    */
   @SuppressWarnings("unused")
   void deleteAllDnsNodes(
-      @NotNull String zoneName);
+      @NotEmpty String zoneName);
 
   /**
    * Delete all dns nodes.
@@ -149,7 +151,7 @@ public interface NameServerService {
    * @param nodeNames the node names
    */
   void deleteAllDnsNodes(
-      @NotNull String zoneName,
+      @NotEmpty String zoneName,
       @Nullable List<String> nodeNames);
 
 }

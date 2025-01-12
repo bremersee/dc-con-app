@@ -18,6 +18,7 @@ package org.bremersee.dccon.service;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Locale;
 import lombok.AccessLevel;
@@ -106,5 +107,5 @@ public abstract class AbstractEmailService implements EmailService {
   abstract void doSendEmailWithCredentials(
       @NotNull DomainUser domainUser,
       @NotNull Locale locale,
-      @NotNull String mailText);
+      @NotEmpty String mailText);
 }

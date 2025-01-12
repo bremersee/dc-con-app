@@ -16,13 +16,14 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotNull;
 import org.bremersee.dccon.model.DnsNode;
 import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
@@ -65,7 +66,7 @@ public interface DnsNodeRepository {
    * @param unknownFilter the unknown filter
    * @return the dns node
    */
-  Optional<DnsNode> findByHostName(@NotNull String hostName, UnknownFilter unknownFilter);
+  Optional<DnsNode> findByHostName(@NotEmpty String hostName, UnknownFilter unknownFilter);
 
   /**
    * Find all.
@@ -76,7 +77,7 @@ public interface DnsNodeRepository {
    * @return the dns nodes
    */
   Stream<DnsNode> findAll(
-      @NotNull String zoneName,
+      @NotEmpty String zoneName,
       @Nullable UnknownFilter unknownFilter,
       @Nullable String query);
 
@@ -89,8 +90,8 @@ public interface DnsNodeRepository {
    * @return {@code true} if the dns node exists, otherwise {@code false}
    */
   boolean exists(
-      @NotNull String zoneName,
-      @NotNull String nodeName,
+      @NotEmpty String zoneName,
+      @NotEmpty String nodeName,
       @Nullable UnknownFilter unknownFilter);
 
   /**
@@ -102,8 +103,8 @@ public interface DnsNodeRepository {
    * @return the dns node
    */
   Optional<DnsNode> findOne(
-      @NotNull String zoneName,
-      @NotNull String nodeName,
+      @NotEmpty String zoneName,
+      @NotEmpty String nodeName,
       @Nullable UnknownFilter unknownFilter);
 
   /**
@@ -114,7 +115,7 @@ public interface DnsNodeRepository {
    * @return the optional
    */
   Optional<DnsPair> findCorrelatedDnsNode(
-      @NotNull String zoneName,
+      @NotEmpty String zoneName,
       @NotNull DnsRecord record);
 
   /**
@@ -124,7 +125,7 @@ public interface DnsNodeRepository {
    * @param dnsNode the dns node
    * @return the dns node (will be {@link Optional#empty()}, if the node has no records)
    */
-  Optional<DnsNode> save(@NotNull String zoneName, @NotNull DnsNode dnsNode);
+  Optional<DnsNode> save(@NotEmpty String zoneName, @NotNull DnsNode dnsNode);
 
   /**
    * Delete a dns node.
@@ -133,7 +134,7 @@ public interface DnsNodeRepository {
    * @param nodeName the node name
    * @return {@code true} if the dns node was removed; {@code false} if dns node didn't exist
    */
-  default boolean delete(@NotNull String zoneName, @NotNull String nodeName) {
+  default boolean delete(@NotEmpty String zoneName, @NotEmpty String nodeName) {
     return findOne(zoneName, nodeName, UnknownFilter.ALL)
         .map(node -> delete(zoneName, node))
         .orElse(false);
@@ -146,14 +147,14 @@ public interface DnsNodeRepository {
    * @param node the node
    * @return the boolean
    */
-  boolean delete(@NotNull String zoneName, @NotNull DnsNode node);
+  boolean delete(@NotEmpty String zoneName, @NotNull DnsNode node);
 
   /**
    * Delete all dns nodes of the specified dns zone.
    *
    * @param zoneName the zone name
    */
-  default void deleteAll(@NotNull String zoneName) {
+  default void deleteAll(@NotEmpty String zoneName) {
     findAll(zoneName, UnknownFilter.ALL, null)
         .forEach(dnsNode -> delete(zoneName, dnsNode));
   }
@@ -164,7 +165,7 @@ public interface DnsNodeRepository {
    * @param zoneName the zone name
    * @param nodeNames the node names
    */
-  default void deleteAll(@NotNull String zoneName, @Nullable Collection<String> nodeNames) {
+  default void deleteAll(@NotEmpty String zoneName, @Nullable Collection<String> nodeNames) {
     if (nodeNames != null && !nodeNames.isEmpty()) {
       for (String nodeName : new LinkedHashSet<>(nodeNames)) {
         findOne(zoneName, nodeName, UnknownFilter.ALL)

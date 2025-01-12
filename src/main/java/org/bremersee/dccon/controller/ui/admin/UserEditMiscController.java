@@ -84,7 +84,7 @@ public class UserEditMiscController extends AbstractEditController implements Pa
           model.addAttribute("user", user);
           return "admin/user-edit-misc";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "admin/users"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
   }
 
   @PostMapping(path = "/admin/user-edit-misc-reset-password")

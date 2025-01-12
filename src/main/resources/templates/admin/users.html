@@ -100,7 +100,7 @@
 
   <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(users.content)}">
     <a th:each="entry : ${users.content}" href="#"
-       th:href="@{user-edit(user=${entry.distinguishedName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
+       th:href="@{user-edit(user=${entry.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1"

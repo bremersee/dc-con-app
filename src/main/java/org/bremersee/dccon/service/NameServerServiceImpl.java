@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -212,7 +211,7 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public Boolean deleteDnsNode(@NotNull String zoneName, @NotNull String nodeName) {
+  public Boolean deleteDnsNode(String zoneName, String nodeName) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
@@ -223,7 +222,7 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public void deleteAllDnsNodes(@NotNull String zoneName) {
+  public void deleteAllDnsNodes(String zoneName) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
@@ -234,7 +233,7 @@ public class NameServerServiceImpl implements NameServerService {
   }
 
   @Override
-  public void deleteAllDnsNodes(@NotNull String zoneName, List<String> nodeNames) {
+  public void deleteAllDnsNodes(String zoneName, List<String> nodeNames) {
     if (!dnsZoneRepository.exists(zoneName)) {
       throw ServiceException.notFoundWithErrorCode(
           DnsZone.class.getSimpleName(),
