@@ -266,7 +266,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
           .sizeLimit(1)
           .build();
     }
-    Dn ouDn = getProperties().getBaseDn(validateOu(ouRdn));
+    Dn ouDn = getProperties().getBaseDn(ouRdn);
     return SearchRequest.builder()
         .dn(ouDn.format())
         .filter(requireNonNullElseGet(filter, () -> findOneFilter(uniqueName)))
@@ -284,7 +284,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
       Filter filter,
       SearchScope scope,
       String... returnAttributes) {
-    Dn ouDn = getProperties().getBaseDn(validateOu(ouRdn));
+    Dn ouDn = getProperties().getBaseDn(ouRdn);
     return SearchRequest.builder()
         .dn(ouDn.format())
         .filter(filter)

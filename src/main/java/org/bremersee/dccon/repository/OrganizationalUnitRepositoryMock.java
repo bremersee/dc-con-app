@@ -113,6 +113,11 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
   }
 
   @Override
+  public boolean hasChildren(Dn ou) {
+    return false;
+  }
+
+  @Override
   public OrganizationalUnit add(OrganizationalUnit organizationalUnit, Dn parentOu) {
     Dn ou = new Dn(new RDn(new NameValue(LDAP_OU, organizationalUnit.getName())));
     if (nonNull(parentOu) && !parentOu.isEmpty()) {

@@ -32,7 +32,7 @@ import org.ldaptive.dn.Dn;
  */
 @Data
 @NoArgsConstructor
-public class OrganizationalUnitEditRequest implements Serializable {
+public class OrganizationalUnitDeleteRequest implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -41,18 +41,17 @@ public class OrganizationalUnitEditRequest implements Serializable {
 
   private Boolean systemOu;
 
-  private String parentOu;
-
   private String name;
 
-  private String description;
+  private Boolean hasChildren;
 
-  public OrganizationalUnitEditRequest(OrganizationalUnit ou) {
+  private String verificationName;
+
+  public OrganizationalUnitDeleteRequest(OrganizationalUnit ou, Boolean hasChildren) {
     this.ou = ou.getDistinguishedName();
     this.systemOu = ou.getSystemOu();
-    this.parentOu = getOuDn().getParent().format();
     this.name = ou.getName();
-    this.description = ou.getDescription();
+    this.hasChildren = hasChildren;
   }
 
   public Dn getOuDn() {
@@ -60,13 +59,6 @@ public class OrganizationalUnitEditRequest implements Serializable {
       return null;
     }
     return new Dn(ou);
-  }
-
-  public Dn getParentOuDn() {
-    if (isEmpty(parentOu)) {
-      return null;
-    }
-    return new Dn(parentOu);
   }
 
 }

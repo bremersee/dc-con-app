@@ -120,10 +120,6 @@ public class OrganizationalUnitAddController extends AbstractController
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
 
-    if (!(bindTarget instanceof OrganizationalUnitAddRequest)) {
-      return;
-    }
-
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_OU_NAME_REQUIRED: {

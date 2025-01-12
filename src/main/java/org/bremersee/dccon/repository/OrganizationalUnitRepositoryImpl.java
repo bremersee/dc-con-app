@@ -44,6 +44,7 @@ import org.ldaptive.dn.NameValue;
 import org.ldaptive.dn.RDn;
 import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.Filter;
+import org.ldaptive.filter.NotFilter;
 import org.ldaptive.filter.OrFilter;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,6 +135,24 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
   @Override
   public boolean exists(Dn ou) {
     return findOne(ou).isPresent();
+  }
+
+  @Override
+  public boolean hasChildren(Dn ou) {
+    if (isEmpty(ou) || ou.isEmpty()) {
+      return false;
+    }
+    RDn rdn = ou.getRDn();
+    Filter filter = new NotFilter(new EqualityFilter(
+        rdn.getNameValue().getName(),
+        rdn.getNameValue().getStringValue()));
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(ou.format())
+        .filter(filter)
+        .scope(SearchScope.SUBTREE)
+        .returnAttributes(LDAP_DN)
+        .build();
+    return !getLdapTemplate().findAll(searchRequest).isEmpty();
   }
 
   @ProfileRequired({"cli", "ldap"})

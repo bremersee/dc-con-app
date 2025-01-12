@@ -421,7 +421,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       commands.add("--login-shell=" + quote(domainUser.getLoginShell()));
       commands.add("--unix-home=" + quote(domainUser.getUnixHomeDirectory()));
       commands.add("--gid-number=" + domainUser.getGidNumber());
-      commands.add("--uid=" + quote(domainUser.getSamAccountName()));
+      commands.add("--uid=" + quote(domainUser.getUid()));
     }
     auth(commands);
 
@@ -441,6 +441,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   public boolean hasAllNisAttributes(DomainUser domainUser) {
     return !isEmpty(domainUser)
         && !isEmpty(getNisDomain(domainUser))
+        && !isEmpty(domainUser.getUid())
         && !isEmpty(domainUser.getUidNumber())
         && !isEmpty(domainUser.getLoginShell())
         && !isEmpty(domainUser.getUnixHomeDirectory())

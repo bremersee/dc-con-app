@@ -24,12 +24,14 @@ import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The interface OrganizationalUnitService.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface OrganizationalUnitService {
 
   Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query);
@@ -44,9 +46,12 @@ public interface OrganizationalUnitService {
 
   boolean organisationUnitExists(@Nullable Dn ou);
 
+  boolean hasChildren(@NotNull Dn ou);
+
   OrganizationalUnit add(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn parentOu);
 
-  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn newParentOu);
+  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit,
+      @Nullable Dn newParentOu);
 
   boolean delete(@NotNull Dn ou);
 

@@ -133,6 +133,11 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   }
 
   @Override
+  public boolean hasChildren(Dn ou) {
+    return repository.hasChildren(ou);
+  }
+
+  @Override
   public OrganizationalUnit add(OrganizationalUnit organizationalUnit, Dn parentOu) {
     return repository.add(organizationalUnit, parentOu);
   }

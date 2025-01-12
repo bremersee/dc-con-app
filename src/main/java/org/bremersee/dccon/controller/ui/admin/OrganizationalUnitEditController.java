@@ -114,7 +114,7 @@ public class OrganizationalUnitEditController extends AbstractEditController
     } catch (ServiceException e) {
       handleException(bindingResult, e);
       if (bindingResult.hasErrors()) {
-        getLogger().debug("Adding organizational unit failed. Some fields were invalid.");
+        getLogger().debug("Updating organizational unit failed. Some fields were invalid.");
         return "admin/organizational-unit-edit";
       }
     }
@@ -137,10 +137,6 @@ public class OrganizationalUnitEditController extends AbstractEditController
 
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
-
-    if (!(bindTarget instanceof OrganizationalUnitEditRequest)) {
-      return;
-    }
 
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {

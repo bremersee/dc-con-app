@@ -16,19 +16,20 @@
 
 package org.bremersee.dccon.repository;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The interface OrganizationalUnitRepository.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface OrganizationalUnitRepository extends OrganizationalUnitRepositoryConstants {
 
   String LDAP_OU = "OU";
@@ -39,9 +40,12 @@ public interface OrganizationalUnitRepository extends OrganizationalUnitReposito
 
   boolean exists(@NotNull Dn ou);
 
+  boolean hasChildren(@NotNull Dn ou);
+
   OrganizationalUnit add(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn parentOu);
 
-  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn newParentOu);
+  OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit,
+      @Nullable Dn newParentOu);
 
   boolean delete(@NotNull Dn ou);
 
