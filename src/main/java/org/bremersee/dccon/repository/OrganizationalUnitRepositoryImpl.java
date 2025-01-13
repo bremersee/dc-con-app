@@ -256,7 +256,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     Dn currentDn = new Dn(existing.getDistinguishedName());
     String tmpName = null;
     if (!existing.getName().equalsIgnoreCase(organizationalUnit.getName())) {
-      tmpName = UUID.randomUUID().toString();
+      tmpName = organizationalUnit.getName() + '-' + UUID.randomUUID();
       currentDn = rename(currentDn, tmpName);
     }
     if (!existingDn.getParent().isSame(wantedDn.getParent())) {
