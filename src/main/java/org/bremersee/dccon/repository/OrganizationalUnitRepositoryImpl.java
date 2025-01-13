@@ -255,14 +255,15 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
 
     Dn currentDn = new Dn(existing.getDistinguishedName());
     String tmpName = null;
-    if (!existing.getName().equalsIgnoreCase(organizationalUnit.getName())) {
-      tmpName = organizationalUnit.getName() + '-' + UUID.randomUUID();
-      currentDn = rename(currentDn, tmpName);
-    }
     if (!existingDn.getParent().isSame(wantedDn.getParent())) {
+      if (!existing.getName().equalsIgnoreCase(organizationalUnit.getName())) {
+        tmpName = organizationalUnit.getName() + '-' + UUID.randomUUID();
+        currentDn = rename(currentDn, tmpName);
+      }
       currentDn = move(currentDn, wantedDn.getParent());
     }
-    if (!isEmpty(tmpName)) {
+    if (!isEmpty(tmpName)
+        || (!existing.getName().equalsIgnoreCase(organizationalUnit.getName()))) {
       currentDn = rename(currentDn, organizationalUnit.getName());
     }
     organizationalUnit.setDistinguishedName(currentDn.format());
