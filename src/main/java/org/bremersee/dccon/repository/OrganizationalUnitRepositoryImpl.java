@@ -91,6 +91,17 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
 
   @Override
   public Stream<OrganizationalUnit> findAll() {
+    SearchRequest searchRequest = searchAllRequest(
+        null,
+        new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_OU),
+        SearchScope.SUBTREE,
+        getReturnAttributes());
+    return getLdapTemplate().findAll(searchRequest, ouLdapMapper)
+        .filter(getIgnoredObjectFilter());
+  }
+
+  @Override
+  public Stream<OrganizationalUnit> findAllWithSystemOus() {
     SearchRequest computersSearchRequest = SearchRequest
         .objectScopeSearchRequest(
             getProperties().getBaseDn(DomainComputerProperties.DEFAULT_OU).format(),
@@ -112,10 +123,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
         new EqualityFilter(LDAP_OBJECT_CLASS, LDAP_OBJECT_CLASS_OU),
         SearchScope.SUBTREE,
         getReturnAttributes());
-    return Stream.concat(
-            stream,
-            getLdapTemplate().findAll(searchRequest, ouLdapMapper))
-        .filter(getIgnoredObjectFilter());
+    return Stream.concat(stream, findAll());
   }
 
   @Override

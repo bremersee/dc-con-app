@@ -36,6 +36,8 @@ public interface OrganizationalUnitRepository extends OrganizationalUnitReposito
 
   Stream<OrganizationalUnit> findAll();
 
+  Stream<OrganizationalUnit> findAllWithSystemOus();
+
   Optional<OrganizationalUnit> findOne(@NotNull Dn ou);
 
   boolean exists(@NotNull Dn ou);

@@ -85,6 +85,11 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
 
   @Override
   public Stream<OrganizationalUnit> findAll() {
+    return Stream.empty();
+  }
+
+  @Override
+  public Stream<OrganizationalUnit> findAllWithSystemOus() {
     return store.getOuRepo().stream()
         .map(this::copy);
   }
@@ -94,7 +99,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     if (ou.isEmpty()) {
       return Optional.empty();
     }
-    return findAll().filter(o -> {
+    return findAllWithSystemOus().filter(o -> {
           Dn dn = new Dn(o.getDistinguishedName());
           Dn baseDn = getProperties().getBaseDn();
           Dn ouDn = new Dn(ou.getRDns());

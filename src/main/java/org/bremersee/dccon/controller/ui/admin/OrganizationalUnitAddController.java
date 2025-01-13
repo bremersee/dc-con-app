@@ -64,8 +64,7 @@ public class OrganizationalUnitAddController extends AbstractController
 
   @ModelAttribute("ous")
   public List<OrganizationalUnit> addOrganisationalUnits() {
-    return organizationalUnitService.getOrganizationalUnitsWithBase()
-        .toList();
+    return organizationalUnitService.getOrganizationalUnitsWithBase().toList();
   }
 
   @GetMapping(path = "/admin/organizational-unit-add")

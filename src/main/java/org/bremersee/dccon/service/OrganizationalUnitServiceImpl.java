@@ -66,6 +66,13 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .build();
   }
 
+  boolean contains(OrganizationalUnit ou, String query) {
+    if (!isEmpty(ou.getName()) && ou.getName().toLowerCase().contains(query)) {
+      return true;
+    }
+    return !isEmpty(ou.getDescription()) && ou.getDescription().toLowerCase().contains(query);
+  }
+
   OrganizationalUnit withFormattedDn(OrganizationalUnit organizationalUnit) {
     if (isEmpty(organizationalUnit) || isEmpty(organizationalUnit.getDistinguishedName())) {
       return organizationalUnit;
@@ -77,7 +84,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   @Override
   public Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query) {
-    Stream<OrganizationalUnit> ous = getOrganizationalUnits();
+    Stream<OrganizationalUnit> ous = getOrganizationalUnitsWithSystemOus();
     if (isEmpty(query) || query.length() <= 2) {
       return new PageBuilder<OrganizationalUnit, OrganizationalUnit>()
           .sourceEntries(ous)
@@ -91,23 +98,25 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .build();
   }
 
-  private boolean contains(OrganizationalUnit ou, String query) {
-    if (!isEmpty(ou.getName()) && ou.getName().toLowerCase().contains(query)) {
-      return true;
-    }
-    return !isEmpty(ou.getDescription()) && ou.getDescription().toLowerCase().contains(query);
+  @Override
+  public Stream<OrganizationalUnit> getOrganizationalUnitsWithBase() {
+    return Stream.concat(
+        Stream.of(base),
+        repository.findAll()
+            .map(this::withFormattedDn)
+            .sorted(Comparator.comparing(OrganizationalUnit::getNameTree)));
   }
 
   @Override
-  public Stream<OrganizationalUnit> getOrganizationalUnits() {
-    return repository.findAll()
+  public Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOus() {
+    return repository.findAllWithSystemOus()
         .map(this::withFormattedDn)
         .sorted(Comparator.comparing(OrganizationalUnit::getNameTree));
   }
 
   @Override
-  public Stream<OrganizationalUnit> getOrganizationalUnitsWithBase() {
-    return Stream.concat(Stream.of(base), getOrganizationalUnits());
+  public Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOusAndBase() {
+    return Stream.concat(Stream.of(base), getOrganizationalUnitsWithSystemOus());
   }
 
   @Override

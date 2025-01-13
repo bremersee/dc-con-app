@@ -57,7 +57,7 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
         .filter(dn -> getOrganizationalUnitService().organisationUnitExists(dn))
         .orElseGet(this::getDefaultOrganizationalUnit));
     List<OrganizationalUnit> orgUnits = getOrganizationalUnitService()
-        .getOrganizationalUnitsWithBase()
+        .getOrganizationalUnitsWithSystemOusAndBase()
         .toList();
     OrganizationalUnitDropdown ouDropdown = new OrganizationalUnitDropdown();
     for (OrganizationalUnit orgUnit : orgUnits) {

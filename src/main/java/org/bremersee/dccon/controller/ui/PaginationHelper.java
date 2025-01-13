@@ -16,9 +16,9 @@
 
 package org.bremersee.dccon.controller.ui;
 
-import lombok.extern.slf4j.Slf4j;
 import org.bremersee.pagebuilder.model.AbstractPageDto;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 /**
  * The type PaginationHelper.
@@ -26,7 +26,6 @@ import org.springframework.stereotype.Component;
  * @author Christian Bremer
  */
 @Component("paginationHelper")
-@Slf4j
 public class PaginationHelper {
 
   private int ceil(Number a, Number b) {
@@ -34,17 +33,14 @@ public class PaginationHelper {
   }
 
   public int getTotalPages(AbstractPageDto<?> page) {
-    int totalPages = ceil(page.getTotalElements(), page.getSize());
-    log.debug("=========> Total pages ({} / {}): {}", page.getTotalElements(), page.getSize(),
-        totalPages);
-    return totalPages;
+    Assert.notNull(page, "Page must not be null.");
+    return ceil(page.getTotalElements(), page.getSize());
   }
 
   public boolean isValidPageNumber(AbstractPageDto<?> page, int number) {
+    Assert.notNull(page, "Page must not be null.");
     int totalPages = getTotalPages(page);
-    boolean valid = 0 <= number && number < totalPages;
-    log.debug("=========> Is valid (0 <= {} < {})? {}", number, totalPages, valid);
-    return valid;
+    return 0 <= number && number < totalPages;
   }
 
 }

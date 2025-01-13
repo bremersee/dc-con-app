@@ -68,8 +68,7 @@ public class OrganizationalUnitEditController extends AbstractEditController
 
   @ModelAttribute("ous")
   public List<OrganizationalUnit> addOrganisationalUnits() {
-    return organizationalUnitService.getOrganizationalUnitsWithBase()
-        .toList();
+    return organizationalUnitService.getOrganizationalUnitsWithBase().toList();
   }
 
   @GetMapping(path = "/admin/organizational-unit-edit")

@@ -120,7 +120,7 @@
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <input type="text" class="form-control" id="description" name="description"
-               aria-describedby="descriptionValidation" required th:field="*{description}"
+               aria-describedby="descriptionValidation" th:field="*{description}"
                th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"/>
         <div id="descriptionValidation" class="invalid-feedback"
              th:text="${#fields.hasErrors('description')} ? ${#fields.errors('description')[0]} : ''">

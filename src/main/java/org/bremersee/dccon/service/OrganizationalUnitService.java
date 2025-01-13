@@ -36,9 +36,11 @@ public interface OrganizationalUnitService {
 
   Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query);
 
-  Stream<OrganizationalUnit> getOrganizationalUnits();
-
   Stream<OrganizationalUnit> getOrganizationalUnitsWithBase();
+
+  Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOus();
+
+  Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOusAndBase();
 
   Optional<OrganizationalUnit> getOrganizationalUnit(@Nullable Dn ou);
 
