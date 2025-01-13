@@ -58,13 +58,25 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown" th:if="${ouDropdown == null}">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Manage
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#" th:href="@{/admin/users}">Users</a></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/groups}">Groups</a></li>
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/computers}">Computers</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/organizational-units}">Organizational Units</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown" th:if="${ouDropdown != null}">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Manage
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/users(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">Users</a></li>
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/groups(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">Groups</a></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/computers}">Computers</a></li>
             <li><hr class="dropdown-divider" /></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/organizational-units}">Organizational Units</a></li>
