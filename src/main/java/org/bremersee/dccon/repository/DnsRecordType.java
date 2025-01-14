@@ -41,7 +41,7 @@ public enum DnsRecordType {
   /**
    * A dns record type.
    */
-  A(1, DnsRecordDataMapper::parseA),
+  A(1, DnsRecordDataMapper::parseA), // TODO add boolean ptrAllowed
 
   /**
    * Ns dns record type.
@@ -247,6 +247,7 @@ public enum DnsRecordType {
    * Apl dns record type.
    */
   APL(42, null),
+  
   /**
    * Ds dns record type.
    */

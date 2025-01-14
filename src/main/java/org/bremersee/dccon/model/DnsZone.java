@@ -59,6 +59,8 @@ public class DnsZone extends CommonAttributes {
   @JsonProperty(value = NAME, required = true)
   private String name;
 
+  private String zoneType;
+
   /**
    * The constant DEFAULT_ZONE.
    */
@@ -68,6 +70,7 @@ public class DnsZone extends CommonAttributes {
       description = "Specifies whether this zone is the default zone or not.",
       accessMode = AccessMode.READ_ONLY)
   @JsonProperty(value = DEFAULT_ZONE)
+  @Deprecated
   private Boolean defaultZone;
 
   /**
@@ -80,6 +83,32 @@ public class DnsZone extends CommonAttributes {
       accessMode = AccessMode.READ_ONLY)
   @JsonProperty(value = REVERSE_ZONE)
   private Boolean reverseZone;
+
+  private String allowUpdate;
+
+  private Boolean paused;
+
+  private Boolean shutdown;
+
+  private Boolean autoCreated;
+
+  private Boolean useDatabase;
+
+  private String dataFile;
+
+  private Boolean useWins;
+
+  private Boolean useNbstat;
+
+  private Boolean aging;
+
+  private String fqdn;
+
+  private Boolean queuedForBackgroundLoad;
+
+  private Boolean backgroundLoadInProgress;
+
+  private Boolean readOnlyZone;
 
   /**
    * Instantiates a new dns zone.

@@ -58,7 +58,7 @@ public class CommandExecutorResponse implements Serializable {
   }
 
   private boolean hasText(String value) {
-    return value != null && value.trim().length() > 0;
+    return value != null && !value.isBlank();
   }
 
   /**

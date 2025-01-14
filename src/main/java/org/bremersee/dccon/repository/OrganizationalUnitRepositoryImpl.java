@@ -62,7 +62,8 @@ import org.springframework.stereotype.Component;
 @MockComponent(value = OrganizationalUnitRepositoryMock.class,
     methodsOf = OrganizationalUnitRepository.class)
 @Slf4j
-public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnitRepository {
+public class OrganizationalUnitRepositoryImpl extends AbstractRepository
+    implements OrganizationalUnitRepository {
 
   private LdaptiveEntryMapper<OrganizationalUnit> ouLdapMapper;
 
@@ -77,6 +78,26 @@ public class OrganizationalUnitRepositoryImpl extends AbstractOrganizationalUnit
     if (!isEmpty(ouLdapMapper)) {
       this.ouLdapMapper = ouLdapMapper;
     }
+  }
+
+  @Override
+  Dn getDefaultOu() {
+    return getProperties().getBaseDn();
+  }
+
+  @Override
+  String getObjectClassValue() {
+    return LDAP_OBJECT_CLASS_OU;
+  }
+
+  @Override
+  String[] getBinaryAttributes() {
+    return LDAP_OU_BINARY_ATTRIBUTES;
+  }
+
+  @Override
+  String[] getReturnAttributes() {
+    return LDAP_OU_MAPPED_ATTRIBUTES;
   }
 
   @Override

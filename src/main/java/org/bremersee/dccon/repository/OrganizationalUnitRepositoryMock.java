@@ -40,8 +40,8 @@ import org.springframework.stereotype.Component;
  */
 @Profile("mock")
 @Component("organizationalUnitRepositoryMock")
-public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnitRepository
-    implements RepositoryMock {
+public class OrganizationalUnitRepositoryMock extends AbstractRepository
+    implements OrganizationalUnitRepository, RepositoryMock {
 
   private final RepositoryMockStore store;
 
@@ -50,6 +50,26 @@ public class OrganizationalUnitRepositoryMock extends AbstractOrganizationalUnit
     super(properties, null);
     this.store = store;
     resetData();
+  }
+
+  @Override
+  Dn getDefaultOu() {
+    return getProperties().getBaseDn();
+  }
+
+  @Override
+  String getObjectClassValue() {
+    return LDAP_OBJECT_CLASS_OU;
+  }
+
+  @Override
+  String[] getBinaryAttributes() {
+    return LDAP_OU_BINARY_ATTRIBUTES;
+  }
+
+  @Override
+  String[] getReturnAttributes() {
+    return LDAP_OU_MAPPED_ATTRIBUTES;
   }
 
   @Override
