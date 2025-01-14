@@ -50,6 +50,9 @@ spring:
         max-interval: ${CONFIG_RETRY_MAX_INTERVAL:4000}
         max-attempts: ${CONFIG_RETRY_MAX_ATTEMPTS:8}
         multiplier: ${CONFIG_RETRY_MULTIPLIER:1.1}
+  messages:
+    use-code-as-default-message: true
+    fallback-to-system-locale: false
 
 management:
   endpoints:
