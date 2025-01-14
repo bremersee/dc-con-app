@@ -87,10 +87,10 @@
       <div class="mb-3">
         <label for="samAccountName" class="form-label">Group name</label>
         <input type="text" class="form-control" id="samAccountName" name="samAccountName"
-               aria-describedby="samAccountNameValidation" required th:field="*{group.samAccountName}"
-               th:classappend="${#fields.hasErrors('group.samAccountName')} ? 'is-invalid' : ''"/>
+               aria-describedby="samAccountNameValidation" required th:field="*{samAccountName}"
+               th:classappend="${#fields.hasErrors('samAccountName')} ? 'is-invalid' : ''"/>
         <div id="samAccountNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('group.samAccountName')} ? ${#fields.errors('group.samAccountName')[0]} : ''">
+             th:text="${#fields.hasErrors('samAccountName')} ? ${#fields.errors('samAccountName')[0]} : ''">
         </div>
       </div>
 
@@ -127,17 +127,17 @@
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="email" class="form-control" id="email" name="email"
-               aria-describedby="emailValidation" th:field="*{group.email}"
-               th:classappend="${#fields.hasErrors('group.email')} ? 'is-invalid' : ''"/>
+               aria-describedby="emailValidation" th:field="*{email}"
+               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"/>
         <div id="emailValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('group.email')} ? ${#fields.errors('group.email')[0]} : ''">
+             th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : ''">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <input type="text" class="form-control" id="description" name="description"
-               th:field="*{group.description}" />
+               th:field="*{description}" />
       </div>
 
       <div th:if="${rfc2307Enabled}">
@@ -146,10 +146,10 @@
             Group's Unix/RFC2307 GID number
           </label>
           <input type="number" class="form-control" id="gidNumber" name="gidNumber"
-                 aria-describedby="gidNumberValidation" th:field="*{group.gidNumber}"
-                 th:classappend="${#fields.hasErrors('group.gidNumber')} ? 'is-invalid' : ''"/>
+                 aria-describedby="gidNumberValidation" th:field="*{gidNumber}"
+                 th:classappend="${#fields.hasErrors('gidNumber')} ? 'is-invalid' : ''"/>
           <div id="gidNumberValidation" class="invalid-feedback"
-               th:text="${#fields.hasErrors('group.gidNumber')} ? ${#fields.errors('group.gidNumber')[0]} : ''">
+               th:text="${#fields.hasErrors('gidNumber')} ? ${#fields.errors('gidNumber')[0]} : ''">
           </div>
         </div>
 
@@ -158,7 +158,7 @@
             Group's Unix/RFC2307 NIS domain
           </label>
           <input type="text" class="form-control" id="nisDomain"
-                 name="nisDomain" th:field="*{group.nisDomain}" />
+                 name="nisDomain" th:field="*{nisDomain}" />
         </div>
       </div> <!-- end of rfc2307Enabled -->
 

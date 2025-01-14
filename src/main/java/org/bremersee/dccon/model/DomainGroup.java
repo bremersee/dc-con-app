@@ -18,7 +18,6 @@ package org.bremersee.dccon.model;
 
 import static java.util.Objects.isNull;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public class DomainGroup extends SamAccount implements NisDomainMember, Comparab
   private String description;
 
   /**
-   * The email address of the domain user.
+   * The email address of the group.
    */
   private String email;
 

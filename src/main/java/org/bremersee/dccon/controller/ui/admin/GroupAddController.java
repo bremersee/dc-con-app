@@ -16,10 +16,9 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
+import static java.util.Objects.requireNonNullElse;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -33,10 +32,6 @@ import org.bremersee.dccon.controller.ui.model.DomainGroupAddRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
-import org.bremersee.dccon.model.DomainGroupType;
-import org.bremersee.dccon.model.DomainGroupType.Purpose;
-import org.bremersee.dccon.model.DomainGroupType.Scope;
-import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -44,6 +39,7 @@ import org.bremersee.exception.ServiceException;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -101,8 +97,7 @@ public class GroupAddController extends AbstractController implements PageableCo
         .filter(dn -> !dn.isEmpty())
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
         .orElseGet(() -> getProperties().getBaseDn(getProperties().getGroup().getDefaultOu()));
-    DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(
-        new DomainGroup(), ouDn.format());
+    DomainGroupAddRequest groupAddRequest = new DomainGroupAddRequest(ouDn.format());
     model.addAttribute("groupAddRequest", groupAddRequest);
     return "admin/group-add";
   }
@@ -116,10 +111,6 @@ public class GroupAddController extends AbstractController implements PageableCo
 
     getLogger().debug("addGroup({})", groupAddRequest);
 
-    DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(
-        Scope.fromString(groupAddRequest.getGroupScope()),
-        Purpose.fromString(groupAddRequest.getGroupPurpose()));
-    groupAddRequest.getGroup().setGroupType(new DomainGroupTypeContainer(groupType));
     DomainGroup addedGroup = addGroup(bindingResult, groupAddRequest);
 
     if (bindingResult.hasErrors()) {
@@ -140,27 +131,15 @@ public class GroupAddController extends AbstractController implements PageableCo
     return redirect;
   }
 
-  private DomainGroup addGroup(BindingResult bindingResult, DomainGroupAddRequest groupAddRequest) {
-    if (isEmpty(groupAddRequest.getGroupScope())) {
-      bindingResult.rejectValue("groupScope", "todo",
-          "Group scope is required.");
-    }
-    if (isEmpty(groupAddRequest.getGroupPurpose())) {
-      bindingResult.rejectValue("groupPurpose", "todo",
-          "Group type is required.");
-    }
-    if (bindingResult.hasErrors()) {
-      return groupAddRequest.getGroup();
-    }
+  private DomainGroup addGroup(
+      BindingResult bindingResult,
+      DomainGroupAddRequest groupAddRequest) {
 
-    Scope groupScope = groupAddRequest.getSelectedGroupScope();
-    Purpose groupPurpose = groupAddRequest.getSelectedGroupPurpose();
-    DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(groupScope, groupPurpose);
-    DomainGroup group = groupAddRequest.getGroup();
-    group.setGroupType(new DomainGroupTypeContainer(groupType));
+    DomainGroup group = DomainGroupAddRequest.MAPPER.mapToDomainGroup(groupAddRequest);
     Dn ou = Optional.ofNullable(groupAddRequest.getNewOu())
         .map(Dn::new)
         .orElseGet(() -> getProperties().getGroup().getDefaultOu());
+
     try {
       return domainGroupService.addGroup(group, ou);
 
@@ -174,12 +153,8 @@ public class GroupAddController extends AbstractController implements PageableCo
 
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
-
-    if (!(bindTarget instanceof DomainGroupAddRequest)) {
-      return;
-    }
-
-    String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
+    Assert.isTrue(bindTarget instanceof DomainGroupAddRequest, "Illegal bind target.");
+    String errorCode = requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
         bindingResult.rejectValue("group.samAccountName", "code",
@@ -209,12 +184,6 @@ public class GroupAddController extends AbstractController implements PageableCo
       case EC_OU_NOT_FOUND: {
         bindingResult.rejectValue("ou", "code",
             "Organizational unit was not found.");
-        break;
-      }
-      case EC_ADDING_GROUP_FAILED: { // TODO global
-        getLogger().error("Adding group failed.", serviceException);
-        bindingResult.rejectValue("group.samAccountName", "code",
-            "Something went wrong. Please try again later.");
         break;
       }
       default: {

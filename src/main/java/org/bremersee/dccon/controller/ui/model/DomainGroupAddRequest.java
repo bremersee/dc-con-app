@@ -29,6 +29,9 @@ import org.bremersee.dccon.model.DomainGroupType.Purpose;
 import org.bremersee.dccon.model.DomainGroupType.Scope;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.ldaptive.dn.Dn;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 /**
  * The type DomainGroupAddRequest.
@@ -42,29 +45,40 @@ public class DomainGroupAddRequest implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private DomainGroup group;
+  public static final ToDomainGroupMapper MAPPER = Mappers.getMapper(ToDomainGroupMapper.class);
 
   private String newOu;
+
+  private String samAccountName;
 
   private String groupScope;
 
   private String groupPurpose;
 
-  public DomainGroupAddRequest(DomainGroup group, String newOu) {
-    this.group = group;
+  /**
+   * The email address of the group.
+   */
+  private String email;
+
+  /**
+   * A description of the domain group.
+   */
+  private String description;
+
+  /**
+   * Group's Unix/RFC2307 GID number.
+   */
+  private Integer gidNumber;
+
+  /**
+   * Group's Unix/RFC2307 NIS domain.
+   */
+  private String nisDomain;
+
+  public DomainGroupAddRequest(String newOu) {
     this.newOu = newOu;
-    this.groupScope = Optional.ofNullable(group)
-        .map(DomainGroup::getGroupType)
-        .map(DomainGroupTypeContainer::getGroupType)
-        .map(DomainGroupType::getScope)
-        .map(Enum::name)
-        .orElse(Scope.GLOBAL.name());
-    this.groupPurpose = Optional.ofNullable(group)
-        .map(DomainGroup::getGroupType)
-        .map(DomainGroupTypeContainer::getGroupType)
-        .map(DomainGroupType::getPurpose)
-        .map(Enum::name)
-        .orElse(Purpose.SECURITY.name());
+    this.groupScope = DomainGroupType.GLOBAL_SECURITY.getScope().name();
+    this.groupPurpose = DomainGroupType.GLOBAL_SECURITY.getPurpose().name();
   }
 
   public Dn getNewOuDn() {
@@ -74,25 +88,30 @@ public class DomainGroupAddRequest implements Serializable {
     return new Dn(newOu);
   }
 
-  public Scope getSelectedGroupScope() {
+  private Scope getSelectedGroupScope() {
     return Optional.ofNullable(groupScope)
         .map(Scope::fromString)
         .orElse(Scope.GLOBAL);
   }
 
-  public Purpose getSelectedGroupPurpose() {
+  private Purpose getSelectedGroupPurpose() {
     return Optional.ofNullable(groupPurpose)
         .map(Purpose::fromString)
         .orElse(Purpose.SECURITY);
   }
 
-  @Override
-  public String toString() {
-    return "DomainUserAddRequest {"
-        + "group=" + Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null)
-        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + ", groupScope=" + getGroupScope()
-        + ", groupPurpose=" + getGroupPurpose()
-        + '}';
+  public DomainGroupTypeContainer getSelectedGroupType() {
+    DomainGroupType groupType = DomainGroupType.fromScopeAndPurpose(
+        getSelectedGroupScope(),
+        getSelectedGroupPurpose());
+    return new DomainGroupTypeContainer(groupType);
+  }
+
+  @Mapper
+  public interface ToDomainGroupMapper {
+
+    @Mapping(source = "selectedGroupType", target = "groupType")
+    DomainGroup mapToDomainGroup(DomainGroupAddRequest request);
+
   }
 }

@@ -20,7 +20,12 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.bremersee.dccon.config.DomainUserProperties;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.dn.Dn;
 import org.mapstruct.Mapper;
@@ -32,11 +37,17 @@ import org.mapstruct.factory.Mappers;
  *
  * @author Christian Bremer
  */
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString(exclude = {"password"})
+@NoArgsConstructor
 public class DomainUserAddRequest implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
+
+  public static final ToDomainUserMapper MAPPER = Mappers.getMapper(ToDomainUserMapper.class);
 
   private String newOu;
 
@@ -178,6 +189,26 @@ public class DomainUserAddRequest implements Serializable {
 
   private boolean generateRandomPassword;
 
+  public DomainUserAddRequest(DomainUserProperties properties, boolean isRfc2307Enabled) {
+    setUseUsernameAsCn(properties.isUseUsernameAsCn());
+    setCompany(properties.getDefaultCompany());
+    setDisplayName(properties.getDefaultDisplayName());
+    setEmail(properties.getDefaultEmail());
+    setHomeDirectory(properties.getDefaultHomeDirectory());
+    setHomeDrive(properties.getDefaultHomeDrive());
+    setPreferredLanguage(properties.getDefaultLanguage());
+    setProfilePath(properties.getDefaultProfilePath());
+    setScriptPath(properties.getDefaultScriptPath());
+    if (isRfc2307Enabled) {
+      setGecos(properties.getDefaultGecos());
+      setGidNumber(properties.getDefaultGidNumber());
+      setLoginShell(properties.getDefaultLoginShell());
+      setNisDomain(properties.getDefaultNisDomain());
+      setUid(properties.getDefaultUid());
+      setUnixHomeDirectory(properties.getDefaultUnixHomeDirectory());
+    }
+  }
+
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
       return null;
@@ -186,9 +217,7 @@ public class DomainUserAddRequest implements Serializable {
   }
 
   @Mapper
-  public interface DomainMapper {
-
-    DomainMapper INSTANCE = Mappers.getMapper(DomainMapper.class);
+  public interface ToDomainUserMapper {
 
     @Mapping(source = "enabled", target = "accountControl.enabled")
     @Mapping(
