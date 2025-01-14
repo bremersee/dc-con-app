@@ -22,9 +22,9 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainComputerService;
 import org.bremersee.dccon.service.DomainGroupService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -64,7 +64,7 @@ public class ComputerEditMembershipsController extends AbstractEditController
   public String displayComputerEditMembershipsDirect(
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return displayComputerEditMemberships(true, computerName, ou, searchScope, model);
@@ -74,7 +74,7 @@ public class ComputerEditMembershipsController extends AbstractEditController
   public String displayComputerEditMembershipsResolved(
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return displayComputerEditMemberships(false, computerName, ou, searchScope, model);
@@ -84,7 +84,7 @@ public class ComputerEditMembershipsController extends AbstractEditController
       boolean direct,
       String computerName,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(computerName)

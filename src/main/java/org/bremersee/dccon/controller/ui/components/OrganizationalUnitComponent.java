@@ -3,7 +3,7 @@ package org.bremersee.dccon.controller.ui.components;
 import java.util.Optional;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.bremersee.dccon.controller.ui.LoggerProvider;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,8 +18,11 @@ public interface OrganizationalUnitComponent extends ControllerConstants, Logger
   }
 
   @ModelAttribute(SCOPE)
-  default String addSearchScope(@RequestParam(name = SCOPE, required = false) SearchScope scope) {
-    String searchScope = Optional.ofNullable(scope).map(Enum::name).orElse("");
+  default String addSearchScope(
+      @RequestParam(name = SCOPE, required = false) TreeSearchScope scope) {
+    String searchScope = Optional.ofNullable(scope)
+        .map(TreeSearchScope::getParameterValue)
+        .orElse("");
     getLogger().debug("Adding 'scope={}' to model.", searchScope);
     return searchScope;
   }

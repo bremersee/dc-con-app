@@ -25,8 +25,8 @@ import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainComputerService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -61,10 +61,10 @@ public class ComputerEditMiscController extends AbstractEditController implement
   }
 
   @GetMapping(path = "/admin/computer-edit-misc")
-  public String displayComputerEditMisc(
+  public String displayComputerDelete(
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(computerName)

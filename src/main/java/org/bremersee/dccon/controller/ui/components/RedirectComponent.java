@@ -30,8 +30,7 @@ import java.util.Optional;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.bremersee.dccon.controller.ui.LoggerProvider;
 import org.bremersee.dccon.converter.DnConverter;
-import org.bremersee.dccon.converter.SearchScopeConverter;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -74,7 +73,7 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   }
 
   default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
-      String query, Dn ou, SearchScope scope) {
+      String query, Dn ou, TreeSearchScope scope) {
     Map<String, Object> paramterMap = new HashMap<>(getParamterMap(page, size, sort, query));
     paramterMap.put(
         OU,
@@ -87,7 +86,7 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
         SCOPE,
         Optional.ofNullable(scope)
             .or(this::findScopeParameterValue)
-            .orElse(SearchScope.ONELEVEL));
+            .orElse(TreeSearchScope.ONELEVEL));
     return paramterMap;
   }
 
@@ -148,9 +147,9 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
         .map(dn -> new DnConverter().convert(dn));
   }
 
-  default Optional<SearchScope> findScopeParameterValue() {
+  default Optional<TreeSearchScope> findScopeParameterValue() {
     return findParameterValue(SCOPE)
-        .map(scope -> new SearchScopeConverter().convert(scope));
+        .map(TreeSearchScope::fromValue);
   }
 
   default String getRedirectUri(

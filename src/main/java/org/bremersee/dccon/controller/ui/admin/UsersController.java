@@ -25,9 +25,9 @@ import org.bremersee.dccon.controller.ui.components.OrganizationalUnitNavigation
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitDropdown;
 import org.bremersee.dccon.model.DomainUserPage;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +44,6 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-//@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class UsersController extends AbstractController
     implements PageableComponent, OrganizationalUnitNavigationComponent {
 
@@ -69,7 +68,7 @@ public class UsersController extends AbstractController
   }
 
   @Override
-  public SearchScope getDefaultSearchScope() {
+  public TreeSearchScope getDefaultSearchScope() {
     return getProperties().getUser().getDefaultSearchScope();
   }
 
@@ -90,7 +89,7 @@ public class UsersController extends AbstractController
       @RequestParam(name = SORT, defaultValue = USER_SORT) SortOrders sort,
       @RequestParam(name = QUERY, required = false) String query,
       @RequestParam(name = OU, required = false) Dn ou,
-      @RequestParam(name = SCOPE, required = false) SearchScope scope,
+      @RequestParam(name = SCOPE, required = false) TreeSearchScope scope,
       ModelMap model) {
 
     OrganizationalUnitDropdown ouDropdown = getOrganizationalUnitDropdown(ou, scope);

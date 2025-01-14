@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;

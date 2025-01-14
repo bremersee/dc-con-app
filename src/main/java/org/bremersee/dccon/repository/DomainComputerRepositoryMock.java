@@ -3,7 +3,7 @@ package org.bremersee.dccon.repository;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainComputer;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 public class DomainComputerRepositoryMock implements DomainComputerRepository {
 
   @Override
-  public Stream<DomainComputer> findAll(String query, Dn ou, SearchScope searchScope) {
+  public Stream<DomainComputer> findAll(String query, Dn ou, TreeSearchScope searchScope) {
     return Stream.empty();
   }
 
   @Override
-  public Optional<DomainComputer> findOne(String name, Dn ou, SearchScope searchScope) {
+  public Optional<DomainComputer> findOne(String name, Dn ou, TreeSearchScope searchScope) {
     return Optional.empty();
   }
 

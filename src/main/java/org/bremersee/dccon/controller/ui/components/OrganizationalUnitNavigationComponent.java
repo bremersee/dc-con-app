@@ -21,10 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
+import org.bremersee.dccon.controller.ui.MessageProvider;
 import org.bremersee.dccon.controller.ui.model.OrganizationalUnitDropdown;
 import org.bremersee.dccon.model.OrganizationalUnit;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.OrganizationalUnitService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.annotation.Validated;
@@ -36,14 +37,14 @@ import org.springframework.validation.annotation.Validated;
  */
 @Validated
 public interface OrganizationalUnitNavigationComponent extends DomainControllerPropertiesProvider,
-    CurrentPageNameProvider {
+    CurrentPageNameProvider, MessageProvider {
 
   OrganizationalUnitService getOrganizationalUnitService();
 
   @NotNull
   Dn getDefaultOrganizationalUnit();
 
-  SearchScope getDefaultSearchScope();
+  TreeSearchScope getDefaultSearchScope();
 
   default void addOrganizationalUnitDropdown(ModelMap model, OrganizationalUnitDropdown selector) {
     model.addAttribute(OU_DROPDOWN, selector);
@@ -51,7 +52,7 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
 
   default OrganizationalUnitDropdown getOrganizationalUnitDropdown(
       Dn ou,
-      SearchScope scope) {
+      TreeSearchScope scope) {
 
     Dn selectedOuDn = getProperties().getBaseDn(Optional.ofNullable(ou)
         .filter(dn -> getOrganizationalUnitService().organisationUnitExists(dn))
@@ -68,19 +69,19 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
       }
     }
     if (isBaseOu(ouDropdown.getSelectedOu())) {
-      ouDropdown.setSelectedScope(SearchScope.SUBTREE);
-      ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(SearchScope.SUBTREE));
-      ouDropdown.setSelectableScope(SearchScope.ONELEVEL);
-      ouDropdown.setSelectableScopeDisplayValue(getDisplayValue(SearchScope.ONELEVEL));
+      ouDropdown.setSelectedScope(TreeSearchScope.SUBTREE);
+      ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(TreeSearchScope.SUBTREE));
+      ouDropdown.setSelectableScope(TreeSearchScope.ONELEVEL);
+      ouDropdown.setSelectableScopeDisplayValue(getDisplayValue(TreeSearchScope.ONELEVEL));
       ouDropdown.setScopeSelectable(false);
     } else {
-      SearchScope selectedScope = Optional.ofNullable(scope)
+      TreeSearchScope selectedScope = Optional.ofNullable(scope)
           .or(() -> Optional.ofNullable(getDefaultSearchScope()))
-          .filter(s -> s == SearchScope.SUBTREE || s == SearchScope.ONELEVEL)
-          .orElse(SearchScope.ONELEVEL);
-      SearchScope selectableScope = selectedScope == SearchScope.SUBTREE
-          ? SearchScope.ONELEVEL
-          : SearchScope.SUBTREE;
+          .filter(s -> s == TreeSearchScope.SUBTREE || s == TreeSearchScope.ONELEVEL)
+          .orElse(TreeSearchScope.ONELEVEL);
+      TreeSearchScope selectableScope = selectedScope == TreeSearchScope.SUBTREE
+          ? TreeSearchScope.ONELEVEL
+          : TreeSearchScope.SUBTREE;
       ouDropdown.setSelectedScope(selectedScope);
       ouDropdown.setSelectedScopeDisplayValue(getDisplayValue(selectedScope));
       ouDropdown.setSelectableScope(selectableScope);
@@ -94,10 +95,8 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
     return getProperties().getBaseDn().isSame(new Dn(ou.getDistinguishedName()));
   }
 
-  default String getDisplayValue(SearchScope scope) {
-    return scope == SearchScope.ONELEVEL
-        ? "One Level"
-        : scope.name().substring(0, 1).toUpperCase() + scope.name().substring(1).toLowerCase();
+  default String getDisplayValue(TreeSearchScope scope) {
+    return getMessage(scope.getDefaultDisplayName(), scope.getI18nCode());
   }
 
 }

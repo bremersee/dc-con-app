@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainUser;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -43,7 +43,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
   Stream<DomainUser> findAll(
       @Nullable String query,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Find user by name.
@@ -54,7 +54,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
   Optional<DomainUser> findOne(
       @NotEmpty String userName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Add domain user.

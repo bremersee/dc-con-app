@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMembers;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,35 +49,35 @@ public interface DomainGroupService {
       @NotNull Pageable pageable,
       @Nullable String query,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   Stream<DomainGroup> resolveMemberships(
       @NotEmpty String samAccountName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   Stream<DomainGroup> getMemberships(
       @NotEmpty String samAccountName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   DomainGroupMembers findPossibleMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   DomainGroupMembers queryPossibleMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope,
+      @Nullable TreeSearchScope searchScope,
       @Nullable String query);
 
   DomainGroupMembers getMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   /**
@@ -97,7 +97,7 @@ public interface DomainGroupService {
   Optional<DomainGroup> getGroup(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Update domain group.

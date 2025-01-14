@@ -75,8 +75,8 @@
             Manage
           </a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" th:href="@{/admin/users(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">Users</a></li>
-            <li><a class="dropdown-item" href="#" th:href="@{/admin/groups(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope})}">Groups</a></li>
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/users(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">Users</a></li>
+            <li><a class="dropdown-item" href="#" th:href="@{/admin/groups(ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">Groups</a></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/computers}">Computers</a></li>
             <li><hr class="dropdown-divider" /></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/organizational-units}">Organizational Units</a></li>
@@ -86,14 +86,20 @@
           <a class="nav-link" href="#">Link</a>
         </li>
         <li class="nav-item dropdown" th:if="${ouDropdown != null}">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" th:text="${'OU: ' + ouDropdown.selectedOu.name}">
-            OU: Users
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-folder-tree" aria-hidden="true"></span>
+            <span class="mx-1" th:text="${ouDropdown.selectedOu.name}">
+              OU: Users
+            </span>
           </a>
           <ul class="dropdown-menu" th:if="${not #lists.isEmpty(ouDropdown.selectableOus)}">
             <li th:each="entry : ${ouDropdown.selectableOus}">
-              <a class="dropdown-item" href="#" th:text="'OU: ' + ${entry.nameTree}"
-                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouDropdown.selectedScope})}">
-                OU: Groups
+              <a class="dropdown-item" href="#"
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${entry.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+                <span class="fa fa-folder-tree text-secondary" aria-hidden="true"></span>
+                <span class="mx-1" th:text="${entry.nameTree}">
+                  OU: Groups
+                </span>
               </a>
             </li>
             <!--
@@ -106,13 +112,16 @@
         <li class="nav-item dropdown" th:if="${ouDropdown != null}">
           <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown"
              th:classappend="${ouDropdown.scopeSelectable} ? 'dropdown-toggle' : 'disabled'"
-             aria-expanded="false" th:text="${'Scope: ' + ouDropdown.selectedScopeDisplayValue}">
-            Scope: Subtree
+             aria-expanded="false">
+            <span class="fa fa-globe" aria-hidden="true"></span>
+            <span class="mx-1" th:text="${ouDropdown.selectedScopeDisplayValue}">
+              Scope: Subtree
+            </span>
           </a>
           <ul class="dropdown-menu" th:if="${ouDropdown.scopeSelectable}">
             <li>
               <a class="dropdown-item" href="#" th:text="${ouDropdown.selectableScopeDisplayValue}"
-                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectableScope})}">
+                 th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectableScope.parameterValue})}">
                 One level
               </a>
             </li>

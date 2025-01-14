@@ -4,9 +4,9 @@ import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 
 import java.util.Optional;
 import org.bremersee.dccon.model.DomainComputer;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.DomainComputerRepository;
 import org.bremersee.pagebuilder.PageBuilder;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +26,7 @@ public class DomainComputerServiceImpl implements DomainComputerService {
       Pageable pageable,
       String query,
       Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
 
     return new PageBuilder<DomainComputer, DomainComputer>()
         .sourceEntries(domainComputerRepository.findAll(query, ou, searchScope))
@@ -35,7 +35,7 @@ public class DomainComputerServiceImpl implements DomainComputerService {
   }
 
   @Override
-  public Optional<DomainComputer> getComputer(String name, Dn ou, SearchScope searchScope) {
+  public Optional<DomainComputer> getComputer(String name, Dn ou, TreeSearchScope searchScope) {
     return domainComputerRepository.findOne(name, ou, searchScope);
   }
 

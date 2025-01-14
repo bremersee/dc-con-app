@@ -33,11 +33,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.converter.TreeSearchScopeConverter;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMember;
 import org.bremersee.dccon.model.DomainGroupType;
 import org.bremersee.dccon.model.DomainGroupTypeContainer;
 import org.bremersee.dccon.model.SamAccount;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -108,22 +110,23 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
+  public Stream<DomainGroup> findAll(String query, Dn ou, TreeSearchScope searchScope) {
     log.debug("findAll({}, {}, {})", query, ou, searchScope);
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
     SearchRequest searchRequest = searchAllRequest(
         ou,
         getFindAllFilter(query),
-        searchScope,
+        scope,
         getReturnAttributes());
     return getLdapTemplate()
         .findAll(searchRequest, domainGroupLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope))
+        .filter(getIgnoredObjectFilter(ou, scope))
         .peek(group -> log.debug("Found group: {}", group.getDistinguishedName()));
   }
 
   @Override
   public Stream<DomainGroup> resolveMemberships(
-      String samAccountName, Dn ou, SearchScope searchScope) {
+      String samAccountName, Dn ou, TreeSearchScope searchScope) {
     log.debug("resolveMemberships({}, {}, {})", samAccountName, ou, searchScope);
     Set<Dn> groupDns = new HashSet<>();
     return getMemberships(samAccountName, ou, searchScope)
@@ -145,7 +148,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
   /*
   public Stream<DomainGroup> resolveMemberships(
-      String samAccountName, Dn ou, SearchScope searchScope) {
+      String samAccountName, Dn ou, TreeSearchScope searchScope) {
     log.debug("resolveMemberships({}, {}, {})", samAccountName, ou, searchScope);
 
     List<DomainGroup> groups = getMemberships(samAccountName, ou, searchScope)
@@ -179,7 +182,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
   @Override
   public Stream<DomainGroup> getMemberships(
-      String samAccountName, Dn ou, SearchScope searchScope) {
+      String samAccountName, Dn ou, TreeSearchScope searchScope) {
 
     log.debug("getMemberships({}, {}, {})", samAccountName, ou, searchScope);
     SamAccount samAccount = findSamAccount(samAccountName, ou, searchScope)
@@ -212,14 +215,14 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
   @Override
   public Stream<DomainGroupMember> findPossibleMembers(
-      String groupName, Dn ou, SearchScope searchScope) {
+      String groupName, Dn ou, TreeSearchScope searchScope) {
     log.debug("findPossibleMembers({}, {}, {})", groupName, ou, searchScope);
     return findPossibleMembers(groupName, ou, searchScope, null);
   }
 
   @Override
   public Stream<DomainGroupMember> queryPossibleMembers(String groupName, Dn ou,
-      SearchScope searchScope, String query) {
+      TreeSearchScope searchScope, String query) {
     log.debug("queryPossibleMembers({}, {}, {}, {})", groupName, ou, searchScope, query);
     if (isEmpty(query) || query.length() <= 2) {
       return Stream.empty();
@@ -230,7 +233,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   Stream<DomainGroupMember> findPossibleMembers(
       String groupName,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       String query) {
 
     DomainGroup group = findOne(groupName, ou, searchScope)
@@ -250,7 +253,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, SearchScope searchScope) {
+  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, TreeSearchScope searchScope) {
     DomainGroup group = findOne(groupName, ou, searchScope)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainGroup.class.getSimpleName(), groupName, EC_SAM_ACCOUNT_NOT_FOUND));
@@ -299,7 +302,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
             || !groupId.equals(member.getPrimaryGroupId()));
   }
 
-  Optional<SamAccount> findSamAccount(String samAccountName, Dn ou, SearchScope searchScope) {
+  Optional<SamAccount> findSamAccount(String samAccountName, Dn ou, TreeSearchScope searchScope) {
     String[] returnAttributes = DomainGroupLdapMapper.SAM_ACCOUNT_ATTRIBUTES;
     SearchRequest searchRequest;
     if (getProperties().isDn(samAccountName)) {
@@ -312,22 +315,24 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         scope = SearchScope.SUBTREE;
       } else {
         ouDn = getProperties().getBaseDn(ou);
-        scope = requireNonNullElse(searchScope, SearchScope.SUBTREE);
+        scope = requireNonNullElse(TreeSearchScopeConverter
+            .toSearchScope(searchScope), SearchScope.SUBTREE);
       }
       Filter filter = new EqualityFilter(LDAP_SAM_ACCOUNT_NAME, samAccountName);
       searchRequest = searchOneRequest(samAccountName, ouDn, filter, scope, returnAttributes);
     }
     return getLdapTemplate().findOne(searchRequest)
-        .filter(getIgnoredEntryFilter(ou, searchScope))
+        .filter(getIgnoredEntryFilter(ou, TreeSearchScopeConverter.toSearchScope(searchScope)))
         .map(domainGroupLdapMapper::mapSamAccount);
   }
 
   @Override
-  public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
-    SearchRequest searchRequest = searchOneRequest(groupName, ou, searchScope);
+  public Optional<DomainGroup> findOne(String groupName, Dn ou, TreeSearchScope searchScope) {
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
+    SearchRequest searchRequest = searchOneRequest(groupName, ou, scope);
     return getLdapTemplate()
         .findOne(searchRequest, domainGroupLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope));
+        .filter(getIgnoredObjectFilter(ou, scope));
   }
 
   public Optional<DomainGroup> findOneByPrimaryGroupId(Integer primaryGroupId) {
@@ -488,7 +493,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
     Dn currentParentDn = getProperties().getParentDn(domainGroup.getDistinguishedName());
-    DomainGroup existingDomainGroup = findOne(groupName, currentParentDn, SearchScope.ONELEVEL)
+    DomainGroup existingDomainGroup = findOne(groupName, currentParentDn, TreeSearchScope.ONELEVEL)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainGroup.class.getSimpleName(),
             domainGroup.getSamAccountName(),
@@ -571,7 +576,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
               .findOne(
                   newSamAccountName,
                   oldParentDn,
-                  SearchScope.ONELEVEL)
+                  TreeSearchScope.ONELEVEL)
               .orElseThrow(() -> ServiceException
                   .internalServerError(String.format("Updating names of group '%s' failed. %s",
                           newDomainGroup.getSamAccountName(),

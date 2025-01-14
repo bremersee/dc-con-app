@@ -33,8 +33,10 @@ import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.converter.TreeSearchScopeConverter;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -135,27 +137,29 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   }
 
   @Override
-  public Stream<DomainUser> findAll(String query, Dn ou, SearchScope searchScope) {
+  public Stream<DomainUser> findAll(String query, Dn ou, TreeSearchScope searchScope) {
     log.debug("findAll({}, {}, {})", query, ou, searchScope);
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
     SearchRequest searchRequest = searchAllRequest(
         ou,
         getFindAllFilter(query),
-        searchScope,
+        scope,
         getReturnAttributes());
     log.debug("findAll, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findAll(searchRequest, domainUserLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope));
+        .filter(getIgnoredObjectFilter(ou, scope));
   }
 
   @Override
-  public Optional<DomainUser> findOne(String userName, Dn ou, SearchScope searchScope) {
+  public Optional<DomainUser> findOne(String userName, Dn ou, TreeSearchScope searchScope) {
     log.debug("findOne({})", userName);
-    SearchRequest searchRequest = searchOneRequest(userName, ou, searchScope);
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
+    SearchRequest searchRequest = searchOneRequest(userName, ou, scope);
     log.debug("findOne, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findOne(searchRequest, domainUserLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope));
+        .filter(getIgnoredObjectFilter(ou, scope));
   }
 
   public Optional<DomainUser> findOneByUid(String uid) {
@@ -244,7 +248,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   public boolean existsAvatarInActiveDirectory(
       String user,
       Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
 
     log.debug("existsAvatarInActiveDirectory({}, {}, {})", user, ou, searchScope);
     return findLdapEntryForAvatar(user, ou, searchScope)
@@ -258,7 +262,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   public Optional<byte[]> findAvatar(
       String userNameOrEmail,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       AvatarDefault avatarDefault,
       Integer size) {
 
@@ -301,7 +305,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   private Optional<LdapEntry> findLdapEntryForAvatar(
       String userNameOrEmail,
       Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
 
     if (isEmpty(userNameOrEmail)) {
       log.debug("Avatar not found because userNameOrEmail is empty.");
@@ -312,12 +316,13 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     Filter emailFilter = new EqualityFilter(LDAP_MAIL, userNameOrEmail);
     Filter orFilter = new OrFilter(nameFilter, emailFilter);
     Filter filter = new AndFilter(objectClassFilter, orFilter);
-    SearchRequest searchRequest = searchOneRequest(userNameOrEmail, ou, filter, searchScope,
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
+    SearchRequest searchRequest = searchOneRequest(userNameOrEmail, ou, filter, scope,
         LDAP_USER_JPEG_PHOTO, LDAP_MAIL);
     log.debug("findAvatar, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findOne(searchRequest)
-        .filter(getIgnoredEntryFilter(ou, searchScope));
+        .filter(getIgnoredEntryFilter(ou, scope));
   }
 
   @Override
@@ -544,7 +549,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
     Dn currentParentDn = getProperties().getParentDn(domainUser.getDistinguishedName());
-    DomainUser existingDomainUser = findOne(userName, currentParentDn, SearchScope.ONELEVEL)
+    DomainUser existingDomainUser = findOne(userName, currentParentDn, TreeSearchScope.ONELEVEL)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainUser.class.getSimpleName(),
             domainUser.getSamAccountName(),
@@ -659,7 +664,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
               .findOne(
                   newSamAccountName,
                   oldParentDn,
-                  SearchScope.ONELEVEL)
+                  TreeSearchScope.ONELEVEL)
               .orElseThrow(() -> ServiceException
                   .internalServerError(String.format("Updating names of user '%s' failed. %s",
                           newDomainUser.getSamAccountName(),

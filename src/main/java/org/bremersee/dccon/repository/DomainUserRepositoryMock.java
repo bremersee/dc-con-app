@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.exception.ServiceException;
 import org.ldaptive.SearchScope;
@@ -136,7 +137,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
   */
 
   @Override
-  public Stream<DomainUser> findAll(final String query, Dn ou, SearchScope scope) {
+  public Stream<DomainUser> findAll(final String query, Dn ou, TreeSearchScope scope) {
     final boolean all = query == null || query.length() <= 2;
     return store.getUserRepo().values().stream()
         .filter(domainUser -> all || isQueryResult(domainUser, query.toLowerCase()));
@@ -155,7 +156,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
   }
 
   @Override
-  public Optional<DomainUser> findOne(String userName, Dn ou, SearchScope searchScope) {
+  public Optional<DomainUser> findOne(String userName, Dn ou, TreeSearchScope searchScope) {
     return Optional.ofNullable(store.getUserRepo().get(userName.toLowerCase()));
   }
 
@@ -163,7 +164,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
   public boolean existsAvatarInActiveDirectory(
       String user,
       Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
 
     return Optional.ofNullable(user)
         .map(name -> store.getAvatarRepo().get(name.toLowerCase()))
@@ -175,7 +176,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
   public Optional<byte[]> findAvatar(
       String userNameOrEmail,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       AvatarDefault avatarDefault,
       Integer size) {
 

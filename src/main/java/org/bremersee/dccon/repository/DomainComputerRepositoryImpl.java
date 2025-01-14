@@ -11,8 +11,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.converter.TreeSearchScopeConverter;
 import org.bremersee.dccon.model.DomainComputer;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
@@ -74,21 +76,22 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
   }
 
   @Override
-  public Stream<DomainComputer> findAll(String query, Dn ou, SearchScope searchScope) {
+  public Stream<DomainComputer> findAll(String query, Dn ou, TreeSearchScope searchScope) {
     log.debug("findAll({}, {}, {})", query, ou, searchScope);
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
     SearchRequest searchRequest = searchAllRequest(
         ou,
         getFindAllFilter(query),
-        searchScope,
+        scope,
         getReturnAttributes());
     log.debug("findAll, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findAll(searchRequest, domainComputerLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope));
+        .filter(getIgnoredObjectFilter(ou, scope));
   }
 
   @Override
-  public Optional<DomainComputer> findOne(String name, Dn ou, SearchScope searchScope) {
+  public Optional<DomainComputer> findOne(String name, Dn ou, TreeSearchScope searchScope) {
     log.debug("findOne({})", name);
     String samAccountName;
     if (!name.endsWith("$")) {
@@ -96,11 +99,12 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     } else {
       samAccountName = name;
     }
-    SearchRequest searchRequest = searchOneRequest(samAccountName, ou, searchScope);
+    SearchScope scope = TreeSearchScopeConverter.toSearchScope(searchScope);
+    SearchRequest searchRequest = searchOneRequest(samAccountName, ou, scope);
     log.debug("findOne, searchRequest = {}", searchRequest);
     return getLdapTemplate()
         .findOne(searchRequest, domainComputerLdapMapper)
-        .filter(getIgnoredObjectFilter(ou, searchScope));
+        .filter(getIgnoredObjectFilter(ou, scope));
   }
 
   @ProfileRequired({"cli", "ldap"})
@@ -109,7 +113,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     log.debug("update({}, {})", domainComputer.getSamAccountName(), newOu);
     Dn currentParentDn = getProperties().getParentDn(domainComputer.getDistinguishedName());
     DomainComputer existingDomainComputer = findOne(
-        domainComputer.getSamAccountName(), currentParentDn, SearchScope.ONELEVEL)
+        domainComputer.getSamAccountName(), currentParentDn, TreeSearchScope.ONELEVEL)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainComputer.class.getSimpleName(),
             domainComputer.getSamAccountName(),

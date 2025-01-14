@@ -25,9 +25,9 @@ import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -75,7 +75,7 @@ public class UserEditMiscController extends AbstractEditController implements Pa
   public String displayUserEditMisc(
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(userName)

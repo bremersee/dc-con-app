@@ -18,7 +18,7 @@ package org.bremersee.dccon.config;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 
 /**
@@ -35,6 +35,6 @@ public class DomainComputerProperties {
   private Dn defaultOu = DEFAULT_OU;
 
   @NotNull
-  private SearchScope defaultSearchScope = SearchScope.ONELEVEL;
+  private TreeSearchScope defaultSearchScope = TreeSearchScope.ONELEVEL;
 
 }

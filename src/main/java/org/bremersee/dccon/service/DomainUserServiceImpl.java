@@ -25,11 +25,11 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.DomainUserRepository;
 import org.bremersee.dccon.repository.RepositoryMock;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.bremersee.pagebuilder.PageBuilder;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -90,7 +90,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public Page<DomainUser> getUsers(Pageable pageable, String query, Dn ou, SearchScope scope) {
+  public Page<DomainUser> getUsers(Pageable pageable, String query, Dn ou, TreeSearchScope scope) {
     return new PageBuilder<DomainUser, DomainUser>()
         .sourceEntries(domainUserRepository.findAll(query, ou, scope))
         .pageable(applyDefaults(pageable, null, true, null))
@@ -116,7 +116,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public Optional<DomainUser> getUser(String userName, Dn ou, SearchScope searchScope) {
+  public Optional<DomainUser> getUser(String userName, Dn ou, TreeSearchScope searchScope) {
     return domainUserRepository.findOne(userName, ou, searchScope);
   }
 
@@ -124,7 +124,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   public Optional<byte[]> getUserAvatar(
       String userName,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       AvatarDefault avatarDefault,
       Integer size) {
 
@@ -189,7 +189,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   }
 
   @Override
-  public boolean existsAvatarInActiveDirectory(String user, Dn ou, SearchScope searchScope) {
+  public boolean existsAvatarInActiveDirectory(String user, Dn ou, TreeSearchScope searchScope) {
     return domainUserRepository.existsAvatarInActiveDirectory(user, ou, searchScope);
   }
 

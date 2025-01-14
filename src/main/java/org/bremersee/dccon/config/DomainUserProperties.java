@@ -21,6 +21,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 
@@ -38,7 +39,7 @@ public class DomainUserProperties {
   private Dn defaultOu = DEFAULT_OU;
 
   @NotNull
-  private SearchScope defaultSearchScope = SearchScope.ONELEVEL;
+  private TreeSearchScope defaultSearchScope = TreeSearchScope.ONELEVEL;
 
   /**
    * Specifies whether the username should be used for attribute 'cn' or firstname and lastname.

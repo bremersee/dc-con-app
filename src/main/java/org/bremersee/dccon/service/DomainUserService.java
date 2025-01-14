@@ -24,7 +24,7 @@ import java.util.Optional;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +55,7 @@ public interface DomainUserService {
       @NotNull Pageable pageable,
       @Nullable String query,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Add domain user.
@@ -77,7 +77,7 @@ public interface DomainUserService {
    * @return the domain user
    */
   Optional<DomainUser> getUser(@NotEmpty String userName, @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Gets user avatar.
@@ -90,7 +90,7 @@ public interface DomainUserService {
   Optional<byte[]> getUserAvatar(
       @NotEmpty String userName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope,
+      @Nullable TreeSearchScope searchScope,
       @Nullable AvatarDefault avatarDefault,
       @Nullable Integer size);
 
@@ -161,6 +161,6 @@ public interface DomainUserService {
   boolean existsAvatarInActiveDirectory(
       @NotEmpty String user,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 }

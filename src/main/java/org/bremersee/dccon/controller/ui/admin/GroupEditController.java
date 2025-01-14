@@ -28,11 +28,11 @@ import org.bremersee.dccon.controller.ui.model.DomainGroupEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -86,7 +86,7 @@ public class GroupEditController extends AbstractEditController implements Pagea
   public String displayGroupEdit(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(groupName)

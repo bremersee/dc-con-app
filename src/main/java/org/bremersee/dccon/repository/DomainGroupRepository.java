@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMember;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -44,35 +44,35 @@ public interface DomainGroupRepository {
   Stream<DomainGroup> findAll(
       @Nullable String query,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   Stream<DomainGroup> resolveMemberships(
       @NotEmpty String samAccountName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   Stream<DomainGroup> getMemberships(
       @NotEmpty String samAccountName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   Stream<DomainGroupMember> findPossibleMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   Stream<DomainGroupMember> queryPossibleMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope,
+      @Nullable TreeSearchScope searchScope,
       @Nullable String query);
 
   Stream<DomainGroupMember> getMembers(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
 
   /**
@@ -84,7 +84,7 @@ public interface DomainGroupRepository {
   Optional<DomainGroup> findOne(
       @NotEmpty String groupName,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Add domain group.

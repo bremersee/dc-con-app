@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMember;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -64,7 +64,7 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroup> findAll(String query, Dn ou, SearchScope searchScope) {
+  public Stream<DomainGroup> findAll(String query, Dn ou, TreeSearchScope searchScope) {
     final boolean all = query == null || query.length() <= 2;
     return store.getGroupRepo().values().stream()
         .filter(domainGroup -> all
@@ -73,29 +73,29 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
 
   @Override
   public Stream<DomainGroup> resolveMemberships(String samAccountName, Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
     return Stream.empty();
   }
 
   @Override
   public Stream<DomainGroupMember> findPossibleMembers(String groupName, Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
     return Stream.empty();
   }
 
   @Override
-  public Stream<DomainGroup> getMemberships(String samAccountName, Dn ou, SearchScope searchScope) {
+  public Stream<DomainGroup> getMemberships(String samAccountName, Dn ou, TreeSearchScope searchScope) {
     return Stream.empty();
   }
 
   @Override
   public Stream<DomainGroupMember> queryPossibleMembers(String groupName, Dn ou,
-      SearchScope searchScope, String query) {
+      TreeSearchScope searchScope, String query) {
     return Stream.empty();
   }
 
   @Override
-  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, SearchScope searchScope) {
+  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, TreeSearchScope searchScope) {
     return Stream.empty();
   }
 
@@ -107,7 +107,7 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Optional<DomainGroup> findOne(String groupName, Dn ou, SearchScope searchScope) {
+  public Optional<DomainGroup> findOne(String groupName, Dn ou, TreeSearchScope searchScope) {
     return Optional.ofNullable(store.getGroupRepo().get(groupName.toLowerCase()));
   }
 

@@ -22,8 +22,8 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainGroupService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -59,7 +59,7 @@ public class GroupEditMembershipsController extends AbstractEditController
   public String displayGroupEditMembershipsDirect(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return displayGroupEditMemberships(true, groupName, ou, searchScope, model);
@@ -69,7 +69,7 @@ public class GroupEditMembershipsController extends AbstractEditController
   public String displayGroupEditMembershipsResolved(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return displayGroupEditMemberships(false, groupName, ou, searchScope, model);
@@ -79,7 +79,7 @@ public class GroupEditMembershipsController extends AbstractEditController
       boolean direct,
       String groupName,
       Dn ou,
-      SearchScope searchScope,
+      TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(groupName)

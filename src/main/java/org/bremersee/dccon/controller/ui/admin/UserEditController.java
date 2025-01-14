@@ -34,12 +34,12 @@ import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.DomainUserService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -105,7 +105,7 @@ public class UserEditController extends AbstractEditController implements Pageab
   public String displayUserEdit(
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(userName)
@@ -125,7 +125,7 @@ public class UserEditController extends AbstractEditController implements Pageab
   @PostMapping(path = "/admin/user-edit")
   public String updateUser(
       @ModelAttribute(name = OU, binding = false) Dn ou,
-      @ModelAttribute(name = SCOPE, binding = false) SearchScope scope,
+      @ModelAttribute(name = SCOPE, binding = false) TreeSearchScope scope,
       @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
       ModelMap model,
       BindingResult bindingResult,

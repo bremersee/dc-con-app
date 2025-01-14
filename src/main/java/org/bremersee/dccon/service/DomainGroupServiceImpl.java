@@ -24,10 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMembers;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.DomainGroupRepository;
 import org.bremersee.dccon.service.validator.DomainGroupValidator;
 import org.bremersee.pagebuilder.PageBuilder;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -75,7 +75,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public Page<DomainGroup> getGroups(Pageable pageable, String query, Dn ou, SearchScope scope) {
+  public Page<DomainGroup> getGroups(Pageable pageable, String query, Dn ou, TreeSearchScope scope) {
     return new PageBuilder<DomainGroup, DomainGroup>()
         .sourceEntries(domainGroupRepository.findAll(query, ou, scope))
         .pageable(applyDefaults(pageable, null, true, null))
@@ -85,33 +85,33 @@ public class DomainGroupServiceImpl implements DomainGroupService {
 
   @Override
   public Stream<DomainGroup> resolveMemberships(String samAccountName, Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
     return domainGroupRepository.resolveMemberships(samAccountName, ou, searchScope);
   }
 
   @Override
   public Stream<DomainGroup> getMemberships(String samAccountName, Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
     return domainGroupRepository.getMemberships(samAccountName, ou, searchScope);
   }
 
 
   @Override
   public DomainGroupMembers findPossibleMembers(String groupName, Dn ou,
-      SearchScope searchScope) {
+      TreeSearchScope searchScope) {
     return DomainGroupMembers.from(domainGroupRepository
         .findPossibleMembers(groupName, ou, searchScope));
   }
 
   @Override
   public DomainGroupMembers queryPossibleMembers(String groupName, Dn ou,
-      SearchScope searchScope, String query) {
+      TreeSearchScope searchScope, String query) {
     return DomainGroupMembers.from(domainGroupRepository
         .queryPossibleMembers(groupName, ou, searchScope, query));
   }
 
   @Override
-  public DomainGroupMembers getMembers(String groupName, Dn ou, SearchScope searchScope) {
+  public DomainGroupMembers getMembers(String groupName, Dn ou, TreeSearchScope searchScope) {
     return DomainGroupMembers.from(domainGroupRepository
         .getMembers(groupName, ou, searchScope));
   }
@@ -124,7 +124,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
-  public Optional<DomainGroup> getGroup(String groupName, Dn ou, SearchScope scope) {
+  public Optional<DomainGroup> getGroup(String groupName, Dn ou, TreeSearchScope scope) {
     return domainGroupRepository.findOne(groupName, ou, scope);
   }
 

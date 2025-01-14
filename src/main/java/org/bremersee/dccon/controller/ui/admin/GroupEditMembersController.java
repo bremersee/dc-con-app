@@ -28,10 +28,10 @@ import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMembers;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.service.DomainGroupService;
 import org.bremersee.dccon.service.DomainService;
 import org.bremersee.dccon.service.OrganizationalUnitService;
-import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -84,7 +84,7 @@ public class GroupEditMembersController extends AbstractEditController implement
   public DomainGroupMembers addMemberSelectOptions(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope) {
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope) {
     return Optional.ofNullable(groupName)
         .map(name -> domainGroupService.findPossibleMembers(groupName, ou, searchScope))
         .orElseGet(DomainGroupMembers::empty);
@@ -94,7 +94,7 @@ public class GroupEditMembersController extends AbstractEditController implement
   public String displayGroupEditMembers(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
-      @RequestParam(value = SCOPE, required = false) SearchScope searchScope,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
     return Optional.ofNullable(groupName)

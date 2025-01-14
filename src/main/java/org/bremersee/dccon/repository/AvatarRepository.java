@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
 import java.util.Optional;
 import org.bremersee.dccon.model.AvatarDefault;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -73,7 +73,7 @@ public interface AvatarRepository {
   default boolean existsAvatar(
       @NotEmpty String user,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope) {
+      @Nullable TreeSearchScope searchScope) {
 
     return findAvatar(user, ou, searchScope, AvatarDefault.NOT_FOUND, DEFAULT_AVATAR_SIZE)
         .isPresent();
@@ -82,7 +82,7 @@ public interface AvatarRepository {
   boolean existsAvatarInActiveDirectory(
       @NotEmpty String user,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope);
+      @Nullable TreeSearchScope searchScope);
 
   /**
    * Find avatar.
@@ -95,7 +95,7 @@ public interface AvatarRepository {
   Optional<byte[]> findAvatar(
       @NotEmpty String user,
       @Nullable Dn ou,
-      @Nullable SearchScope searchScope,
+      @Nullable TreeSearchScope searchScope,
       @Nullable AvatarDefault avatarDefault,
       @Nullable Integer size);
 

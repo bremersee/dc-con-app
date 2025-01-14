@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import org.bremersee.dccon.model.OrganizationalUnit;
-import org.ldaptive.SearchScope;
+import org.bremersee.dccon.model.TreeSearchScope;
 
 /**
  * The type OrganizationalUnitSelector.
@@ -43,11 +43,11 @@ public class OrganizationalUnitDropdown implements Serializable {
 
   private boolean scopeSelectable = true;
 
-  private SearchScope selectedScope;
+  private TreeSearchScope selectedScope;
 
   private String selectedScopeDisplayValue;
 
-  private SearchScope selectableScope;
+  private TreeSearchScope selectableScope;
 
   private String selectableScopeDisplayValue;
 
