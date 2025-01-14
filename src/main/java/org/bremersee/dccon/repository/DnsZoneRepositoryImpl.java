@@ -121,8 +121,12 @@ public class DnsZoneRepositoryImpl extends AbstractDnsZoneRepository implements 
 
   @Override
   public boolean exists(final String zoneName) {
+    return false;
+    /*
     return isNonExcludedDnsZone(zoneName)
         && getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
+
+     */
   }
 
   @Override

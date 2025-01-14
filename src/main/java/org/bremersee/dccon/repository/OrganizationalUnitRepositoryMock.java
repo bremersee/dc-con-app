@@ -74,6 +74,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
 
   @Override
   public void resetData() {
+    /*
     store.getOuRepo().clear();
     store.getOuRepo().add(OrganizationalUnit.builder()
         .created(OffsetDateTime.now())
@@ -101,6 +102,8 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
         .description("Default container for domain controllers")
         .systemOu(true)
         .build());
+
+     */
   }
 
   @Override
@@ -162,6 +165,7 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
     Dn dn = new Dn();
     dn.add(ou);
     dn.add(getProperties().getBaseDn());
+    /*
     OrganizationalUnit newOu = organizationalUnit.toBuilder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
@@ -169,7 +173,9 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
         .systemOu(false)
         .build();
     store.getOuRepo().add(newOu);
-    return newOu;
+
+     */
+    return null;
   }
 
   public OrganizationalUnit update(OrganizationalUnit organizationalUnit) {
@@ -203,6 +209,6 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
   }
 
   private OrganizationalUnit copy(OrganizationalUnit ou) {
-    return ou.toBuilder().build();
+    return null; // ou.toBuilder().build();
   }
 }

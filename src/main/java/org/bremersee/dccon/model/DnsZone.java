@@ -44,9 +44,6 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DnsZone extends CommonAttributes {
 
-  @Serial
-  private static final long serialVersionUID = 2L;
-
   /**
    * The constant NAME.
    */
@@ -120,7 +117,7 @@ public class DnsZone extends CommonAttributes {
    * @param defaultZone the default zone
    * @param reverseZone the reverse zone
    */
-  @Builder(toBuilder = true)
+  //@Builder(toBuilder = true)
   public DnsZone(
       String distinguishedName,
       OffsetDateTime created,

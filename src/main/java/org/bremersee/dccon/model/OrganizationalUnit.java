@@ -16,21 +16,23 @@
 
 package org.bremersee.dccon.model;
 
-import static java.util.Objects.isNull;
-
-import java.io.Serial;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.ldaptive.dn.Dn;
+import org.ldaptive.dn.RDn;
 import org.springframework.lang.NonNull;
 
 /**
@@ -46,9 +48,6 @@ import org.springframework.lang.NonNull;
 public class OrganizationalUnit extends CommonAttributes
     implements Comparable<OrganizationalUnit> {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
   private String description;
 
   private String name;
@@ -56,10 +55,10 @@ public class OrganizationalUnit extends CommonAttributes
   private Boolean systemOu;
 
   @Builder(toBuilder = true)
-  public OrganizationalUnit(String distinguishedName, OffsetDateTime created,
+  public OrganizationalUnit(Dn dn, OffsetDateTime created,
       OffsetDateTime modified, String description, String name,
       Boolean systemOu) {
-    super(distinguishedName, created, modified);
+    super(dn, created, modified);
     this.description = description;
     this.name = name;
     this.systemOu = systemOu;
@@ -69,32 +68,24 @@ public class OrganizationalUnit extends CommonAttributes
     return Boolean.TRUE.equals(systemOu);
   }
 
+  @Hidden
+  @JsonIgnore
+  @Override
   public String getNameTree() {
-    // TODO set the name tree when dn is set, otherwise it is lower case + method
-    String dn = getDistinguishedName();
-    if (isNull(dn)) {
-      return null;
-    }
-    if (dn.toLowerCase().startsWith("dc=")) {
+    String nameTree = Stream.ofNullable(getDn())
+        .map(Dn::getRDns)
+        .flatMap(rdnList -> {
+          List<RDn> rdns = new ArrayList<>(getDn().getRDns());
+          Collections.reverse(rdns);
+          return rdns.stream();
+        })
+        .filter(rdn -> !rdn.getNameValue().hasName("dc"))
+        .map(rdn -> rdn.getNameValue().getStringValue())
+        .collect(Collectors.joining(" → "));
+    if (nameTree.isEmpty()) {
       return getName();
     }
-    int index = dn.toLowerCase().indexOf(",dc=");
-    if (index != -1) {
-      dn = dn.substring(0, index);
-    }
-    List<String> names = new ArrayList<>();
-    StringTokenizer st = new StringTokenizer(dn, ",");
-    while (st.hasMoreTokens()) {
-      String rdn = st.nextToken();
-      index = rdn.indexOf('=');
-      if (index != -1) {
-        names.add(rdn.substring(index + 1));
-      } else {
-        names.add(rdn);
-      }
-    }
-    Collections.reverse(names);
-    return String.join(" → ", names);
+    return nameTree;
   }
 
   @Override

@@ -80,11 +80,16 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
 
   @Override
   public DnsZone save(String zoneName) {
+    return null;
+
+    /*
     return build(repo.computeIfAbsent(zoneName.toLowerCase(), key -> DnsZone.builder()
         .created(OffsetDateTime.now())
         .modified(OffsetDateTime.now())
         .name(zoneName)
         .build()));
+
+     */
   }
 
   @Override
@@ -93,11 +98,15 @@ public class DnsZoneRepositoryMock implements DnsZoneRepository {
   }
 
   private DnsZone build(DnsZone dnsZone) {
+    return null;
+    /*
     return dnsZone == null ? null : dnsZone.toBuilder()
         .defaultZone(dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()))
         .reverseZone(getProperties().isReverseZone(dnsZone.getName()))
         .distinguishedName(String.format(DISTINGUISHED_NAME_TEMPLATE, dnsZone.getName()))
         .build();
+
+     */
   }
 
 }

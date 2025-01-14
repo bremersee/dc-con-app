@@ -16,12 +16,14 @@
 
 package org.bremersee.dccon.model;
 
+import java.util.Objects;
+
 /**
  * The interface DistinguishedNameProvider.
  *
  * @author Christian Bremer
  */
-public interface DistinguishedNameProvider {
+public interface DistinguishedNameProvider  {
 
   String getDistinguishedName();
 

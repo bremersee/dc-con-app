@@ -168,6 +168,8 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
       return Optional.empty();
     }
 
+    return Optional.empty();
+    /*
     final DnsNode newDnsNode = dnsNode.toBuilder()
         .distinguishedName(null)
         .records(dnsNode.getRecords().stream()
@@ -209,6 +211,8 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
     getNodeMap(zoneName).put(newDnsNode.getName().toLowerCase(), newDnsNode);
     handlePtrRecords(zoneName, newDnsNode.getName(), newRecords, deletedRecords);
     return findOne(zoneName, newDnsNode.getName(), null, true, true);
+
+     */
   }
 
   @Override
@@ -225,9 +229,13 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
   }
 
   private DnsNode build(DnsNode dnsNode, String zoneName) {
+    return null;
+    /*
     return dnsNode == null ? null : dnsNode.toBuilder()
         .distinguishedName(String.format(DISTINGUISHED_NAME_TEMPLATE, dnsNode.getName(), zoneName))
         .build();
+
+     */
   }
 
 }

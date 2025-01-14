@@ -20,11 +20,14 @@ import static java.util.Objects.isNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.Hidden;
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.ldaptive.dn.Dn;
 
 /**
  * Common attributes.
@@ -33,15 +36,14 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public abstract class CommonAttributes implements Serializable, DistinguishedNameProvider {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public abstract class CommonAttributes implements DistinguishedNameProvider {
 
   /**
    * The distinguished name in the active directory.
    */
-  String distinguishedName;
+  @Hidden
+  @JsonIgnore
+  Dn dn;
 
   /**
    * The creation date.
@@ -65,22 +67,62 @@ public abstract class CommonAttributes implements Serializable, DistinguishedNam
       OffsetDateTime created,
       OffsetDateTime modified) {
 
-    this.distinguishedName = distinguishedName;
-    this.created = created;
-    this.modified = modified;
+    setDistinguishedName(distinguishedName);
+    setCreated(created);
+    setModified(modified);
+  }
+
+  public CommonAttributes(
+      Dn dn,
+      OffsetDateTime created,
+      OffsetDateTime modified) {
+
+    setDn(dn);
+    setCreated(created);
+    setModified(modified);
   }
 
   @Hidden
   @JsonIgnore
-  public String getParentDn() {
-    if (isNull(distinguishedName)) {
-      return null;
+  public Dn getDn() {
+    return dn;
+  }
+
+  @Hidden
+  @JsonIgnore
+  public void setDn(Dn dn) {
+    this.dn = dn;
+  }
+
+  public String getDistinguishedName() {
+    return isNull(dn) ? null : dn.format();
+  }
+
+  public void setDistinguishedName(String distinguishedName) {
+    if (isNull(distinguishedName) || distinguishedName.isEmpty()) {
+      this.dn = null;
+    } else {
+      this.dn = new Dn(distinguishedName);
     }
-    int index = distinguishedName.indexOf(',');
-    if (index < 0) {
-      return null;
-    }
-    return distinguishedName.substring(index + 1);
+  }
+
+  @Hidden
+  @JsonIgnore
+  public String getParentDistinguishedName() {
+    return Optional.ofNullable(getDn())
+        .map(Dn::format)
+        .orElse(null);
+  }
+
+  @Hidden
+  @JsonIgnore
+  public String getNameTree() { // ou is reverse
+    return Stream.ofNullable(getDn())
+        .map(Dn::getRDns)
+        .flatMap(Collection::stream)
+        .filter(rdn -> !rdn.getNameValue().hasName("dc"))
+        .map(rdn -> rdn.getNameValue().getStringValue())
+        .collect(Collectors.joining(" → "));
   }
 
 }

@@ -148,10 +148,14 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       final String zoneName,
       final String nodeName,
       final UnknownFilter unknownFilter) {
+    return false;
+    /*
     return isNonExcludedDnsNode(nodeName)
         && getDnsZoneRepository().exists(zoneName)
         && getLdapTemplate().exists(DnsNode.builder().name(nodeName).build(),
         getDnsNodeLdapMapper(zoneName, unknownFilter));
+
+     */
   }
 
   @Override
@@ -191,7 +195,9 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
           "Node name is not allowed.",
           "org.bremersee:dc-con-app:8dd7165e-89af-4423-900a-5fc0a71fe7bf");
     }
+    return Optional.empty();
     // Collect deleted records and save existing dns node
+    /*
     final Set<DnsRecord> deletedRecords = new LinkedHashSet<>();
     DnsNode newDnsNode = findOne(zoneName, dnsNode.getName(), ALL, false, false)
         .map(existingDnsNode -> {
@@ -242,6 +248,8 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
     handlePtrRecords(zoneName, dnsNode.getName(), newRecords, deletedRecords);
 
     return Optional.ofNullable(newDnsNode);
+
+     */
   }
 
   /**

@@ -48,9 +48,6 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DomainUser extends SamAccount implements NisDomainMember {
 
-  @Serial
-  private static final long serialVersionUID = 2L;
-
   /**
    * User's account control.
    */

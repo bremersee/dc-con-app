@@ -56,14 +56,13 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
       OrganizationalUnitRepository repository) {
     this.properties = properties;
     this.repository = repository;
-    this.base = OrganizationalUnit.builder()
-        .distinguishedName(properties.getBaseDn().format())
-        .created(OffsetDateTime.now())
-        .modified(OffsetDateTime.now())
-        .name("Base")
-        .description("Base of Active Directory")
-        .systemOu(true)
-        .build();
+    this.base = new OrganizationalUnit();
+    this.base.setDn(properties.getBaseDn());
+    this.base.setCreated(OffsetDateTime.now());
+    this.base.setModified(OffsetDateTime.now());
+    this.base.setName("Base");
+    this.base.setDescription("Base of Active Directory");
+    this.base.setSystemOu(true);
   }
 
   boolean contains(OrganizationalUnit ou, String query) {
@@ -73,6 +72,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
     return !isEmpty(ou.getDescription()) && ou.getDescription().toLowerCase().contains(query);
   }
 
+  /*
   OrganizationalUnit withFormattedDn(OrganizationalUnit organizationalUnit) {
     if (isEmpty(organizationalUnit) || isEmpty(organizationalUnit.getDistinguishedName())) {
       return organizationalUnit;
@@ -81,6 +81,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .distinguishedName(new Dn(organizationalUnit.getDistinguishedName()).format())
         .build();
   }
+  */
 
   @Override
   public Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query) {
@@ -103,14 +104,14 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
     return Stream.concat(
         Stream.of(base),
         repository.findAll()
-            .map(this::withFormattedDn)
+            //.map(this::withFormattedDn)
             .sorted(Comparator.comparing(OrganizationalUnit::getNameTree)));
   }
 
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOus() {
     return repository.findAllWithSystemOus()
-        .map(this::withFormattedDn)
+        //.map(this::withFormattedDn)
         .sorted(Comparator.comparing(OrganizationalUnit::getNameTree));
   }
 
@@ -127,7 +128,8 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .or(() -> Optional.ofNullable(ou)
             .filter(dn -> dn.isSame(properties.getBaseDn()))
             .map(baseDn -> base))
-        .map(this::withFormattedDn);
+        //.map(this::withFormattedDn)
+        ;
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.model;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNullElse;
 
@@ -25,15 +24,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.io.Serial;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.StringTokenizer;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,11 +47,7 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class DomainGroupMember extends SamAccount implements Serializable,
-    Comparable<DomainGroupMember> {
-
-  @Serial
-  private static final long serialVersionUID = 1;
+public class DomainGroupMember extends SamAccount implements Comparable<DomainGroupMember> {
 
   @Hidden
   @JsonIgnore
@@ -86,7 +76,7 @@ public class DomainGroupMember extends SamAccount implements Serializable,
       boolean selected) {
     super(distinguishedName, created, modified, samAccountName, sid, primaryGroupId, memberships);
     this.distinguishedNameBase64 = Base64.getEncoder()
-        .encodeToString(this.distinguishedName.getBytes(StandardCharsets.UTF_8));
+        .encodeToString(getDistinguishedName().getBytes(StandardCharsets.UTF_8));
     this.memberType = requireNonNullElse(objectClass, DomainGroupMemberType.UNKNOWN);
     this.displayName = displayName;
     this.selected = selected;
@@ -139,34 +129,8 @@ public class DomainGroupMember extends SamAccount implements Serializable,
     return distinguishedNameBase64;
   }
 
-  @Hidden
-  @JsonIgnore
-  public String getDistinguishedNameTree() {
-    String dn = getDistinguishedName();
-    if (isNull(dn)) {
-      return null;
-    }
-    int index = dn.toLowerCase().indexOf(",dc=");
-    if (index != -1) {
-      dn = dn.substring(0, index);
-    }
-    List<String> names = new ArrayList<>();
-    StringTokenizer st = new StringTokenizer(dn, ",");
-    while (st.hasMoreTokens()) {
-      String rdn = st.nextToken();
-      index = rdn.indexOf('=');
-      if (index != -1) {
-        names.add(rdn.substring(index + 1));
-      } else {
-        names.add(rdn);
-      }
-    }
-    return String.join(" → ", names);
-  }
-
   @Override
   public int compareTo(@NonNull DomainGroupMember selectOption) {
-    // TODO
     String s0 = requireNonNullElse(getDisplayName(), "");
     String s1 = requireNonNullElse(selectOption.getDisplayName(), "");
     int c = s0.compareTo(s1);

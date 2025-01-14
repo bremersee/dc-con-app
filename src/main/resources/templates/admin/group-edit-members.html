@@ -81,7 +81,7 @@
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
         <a class="nav-link" href="group-edit.html"
-           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${group.parentDn},scope=${scope})}">
+           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${group.parentDistinguishedName},scope=${scope})}">
           <span class="fa fa-edit" aria-hidden="true"></span>
         </a>
       </li>
@@ -189,7 +189,7 @@
                        th:value="${member.distinguishedNameBase64}"/>
               </div>
             </div>
-            <small class="text-secondary" th:text="${member.distinguishedNameTree}">CN</small>
+            <small class="text-secondary" th:text="${member.nameTree}">CN</small>
           </div>
         </div>
 

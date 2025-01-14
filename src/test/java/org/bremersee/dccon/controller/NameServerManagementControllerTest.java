@@ -88,6 +88,7 @@ class NameServerManagementControllerTest {
   @Test
   @Disabled
   void query(SoftAssertions softly) {
+    /*
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -123,6 +124,8 @@ class NameServerManagementControllerTest {
         .extracting(DnsNodePage::getContent)
         .extracting(List::size, InstanceOfAssertFactories.INTEGER)
         .isGreaterThan(0);
+
+     */
   }
 
   /**
@@ -177,6 +180,7 @@ class NameServerManagementControllerTest {
   @Test
   @Disabled
   void addDnsZoneAndDelete(SoftAssertions softly) {
+    /*
     DnsZone expected = DnsZone.builder().name("newtestzone").build();
     ResponseEntity<DnsZone> addResponse = restTemplate
         .withBasicAuth(user, pass)
@@ -217,6 +221,8 @@ class NameServerManagementControllerTest {
     deleted = response.getBody();
     softly.assertThat(deleted)
         .isFalse();
+
+     */
   }
 
   /**
@@ -251,6 +257,7 @@ class NameServerManagementControllerTest {
   @Test
   @Disabled
   void saveDnsNodeAndDelete(SoftAssertions softly) {
+    /*
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -301,6 +308,8 @@ class NameServerManagementControllerTest {
     deleted = response.getBody();
     softly.assertThat(deleted)
         .isFalse();
+
+     */
   }
 
   /**
@@ -311,6 +320,7 @@ class NameServerManagementControllerTest {
   @Test
   @Disabled
   void saveAndGetDnsNode(SoftAssertions softly) {
+    /*
     DnsNode expected = DnsNode.builder()
         .name("newtestnode")
         .records(Collections.singleton(DnsRecord.builder()
@@ -346,6 +356,8 @@ class NameServerManagementControllerTest {
         .isNotNull()
         .extracting(DnsNode::getName)
         .isEqualTo(expected.getName());
+
+     */
   }
 
   /**

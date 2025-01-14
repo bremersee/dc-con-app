@@ -367,6 +367,8 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
       final String ip4,
       final DnsZone reverseZone) {
 
+    return Optional.empty();
+    /*
     return getDnsNodeNameByIp4(ip4, reverseZone.getName())
         .map(nodeName -> findOne(reverseZone.getName(), nodeName, NO_UNKNOWN, false, false)
             .map(dnsNode -> DnsPair.builder()
@@ -381,6 +383,8 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
                     .build())
                 .nodeExists(false)
                 .build()));
+
+     */
   }
 
   /**
@@ -391,6 +395,8 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
    * @return the optional
    */
   Optional<DnsPair> buildDnsPairByFqdn(final String fqdn, final DnsZone dnsZone) {
+    return Optional.empty();
+    /*
     return getDnsNodeNameByFqdn(fqdn, dnsZone.getName())
         .map(nodeName -> findOne(dnsZone.getName(), nodeName, NO_UNKNOWN, false, false)
             .map(dnsNode -> DnsPair.builder()
@@ -405,6 +411,8 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
                     .build())
                 .nodeExists(false)
                 .build()));
+
+     */
   }
 
   @Override
@@ -441,6 +449,7 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
     if (dnsZoneRepository.isDnsReverseZone(zoneName)) {
       return;
     }
+    /*
     for (final DnsRecord record : deletedRecords) {
       findCorrelatedDnsNode(zoneName, record).ifPresent(pair -> {
         final Set<DnsRecord> records = new LinkedHashSet<>(pair.getNode().getRecords());
@@ -470,6 +479,8 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
         }
       });
     }
+
+     */
   }
 
   /**

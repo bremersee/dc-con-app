@@ -49,9 +49,6 @@ import org.springframework.lang.NonNull;
 @NoArgsConstructor
 public class DomainGroup extends SamAccount implements NisDomainMember, Comparable<DomainGroup> {
 
-  @Serial
-  private static final long serialVersionUID = 2L;
-
   /**
    * A description of the domain group.
    */

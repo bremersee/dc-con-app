@@ -18,7 +18,6 @@ package org.bremersee.dccon.model;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.Serial;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +39,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class SamAccount extends CommonAttributes implements NameProvider {
-
-  @Serial
-  private static final long serialVersionUID = 1;
 
   String samAccountName;
 

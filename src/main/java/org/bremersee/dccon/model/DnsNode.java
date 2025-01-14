@@ -45,9 +45,6 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DnsNode extends CommonAttributes {
 
-  @Serial
-  private static final long serialVersionUID = 2L;
-
   /**
    * The constant NAME.
    */
@@ -83,7 +80,7 @@ public class DnsNode extends CommonAttributes {
    * @param name the name
    * @param records the records
    */
-  @Builder(toBuilder = true)
+  //@Builder(toBuilder = true)
   public DnsNode(
       String distinguishedName,
       OffsetDateTime created,

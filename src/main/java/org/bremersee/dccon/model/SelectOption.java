@@ -43,7 +43,7 @@ import org.springframework.lang.NonNull;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SelectOption<D extends Serializable>
+public class SelectOption<D>
     implements Serializable, Comparable<SelectOption<D>> {
 
   @Serial
