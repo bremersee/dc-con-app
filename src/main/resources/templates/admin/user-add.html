@@ -87,10 +87,10 @@
       <div class="mb-3">
         <label for="samAccountName" class="form-label">Username</label>
         <input type="text" class="form-control" id="samAccountName" name="samAccountName"
-               aria-describedby="samAccountNameValidation" required th:field="*{user.samAccountName}"
-               th:classappend="${#fields.hasErrors('user.samAccountName')} ? 'is-invalid' : ''"/>
+               aria-describedby="samAccountNameValidation" required th:field="*{samAccountName}"
+               th:classappend="${#fields.hasErrors('samAccountName')} ? 'is-invalid' : ''"/>
         <div id="samAccountNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.samAccountName')} ? ${#fields.errors('user.samAccountName')[0]} : ''">
+             th:text="${#fields.hasErrors('samAccountName')} ? ${#fields.errors('samAccountName')[0]} : ''">
         </div>
       </div>
 
@@ -104,7 +104,7 @@
 
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" role="switch" id="enabled" name="enabled"
-               th:field="*{user.accountControl.enabled}" />
+               th:field="*{enabled}" />
         <label class="form-check-label" for="enabled" th:text="#{i18n.enabled}">
           Enabled
         </label>
@@ -113,7 +113,7 @@
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" role="switch"
                id="passwordExpirationEnabled" name="passwordExpirationEnabled"
-               th:field="*{user.accountControl.passwordExpirationEnabled}" />
+               th:field="*{passwordExpirationEnabled}" />
         <label class="form-check-label" for="passwordExpirationEnabled">
           Password expiration enabled
         </label>
@@ -122,56 +122,56 @@
       <div class="mb-3">
         <label for="firstName" class="form-label">First Name</label>
         <input type="text" class="form-control" id="firstName" name="firstName"
-               aria-describedby="firstNameValidation" th:field="*{user.firstName}"
-               th:classappend="${#fields.hasErrors('user.firstName')} ? 'is-invalid' : ''"/>
+               aria-describedby="firstNameValidation" th:field="*{firstName}"
+               th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"/>
         <div id="firstNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.firstName')} ? ${#fields.errors('user.firstName')[0]} : ''">
+             th:text="${#fields.hasErrors('firstName')} ? ${#fields.errors('firstName')[0]} : ''">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="lastName" class="form-label">Last Name</label>
         <input type="text" class="form-control" id="lastName" name="lastName"
-               aria-describedby="lastNameValidation" th:field="*{user.lastName}"
-               th:classappend="${#fields.hasErrors('user.lastName')} ? 'is-invalid' : ''"/>
+               aria-describedby="lastNameValidation" th:field="*{lastName}"
+               th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"/>
         <div id="lastNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.lastName')} ? ${#fields.errors('user.lastName')[0]} : ''">
+             th:text="${#fields.hasErrors('lastName')} ? ${#fields.errors('lastName')[0]} : ''">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="displayName" class="form-label">Display Name</label>
         <input type="text" class="form-control" id="displayName" name="displayName"
-               th:field="*{user.displayName}" />
+               th:field="*{displayName}" />
       </div>
 
       <div class="mb-3">
         <label for="initials" class="form-label">Initials</label>
         <input type="text" class="form-control" id="initials" name="initials"
-               th:field="*{user.initials}" />
+               th:field="*{initials}" />
       </div>
 
       <div class="mb-3">
         <label for="preferredLanguage" class="form-label">Preferred language</label>
         <input type="text" class="form-control" id="preferredLanguage" name="preferredLanguage"
-               aria-describedby="preferredLanguageValidation" th:field="*{user.preferredLanguage}"
-               th:classappend="${#fields.hasErrors('user.preferredLanguage')} ? 'is-invalid' : ''"/>
+               aria-describedby="preferredLanguageValidation" th:field="*{preferredLanguage}"
+               th:classappend="${#fields.hasErrors('preferredLanguage')} ? 'is-invalid' : ''"/>
         <div id="preferredLanguageHelp" class="form-text">
           User's preferred language. ISO 639-1 language codes. The combinations like de-DE and
           en-US with ISO-639 and ISO-3166 also work.
         </div>
         <div id="preferredLanguageValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.preferredLanguage')} ? ${#fields.errors('user.preferredLanguage')[0]} : ''">
+             th:text="${#fields.hasErrors('preferredLanguage')} ? ${#fields.errors('preferredLanguage')[0]} : ''">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="text" class="form-control" id="email" name="email"
-               aria-describedby="emailValidation" th:field="*{user.email}"
-               th:classappend="${#fields.hasErrors('user.email')} ? 'is-invalid' : ''"/>
+               aria-describedby="emailValidation" th:field="*{email}"
+               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"/>
         <div id="emailValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.email')} ? ${#fields.errors('user.email')[0]} : ''">
+             th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : ''">
         </div>
       </div>
 
@@ -186,61 +186,61 @@
       <div class="mb-3">
         <label for="mobile" class="form-label">Mobile phone number</label>
         <input type="text" class="form-control" id="mobile" name="mobile"
-               th:field="*{user.mobile}" />
+               th:field="*{mobile}" />
       </div>
 
       <div class="mb-3">
         <label for="telephoneNumber" class="form-label">Telephone number</label>
         <input type="text" class="form-control" id="telephoneNumber" name="telephoneNumber"
-               th:field="*{user.telephoneNumber}" />
+               th:field="*{telephoneNumber}" />
       </div>
 
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <input type="text" class="form-control" id="description" name="description"
-               th:field="*{user.description}" />
+               th:field="*{description}" />
       </div>
 
       <div class="mb-3">
         <label for="homeDirectory" class="form-label">Home directory</label>
         <input type="text" class="form-control" id="homeDirectory" name="homeDirectory"
-               th:field="*{user.homeDirectory}" />
+               th:field="*{homeDirectory}" />
       </div>
 
       <div class="mb-3">
         <label for="homeDrive" class="form-label">Home Drive Letter</label>
         <input type="text" class="form-control" id="homeDrive" name="homeDrive"
-               th:field="*{user.homeDrive}" />
+               th:field="*{homeDrive}" />
       </div>
 
       <div class="mb-3">
         <label for="profilePath" class="form-label">Profile path</label>
         <input type="text" class="form-control" id="profilePath" name="profilePath"
-               th:field="*{user.profilePath}" />
+               th:field="*{profilePath}" />
       </div>
 
       <div class="mb-3">
         <label for="scriptPath" class="form-label">Logon script path</label>
         <input type="text" class="form-control" id="scriptPath" name="scriptPath"
-               th:field="*{user.scriptPath}" />
+               th:field="*{scriptPath}" />
       </div>
 
       <div class="mb-3">
         <label for="company" class="form-label">Company</label>
         <input type="text" class="form-control" id="company" name="company"
-               th:field="*{user.company}" />
+               th:field="*{company}" />
       </div>
 
       <div class="mb-3">
         <label for="title" class="form-label">Job title</label>
         <input type="text" class="form-control" id="title" name="title"
-               th:field="*{user.title}" />
+               th:field="*{title}" />
       </div>
 
       <div class="mb-3">
         <label for="department" class="form-label">Department</label>
         <input type="text" class="form-control" id="department" name="department"
-               th:field="*{user.department}" />
+               th:field="*{department}" />
       </div>
 
       <div class="mb-3">
@@ -248,42 +248,42 @@
           Office location
         </label>
         <input type="text" class="form-control" id="physicalDeliveryOfficeName"
-               name="physicalDeliveryOfficeName" th:field="*{user.physicalDeliveryOfficeName}" />
+               name="physicalDeliveryOfficeName" th:field="*{physicalDeliveryOfficeName}" />
       </div>
 
       <div th:if="${rfc2307Enabled}">
         <div class="mb-3">
           <label for="uid" class="form-label">User's Unix/RFC2307 username</label>
           <input type="text" class="form-control" id="uid" name="uid"
-                 aria-describedby="uidValidation" th:field="*{user.uid}"
-                 th:classappend="${#fields.hasErrors('user.uid')} ? 'is-invalid' : ''"/>
+                 aria-describedby="uidValidation" th:field="*{uid}"
+                 th:classappend="${#fields.hasErrors('uid')} ? 'is-invalid' : ''"/>
           <div id="uidValidation" class="invalid-feedback"
-               th:text="${#fields.hasErrors('user.uid')} ? ${#fields.errors('user.uid')[0]} : ''">
+               th:text="${#fields.hasErrors('uid')} ? ${#fields.errors('uid')[0]} : ''">
           </div>
         </div>
 
         <div class="mb-3">
           <label for="uidNumber" class="form-label">User's Unix/RFC2307 UID number</label>
           <input type="text" class="form-control" id="uidNumber" name="uidNumber"
-                 aria-describedby="uidNumberValidation" th:field="*{user.uidNumber}"
-                 th:classappend="${#fields.hasErrors('user.uidNumber')} ? 'is-invalid' : ''"/>
+                 aria-describedby="uidNumberValidation" th:field="*{uidNumber}"
+                 th:classappend="${#fields.hasErrors('uidNumber')} ? 'is-invalid' : ''"/>
           <div id="uidNumberValidation" class="invalid-feedback"
-               th:text="${#fields.hasErrors('user.uidNumber')} ? ${#fields.errors('user.uidNumber')[0]} : ''">
+               th:text="${#fields.hasErrors('uidNumber')} ? ${#fields.errors('uidNumber')[0]} : ''">
           </div>
         </div>
 
-        <div class="mb-3"> <!-- TODO select ? -->
+        <div class="mb-3">
           <label for="gidNumber" class="form-label">
             User's Unix/RFC2307 primary group ID
           </label>
           <input type="number" class="form-control" id="gidNumber"
-                 name="gidNumber" th:field="*{user.gidNumber}" />
+                 name="gidNumber" th:field="*{gidNumber}" />
         </div>
 
         <div class="mb-3">
           <label for="loginShell" class="form-label">User's Unix/RFC2307 login shell</label>
           <input type="text" class="form-control" id="loginShell" name="loginShell"
-                 th:field="*{user.loginShell}" />
+                 th:field="*{loginShell}" />
         </div>
 
         <div class="mb-3">
@@ -291,7 +291,7 @@
             User's Unix/RFC2307 home directory
           </label>
           <input type="text" class="form-control" id="unixHomeDirectory" name="unixHomeDirectory"
-                 th:field="*{user.unixHomeDirectory}" />
+                 th:field="*{unixHomeDirectory}" />
         </div>
 
         <div class="mb-3">
@@ -299,7 +299,7 @@
             User's Unix/RFC2307 GECOS field
           </label>
           <input type="text" class="form-control" id="gecos" name="gecos"
-                 th:field="*{user.gecos}" />
+                 th:field="*{gecos}" />
         </div>
 
         <div class="mb-3">
@@ -307,15 +307,15 @@
             User's Unix/RFC2307 NIS domain
           </label>
           <input type="text" class="form-control" id="nisDomain"
-                 name="nisDomain" th:field="*{user.nisDomain}" />
+                 name="nisDomain" th:field="*{nisDomain}" />
         </div>
       </div> <!-- end of rfc2307Enabled -->
 
       <div id="passwordDiv" class="mb-3">
         <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" name="password"
-               aria-describedby="passwordValidation" th:field="*{user.password}"
-               th:classappend="${#fields.hasErrors('user.password')} ? 'is-invalid' : ''"
+               aria-describedby="passwordValidation" th:field="*{password}"
+               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
                pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,75}$"
                th:pattern="${passwordPattern}"/>
         <div id="passwordHelp" class="form-text">
@@ -323,7 +323,7 @@
           include at least one upper case letter, one lower case letter, and one numeric digit.
         </div>
         <div id="passwordValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('user.password')} ? ${#fields.errors('user.password')[0]} : ''">
+             th:text="${#fields.hasErrors('password')} ? ${#fields.errors('password')[0]} : ''">
         </div>
       </div>
 

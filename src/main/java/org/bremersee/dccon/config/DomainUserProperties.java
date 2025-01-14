@@ -20,6 +20,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.SearchScope;
@@ -76,7 +77,8 @@ public class DomainUserProperties {
 
   private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
 
-  public void fillDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
+  // TODO move to user add controller
+  public void fillDefaults(DomainUserAddRequest domainUser, boolean rfc2307Enabled) {
     if (isEmpty(domainUser)) {
       return;
     }
@@ -126,7 +128,8 @@ public class DomainUserProperties {
     }
   }
 
-  public void replaceInvalidUsernameWithDefaults(DomainUser domainUser, boolean rfc2307Enabled) {
+  // TODO move to user add controller
+  public void replaceInvalidUsernameWithDefaults(DomainUserAddRequest domainUser, boolean rfc2307Enabled) {
     if (isEmpty(domainUser) || isEmpty(domainUser.getSamAccountName())) {
       return;
     }

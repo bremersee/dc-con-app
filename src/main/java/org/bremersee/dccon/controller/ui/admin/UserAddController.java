@@ -31,6 +31,7 @@ import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest;
+import org.bremersee.dccon.controller.ui.model.DomainUserAddRequest.DomainMapper;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainUser;
@@ -112,8 +113,7 @@ public class UserAddController extends AbstractController
         .filter(dn -> !dn.isEmpty())
         .filter(dn -> !dn.isSame(getProperties().getBaseDn()))
         .orElseGet(() -> getProperties().getBaseDn(getProperties().getUser().getDefaultOu()));
-    DomainUserAddRequest userAddRequest = new DomainUserAddRequest();
-    userAddRequest.setUser(createNewDomainUser());
+    DomainUserAddRequest userAddRequest = createAddRequest();
     userAddRequest.setNewOu(ouDn.format());
     userAddRequest.setUseUsernameAsCn(getProperties().getUser().isUseUsernameAsCn());
     userAddRequest.setSendEmail(false);
@@ -130,21 +130,21 @@ public class UserAddController extends AbstractController
 
     getLogger().debug("addUser({})", userAddRequest);
 
-    processTemplates(bindingResult, userAddRequest.getUser());
+    processTemplates(bindingResult, userAddRequest);
 
-    if (!isEmpty(userAddRequest.getUser().getEmail())
-        && !emailPattern.matcher(userAddRequest.getUser().getEmail()).matches()) {
-      bindingResult.rejectValue("user.email", "code",
+    if (!isEmpty(userAddRequest.getEmail())
+        && !emailPattern.matcher(userAddRequest.getEmail()).matches()) {
+      bindingResult.rejectValue("email", "code",
           "Email is invalid.");
     }
-    if (userAddRequest.isSendEmail() && isEmpty(userAddRequest.getUser().getEmail())) {
-      bindingResult.rejectValue("user.email", "code",
+    if (userAddRequest.isSendEmail() && isEmpty(userAddRequest.getEmail())) {
+      bindingResult.rejectValue("email", "code",
           "If you want to send an invitation email, you have to enter an email address.");
     }
     if (userAddRequest.isGenerateRandomPassword()) {
-      userAddRequest.getUser().setPassword(null);
-    } else if (isEmpty(userAddRequest.getUser().getPassword())) {
-      bindingResult.rejectValue("user.password", "code",
+      userAddRequest.setPassword(null);
+    } else if (isEmpty(userAddRequest.getPassword())) {
+      bindingResult.rejectValue("password", "code",
           "Password is required.");
     }
     if (bindingResult.hasErrors()) {
@@ -153,7 +153,7 @@ public class UserAddController extends AbstractController
     }
     DomainUser addedUser = addUser(
         bindingResult,
-        userAddRequest.getUser(),
+        DomainMapper.INSTANCE.mapToDomainUser(userAddRequest),
         Optional.ofNullable(userAddRequest.getNewOu())
             .map(Dn::new)
             .orElseGet(() -> getProperties().getUser().getDefaultOu()),
@@ -194,51 +194,50 @@ public class UserAddController extends AbstractController
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
 
-    if (!(bindTarget instanceof DomainUserAddRequest)) {
+    if (!(bindTarget instanceof DomainUserAddRequest userAddRequest)) {
       return;
     }
-    DomainUser user = ((DomainUserAddRequest) bindTarget).getUser();
 
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_SAM_ACCOUNT_NAME_REQUIRED: {
-        bindingResult.rejectValue("user.samAccountName", "code",
+        bindingResult.rejectValue("samAccountName", "code",
             "Username is required.");
         break;
       }
       case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
-        bindingResult.rejectValue("user.samAccountName", "code",
+        bindingResult.rejectValue("samAccountName", "code",
             "Username contains illegal characters.");
         break;
       }
       case EC_ILLEGAL_FIRST_NAME: {
-        bindingResult.rejectValue("user.firstName", "code",
+        bindingResult.rejectValue("firstName", "code",
             "First name contains illegal characters.");
         break;
       }
       case EC_ILLEGAL_LAST_NAME: {
-        bindingResult.rejectValue("user.lastName", "code",
+        bindingResult.rejectValue("lastName", "code",
             "Last name contains illegal characters.");
         break;
       }
       case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-        bindingResult.rejectValue("user.samAccountName", "code",
+        bindingResult.rejectValue("samAccountName", "code",
             "Username already exists.");
-        getProperties().getUser().replaceInvalidUsernameWithDefaults(user, isRfc2307Enabled());
+        getProperties().getUser().replaceInvalidUsernameWithDefaults(userAddRequest, isRfc2307Enabled());
         break;
       }
       case EC_UID_ALREADY_EXISTS: {
-        bindingResult.rejectValue("user.uid", "code",
+        bindingResult.rejectValue("uid", "code",
             "User's unix uid already exists.");
         break;
       }
       case EC_UID_NUMBER_ALREADY_EXISTS: {
-        bindingResult.rejectValue("user.uidNumber", "code",
+        bindingResult.rejectValue("uidNumber", "code",
             "User's unix uid number already exists.");
         break;
       }
       case EC_PASSWORD_RESTRICTIONS: {
-        bindingResult.rejectValue("user.password", "code",
+        bindingResult.rejectValue("password", "code",
             "Password restrictions are not met.");
         break;
       }
@@ -254,7 +253,7 @@ public class UserAddController extends AbstractController
       }
       case EC_ADDING_USER_FAILED: { // TODO global
         getLogger().error("Adding user failed.", serviceException);
-        bindingResult.rejectValue("user.samAccountName", "code",
+        bindingResult.rejectValue("samAccountName", "code",
             "Something went wrong. Please try again later.");
         break;
       }
@@ -265,13 +264,13 @@ public class UserAddController extends AbstractController
     }
   }
 
-  private DomainUser createNewDomainUser() {
-    DomainUser domainUser = new DomainUser();
-    getProperties().getUser().fillDefaults(domainUser, isRfc2307Enabled());
-    return domainUser;
+  private DomainUserAddRequest createAddRequest() {
+    DomainUserAddRequest addRequest = new DomainUserAddRequest();
+    getProperties().getUser().fillDefaults(addRequest, isRfc2307Enabled());
+    return addRequest;
   }
 
-  private void processTemplates(BindingResult bindingResult, DomainUser user) {
+  private void processTemplates(BindingResult bindingResult, DomainUserAddRequest user) {
     Map<String, Object> map = Map.of("user", user);
 
     String value = processTemplatedField(bindingResult, "company", user.getCompany(), map);

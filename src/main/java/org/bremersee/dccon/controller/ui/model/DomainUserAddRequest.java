@@ -16,15 +16,16 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
-import static java.util.Objects.isNull;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Optional;
 import lombok.Data;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.dn.Dn;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 /**
  * The type DomainUserAddRequest.
@@ -37,13 +38,143 @@ public class DomainUserAddRequest implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private DomainUser user;
-
   private String newOu;
+
+  private String samAccountName;
 
   private boolean useUsernameAsCn = true;
 
+  private boolean enabled = true;
+
+  private boolean passwordExpirationEnabled = false;
+
+  /**
+   * User's first name.
+   */
+  private String firstName;
+
+  /**
+   * User's last name.
+   */
+  private String lastName;
+
+  /**
+   * User's display name.
+   */
+  private String displayName;
+
+  /**
+   * User's initials.
+   */
+  private String initials;
+
+  /**
+   * User's preferred language. ISO 639-1 language codes. The combinations like de-DE and en-US with
+   * ISO-639 and ISO-3166 also work.
+   */
+  private String preferredLanguage;
+
+  /**
+   * User's email address.
+   */
+  private String email;
+
   private boolean sendEmail;
+
+  /**
+   * User's mobile phone number.
+   */
+  private String mobile;
+
+  /**
+   * User's telephone number.
+   */
+  private String telephoneNumber;
+
+  /**
+   * A description of the user.
+   */
+  private String description;
+
+  /**
+   * User's home directory path.
+   */
+  private String homeDirectory;
+
+  /**
+   * User's home drive letter.
+   */
+  private String homeDrive;
+
+  /**
+   * User's profile path.
+   */
+  private String profilePath;
+
+  /**
+   * User's logon script path.
+   */
+  private String scriptPath;
+
+  /**
+   * User's company.
+   */
+  private String company;
+
+  /**
+   * User's job title.
+   */
+  private String title;
+
+  /**
+   * User's department.
+   */
+  private String department;
+
+  /**
+   * User's office location.
+   */
+  private String physicalDeliveryOfficeName;
+
+  /**
+   * User's Unix/RFC2307 username.
+   */
+  private String uid;
+
+  /**
+   * User's Unix/RFC2307 numeric UID.
+   */
+  private Integer uidNumber;
+
+  /**
+   * User's Unix/RFC2307 primary GID number.
+   */
+  private Integer gidNumber;
+
+  /**
+   * User's Unix/RFC2307 login shell.
+   */
+  private String loginShell;
+
+  /**
+   * User's Unix/RFC2307 home directory.
+   */
+  private String unixHomeDirectory;
+
+  /**
+   * User's Unix/RFC2307 GECOS field.
+   */
+  private String gecos;
+
+  /**
+   * User's Unix/RFC2307 NIS domain.
+   */
+  private String nisDomain;
+
+  /**
+   * User's password.
+   */
+  private String password;
 
   private boolean generateRandomPassword;
 
@@ -54,14 +185,16 @@ public class DomainUserAddRequest implements Serializable {
     return new Dn(newOu);
   }
 
-  @Override
-  public String toString() {
-    return "DomainUserAddRequest {"
-        + "user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
-        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + ", useUsernameAsCn=" + useUsernameAsCn
-        + ", sendEmail=" + sendEmail
-        + ", generateRandomPassword=" + generateRandomPassword
-        + '}';
+  @Mapper
+  public interface DomainMapper {
+
+    DomainMapper INSTANCE = Mappers.getMapper(DomainMapper.class);
+
+    @Mapping(source = "enabled", target = "accountControl.enabled")
+    @Mapping(
+        source = "passwordExpirationEnabled",
+        target = "accountControl.passwordExpirationEnabled")
+    DomainUser mapToDomainUser(DomainUserAddRequest request);
+
   }
 }
