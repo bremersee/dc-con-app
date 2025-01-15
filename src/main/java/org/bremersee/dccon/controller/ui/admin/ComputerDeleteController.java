@@ -42,12 +42,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class ComputerEditMiscController extends AbstractEditController implements PageableComponent,
+public class ComputerDeleteController extends AbstractEditController implements PageableComponent,
     OrganizationalUnitComponent {
 
   private final DomainComputerService domainComputerService;
 
-  public ComputerEditMiscController(
+  public ComputerDeleteController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainComputerService domainComputerService) {
@@ -60,7 +60,7 @@ public class ComputerEditMiscController extends AbstractEditController implement
     return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/computer-edit-misc")
+  @GetMapping(path = "/admin/computer-delete")
   public String displayComputerDelete(
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
@@ -71,12 +71,12 @@ public class ComputerEditMiscController extends AbstractEditController implement
         .flatMap(name -> domainComputerService.getComputer(computerName, ou, searchScope))
         .map(computer -> {
           model.addAttribute("computer", computer);
-          return "admin/computer-edit-misc";
+          return "admin/computer-delete";
         })
         .orElseGet(() -> entityNotFoundRedirect(model, "Computer", "todo", computerName, "computers"));
   }
 
-  @PostMapping(path = "/admin/computer-edit-misc-delete-computer")
+  @PostMapping(path = "/admin/computer-delete")
   public String deleteComputer(
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = "verificationName", required = false) String verificationName,
@@ -102,7 +102,7 @@ public class ComputerEditMiscController extends AbstractEditController implement
       String defaultMsg = "Deleting computer failed. The given computer name doesn't match.";
       RedirectMessage dmsg = getRedirectMessage(RedirectMessageType.DANGER, defaultMsg, "todo");
       redirectAttributes.addFlashAttribute("dmsg", dmsg);
-      String redirect = getRedirectUri("computer-edit-misc?name={{computerName}}",
+      String redirect = getRedirectUri("computer-delete?name={{computerName}}",
           PAGE_AND_OU_PARAMS, parametersWithComputerName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;
@@ -112,7 +112,7 @@ public class ComputerEditMiscController extends AbstractEditController implement
       String defaultMsg = "Deleting computer failed. It is still present.";
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, defaultMsg, "todo");
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("computer-edit-misc?name={{computerName}}",
+      String redirect = getRedirectUri("computer-delete?name={{computerName}}",
           PAGE_AND_OU_PARAMS, parametersWithComputerName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;

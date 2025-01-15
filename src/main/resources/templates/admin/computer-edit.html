@@ -94,7 +94,7 @@
         <a class="nav-link" href="#"
            th:classappend="${computer.criticalSystemObject} ? 'disabled' : ''"
            th:attr="aria-disabled=${computer.criticalSystemObject}"
-           th:href="@{computer-edit-misc(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{computer-delete(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
