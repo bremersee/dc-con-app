@@ -138,7 +138,6 @@ public class UserEditController extends AbstractEditController implements Pageab
 
     getLogger().debug("updateUser({})", userEditRequest);
 
-    // TODO email may be corrupt
     if (userEditRequest.isRenameNamesAutomatically()) {
       replaceNames(userEditRequest, previousSamAccountName, userEditRequest.getSamAccountName());
       replaceNames(userEditRequest, previousFirstName, userEditRequest.getFirstName());
@@ -217,9 +216,6 @@ public class UserEditController extends AbstractEditController implements Pageab
     String replacement = isEmpty(newName) ? "" : newName;
     if (!isEmpty(userEditRequest.getDisplayName())) {
       userEditRequest.setDisplayName(userEditRequest.getDisplayName().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(userEditRequest.getEmail())) {
-      userEditRequest.setEmail(userEditRequest.getEmail().replace(oldName, replacement).trim());
     }
     if (!isEmpty(userEditRequest.getGecos())) {
       userEditRequest.setGecos(userEditRequest.getGecos().replace(oldName, replacement).trim());
