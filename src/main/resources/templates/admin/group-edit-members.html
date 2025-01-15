@@ -138,7 +138,7 @@
         </div>
       </div>
 
-      <form th:action="@{group-edit-members}" th:object="${group}" action="#" method="post">
+      <form th:action="@{group-edit-members}" th:object="${editRequest}" action="#" method="post">
 
         <input type="hidden" name="page" th:value="${page}"/>
         <input type="hidden" name="size" th:value="${size}"/>
@@ -147,14 +147,7 @@
         <input type="hidden" name="ou" th:value="${ou}"/>
         <input type="hidden" name="scope" th:value="${scope}"/>
 
-        <input type="hidden" name="distinguishedName" th:field="*{distinguishedName}"/>
-        <input type="hidden" name="description" th:field="*{description}"/>
-        <input type="hidden" name="email" th:field="*{email}"/>
-        <input type="hidden" name="gidNumber" th:field="*{gidNumber}"/>
-        <input type="hidden" name="groupTypeValue" th:field="*{groupType.groupType.value}"/>
-        <input type="hidden" name="nisDomain" th:field="*{nisDomain}"/>
-        <input type="hidden" name="samAccountName" th:field="*{samAccountName}"/>
-        <input type="hidden" name="sidValue" th:field="*{sid.value}"/>
+        <input type="hidden" name="name" th:value="${group.samAccountName}"/>
 
         <div id="memberList" class="list-group list-group-flush">
           <div class="list-group-item list-group-item-action" aria-current="true"
@@ -185,7 +178,7 @@
                 <input th:id="'member-' + ${iter.index}" id="member-0"
                        th:name="'member-' + ${iter.index}" name="members"
                        type="checkbox" class="form-check-input" role="switch"
-                       th:field="*{members}"
+                       th:field="*{membersBase64}"
                        th:value="${member.distinguishedNameBase64}"/>
               </div>
             </div>

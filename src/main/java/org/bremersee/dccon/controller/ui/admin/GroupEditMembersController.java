@@ -16,14 +16,13 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Optional;
 import lombok.Getter;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent;
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
+import org.bremersee.dccon.controller.ui.model.DomainGroupEditMembersRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainGroup;
@@ -100,10 +99,8 @@ public class GroupEditMembersController extends AbstractEditController implement
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
         .map(group -> {
-          group.setMembers(group.getMembers().stream()
-              .map(dn -> Base64.getEncoder().encodeToString(dn.getBytes(StandardCharsets.UTF_8)))
-              .toList());
           model.addAttribute("group", group);
+          model.addAttribute("editRequest", new DomainGroupEditMembersRequest(group));
           return "admin/group-edit-members";
         })
         .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
@@ -111,27 +108,34 @@ public class GroupEditMembersController extends AbstractEditController implement
 
   @PostMapping(path = "/admin/group-edit-members")
   public String updateGroupMembers(
-      @ModelAttribute(name = "group") DomainGroup group,
+      @RequestParam(value = "name", required = false) String groupName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
+      @ModelAttribute(name = "editRequest") DomainGroupEditMembersRequest editRequest,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("updateGroupMembers({})", group.getSamAccountName());
+    getLogger().debug("updateGroupMembers({}, {})", groupName, editRequest);
+    return Optional.ofNullable(groupName)
+        .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
+        .map(existingGroup -> {
+          existingGroup.setMembers(editRequest.getMembers());
+          DomainGroup updatedGroup = domainGroupService
+              .updateGroup(existingGroup.getSamAccountName(), existingGroup, null);
+          model.clear();
+          String msg = String.format("Members of group '%s' were successfully updated.",
+              updatedGroup.getName());
+          RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
+              "todo", updatedGroup.getName());
+          redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    group.setMembers(group.getMembers().stream()
-        .map(base64 -> new String(Base64.getDecoder().decode(base64), StandardCharsets.UTF_8))
-        .toList());
-    domainGroupService.updateGroup(group.getSamAccountName(), group, null);
-
-    model.clear();
-    String msg = String.format("Members of group '%s' were successfully updated.", group.getName());
-    RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-        "todo", group.getName());
-    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-
-    String redirect = getRedirectUri("group-edit-members?name={{group.samAccountName}}",
-        PAGE_AND_OU_PARAMS, putToParameterMap(getParamterMap(), "group", group));
-    logRedirectTo("Members of group successfully updated.", redirect);
-    return redirect;
+          String redirect = getRedirectUri("group-edit-members?name={{group.samAccountName}}",
+              PAGE_AND_OU_PARAMS, putToParameterMap(getParamterMap(), "group", updatedGroup));
+          logRedirectTo("Members of group successfully updated.", redirect);
+          return redirect;
+        })
+        .orElseGet(() -> entityNotFoundRedirect(
+            model, "Group", "todo", groupName, "groups"));
   }
 
 }

@@ -27,6 +27,7 @@ public abstract class AbstractEditController extends AbstractController
     String msg = String.format("%s '%s' was not found.", entityType, entityName);
     RedirectMessage redirectMessage = getRedirectMessage(RedirectMessageType.WARNING, msg,
         i18nCode, String.valueOf(entityName));
+    // TODO hier fehlen die redirect attributes
     model.addAttribute(RedirectMessage.ATTRIBUTE_NAME, redirectMessage);
     String redirectUri = getRedirectUri(redirect, PAGE_AND_OU_PARAMS, getParamterMap());
     logRedirectTo(msg, redirectUri);
