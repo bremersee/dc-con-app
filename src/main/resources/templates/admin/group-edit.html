@@ -97,10 +97,10 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#"
+        <a class="nav-link" href="group-delete.html"
            th:classappend="${group.sid.systemEntity} ? 'disabled' : ''"
            th:attr="aria-disabled=${group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-delete(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>

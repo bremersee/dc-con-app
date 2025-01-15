@@ -42,12 +42,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author Christian Bremer
  */
 @Controller
-public class GroupEditMiscController extends AbstractEditController implements PageableComponent,
+public class GroupDeleteController extends AbstractEditController implements PageableComponent,
     OrganizationalUnitComponent {
 
   private final DomainGroupService domainGroupService;
 
-  public GroupEditMiscController(
+  public GroupDeleteController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainGroupService domainGroupService) {
@@ -60,7 +60,7 @@ public class GroupEditMiscController extends AbstractEditController implements P
     return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/group-edit-misc")
+  @GetMapping(path = "/admin/group-delete")
   public String displayGroupEditMisc(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
@@ -71,12 +71,12 @@ public class GroupEditMiscController extends AbstractEditController implements P
         .flatMap(name -> domainGroupService.getGroup(groupName, ou, searchScope))
         .map(group -> {
           model.addAttribute("group", group);
-          return "admin/group-edit-misc";
+          return "admin/group-delete";
         })
         .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
   }
 
-  @PostMapping(path = "/admin/group-edit-misc-delete-group")
+  @PostMapping(path = "/admin/group-delete")
   public String deleteGroup(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = "verificationName", required = false) String verificationName,
@@ -102,7 +102,7 @@ public class GroupEditMiscController extends AbstractEditController implements P
       String defaultMsg = "Deleting group failed. The given group name doesn't match.";
       RedirectMessage dmsg = getRedirectMessage(RedirectMessageType.DANGER, defaultMsg, "todo");
       redirectAttributes.addFlashAttribute("dmsg", dmsg);
-      String redirect = getRedirectUri("group-edit-misc?name={{groupName}}",
+      String redirect = getRedirectUri("group-delete?name={{groupName}}",
           PAGE_AND_OU_PARAMS, parametersWithGroupName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;
@@ -112,7 +112,7 @@ public class GroupEditMiscController extends AbstractEditController implements P
       String defaultMsg = "Deleting group failed. It is still present.";
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, defaultMsg, "todo");
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("group-edit-misc?name={{groupName}}",
+      String redirect = getRedirectUri("group-delete?name={{groupName}}",
           PAGE_AND_OU_PARAMS, parametersWithGroupName);
       logRedirectTo(defaultMsg, redirect);
       return redirect;

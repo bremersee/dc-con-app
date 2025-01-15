@@ -108,7 +108,7 @@
           <span>Delete Group </span>
           <span class="badge text-bg-secondary" th:text="${group.samAccountName}">anna</span>
         </div>
-        <form th:action="@{group-edit-misc-delete-group}" action="#" method="post">
+        <form th:action="@{group-delete}" action="#" method="post">
           <input type="hidden" name="page" th:value="${page}"/>
           <input type="hidden" name="size" th:value="${size}"/>
           <input type="hidden" name="sort" th:value="${sort}"/>
