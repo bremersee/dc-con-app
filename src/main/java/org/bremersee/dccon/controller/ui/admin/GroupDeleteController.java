@@ -61,7 +61,7 @@ public class GroupDeleteController extends AbstractEditController implements Pag
   }
 
   @GetMapping(path = "/admin/group-delete")
-  public String displayGroupEditMisc(
+  public String displayGroupDelete(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
