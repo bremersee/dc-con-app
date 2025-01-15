@@ -111,9 +111,8 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
   @Override
   public DomainComputer update(DomainComputer domainComputer, Dn newOu) {
     log.debug("update({}, {})", domainComputer.getSamAccountName(), newOu);
-    Dn currentParentDn = getProperties().getParentDn(domainComputer.getDistinguishedName());
     DomainComputer existingDomainComputer = findOne(
-        domainComputer.getSamAccountName(), currentParentDn, TreeSearchScope.ONELEVEL)
+        domainComputer.getSamAccountName(), null, null)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainComputer.class.getSimpleName(),
             domainComputer.getSamAccountName(),

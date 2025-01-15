@@ -18,11 +18,17 @@ package org.bremersee.dccon.controller.ui.model;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import java.io.Serializable;
 import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.dn.Dn;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -34,6 +40,9 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 public class DomainUserEditRequest {
 
+  public static final DomainUserEditMapper MAPPER = Mappers.getMapper(DomainUserEditMapper.class);
+
+  /*
   private String oldSamAccountName;
 
   private String oldFirstName;
@@ -41,17 +50,148 @@ public class DomainUserEditRequest {
   private String oldLastName;
 
   private String oldName;
-
-  private boolean renameNamesAutomatically = true;
-
-  private DomainUser user;
-
-  private String newOu;
+  */
 
   private MultipartFile avatar;
 
   private boolean removeAvatar;
 
+  private String newOu;
+
+  private String samAccountName;
+
+  private boolean renameNamesAutomatically = true;
+
+  private boolean enabled = true;
+
+  private boolean passwordExpirationEnabled = false;
+
+  private String userPrincipalName;
+
+  private Integer primaryGroupId;
+
+  /**
+   * User's first name.
+   */
+  private String firstName;
+
+  /**
+   * User's last name.
+   */
+  private String lastName;
+
+  /**
+   * User's display name.
+   */
+  private String displayName;
+
+  /**
+   * User's initials.
+   */
+  private String initials;
+
+  /**
+   * User's preferred language. ISO 639-1 language codes. The combinations like de-DE and en-US with
+   * ISO-639 and ISO-3166 also work.
+   */
+  private String preferredLanguage;
+
+  /**
+   * User's email address.
+   */
+  private String email;
+
+  /**
+   * User's mobile phone number.
+   */
+  private String mobile;
+
+  /**
+   * User's telephone number.
+   */
+  private String telephoneNumber;
+
+  /**
+   * A description of the user.
+   */
+  private String description;
+
+  /**
+   * User's home directory path.
+   */
+  private String homeDirectory;
+
+  /**
+   * User's home drive letter.
+   */
+  private String homeDrive;
+
+  /**
+   * User's profile path.
+   */
+  private String profilePath;
+
+  /**
+   * User's logon script path.
+   */
+  private String scriptPath;
+
+  /**
+   * User's company.
+   */
+  private String company;
+
+  /**
+   * User's job title.
+   */
+  private String title;
+
+  /**
+   * User's department.
+   */
+  private String department;
+
+  /**
+   * User's office location.
+   */
+  private String physicalDeliveryOfficeName;
+
+  /**
+   * User's Unix/RFC2307 username.
+   */
+  private String uid;
+
+  /**
+   * User's Unix/RFC2307 numeric UID.
+   */
+  private Integer uidNumber;
+
+  /**
+   * User's Unix/RFC2307 primary GID number.
+   */
+  private Integer gidNumber;
+
+  /**
+   * User's Unix/RFC2307 login shell.
+   */
+  private String loginShell;
+
+  /**
+   * User's Unix/RFC2307 home directory.
+   */
+  private String unixHomeDirectory;
+
+  /**
+   * User's Unix/RFC2307 GECOS field.
+   */
+  private String gecos;
+
+  /**
+   * User's Unix/RFC2307 NIS domain.
+   */
+  private String nisDomain;
+
+  /*
   public DomainUserEditRequest(DomainUser user, Dn newOu) {
     this.oldSamAccountName = user.getSamAccountName();
     this.oldFirstName = user.getFirstName();
@@ -60,6 +200,7 @@ public class DomainUserEditRequest {
     this.user = user;
     this.newOu = newOu.format();
   }
+  */
 
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
@@ -68,16 +209,29 @@ public class DomainUserEditRequest {
     return new Dn(newOu);
   }
 
-  @Override
-  public String toString() {
-    return "DomainUserEditRequest {"
-        + "oldSamAccountName=" + oldSamAccountName
-        + ", oldFirstName=" + oldFirstName
-        + ", oldLastName=" + oldLastName
-        + ", oldName=" + oldName
-        + ", user=" + Optional.ofNullable(user).map(DomainUser::getSamAccountName).orElse(null)
-        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + '}';
+  @Mapper
+  public interface DomainUserEditMapper {
+
+    @Mapping(source = "dn", target = "newOu")
+    @Mapping(source = "accountControl.enabled", target = "enabled")
+    @Mapping(
+        source = "accountControl.passwordExpirationEnabled",
+        target = "passwordExpirationEnabled")
+    DomainUserEditRequest map(DomainUser domainUser);
+
+    default String maoToNewOu(Dn distinguishedName) {
+      return Optional.ofNullable(distinguishedName)
+          .map(Dn::getParent)
+          .map(Dn::format)
+          .orElse(null);
+    }
+
+    @Mapping(source = "enabled", target = "accountControl.enabled")
+    @Mapping(
+        source = "passwordExpirationEnabled",
+        target = "accountControl.passwordExpirationEnabled")
+    void update(@MappingTarget DomainUser existingDomainUser,
+        DomainUserEditRequest domainUserEditRequest);
   }
 
 }

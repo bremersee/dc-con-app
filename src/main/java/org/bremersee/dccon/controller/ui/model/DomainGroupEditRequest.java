@@ -25,6 +25,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DomainGroup;
 import org.ldaptive.dn.Dn;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
 
 /**
  * The type DomainGroupAddRequest.
@@ -38,17 +42,31 @@ public class DomainGroupEditRequest implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private DomainGroup group;
-
-  private String oldSamAccountName;
+  public static final DomainGroupEditMapper MAPPER = Mappers.getMapper(DomainGroupEditMapper.class);
 
   private String newOu;
 
-  public DomainGroupEditRequest(DomainGroup group, Dn newOu) {
-    this.group = group;
-    this.oldSamAccountName = group.getSamAccountName();
-    this.newOu = newOu.format();
-  }
+  private String samAccountName;
+
+  /**
+   * The email address of the group.
+   */
+  private String email;
+
+  /**
+   * A description of the domain group.
+   */
+  private String description;
+
+  /**
+   * Group's Unix/RFC2307 GID number.
+   */
+  private Integer gidNumber;
+
+  /**
+   * Group's Unix/RFC2307 NIS domain.
+   */
+  private String nisDomain;
 
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
@@ -57,12 +75,21 @@ public class DomainGroupEditRequest implements Serializable {
     return new Dn(newOu);
   }
 
-  @Override
-  public String toString() {
-    return "DomainUserEditRequest {"
-        + "oldSamAccountName=" + oldSamAccountName
-        + ", group=" + Optional.ofNullable(group).map(DomainGroup::getSamAccountName).orElse(null)
-        + ", newOu=" + Optional.ofNullable(getNewOuDn()).map(Dn::format).orElse(null)
-        + '}';
+  @Mapper
+  public interface DomainGroupEditMapper {
+
+    @Mapping(source = "dn", target = "newOu")
+    DomainGroupEditRequest map(DomainGroup domainGroup);
+
+    default String maoToNewOu(Dn distinguishedName) {
+      return Optional.ofNullable(distinguishedName)
+          .map(Dn::getParent)
+          .map(Dn::format)
+          .orElse(null);
+    }
+
+    void update(@MappingTarget DomainGroup existingDomainGroup,
+        DomainGroupEditRequest domainGroupEditRequest);
   }
+
 }

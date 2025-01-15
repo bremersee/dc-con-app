@@ -47,7 +47,7 @@ public class DomainUserAddRequest implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  public static final ToDomainUserMapper MAPPER = Mappers.getMapper(ToDomainUserMapper.class);
+  public static final DomainUserAddMapper MAPPER = Mappers.getMapper(DomainUserAddMapper.class);
 
   private String newOu;
 
@@ -217,7 +217,7 @@ public class DomainUserAddRequest implements Serializable {
   }
 
   @Mapper
-  public interface ToDomainUserMapper {
+  public interface DomainUserAddMapper {
 
     @Mapping(source = "enabled", target = "accountControl.enabled")
     @Mapping(

@@ -45,7 +45,7 @@ public class DomainGroupAddRequest implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  public static final ToDomainGroupMapper MAPPER = Mappers.getMapper(ToDomainGroupMapper.class);
+  public static final DomainGroupAddMapper MAPPER = Mappers.getMapper(DomainGroupAddMapper.class);
 
   private String newOu;
 
@@ -108,7 +108,7 @@ public class DomainGroupAddRequest implements Serializable {
   }
 
   @Mapper
-  public interface ToDomainGroupMapper {
+  public interface DomainGroupAddMapper {
 
     @Mapping(source = "selectedGroupType", target = "groupType")
     DomainGroup mapToDomainGroup(DomainGroupAddRequest request);

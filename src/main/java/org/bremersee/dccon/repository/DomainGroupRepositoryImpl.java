@@ -492,8 +492,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           domainGroup.getSamAccountName(),
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
-    Dn currentParentDn = getProperties().getParentDn(domainGroup.getDistinguishedName());
-    DomainGroup existingDomainGroup = findOne(groupName, currentParentDn, TreeSearchScope.ONELEVEL)
+    DomainGroup existingDomainGroup = findOne(groupName, null, null)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainGroup.class.getSimpleName(),
             domainGroup.getSamAccountName(),

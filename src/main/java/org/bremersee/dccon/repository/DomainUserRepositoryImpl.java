@@ -548,8 +548,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
           domainUser.getSamAccountName(),
           EC_SAM_ACCOUNT_ALREADY_EXISTS);
     }
-    Dn currentParentDn = getProperties().getParentDn(domainUser.getDistinguishedName());
-    DomainUser existingDomainUser = findOne(userName, currentParentDn, TreeSearchScope.ONELEVEL)
+    DomainUser existingDomainUser = findOne(userName, null, null)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainUser.class.getSimpleName(),
             domainUser.getSamAccountName(),

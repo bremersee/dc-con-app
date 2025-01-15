@@ -77,41 +77,4 @@ public class DomainUserProperties {
 
   private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
 
-  // TODO move to user edit controller
-  public void replaceNames(DomainUser domainUser, String oldName, String newName) {
-    if (isEmpty(domainUser) || isEmpty(oldName)) {
-      return;
-    }
-    String replacement = isEmpty(newName) ? "" : newName;
-    if (!isEmpty(domainUser.getDisplayName())) {
-      domainUser.setDisplayName(domainUser.getDisplayName().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getEmail())) {
-      domainUser.setEmail(domainUser.getEmail().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getGecos())) {
-      domainUser.setGecos(domainUser.getGecos().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getHomeDirectory())) {
-      domainUser.setHomeDirectory(
-          domainUser.getHomeDirectory().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getProfilePath())) {
-      domainUser.setProfilePath(domainUser.getProfilePath().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getScriptPath())) {
-      domainUser.setScriptPath(domainUser.getScriptPath().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getUid())) {
-      domainUser.setUid(domainUser.getUid().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getUnixHomeDirectory())) {
-      domainUser.setUnixHomeDirectory(
-          domainUser.getUnixHomeDirectory().replace(oldName, replacement).trim());
-    }
-    if (!isEmpty(domainUser.getUserPrincipalName())) {
-      domainUser.setUserPrincipalName(
-          domainUser.getUserPrincipalName().replace(oldName, replacement).trim());
-    }
-  }
 }

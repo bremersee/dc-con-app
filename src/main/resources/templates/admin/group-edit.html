@@ -71,7 +71,7 @@
             <h3 class="small">Edit group</h3>
           </div>
           <div class="d-flex justify-content-center">
-            <h3 th:text="${groupEditRequest.group.name}">Domain Users</h3>
+            <h3 th:text="${group.name}">Domain Users</h3>
           </div>
         </div>
       </div>
@@ -86,21 +86,21 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-members(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-people-group" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="group-edit-memberships-direct.html"
-           th:href="@{group-edit-memberships-direct(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{group-edit-memberships-direct(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="#"
-           th:classappend="${groupEditRequest.group.sid.systemEntity} ? 'disabled' : ''"
-           th:attr="aria-disabled=${groupEditRequest.group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${groupEditRequest.oldSamAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:classappend="${group.sid.systemEntity} ? 'disabled' : ''"
+           th:attr="aria-disabled=${group.sid.systemEntity}"
+           th:href="@{group-edit-misc(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -116,9 +116,7 @@
       <input type="hidden" name="ou" th:value="${ou}"/>
       <input type="hidden" name="scope" th:value="${scope}"/>
 
-      <input type="hidden" name="oldSamAccountName" th:field="*{oldSamAccountName}"/>
-
-      <input type="hidden" name="distinguishedName" th:field="*{group.distinguishedName}"/>
+      <input type="hidden" name="name" th:value="${group.samAccountName}"/>
 
       <div class="mb-3">
         <label for="newOu" class="form-label">Organizational Unit</label>
@@ -138,30 +136,30 @@
       <div class="mb-3">
         <label for="samAccountName" class="form-label">Group name</label>
         <input type="text" class="form-control" id="samAccountName" name="samAccountName"
-               aria-describedby="samAccountNameValidation" required th:field="*{group.samAccountName}"
-               th:classappend="${#fields.hasErrors('group.samAccountName')} ? 'is-invalid' : ''"/>
+               aria-describedby="samAccountNameValidation" required th:field="*{samAccountName}"
+               th:classappend="${#fields.hasErrors('samAccountName')} ? 'is-invalid' : ''"/>
         <div id="samAccountNameValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('group.samAccountName')} ? ${#fields.errors('group.samAccountName')[0]} : ''">
+             th:text="${#fields.hasErrors('samAccountName')} ? ${#fields.errors('samAccountName')[0]} : ''">
         </div>
       </div>
 
-      <div class="row mb-3" th:if="${groupEditRequest.group.groupType.groupType.scope != null}">
+      <div class="row mb-3" th:if="${group.groupType.groupType.scope != null}">
         <div class="col">
           <label for="groupScope" class="form-label">Group scope</label>
           <input type="text" class="form-control" id="groupScope" disabled
-                 th:value="${groupEditRequest.group.groupType.groupType.scope}" />
+                 th:value="${group.groupType.groupType.scope}" />
         </div>
         <div class="col">
           <label for="groupPurpose" class="form-label">Group purpose</label>
           <input type="text" class="form-control" id="groupPurpose" disabled
-                 th:value="${groupEditRequest.group.groupType.groupType.purpose}" />
+                 th:value="${group.groupType.groupType.purpose}" />
         </div>
       </div>
 
-      <div class="mb-3" th:if="${groupEditRequest.group.groupType.groupType.scope == null}">
+      <div class="mb-3" th:if="${group.groupType.groupType.scope == null}">
         <label for="groupType" class="form-label">Group type</label>
         <input type="number" class="form-control" id="groupType" name="groupType" disabled
-               value="1234" th:value="${groupEditRequest.group.groupType.groupTypeValue}" />
+               value="1234" th:value="${group.groupType.groupTypeValue}" />
         <div class="small text-secondary mt-2">
           Group type is unknown.
         </div>
@@ -170,17 +168,17 @@
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="email" class="form-control" id="email" name="email"
-               aria-describedby="emailValidation" th:field="*{group.email}"
-               th:classappend="${#fields.hasErrors('group.email')} ? 'is-invalid' : ''"/>
+               aria-describedby="emailValidation" th:field="*{email}"
+               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"/>
         <div id="emailValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('group.email')} ? ${#fields.errors('group.email')[0]} : ''">
+             th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : ''">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <input type="text" class="form-control" id="description" name="description"
-               th:field="*{group.description}" />
+               th:field="*{description}" />
       </div>
 
       <div th:if="${rfc2307Enabled}">
@@ -189,10 +187,10 @@
             Group's Unix/RFC2307 GID number
           </label>
           <input type="number" class="form-control" id="gidNumber" name="gidNumber"
-                 aria-describedby="gidNumberValidation" th:field="*{group.gidNumber}"
-                 th:classappend="${#fields.hasErrors('group.gidNumber')} ? 'is-invalid' : ''"/>
+                 aria-describedby="gidNumberValidation" th:field="*{gidNumber}"
+                 th:classappend="${#fields.hasErrors('gidNumber')} ? 'is-invalid' : ''"/>
           <div id="gidNumberValidation" class="invalid-feedback"
-               th:text="${#fields.hasErrors('group.gidNumber')} ? ${#fields.errors('group.gidNumber')[0]} : ''">
+               th:text="${#fields.hasErrors('gidNumber')} ? ${#fields.errors('gidNumber')[0]} : ''">
           </div>
         </div>
 
@@ -201,7 +199,7 @@
             Group's Unix/RFC2307 NIS domain
           </label>
           <input type="text" class="form-control" id="nisDomain"
-                 name="nisDomain" th:field="*{group.nisDomain}" />
+                 name="nisDomain" th:field="*{nisDomain}" />
         </div>
       </div> <!-- end of rfc2307Enabled -->
 
