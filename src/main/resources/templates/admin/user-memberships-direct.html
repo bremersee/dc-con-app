@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Direct memberships of group</title>
+  <title>Users</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -54,21 +54,27 @@
     Status message
   </div>
 
-  <div th:if="${group != null}">
+  <div th:if="${user != null}">
     <div class="row mb-4">
       <div class="col-1">
-        <a class="btn btn-outline-secondary" href="groups.html"
-           th:href="@{groups(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+        <a class="btn btn-outline-secondary" href="users.html"
+           th:href="@{users(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-backward"></span>
         </a>
       </div>
       <div class="col">
         <div class="container">
-          <div class="d-flex justify-content-center">
-            <h3 class="small">Direct memberships of group</h3>
+          <div class="d-flex justify-content-center mb-3">
+            <img id="avatarImage" src="../../static/mp.jpg"
+                 th:src="@{'/api/users/' + ${user.samAccountName} + '/avatar?d=mp&s=200'}"
+                 class="rounded-circle" alt="avatar"
+                 style="width: 200px; height: 200px; object-fit: cover;"  />
           </div>
           <div class="d-flex justify-content-center">
-            <h3 th:text="${group.name}">Domain Users</h3>
+            <h3 class="small">Direct memberships of user</h3>
+          </div>
+          <div class="d-flex justify-content-center">
+            <h3 th:text="${user.name}">Administrator</h3>
           </div>
         </div>
       </div>
@@ -77,15 +83,9 @@
 
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link" href="group-edit.html"
-           th:href="@{group-edit(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-edit" aria-hidden="true"></span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="group-edit-members.html"
-           th:href="@{group-edit-members(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-people-group" aria-hidden="true"></span>
+        <a class="nav-link" href="user-edit.html"
+           th:href="@{user-edit(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-user-edit" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
@@ -94,11 +94,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#"
-           th:classappend="${group.sid.systemEntity} ? 'disabled' : ''"
-           th:attr="aria-disabled=${group.sid.systemEntity}"
-           th:href="@{group-edit-misc(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-trash-alt" aria-hidden="true"></span>
+        <a class="nav-link" href="user-edit-misc.html"
+           th:href="@{user-edit-misc(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-shapes" aria-hidden="true"></span>
         </a>
       </li>
     </ul>
@@ -113,8 +111,8 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="group-edit-memberships-resolved.html"
-               th:href="@{group-edit-memberships-resolved(name=${group.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+            <a class="nav-link" href="user-memberships-resolved.html"
+               th:href="@{user-memberships-resolved(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
               Resolved
             </a>
           </li>

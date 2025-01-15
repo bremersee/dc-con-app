@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Users</title>
+  <title>Computers</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -54,27 +54,21 @@
     Status message
   </div>
 
-  <div th:if="${user != null}">
+  <div th:if="${computer != null}">
     <div class="row mb-4">
       <div class="col-1">
-        <a class="btn btn-outline-secondary" href="users.html"
-           th:href="@{users(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+        <a class="btn btn-outline-secondary" href="computers.html"
+           th:href="@{computers(page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-backward"></span>
         </a>
       </div>
       <div class="col">
         <div class="container">
-          <div class="d-flex justify-content-center mb-3">
-            <img id="avatarImage" src="../../static/mp.jpg"
-                 th:src="@{'/api/users/' + ${user.samAccountName} + '/avatar?d=mp&s=200'}"
-                 class="rounded-circle" alt="avatar"
-                 style="width: 200px; height: 200px; object-fit: cover;"  />
+          <div class="d-flex justify-content-center">
+            <h3 class="small">Direct memberships of computer</h3>
           </div>
           <div class="d-flex justify-content-center">
-            <h3 class="small">Resolved memberships of user</h3>
-          </div>
-          <div class="d-flex justify-content-center">
-            <h3 th:text="${user.name}">Administrator</h3>
+            <h3 th:text="${computer.name}">Zander</h3>
           </div>
         </div>
       </div>
@@ -83,9 +77,9 @@
 
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link" href="user-edit.html"
-           th:href="@{user-edit(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-user-edit" aria-hidden="true"></span>
+        <a class="nav-link" href="computer-edit.html"
+           th:href="@{computer-edit(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-computer" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
@@ -94,9 +88,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="user-edit-misc.html"
-           th:href="@{user-edit-misc(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
-          <span class="fa fa-shapes" aria-hidden="true"></span>
+        <a class="nav-link" href="computer-edit-misc.html"
+           th:href="@{computer-edit-misc(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
     </ul>
@@ -106,13 +100,13 @@
       <div class="d-flex justify-content-center mb-3">
         <ul class="nav nav-pills">
           <li class="nav-item">
-            <a class="nav-link" href="user-edit-memberships-direct.html"
-               th:href="@{user-edit-memberships-direct(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+            <a class="nav-link active" aria-current="page" href="#">
               Direct
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">
+            <a class="nav-link" href="computer-memberships-resolved.html"
+               th:href="@{computer-memberships-resolved(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
               Resolved
             </a>
           </li>
@@ -125,7 +119,7 @@
       </div>
 
       <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(memberships)}">
-        <a th:each="entry : ${memberships}" href="group-edit-members.html"
+        <a th:each="entry : ${memberships}" href="computer-edit-members.html"
            th:href="@{group-edit-members(name=${entry.samAccountName},ou=${entry.parentDistinguishedName})}"
            class="list-group-item list-group-item-action">
           <div class="d-flex w-100 justify-content-between">

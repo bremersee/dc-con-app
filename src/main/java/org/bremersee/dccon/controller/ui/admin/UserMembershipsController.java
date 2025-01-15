@@ -23,8 +23,8 @@ import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.TreeSearchScope;
-import org.bremersee.dccon.service.DomainComputerService;
 import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainUserService;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -33,77 +33,77 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
 
 /**
- * The type ComputersController.
+ * The type UsersController.
  *
  * @author Christian Bremer
  */
 @Controller
-public class ComputerEditMembershipsController extends AbstractEditController
+public class UserMembershipsController extends AbstractEditController
     implements PageableComponent, OrganizationalUnitComponent {
 
-  private final DomainComputerService domainComputerService;
+  private final DomainUserService domainUserService;
 
   private final DomainGroupService domainGroupService;
 
-  public ComputerEditMembershipsController(
+  public UserMembershipsController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
-      DomainComputerService domainComputerService,
+      DomainUserService domainUserService,
       DomainGroupService domainGroupService) {
     super(domainControllerProperties, localeResolver);
-    this.domainComputerService = domainComputerService;
+    this.domainUserService = domainUserService;
     this.domainGroupService = domainGroupService;
   }
 
   @Override
   public String getDefaultSort() {
-    return COMPUTER_SORT;
+    return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/computer-edit-memberships-direct")
-  public String displayComputerEditMembershipsDirect(
-      @RequestParam(value = "name", required = false) String computerName,
+  @GetMapping(path = "/admin/user-memberships-direct")
+  public String displayUserEditMembershipsDirect(
+      @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
-    return displayComputerEditMemberships(true, computerName, ou, searchScope, model);
+    return displayUserEditMemberships(true, userName, ou, searchScope, model);
   }
 
-  @GetMapping(path = "/admin/computer-edit-memberships-resolved")
-  public String displayComputerEditMembershipsResolved(
-      @RequestParam(value = "name", required = false) String computerName,
+  @GetMapping(path = "/admin/user-memberships-resolved")
+  public String displayUserEditMembershipsResolved(
+      @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model) {
 
-    return displayComputerEditMemberships(false, computerName, ou, searchScope, model);
+    return displayUserEditMemberships(false, userName, ou, searchScope, model);
   }
 
-  private String displayComputerEditMemberships(
+  private String displayUserEditMemberships(
       boolean direct,
-      String computerName,
+      String userName,
       Dn ou,
       TreeSearchScope searchScope,
       ModelMap model) {
 
-    return Optional.ofNullable(computerName)
-        .flatMap(name -> domainComputerService.getComputer(computerName, ou, searchScope))
-        .map(computer -> {
-          model.addAttribute("computer", computer);
+    return Optional.ofNullable(userName)
+        .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
+        .map(user -> {
+          model.addAttribute("user", user);
           Stream<DomainGroup> memberships;
           String page;
           if (direct) {
-            memberships = domainGroupService.getMemberships(computerName, ou, searchScope);
-            page = "admin/computer-edit-memberships-direct";
+            memberships = domainGroupService.getMemberships(userName, ou, searchScope);
+            page = "admin/user-memberships-direct";
           } else {
-            memberships = domainGroupService.resolveMemberships(computerName, ou, searchScope);
-            page = "admin/computer-edit-memberships-resolved";
+            memberships = domainGroupService.resolveMemberships(userName, ou, searchScope);
+            page = "admin/user-memberships-resolved";
           }
           model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", computerName, "computers"));
+        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
   }
 
 }

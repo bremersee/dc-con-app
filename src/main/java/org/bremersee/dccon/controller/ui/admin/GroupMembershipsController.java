@@ -37,12 +37,12 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class GroupEditMembershipsController extends AbstractEditController
+public class GroupMembershipsController extends AbstractEditController
     implements PageableComponent, OrganizationalUnitComponent {
 
   private final DomainGroupService domainGroupService;
 
-  public GroupEditMembershipsController(
+  public GroupMembershipsController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
       DomainGroupService domainGroupService) {
@@ -55,7 +55,7 @@ public class GroupEditMembershipsController extends AbstractEditController
     return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/group-edit-memberships-direct")
+  @GetMapping(path = "/admin/group-memberships-direct")
   public String displayGroupEditMembershipsDirect(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
@@ -65,7 +65,7 @@ public class GroupEditMembershipsController extends AbstractEditController
     return displayGroupEditMemberships(true, groupName, ou, searchScope, model);
   }
 
-  @GetMapping(path = "/admin/group-edit-memberships-resolved")
+  @GetMapping(path = "/admin/group-memberships-resolved")
   public String displayGroupEditMembershipsResolved(
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
@@ -90,10 +90,10 @@ public class GroupEditMembershipsController extends AbstractEditController
           String page;
           if (direct) {
             memberships = domainGroupService.getMemberships(groupName, ou, searchScope);
-            page = "admin/group-edit-memberships-direct";
+            page = "admin/group-memberships-direct";
           } else {
             memberships = domainGroupService.resolveMemberships(groupName, ou, searchScope);
-            page = "admin/group-edit-memberships-resolved";
+            page = "admin/group-memberships-resolved";
           }
           model.addAttribute("memberships", memberships.toList());
           return page;
