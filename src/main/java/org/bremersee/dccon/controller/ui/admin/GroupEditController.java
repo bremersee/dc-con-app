@@ -146,7 +146,7 @@ public class GroupEditController extends AbstractEditController implements Pagea
           "i18n.group.edited", updatedGroup.getName());
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-      Map<String, Object> parameters = getParamterMap(groupEditRequest.getNewOuDn());
+      Map<String, Object> parameters = getParamterMap(updatedGroup.getDn().getParent());
       String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
           PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "group", updatedGroup));
       logRedirectTo("Group successfully updated.", redirect);

@@ -86,6 +86,8 @@ public interface DomainGroupRepository {
       @Nullable Dn ou,
       @Nullable TreeSearchScope searchScope);
 
+  Optional<DomainGroup> findOneByPrimaryGroupId(@NotNull Integer primaryGroupId);
+
   /**
    * Add domain group.
    *
@@ -103,6 +105,7 @@ public interface DomainGroupRepository {
   @Deprecated
   DomainGroup update(@NotNull DomainGroup domainGroup);
 
+  @NotNull
   DomainGroup update(@NotEmpty String groupName, @NotNull DomainGroup domainGroup,
       @Nullable Dn newOu);
 

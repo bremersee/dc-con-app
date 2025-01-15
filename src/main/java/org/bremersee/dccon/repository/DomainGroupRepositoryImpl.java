@@ -335,6 +335,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
         .filter(getIgnoredObjectFilter(ou, scope));
   }
 
+  @Override
   public Optional<DomainGroup> findOneByPrimaryGroupId(Integer primaryGroupId) {
     log.debug("findByPrimaryGroupId({})", primaryGroupId);
     return Optional.ofNullable(primaryGroupId)

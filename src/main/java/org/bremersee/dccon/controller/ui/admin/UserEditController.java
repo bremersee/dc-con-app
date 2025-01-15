@@ -134,7 +134,7 @@ public class UserEditController extends AbstractEditController implements Pageab
       @ModelAttribute(name = "userEditRequest") DomainUserEditRequest userEditRequest,
       ModelMap model,
       BindingResult bindingResult,
-      RedirectAttributes redirectAttributes) throws IOException {
+      RedirectAttributes redirectAttributes) {
 
     getLogger().debug("updateUser({})", userEditRequest);
 
@@ -177,7 +177,7 @@ public class UserEditController extends AbstractEditController implements Pageab
           "todo", updatedUser.getName());
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-      Map<String, Object> parameters = getParamterMap(userEditRequest.getNewOuDn());
+      Map<String, Object> parameters = getParamterMap(updatedUser.getDn().getParent());
       String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
           PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "user", updatedUser));
       logRedirectTo("User successfully updated.", redirect);

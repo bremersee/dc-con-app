@@ -106,6 +106,7 @@ public interface DomainUserService {
       @NotEmpty String userName,
       @NotNull @Valid DomainUser domainUser);
 
+  @NotNull
   DomainUser updateUser(
       @NotEmpty String userName,
       @NotNull DomainUser domainUser,

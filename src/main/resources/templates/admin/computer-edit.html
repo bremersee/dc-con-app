@@ -71,7 +71,7 @@
             <h3 class="small">Edit computer</h3>
           </div>
           <div class="d-flex justify-content-center">
-            <h3 th:text="${computerEditRequest.computer.name}">Zander</h3>
+            <h3 th:text="${computer.name}">Zander</h3>
           </div>
         </div>
       </div>
@@ -86,15 +86,15 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="computer-edit-memberships-direct.html"
-           th:href="@{computer-edit-memberships-direct(name=${computerEditRequest.computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:href="@{computer-edit-memberships-direct(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-folder-tree" aria-hidden="true"></span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="#"
-           th:classappend="${computerEditRequest.computer.criticalSystemObject} ? 'disabled' : ''"
-           th:attr="aria-disabled=${computerEditRequest.computer.criticalSystemObject}"
-           th:href="@{computer-edit-misc(name=${computerEditRequest.computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+           th:classappend="${computer.criticalSystemObject} ? 'disabled' : ''"
+           th:attr="aria-disabled=${computer.criticalSystemObject}"
+           th:href="@{computer-edit-misc(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-trash-alt" aria-hidden="true"></span>
         </a>
       </li>
@@ -110,16 +110,18 @@
       <input type="hidden" name="ou" th:value="${ou}"/>
       <input type="hidden" name="scope" th:value="${scope}"/>
 
-      <input type="hidden" name="distinguishedName" th:field="*{computer.distinguishedName}"/>
+      <input type="hidden" name="samAccountName" th:value="${computer.samAccountName}"/>
 
       <div class="mb-3">
         <label for="newOu" class="form-label">Organizational Unit</label>
         <select id="newOu" class="form-select" aria-label="Organizational Unit"
                 aria-describedby="newOuValidation"
+                th:readonly="${computer.criticalSystemObject}"
+                th:disabled="${computer.criticalSystemObject}"
                 th:classappend="${#fields.hasErrors('newOu')} ? 'is-invalid' : ''"
                 th:field="*{newOu}">
           <option th:each="o : ${ous}" th:value="${o.distinguishedName}" th:text="${o.nameTree}">
-            Users
+            Computers
           </option>
         </select>
         <div id="newOuValidation" class="invalid-feedback"
@@ -128,54 +130,66 @@
       </div>
 
       <div class="mb-3">
-        <label for="samAccountName" class="form-label">Computer ID</label>
-        <input type="text" class="form-control" id="samAccountName" name="samAccountName" readonly
-               th:field="*{computer.samAccountName}"/>
-      </div>
-
-      <div class="mb-3">
-        <label for="name" class="form-label">Computer name</label>
-        <input type="text" class="form-control" id="name" name="name" readonly
-               th:field="*{computer.name}"/>
-      </div>
-
-      <div class="mb-3">
-        <label for="primaryGroupId" class="form-label">Primary group</label>
-        <select id="primaryGroupId" class="form-select" aria-label="Primary group"
-                aria-describedby="primaryGroupIdValidation"
-                th:classappend="${#fields.hasErrors('computer.primaryGroupId')} ? 'is-invalid' : ''"
-                th:field="*{computer.primaryGroupId}">
-          <option th:each="o : ${groups}" th:value="${o.primaryGroupId}" th:text="${o.samAccountName}">
-            Domain Users
-          </option>
-        </select>
-        <div id="primaryGroupIdValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('computer.primaryGroupId')} ? ${#fields.errors('computer.primaryGroupId')[0]} : ''">
+        <div class="form-label">Name</div>
+        <div class="form-control text-secondary" th:text="${computer.name}">
+          zander
         </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="dnsHostName" class="form-label">Computer host name</label>
-        <input type="text" class="form-control" id="dnsHostName" name="dnsHostName" readonly
-               th:field="*{computer.dnsHostName}"/>
-      </div>
-
-      <div class="mb-3">
-        <label for="operatingSystem" class="form-label">Operating system</label>
-        <input type="text" class="form-control" id="operatingSystem" name="operatingSystem" readonly
-               th:field="*{computer.operatingSystem}"/>
-      </div>
-
-      <div class="mb-3">
-        <label for="operatingSystemVersion" class="form-label">Version of the operating system</label>
-        <input type="text" class="form-control" id="operatingSystemVersion" name="operatingSystemVersion" readonly
-               th:field="*{computer.operatingSystemVersion}"/>
       </div>
 
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <input type="text" class="form-control" id="description" name="description"
-               th:field="*{computer.description}" />
+               th:field="*{description}" />
+      </div>
+
+      <div class="mb-3" th:if="${primaryGroup != null}">
+        <div class="form-label">Primary Group</div>
+        <div class="form-control text-secondary" th:text="${primaryGroup.name}">
+          Domain Computers
+        </div>
+      </div>
+
+      <div class="mb-3" th:if="${not #strings.isEmpty(computer.dnsHostName)}">
+        <div class="form-label">Host Name</div>
+        <div class="form-control text-secondary" th:text="${computer.dnsHostName}">
+          zander.bremersee.org
+        </div>
+      </div>
+
+      <div class="mb-3" th:if="${not #lists.isEmpty(computer.networkAddresses)}">
+        <div class="form-label">Network Addresses</div>
+        <ul class="list-group">
+          <li class="list-group-item" th:each="ip : ${computer.networkAddresses}">
+            <span class="text-secondary" th:text="${ip}">
+              192.168.1.222
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-3" th:if="${not #strings.isEmpty(computer.operatingSystem)}">
+        <div class="form-label">Operating System</div>
+        <div class="form-control text-secondary" th:text="${computer.operatingSystem}">
+          Linux
+        </div>
+      </div>
+
+      <div class="mb-3" th:if="${not #strings.isEmpty(computer.operatingSystemVersion)}">
+        <div class="form-label">Operating System Version</div>
+        <div class="form-control text-secondary" th:text="${computer.operatingSystemVersion}">
+          Linux
+        </div>
+      </div>
+
+      <div class="mb-3" th:if="${not #lists.isEmpty(computer.servicePrincipalNames)}">
+        <div class="form-label">Service Principal Names</div>
+        <ul class="list-group">
+          <li class="list-group-item" th:each="service : ${computer.servicePrincipalNames}">
+            <span class="text-secondary" th:text="${service}">
+              Service
+            </span>
+          </li>
+        </ul>
       </div>
 
       <button type="submit" class="btn btn-primary mt-3">

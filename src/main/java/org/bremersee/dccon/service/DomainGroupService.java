@@ -99,6 +99,8 @@ public interface DomainGroupService {
       @Nullable Dn ou,
       @Nullable TreeSearchScope searchScope);
 
+  Optional<DomainGroup> getGroupByPrimaryGroupId(@NotNull Integer primaryGroupId);
+
   /**
    * Update domain group.
    *
@@ -111,6 +113,7 @@ public interface DomainGroupService {
       @NotEmpty String groupName,
       @NotNull @Valid DomainGroup domainGroup);
 
+  @NotNull
   DomainGroup updateGroup(
       @NotEmpty String groupName,
       @NotNull @Valid DomainGroup domainGroup,

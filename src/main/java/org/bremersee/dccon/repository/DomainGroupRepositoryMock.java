@@ -112,6 +112,11 @@ public class DomainGroupRepositoryMock extends AbstractDomainGroupRepository
   }
 
   @Override
+  public Optional<DomainGroup> findOneByPrimaryGroupId(Integer primaryGroupId) {
+    return Optional.empty();
+  }
+
+  @Override
   public DomainGroup add(DomainGroup domainGroup, Dn ou) {
     if (store.getGroupRepo().size() > MAX_ENTRIES) {
       throw ServiceException.internalServerError(

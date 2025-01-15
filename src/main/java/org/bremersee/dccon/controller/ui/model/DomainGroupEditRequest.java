@@ -81,7 +81,7 @@ public class DomainGroupEditRequest implements Serializable {
     @Mapping(source = "dn", target = "newOu")
     DomainGroupEditRequest map(DomainGroup domainGroup);
 
-    default String maoToNewOu(Dn distinguishedName) {
+    default String mapToNewOu(Dn distinguishedName) {
       return Optional.ofNullable(distinguishedName)
           .map(Dn::getParent)
           .map(Dn::format)

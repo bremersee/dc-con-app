@@ -74,6 +74,7 @@ public interface DomainUserRepository extends DomainUserRepositoryConstants, Ava
   @Deprecated
   DomainUser update(@NotNull DomainUser domainUser);
 
+  @NotNull
   DomainUser update(@NotEmpty String userName, @NotNull DomainUser domainUser, @Nullable Dn newOu);
 
   /**

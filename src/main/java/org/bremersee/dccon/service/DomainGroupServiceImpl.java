@@ -129,6 +129,11 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   }
 
   @Override
+  public Optional<DomainGroup> getGroupByPrimaryGroupId(Integer primaryGroupId) {
+    return domainGroupRepository.findOneByPrimaryGroupId(primaryGroupId);
+  }
+
+  @Override
   public Optional<DomainGroup> updateGroup(String groupName, DomainGroup domainGroup) {
     domainGroupValidator.doUpdateValidation(groupName, domainGroup);
     return Optional.of(domainGroupRepository.update(domainGroup));

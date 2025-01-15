@@ -25,6 +25,7 @@ public interface DomainComputerService {
       @Nullable Dn ou,
       @Nullable TreeSearchScope searchScope);
 
+  @NotNull
   DomainComputer updateComputer(@NotNull DomainComputer domainComputer, @Nullable Dn newOu);
 
   boolean deleteComputer(@NotEmpty String name);

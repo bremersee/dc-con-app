@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,6 +25,7 @@ import org.bremersee.dccon.controller.ui.components.OrganisationalUnitsComponent
 import org.bremersee.dccon.controller.ui.components.OrganizationalUnitComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.DomainComputerEditRequest;
+import org.bremersee.dccon.controller.ui.model.DomainGroupEditRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DomainComputer;
@@ -39,6 +39,7 @@ import org.bremersee.exception.ServiceException;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -99,13 +100,11 @@ public class ComputerEditController extends AbstractEditController implements Pa
     return Optional.ofNullable(computerName)
         .flatMap(name -> domainComputerService.getComputer(name, ou, searchScope))
         .map(computer -> {
-          DomainComputerEditRequest req = new DomainComputerEditRequest(
-              computer, getProperties().getParentDn(computer.getDistinguishedName()));
+          model.addAttribute("computer", computer);
+          domainGroupService.getGroupByPrimaryGroupId(computer.getPrimaryGroupId())
+              .ifPresent(group -> model.addAttribute("primaryGroup", group));
+          DomainComputerEditRequest req = DomainComputerEditRequest.MAPPER.map(computer);
           model.addAttribute("computerEditRequest", req);
-          List<DomainGroup> groups = domainGroupService
-              .getMemberships(computerName, ou, searchScope)
-              .toList();
-          model.addAttribute("groups", groups);
           return "admin/computer-edit";
         })
         .orElseGet(() -> entityNotFoundRedirect(model, "Computer", "todo", computerName,
@@ -114,87 +113,70 @@ public class ComputerEditController extends AbstractEditController implements Pa
 
   @PostMapping(path = "/admin/computer-edit")
   public String updateComputer(
-      @ModelAttribute(name = OU, binding = false) Dn ou,
-      @ModelAttribute(name = SCOPE, binding = false) TreeSearchScope scope,
+      @RequestParam(value = "samAccountName", required = false) String samAccountName,
+      @RequestParam(value = OU, required = false) Dn ou,
+      @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       @ModelAttribute(name = "computerEditRequest") DomainComputerEditRequest computerEditRequest,
       ModelMap model,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("updateComputer({})", computerEditRequest);
+    getLogger().debug("updateComputer({}, {})", samAccountName, computerEditRequest);
 
-    DomainComputer updatedComputer = updateComputer(bindingResult, computerEditRequest);
-
-    if (bindingResult.hasErrors()) {
-      getLogger().debug("Updating computer failed. Some fields were invalid.");
-      List<DomainGroup> groups = domainGroupService
-          .getMemberships(computerEditRequest.getComputer().getSamAccountName(), ou, scope)
-          .toList();
-      model.addAttribute("groups", groups);
-      return "admin/computer-edit";
-    }
-
-    model.clear();
-    String msg = String.format("Computer '%s' was successfully updated.",
-        updatedComputer.getName());
-    RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-        "i18n.computer.edited", updatedComputer.getName());
-    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-
-    Map<String, Object> parameters = getParamterMap(computerEditRequest.getNewOuDn());
-    String redirect = getRedirectUri("computer-edit?name={{computer.samAccountName}}",
-        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "computer", updatedComputer));
-    logRedirectTo("Computer successfully updated.", redirect);
-    return redirect;
+    return Optional.ofNullable(samAccountName)
+        .flatMap(name -> domainComputerService.getComputer(name, ou, searchScope))
+        .map(existingComputer -> updateComputer(
+            existingComputer, computerEditRequest, model, bindingResult, redirectAttributes))
+        .orElseGet(() -> entityNotFoundRedirect(
+            model, "Computer", "todo", samAccountName, "computers"));
   }
 
-  private DomainComputer updateComputer(BindingResult bindingResult,
-      DomainComputerEditRequest computerEditRequest) {
-    DomainComputer computer = computerEditRequest.getComputer();
+  private String updateComputer(
+      DomainComputer existingComputer,
+      DomainComputerEditRequest computerEditRequest,
+      ModelMap model,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes) {
+
+    DomainComputerEditRequest.MAPPER.update(existingComputer, computerEditRequest);
     Dn ou = computerEditRequest.getNewOuDn();
     try {
-      Dn parentDn = getProperties().getParentDn(computer.getDistinguishedName());
+      Dn parentDn = existingComputer.getDn().getParent();
       Dn ouDn = getProperties().getBaseDn(ou);
       Dn newOu = parentDn.isSame(ouDn) ? null : ouDn;
-      return domainComputerService.updateComputer(computer, newOu);
+      DomainComputer updatedComputer = domainComputerService
+          .updateComputer(existingComputer, newOu);
+
+      model.clear();
+      String msg = String.format("Computer '%s' was successfully updated.", updatedComputer.getName());
+      RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
+          "todo", updatedComputer.getName());
+      redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
+
+      Map<String, Object> parameters = getParamterMap(updatedComputer.getDn().getParent()); // TODO ou from updated -> in others, too
+      String redirect = getRedirectUri("computer-edit?name={{computer.samAccountName}}",
+          PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "computer", updatedComputer));
+      logRedirectTo("Computer successfully updated.", redirect);
+      return redirect;
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
+      model.addAttribute("computer", existingComputer);
+      domainGroupService.getGroupByPrimaryGroupId(existingComputer.getPrimaryGroupId())
+          .ifPresent(group -> model.addAttribute("primaryGroup", group));
+      return "admin/computer-edit";
     }
-    return computer;
   }
 
   private void handleException(BindingResult bindingResult, ServiceException serviceException) {
 
     getLogger().debug("Handle exception of bind target '{}'",
         bindingResult.getTarget(), serviceException);
-
-    if (!(bindingResult.getTarget() instanceof DomainComputerEditRequest)) {
-      return;
-    }
-
+    Object bindTarget = bindingResult.getTarget();
+    getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
+    Assert.isTrue(bindTarget instanceof DomainComputerEditRequest, "Illegal bind target.");
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
-      case EC_SAM_ACCOUNT_NAME_REQUIRED: {
-        bindingResult.rejectValue("computer.samAccountName", "code",
-            "Computer name is required.");
-        break;
-      }
-      case EC_ILLEGAL_SAM_ACCOUNT_NAME: {
-        bindingResult.rejectValue("computer.samAccountName", "code",
-            "Computer name contains illegal characters.");
-        break;
-      }
-      case EC_SAM_ACCOUNT_ALREADY_EXISTS: {
-        bindingResult.rejectValue("computer.samAccountName", "code",
-            "Computer name already exists.");
-        break;
-      }
-      case EC_DN_ALREADY_EXISTS: {
-        bindingResult.rejectValue("computer.samAccountName", "code",
-            "Distinguished name already exists.");
-        break;
-      }
       case EC_EMPTY_OU_RDN: {
         bindingResult.rejectValue("newOu", "code",
             "Organizational unit is empty.");

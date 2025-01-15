@@ -18,11 +18,9 @@ package org.bremersee.dccon.controller.ui.model;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import java.io.Serializable;
 import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainUser;
 import org.ldaptive.dn.Dn;
 import org.mapstruct.Mapper;
@@ -41,16 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class DomainUserEditRequest {
 
   public static final DomainUserEditMapper MAPPER = Mappers.getMapper(DomainUserEditMapper.class);
-
-  /*
-  private String oldSamAccountName;
-
-  private String oldFirstName;
-
-  private String oldLastName;
-
-  private String oldName;
-  */
 
   private MultipartFile avatar;
 
@@ -191,17 +179,6 @@ public class DomainUserEditRequest {
    */
   private String nisDomain;
 
-  /*
-  public DomainUserEditRequest(DomainUser user, Dn newOu) {
-    this.oldSamAccountName = user.getSamAccountName();
-    this.oldFirstName = user.getFirstName();
-    this.oldLastName = user.getLastName();
-    this.oldName = user.getName();
-    this.user = user;
-    this.newOu = newOu.format();
-  }
-  */
-
   public Dn getNewOuDn() {
     if (isEmpty(newOu)) {
       return null;
@@ -219,7 +196,7 @@ public class DomainUserEditRequest {
         target = "passwordExpirationEnabled")
     DomainUserEditRequest map(DomainUser domainUser);
 
-    default String maoToNewOu(Dn distinguishedName) {
+    default String mapToNewOu(Dn distinguishedName) {
       return Optional.ofNullable(distinguishedName)
           .map(Dn::getParent)
           .map(Dn::format)

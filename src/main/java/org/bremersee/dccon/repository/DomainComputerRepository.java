@@ -23,6 +23,7 @@ public interface DomainComputerRepository {
       @Nullable Dn ou,
       @Nullable TreeSearchScope searchScope);
 
+  @NotNull
   DomainComputer update(@NotNull DomainComputer domainComputer, @Nullable Dn newOu);
 
   boolean delete(@NotEmpty String name);
