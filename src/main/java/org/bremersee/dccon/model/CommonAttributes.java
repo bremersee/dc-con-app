@@ -110,6 +110,7 @@ public abstract class CommonAttributes implements DistinguishedNameProvider {
   @JsonIgnore
   public String getParentDistinguishedName() {
     return Optional.ofNullable(getDn())
+        .map(Dn::getParent)
         .map(Dn::format)
         .orElse(null);
   }
