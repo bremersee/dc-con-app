@@ -130,22 +130,24 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
    * Calls linux command {@code kinit} for authentication.
    */
   void kinit() {
-    if (getProperties().isUsingKinit()) {
+    if (getProperties().getCli().getKinit().isUsingKinit()) {
       synchronized (KINIT_LOCK) {
         List<String> commands = new ArrayList<>();
         sudo(commands);
-        commands.add(properties.getKinitBinary());
-        commands.add(KINIT_PASSWORD_FILE.replace("{}", properties.getKinitPasswordFile()));
-        commands.add(properties.getKinitAdministratorName());
-        CommandExecutor.exec(commands, properties.getSambaToolExecDir());
+        commands.add(properties.getCli().getKinit().getKinitBinary());
+        commands.add(KINIT_PASSWORD_FILE.replace("{}",
+            properties.getCli().getKinit().getKinitPasswordFile()));
+        commands.add(properties.getCli().getKinit().getKinitAdministratorName());
+        CommandExecutor.exec(commands, properties.getCli().getExecDir());
       }
     }
   }
 
   void ssh(List<String> commands) {
-    if (getProperties().isUsingSsh()) {
-      Assert.isTrue(!properties.isUsingKinit(), "Using ssh with kinit is not supported.");
-      commands.add(properties.getSshCommand());
+    if (getProperties().getCli().getSsh().isUsingSsh()) {
+      Assert.isTrue(!properties.getCli().getKinit().isUsingKinit(),
+          "Using ssh with kinit is not supported.");
+      commands.add(properties.getCli().getSsh().getSshCommand());
     }
   }
 
@@ -155,8 +157,8 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
    * @param commands the commands
    */
   void sudo(List<String> commands) {
-    if (properties.isUsingSudo()) {
-      commands.add(properties.getSudoBinary());
+    if (properties.getCli().getSudo().isUsingSudo()) {
+      commands.add(properties.getCli().getSudo().getSudoCommand());
     }
   }
 
@@ -167,7 +169,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
    * @param commands the commands
    */
   void auth(List<String> commands) {
-    if (getProperties().isUsingKinit()) {
+    if (getProperties().getCli().getKinit().isUsingKinit()) {
       commands.add(USE_KERBEROS);
       commands.add(YES);
     }

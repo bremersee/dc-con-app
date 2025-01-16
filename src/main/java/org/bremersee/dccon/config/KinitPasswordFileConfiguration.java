@@ -61,16 +61,16 @@ public class KinitPasswordFileConfiguration {
    */
   @EventListener(ApplicationReadyEvent.class)
   public void init() {
-    if (properties.isUsingKinit()) {
+    if (properties.getCli().getKinit().isUsingKinit()) {
       if (ldaptiveProperties == null) {
         log.warn("Kinit password file cannot be created because ldaptive properties are not "
             + "present. You have to enable profile 'ldap'.");
       } else {
-        Assert.hasText(properties.getKinitAdministratorName(),
+        Assert.hasText(properties.getCli().getKinit().getKinitAdministratorName(),
             "Kinit administrator name must be present.");
-        Assert.hasText(properties.getKinitPasswordFile(),
+        Assert.hasText(properties.getCli().getKinit().getKinitPasswordFile(),
             "Kinit password file must be specified.");
-        final File file = new File(properties.getKinitPasswordFile());
+        final File file = new File(properties.getCli().getKinit().getKinitPasswordFile());
         if (!file.exists()) {
           try (final FileOutputStream out = new FileOutputStream(file)) {
             out.write(ldaptiveProperties.getBindCredentials().getBytes(StandardCharsets.UTF_8));

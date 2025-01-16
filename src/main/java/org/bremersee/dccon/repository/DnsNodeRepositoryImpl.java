@@ -21,11 +21,9 @@ import static org.bremersee.dccon.model.UnknownFilter.ALL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +43,6 @@ import org.ldaptive.SearchRequest;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * The dns node repository.
@@ -273,7 +270,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       final List<String> commands = new ArrayList<>();
       ssh(commands);
       sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
+      commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("dns");
       commands.add("add");
       commands.add(getProperties().getNameServerHost());
@@ -282,7 +279,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       commands.add(record.getRecordType());
       commands.add(record.getRecordValue());
       auth(commands);
-      CommandExecutor.exec(commands, getProperties().getSambaToolExecDir());
+      CommandExecutor.exec(commands, getProperties().getCli().getExecDir());
     }
   }
 

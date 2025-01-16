@@ -55,7 +55,7 @@ public class GravatarProvider implements AvatarProvider {
     String hex = new String(Hex.encode(md5));
     AvatarDefault defaultAvatar = requireNonNullElse(avatarDefault, AvatarDefault.NOT_FOUND);
     int avatarSize = getAvatarSize(size);
-    String url = properties.getGravatarUrl()
+    String url = properties.getUser().getGravatarUrl()
         .replace("{hash}", hex)
         .replace("{default}", String.valueOf(defaultAvatar))
         .replace("{size}", String.valueOf(avatarSize));

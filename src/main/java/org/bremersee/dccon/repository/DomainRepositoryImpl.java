@@ -29,13 +29,10 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.PasswordInformation;
-import org.bremersee.dccon.model.Sid;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.PasswordInformationParser;
-import org.bremersee.dccon.repository.transcoder.SidValueTranscoder;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
@@ -178,7 +175,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("domain");
     commands.add("passwordsettings");
     commands.add("show");
@@ -186,7 +183,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
     PasswordInformation raw = CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         passwordInformationParser);
     int minLength = raw.getMinimumPasswordLength();
     int maxLength = Math.max(getProperties().getMaximumPasswordLength(), minLength);

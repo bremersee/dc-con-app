@@ -80,9 +80,14 @@ public class DomainControllerProperties implements Serializable {
 
   private String emailRegex = EMAIL_REGEX;
 
+  private String hostName; // TODO -> samba-tool dns <server>; via command?
+
   private String domainName;
 
   private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
+
+  @NestedConfigurationProperty
+  private CliProperties cli = new CliProperties();
 
   @NestedConfigurationProperty
   private DomainUserProperties user = new DomainUserProperties();
@@ -195,28 +200,8 @@ public class DomainControllerProperties implements Serializable {
   private SearchScope dnsNodeFindOneSearchScope = SearchScope.SUBTREE;
 
 
-  private boolean usingKinit = false;
-
-  private String kinitBinary = "/usr/bin/kinit";
-
-  private String kinitAdministratorName = "Administrator";
-
-  private String kinitPasswordFile = "/var/lib/dc-con/dc-pass.txt";
 
 
-  private boolean usingSudo = true;
-
-  private String sudoBinary = "/usr/bin/sudo";
-
-
-  private boolean usingSsh = false;
-
-  private String sshCommand = "/usr/bin/ssh root@dc1";
-
-
-  private String sambaToolBinary = "/usr/bin/samba-tool";
-
-  private String sambaToolExecDir = "/tmp";
 
 
   /*
@@ -240,10 +225,6 @@ public class DomainControllerProperties implements Serializable {
   */
 
 
-  private String dhcpLeaseListBinary = "/usr/sbin/dhcp-lease-list";
-
-  private String dhcpLeaseListExecDir = "/tmp";
-
 
   private String nameServerHost = "ns.samdom.example.org";
 
@@ -260,8 +241,6 @@ public class DomainControllerProperties implements Serializable {
 
   private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
 
-
-  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}"; // TODO mustache or string format
 
 
   private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();

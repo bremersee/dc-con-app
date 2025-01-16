@@ -209,7 +209,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     final List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("add");
     commands.add(quote(dn.format(rdn -> rdn)));
@@ -220,7 +220,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> findOne(dn)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding organization unit '%s' failed: %s",
@@ -304,7 +304,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("move");
     commands.add(quote(oldDn.format()));
@@ -313,7 +313,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> {
           return findOne(newDn)
               .map(OrganizationalUnit::getDistinguishedName)
@@ -333,7 +333,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("rename");
     commands.add(quote(ou.format()));
@@ -342,7 +342,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> {
           return findOne(newDn)
               .map(OrganizationalUnit::getDistinguishedName)
@@ -373,7 +373,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("delete");
     commands.add(quote(ou.format()));
@@ -381,7 +381,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> {
           if (exists(ou)) {
             throw ServiceException

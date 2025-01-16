@@ -437,7 +437,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     final List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("group");
     commands.add("add");
     commands.add(quote(domainGroup.getSamAccountName()));
@@ -456,7 +456,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> getDomainRepository().findDnOfSamAccount(domainGroup)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding group '%s' failed: %s",
@@ -554,7 +554,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       List<String> commands = new ArrayList<>();
       ssh(commands);
       sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
+      commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("group");
       commands.add("rename");
       commands.add(quote(oldSamAccountName));
@@ -571,7 +571,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       CommandExecutor.exec(
           commands,
           null,
-          getProperties().getSambaToolExecDir(),
+          getProperties().getCli().getExecDir(),
           (CommandExecutorResponseValidator) response -> this
               .findOne(
                   newSamAccountName,
@@ -590,7 +590,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       List<String> commands = new ArrayList<>();
       ssh(commands);
       sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
+      commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("group");
       commands.add("move");
       commands.add(quote(newSamAccountName));
@@ -600,7 +600,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       CommandExecutor.exec(
           commands,
           null,
-          getProperties().getSambaToolExecDir(),
+          getProperties().getCli().getExecDir(),
           (CommandExecutorResponseValidator) response -> getDomainRepository()
               .findDnOfSamAccountName(newSamAccountName)
               .filter(groupDn -> new Dn(groupDn).isSame(newDn))
@@ -648,7 +648,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     final List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("group");
     commands.add("delete");
     commands.add(quote(groupName));
@@ -656,7 +656,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> {
           if (getDomainRepository().samAccountNameExists(groupName)) {
             throw ServiceException.internalServerError(

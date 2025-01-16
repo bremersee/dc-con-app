@@ -209,14 +209,14 @@ public class DnsZoneRepositoryImpl extends AbstractDnsZoneRepository implements 
     final List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("dns");
     commands.add(dnsCommand);
     commands.add(getProperties().getNameServerHost());
     commands.add(zoneName);
     auth(commands);
     return CommandExecutor.exec(
-        commands, null, getProperties().getSambaToolExecDir(), parser);
+        commands, null, getProperties().getCli().getExecDir(), parser);
   }
 
 }

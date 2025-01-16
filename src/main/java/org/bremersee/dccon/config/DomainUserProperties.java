@@ -77,4 +77,6 @@ public class DomainUserProperties {
 
   private String defaultUnixHomeDirectory = "/home/{{user.samAccountName}}";
 
+  private String gravatarUrl = "https://www.gravatar.com/avatar/{hash}?d={default}&s={size}";
+
 }

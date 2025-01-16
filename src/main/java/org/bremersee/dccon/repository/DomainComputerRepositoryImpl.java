@@ -148,7 +148,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("computer");
     commands.add("delete");
     commands.add(samAccountName);
@@ -156,7 +156,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> findOne(name, null, null).isEmpty());
   }
 
@@ -166,7 +166,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("computer");
     commands.add("move");
     commands.add(domainComputer.getSamAccountNameWithoutTrailingDollarSign());
@@ -176,7 +176,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     String newDn = CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> getDomainRepository()
             .findDnOfSamAccountName(domainComputer.getSamAccountName())
             .orElseThrow(() -> ServiceException

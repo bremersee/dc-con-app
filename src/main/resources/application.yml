@@ -24,7 +24,10 @@ bremersee:
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@bremersee.org}
       login-url: http://localhost:4200/change-password
-    ssh-command: ${SSH_COMMAND:ssh root@dc1}
+    cli:
+      samba-tool-credentials-options: "--simple-bind-dn='${bremersee.ldaptive.bind-dn}' --password='${bremersee.ldaptive.bind-credentials}'"
+      ssh:
+        ssh-command: ${SSH_COMMAND:ssh root@dc1}
 
 eureka:
   client:

@@ -110,7 +110,7 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
     final List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getDhcpLeaseListBinary());
+    commands.add(getProperties().getCli().getDhcpLeaseListBinary());
     commands.add("--parsable");
     if (all) {
       commands.add("--all");
@@ -118,7 +118,7 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getDhcpLeaseListExecDir(),
+        getProperties().getCli().getExecDir(),
         parser);
   }
 

@@ -403,7 +403,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("user");
     commands.add("add");
     commands.add(quote(domainUser.getSamAccountName()));
@@ -433,7 +433,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> getDomainRepository().findDnOfSamAccount(domainUser)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding user '%s' failed. %s",
@@ -648,7 +648,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       List<String> commands = new ArrayList<>();
       ssh(commands);
       sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
+      commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("user");
       commands.add("rename");
       commands.add(quote(oldSamAccountName));
@@ -658,7 +658,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       CommandExecutor.exec(
           commands,
           null,
-          getProperties().getSambaToolExecDir(),
+          getProperties().getCli().getExecDir(),
           (CommandExecutorResponseValidator) response -> this
               .findOne(
                   newSamAccountName,
@@ -677,7 +677,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       List<String> commands = new ArrayList<>();
       ssh(commands);
       sudo(commands);
-      commands.add(getProperties().getSambaToolBinary());
+      commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("user");
       commands.add("move");
       commands.add(quote(newSamAccountName));
@@ -687,7 +687,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       CommandExecutor.exec(
           commands,
           null,
-          getProperties().getSambaToolExecDir(),
+          getProperties().getCli().getExecDir(),
           (CommandExecutorResponseValidator) response -> getDomainRepository()
               .findDnOfSamAccountName(newSamAccountName)
               .filter(userDn -> new Dn(userDn).isSame(newDn))
@@ -788,7 +788,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     List<String> commands = new ArrayList<>();
     ssh(commands);
     sudo(commands);
-    commands.add(getProperties().getSambaToolBinary());
+    commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("user");
     commands.add("delete");
     commands.add(quote(userName));
@@ -796,7 +796,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     return CommandExecutor.exec(
         commands,
         null,
-        getProperties().getSambaToolExecDir(),
+        getProperties().getCli().getExecDir(),
         response -> {
           if (getDomainRepository().samAccountNameExists(userName)) {
             throw ServiceException.internalServerError(
