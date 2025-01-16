@@ -50,8 +50,10 @@ public interface OrganizationalUnitService {
 
   boolean hasChildren(@NotNull Dn ou);
 
+  @NotNull
   OrganizationalUnit add(@NotNull OrganizationalUnit organizationalUnit, @Nullable Dn parentOu);
 
+  @NotNull
   OrganizationalUnit update(@NotNull OrganizationalUnit organizationalUnit,
       @Nullable Dn newParentOu);
 

@@ -77,10 +77,12 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
         .filter(dn -> !dn.isEmpty())
         .flatMap(organizationalUnitService::getOrganizationalUnit)
         .map(ou -> {
+          model.addAttribute("organizationalUnit", ou);
           boolean hasChildren = organizationalUnitService
-              .hasChildren(new Dn(ou.getDistinguishedName()));
+              .hasChildren(ou.getDn());
+          model.addAttribute("hasChildren", hasChildren);
           OrganizationalUnitDeleteRequest ouDeleteRequest = new OrganizationalUnitDeleteRequest(
-              ou, hasChildren);
+              ou);
           model.put("ouDeleteRequest", ouDeleteRequest);
           return "admin/organizational-unit-delete";
         })
@@ -96,32 +98,43 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
       RedirectAttributes redirectAttributes) {
 
     getLogger().debug("deleteOrganizationalUnit({})", ouDeleteRequest);
+    String name = Optional.ofNullable(ouDeleteRequest.getOu())
+        .map(Dn::new)
+        .map(Dn::getRDn)
+        .map(RDn::getNameValue)
+        .map(NameValue::getStringValue)
+        .orElse("null");
+    return Optional.ofNullable(ouDeleteRequest.getOu())
+        .map(Dn::new)
+        .flatMap(organizationalUnitService::getOrganizationalUnit)
+        .map(ou -> {
+          if (!ou.getName().equalsIgnoreCase(ouDeleteRequest.getVerificationName())) {
+            bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
+            return "admin/organizational-unit-delete";
+          }
 
-    if (!ouDeleteRequest.getName().equalsIgnoreCase(ouDeleteRequest.getVerificationName())) {
-      bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
-      return "admin/organizational-unit-delete";
-    }
+          boolean result = organizationalUnitService.delete(ou.getDn());
 
-    boolean result = organizationalUnitService.delete(ouDeleteRequest.getOuDn());
+          model.clear();
+          RedirectMessage rmsg;
+          if (result) {
+            rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
+                String.format("Organizational unit '%s' was successfully deleted.", name),
+                "todo", name);
+          } else {
+            rmsg = getRedirectMessage(RedirectMessageType.WARNING,
+                String.format("Somehow the organizational unit '%s' was not deleted.", name),
+                "todo", name);
+          }
+          redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    model.clear();
-    String name = ouDeleteRequest.getName();
-    RedirectMessage rmsg;
-    if (result) {
-      rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
-          String.format("Organizational unit '%s' was successfully deleted.", name),
-          "todo", name);
-    } else {
-      rmsg = getRedirectMessage(RedirectMessageType.WARNING,
-          String.format("Somehow the organizational unit '%s' was not deleted.", name),
-          "todo", name);
-    }
-    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-
-    Map<String, Object> parameters = getParamterMap();
-    String redirect = getRedirectUri("organizational-units", PAGE_AND_OU_PARAMS, parameters);
-    logRedirectTo("Organizational unit successfully added.", redirect);
-    return redirect;
+          Map<String, Object> parameters = getParamterMap();
+          String redirect = getRedirectUri("organizational-units", PAGE_AND_OU_PARAMS, parameters);
+          logRedirectTo("Organizational unit successfully added.", redirect);
+          return redirect;
+        })
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Organizational Unit", "todo", name, "organizational-units"));
   }
 
 }

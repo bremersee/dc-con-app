@@ -212,7 +212,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     commands.add(getProperties().getSambaToolBinary());
     commands.add("ou");
     commands.add("add");
-    commands.add(quote(dn.format()));
+    commands.add(quote(dn.format(rdn -> rdn)));
     if (!isEmpty(organizationalUnit.getDescription())) {
       commands.add("--description=" + quote(organizationalUnit.getDescription()));
     }
@@ -250,6 +250,11 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
             OrganizationalUnit.class.getSimpleName(),
             organizationalUnit.getDistinguishedName(),
             EC_OU_NOT_FOUND));
+
+    if (existing.getSystemOu()) {
+      existing.setDescription(organizationalUnit.getDescription());
+      return getLdapTemplate().save(existing, ouLdapMapper);
+    }
 
     Dn existingDn = new Dn(existing.getDistinguishedName());
     log.debug("Existing ou dn: {}", existingDn);
@@ -332,7 +337,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     commands.add("ou");
     commands.add("rename");
     commands.add(quote(ou.format()));
-    commands.add(quote(newDn.format()));
+    commands.add(quote(newDn.format(rdn -> rdn)));
     auth(commands);
     return CommandExecutor.exec(
         commands,

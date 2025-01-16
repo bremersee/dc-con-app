@@ -133,8 +133,9 @@ public class OrganizationalUnitEditController extends AbstractEditController
       RedirectAttributes redirectAttributes) {
 
     ouEditRequest.update(ou);
+    OrganizationalUnit updatedOu;
     try {
-      ou = organizationalUnitService.update(ou, ouEditRequest.getParentOuDn());
+      updatedOu = organizationalUnitService.update(ou, ouEditRequest.getParentOuDn());
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
@@ -143,15 +144,17 @@ public class OrganizationalUnitEditController extends AbstractEditController
     }
 
     model.clear();
-    String newName = ou.getName();
+    String newName = updatedOu.getName();
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
         String.format("Organizational unit '%s' was successfully updated.", newName),
         "todo", newName);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
     Map<String, Object> parameters = getParamterMap();
-    String redirect = getRedirectUri("organizational-unit-edit?name={{name}}",
-        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "name", ou.getDistinguishedName()));
+    String redirect = getRedirectUri(
+        "organizational-unit-edit?name={{name}}",
+        PAGE_AND_OU_PARAMS,
+        putToParameterMap(parameters, "name", updatedOu.getDistinguishedNameUnformatted()));
     logRedirectTo("Organizational unit successfully added.", redirect);
     return redirect;
   }

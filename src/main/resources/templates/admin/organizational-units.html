@@ -113,7 +113,7 @@
 
   <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(ouPage.content)}">
     <a th:each="entry : ${ouPage.content}" href="#"
-       th:href="@{organizational-unit-edit(name=${entry.distinguishedName},page=${page},size=${size},q=${q})}"
+       th:href="@{organizational-unit-edit(name=${entry.distinguishedNameUnformatted},page=${page},size=${size},q=${q})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1" th:text="${entry.nameTree}">

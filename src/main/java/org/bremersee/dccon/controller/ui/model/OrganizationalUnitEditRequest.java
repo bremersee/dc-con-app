@@ -46,7 +46,7 @@ public class OrganizationalUnitEditRequest implements Serializable {
   private String description;
 
   public OrganizationalUnitEditRequest(OrganizationalUnit ou) {
-    this.ou = ou.getDistinguishedName();
+    this.ou = ou.getDistinguishedNameUnformatted();
     this.parentOu = ou.getDn().getParent().format();
     this.name = ou.getName();
     this.description = ou.getDescription();

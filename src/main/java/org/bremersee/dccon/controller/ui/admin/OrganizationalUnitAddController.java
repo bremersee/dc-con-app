@@ -31,6 +31,7 @@ import org.bremersee.dccon.service.OrganizationalUnitService;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -89,27 +90,28 @@ public class OrganizationalUnitAddController extends AbstractController
     organizationalUnit.setName(ouAddRequest.getName());
     organizationalUnit.setDescription(ouAddRequest.getDescription());
 
+    OrganizationalUnit addedOu;
     try {
-      organizationalUnitService.add(organizationalUnit, ouAddRequest.getParentOuDn());
+      addedOu = organizationalUnitService.add(organizationalUnit, ouAddRequest.getParentOuDn());
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
-      if (bindingResult.hasErrors()) {
-        getLogger().debug("Adding organizational unit failed. Some fields were invalid.");
-        return "admin/organizational-unit-add";
-      }
+      getLogger().debug("Adding organizational unit failed. Some fields were invalid.");
+      return "admin/organizational-unit-add";
     }
 
     model.clear();
-    String name = organizationalUnit.getName();
+    String name = addedOu.getName();
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
         String.format("Organizational unit '%s' was successfully added.", name),
         "todo", name);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
     Map<String, Object> parameters = getParamterMap();
-    String redirect = getRedirectUri("organizational-unit-edit?name={{name}}",
-        PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "name", name));
+    String redirect = getRedirectUri(
+        "organizational-unit-edit?name={{name}}",
+        PAGE_AND_OU_PARAMS,
+        putToParameterMap(parameters, "name", addedOu.getDistinguishedNameUnformatted()));
     logRedirectTo("Organizational unit successfully added.", redirect);
     return redirect;
   }
@@ -118,7 +120,7 @@ public class OrganizationalUnitAddController extends AbstractController
 
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
-
+    Assert.isTrue(bindTarget instanceof OrganizationalUnitAddRequest, "Illegal bind target.");
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_OU_NAME_REQUIRED: {

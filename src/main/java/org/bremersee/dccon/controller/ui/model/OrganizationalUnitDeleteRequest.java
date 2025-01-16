@@ -16,14 +16,11 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.OrganizationalUnit;
-import org.ldaptive.dn.Dn;
 
 /**
  * The type DomainGroupAddRequest.
@@ -39,26 +36,10 @@ public class OrganizationalUnitDeleteRequest implements Serializable {
 
   private String ou;
 
-  private Boolean systemOu;
-
-  private String name;
-
-  private Boolean hasChildren;
-
   private String verificationName;
 
-  public OrganizationalUnitDeleteRequest(OrganizationalUnit ou, Boolean hasChildren) {
-    this.ou = ou.getDistinguishedName();
-    this.systemOu = ou.getSystemOu();
-    this.name = ou.getName();
-    this.hasChildren = hasChildren;
-  }
-
-  public Dn getOuDn() {
-    if (isEmpty(ou)) {
-      return null;
-    }
-    return new Dn(ou);
+  public OrganizationalUnitDeleteRequest(OrganizationalUnit ou) {
+    this.ou = ou.getDistinguishedNameUnformatted();
   }
 
 }

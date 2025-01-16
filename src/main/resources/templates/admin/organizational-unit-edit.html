@@ -76,7 +76,7 @@
       <a class="nav-link" href="organizational-unit-delete.html"
          th:classappend="${organizationalUnit.systemOu} ? 'disabled' : ''"
          th:attr="aria-disabled=${organizationalUnit.systemOu}"
-         th:href="@{organizational-unit-delete(name=${organizationalUnit.distinguishedName},page=${page},size=${size},q=${q})}">
+         th:href="@{organizational-unit-delete(name=${organizationalUnit.distinguishedNameUnformatted},page=${page},size=${size},q=${q})}">
         <span class="fa fa-trash-alt" aria-hidden="true"></span>
       </a>
     </li>
@@ -95,6 +95,8 @@
         <label for="parentOu" class="form-label">Parent Organizational Unit</label>
         <select id="parentOu" class="form-select" aria-label="Organizational Unit"
                 aria-describedby="parentOuValidation"
+                th:readonly="${organizationalUnit.systemOu}"
+                th:disabled="${organizationalUnit.systemOu}"
                 th:classappend="${#fields.hasErrors('parentOu')} ? 'is-invalid' : ''"
                 th:field="*{parentOu}">
           <option th:each="o : ${ous}" th:value="${o.distinguishedName}" th:text="${o.nameTree}">
@@ -110,6 +112,7 @@
         <label for="name" class="form-label">Name</label>
         <input type="text" class="form-control" id="name" name="name"
                aria-describedby="nameValidation" required th:field="*{name}"
+               th:readonly="${organizationalUnit.systemOu}"
                th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"/>
         <div id="nameValidation" class="invalid-feedback"
              th:text="${#fields.hasErrors('name')} ? ${#fields.errors('name')[0]} : ''">

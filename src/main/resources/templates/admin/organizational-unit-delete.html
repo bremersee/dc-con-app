@@ -69,7 +69,7 @@
   <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
       <a class="nav-link" href="organizational-unit-edit.html"
-         th:href="@{organizational-unit-edit(name=${ouDeleteRequest.ou},page=${page},size=${size},q=${q})}">
+         th:href="@{organizational-unit-edit(name=${organizationalUnit.distinguishedNameUnformatted},page=${page},size=${size},q=${q})}">
         <span class="fa fa-edit" aria-hidden="true"></span>
       </a>
     </li>
@@ -81,19 +81,19 @@
   </ul>
 
   <div class="mx-0 mx-sm-1 mx-md-3">
-    <div class="mb-4 p-3 border border-1 border-danger" th:if="${ouDeleteRequest.hasChildren}">
+    <div class="mb-4 p-3 border border-1 border-danger" th:if="${hasChildren}">
       <div class="h5 mb-3">
         <span>Delete Organizational Unit </span>
-        <span class="badge text-bg-secondary" th:text="${ouDeleteRequest.name}">Users</span>
+        <span class="badge text-bg-secondary" th:text="${organizationalUnit.name}">Users</span>
       </div>
       <div>
         Deletion of organizational unit is not possible. It is not empty.
       </div>
     </div>
-    <div class="mb-4 p-3 border border-1 border-danger" th:if="${not ouDeleteRequest.hasChildren}">
+    <div class="mb-4 p-3 border border-1 border-danger" th:if="${not hasChildren}">
       <div class="h5 mb-3">
         <span>Delete Organizational Unit </span>
-        <span class="badge text-bg-secondary" th:text="${ouDeleteRequest.name}">Users</span>
+        <span class="badge text-bg-secondary" th:text="${organizationalUnit.name}">Users</span>
       </div>
       <form th:action="@{organizational-unit-delete}" th:object="${ouDeleteRequest}" action="#"
             method="post">
@@ -102,9 +102,6 @@
         <input type="hidden" name="q" th:value="${q}"/>
 
         <input type="hidden" name="ou" th:field="*{ou}"/>
-        <input type="hidden" name="systemOu" th:field="*{systemOu}"/>
-        <input type="hidden" name="systemOu" th:field="*{hasChildren}"/>
-        <input type="hidden" name="systemOu" th:field="*{name}"/>
 
         <div class="mb-3">
           <input type="text" class="form-control" id="verificationName" name="verificationName"
