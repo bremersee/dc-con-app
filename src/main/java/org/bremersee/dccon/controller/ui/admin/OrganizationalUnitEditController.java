@@ -34,6 +34,7 @@ import org.ldaptive.dn.NameValue;
 import org.ldaptive.dn.RDn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -76,16 +77,19 @@ public class OrganizationalUnitEditController extends AbstractEditController
       @RequestParam(value = "name", required = false) Dn ouDn,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
+
     getLogger().debug("displayOrganizationalUnitEdit({})", ouDn);
     String name = Optional.ofNullable(ouDn)
         .map(Dn::getRDn)
         .map(RDn::getNameValue)
         .map(NameValue::getStringValue)
         .orElse("null");
+
     return Optional.ofNullable(ouDn)
         .filter(dn -> !dn.isEmpty())
         .flatMap(organizationalUnitService::getOrganizationalUnit)
         .map(ou -> {
+          model.addAttribute("organizationalUnit", ou);
           OrganizationalUnitEditRequest ouEditRequest = new OrganizationalUnitEditRequest(ou);
           model.put("ouEditRequest", ouEditRequest);
           return "admin/organizational-unit-edit";
@@ -96,7 +100,7 @@ public class OrganizationalUnitEditController extends AbstractEditController
   }
 
   @PostMapping(path = "/admin/organizational-unit-edit")
-  public String editOrganizationalUnit(
+  public String updateOrganizationalUnit(
       @ModelAttribute(name = "ouEditRequest") OrganizationalUnitEditRequest ouEditRequest,
       ModelMap model,
       BindingResult bindingResult,
@@ -104,27 +108,45 @@ public class OrganizationalUnitEditController extends AbstractEditController
 
     getLogger().debug("editOrganizationalUnit({})", ouEditRequest);
 
-    OrganizationalUnit ou = new OrganizationalUnit();
-    ou.setDistinguishedName(ouEditRequest.getOu());
-    ou.setSystemOu(ouEditRequest.getSystemOu());
-    ou.setName(ouEditRequest.getName());
-    ou.setDescription(ouEditRequest.getDescription());
+    String name = Optional.ofNullable(ouEditRequest.getOu())
+        .map(Dn::new)
+        .map(Dn::getRDn)
+        .map(RDn::getNameValue)
+        .map(NameValue::getStringValue)
+        .orElse("null");
+
+    return Optional.ofNullable(ouEditRequest.getOu())
+        .map(Dn::new)
+        .flatMap(organizationalUnitService::getOrganizationalUnit)
+        .map(ou -> updateOrganizationalUnit(
+            ou, ouEditRequest, model, bindingResult, redirectAttributes))
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Organizational Unit", "todo", name,
+            "organizational-units"));
+  }
+
+  private String updateOrganizationalUnit(
+      OrganizationalUnit ou,
+      OrganizationalUnitEditRequest ouEditRequest,
+      ModelMap model,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes) {
+
+    ouEditRequest.update(ou);
     try {
       ou = organizationalUnitService.update(ou, ouEditRequest.getParentOuDn());
 
     } catch (ServiceException e) {
       handleException(bindingResult, e);
-      if (bindingResult.hasErrors()) {
-        getLogger().debug("Updating organizational unit failed. Some fields were invalid.");
-        return "admin/organizational-unit-edit";
-      }
+      getLogger().debug("Updating organizational unit failed. Some fields were invalid.");
+      return "admin/organizational-unit-edit";
     }
 
     model.clear();
-    String name = ou.getName();
+    String newName = ou.getName();
     RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
-        String.format("Organizational unit '%s' was successfully updated.", name),
-        "todo", name);
+        String.format("Organizational unit '%s' was successfully updated.", newName),
+        "todo", newName);
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
     Map<String, Object> parameters = getParamterMap();
@@ -138,7 +160,7 @@ public class OrganizationalUnitEditController extends AbstractEditController
 
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
-
+    Assert.isTrue(bindTarget instanceof OrganizationalUnitEditRequest, "Illegal bind target.");
     String errorCode = Objects.requireNonNullElse(serviceException.getErrorCode(), "");
     switch (errorCode) {
       case EC_OU_NAME_REQUIRED: {

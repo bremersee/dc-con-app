@@ -171,8 +171,6 @@ public class ComputerEditController extends AbstractEditController implements Pa
 
   private void handleException(BindingResult bindingResult, ServiceException serviceException) {
 
-    getLogger().debug("Handle exception of bind target '{}'",
-        bindingResult.getTarget(), serviceException);
     Object bindTarget = bindingResult.getTarget();
     getLogger().debug("handleException of bind target '{}'", bindTarget, serviceException);
     Assert.isTrue(bindTarget instanceof DomainComputerEditRequest, "Illegal bind target.");

@@ -74,9 +74,9 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" href="organizational-unit-delete.html"
-         th:classappend="${ouEditRequest.systemOu} ? 'disabled' : ''"
-         th:attr="aria-disabled=${ouEditRequest.systemOu}"
-         th:href="@{organizational-unit-delete(name=${ouEditRequest.ou},page=${page},size=${size},q=${q})}">
+         th:classappend="${organizationalUnit.systemOu} ? 'disabled' : ''"
+         th:attr="aria-disabled=${organizationalUnit.systemOu}"
+         th:href="@{organizational-unit-delete(name=${organizationalUnit.distinguishedName},page=${page},size=${size},q=${q})}">
         <span class="fa fa-trash-alt" aria-hidden="true"></span>
       </a>
     </li>
@@ -90,7 +90,6 @@
       <input type="hidden" name="q" th:value="${q}"/>
 
       <input type="hidden" name="ou" th:field="*{ou}"/>
-      <input type="hidden" name="systemOu" th:field="*{systemOu}"/>
 
       <div class="mb-3">
         <label for="parentOu" class="form-label">Parent Organizational Unit</label>

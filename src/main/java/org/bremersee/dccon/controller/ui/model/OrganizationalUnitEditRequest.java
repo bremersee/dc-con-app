@@ -39,8 +39,6 @@ public class OrganizationalUnitEditRequest implements Serializable {
 
   private String ou;
 
-  private Boolean systemOu;
-
   private String parentOu;
 
   private String name;
@@ -49,17 +47,9 @@ public class OrganizationalUnitEditRequest implements Serializable {
 
   public OrganizationalUnitEditRequest(OrganizationalUnit ou) {
     this.ou = ou.getDistinguishedName();
-    this.systemOu = ou.getSystemOu();
-    this.parentOu = getOuDn().getParent().format();
+    this.parentOu = ou.getDn().getParent().format();
     this.name = ou.getName();
     this.description = ou.getDescription();
-  }
-
-  public Dn getOuDn() {
-    if (isEmpty(ou)) {
-      return null;
-    }
-    return new Dn(ou);
   }
 
   public Dn getParentOuDn() {
@@ -67,6 +57,14 @@ public class OrganizationalUnitEditRequest implements Serializable {
       return null;
     }
     return new Dn(parentOu);
+  }
+
+  public void update(OrganizationalUnit ou) {
+    if (isEmpty(ou)) {
+      return;
+    }
+    ou.setName(getName());
+    ou.setDescription(getDescription());
   }
 
 }
