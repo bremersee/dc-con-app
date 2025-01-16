@@ -76,7 +76,8 @@ public class UserEditMiscController extends AbstractEditController implements Pa
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(userName)
         .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
@@ -84,7 +85,8 @@ public class UserEditMiscController extends AbstractEditController implements Pa
           model.addAttribute("user", user);
           return "admin/user-edit-misc";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "User", "todo", userName, "users"));
   }
 
   @PostMapping(path = "/admin/user-edit-misc-reset-password")

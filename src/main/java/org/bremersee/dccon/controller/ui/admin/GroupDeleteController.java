@@ -65,7 +65,8 @@ public class GroupDeleteController extends AbstractEditController implements Pag
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(groupName, ou, searchScope))
@@ -73,7 +74,8 @@ public class GroupDeleteController extends AbstractEditController implements Pag
           model.addAttribute("group", group);
           return "admin/group-delete";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", groupName, "groups"));
   }
 
   @PostMapping(path = "/admin/group-delete")

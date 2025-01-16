@@ -94,7 +94,8 @@ public class GroupEditMembersController extends AbstractEditController implement
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
@@ -103,7 +104,8 @@ public class GroupEditMembersController extends AbstractEditController implement
           model.addAttribute("editRequest", new DomainGroupEditMembersRequest(group));
           return "admin/group-edit-members";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", groupName, "groups"));
   }
 
   @PostMapping(path = "/admin/group-edit-members")
@@ -135,7 +137,7 @@ public class GroupEditMembersController extends AbstractEditController implement
           return redirect;
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            model, "Group", "todo", groupName, "groups"));
+            redirectAttributes, "Group", "todo", groupName, "groups"));
   }
 
 }

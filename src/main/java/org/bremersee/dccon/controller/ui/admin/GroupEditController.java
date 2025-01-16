@@ -89,7 +89,8 @@ public class GroupEditController extends AbstractEditController implements Pagea
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
@@ -99,7 +100,8 @@ public class GroupEditController extends AbstractEditController implements Pagea
           model.addAttribute("groupEditRequest", req);
           return "admin/group-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", groupName, "groups"));
   }
 
   @PostMapping(path = "/admin/group-edit")
@@ -119,8 +121,8 @@ public class GroupEditController extends AbstractEditController implements Pagea
         .flatMap(oldName -> domainGroupService.getGroup(oldName, ou, searchScope))
         .map(existingGroup -> updateGroup(
             existingGroup, groupEditRequest, model, bindingResult, redirectAttributes))
-        .orElseGet(
-            () -> entityNotFoundRedirect(model, "Group", "todo", oldSamAccountName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", oldSamAccountName, "groups"));
   }
 
   private String updateGroup(

@@ -107,7 +107,8 @@ public class UserEditController extends AbstractEditController implements Pageab
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(userName)
         .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
@@ -120,7 +121,8 @@ public class UserEditController extends AbstractEditController implements Pageab
           model.addAttribute("userEditRequest", request);
           return "admin/user-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "User", "todo", userName, "users"));
   }
 
   @PostMapping(path = "/admin/user-edit")
@@ -149,7 +151,8 @@ public class UserEditController extends AbstractEditController implements Pageab
         .flatMap(oldName -> domainUserService.getUser(oldName, ou, searchScope))
         .map(existingUser -> updateUser(
             existingUser, userEditRequest, model, bindingResult, redirectAttributes))
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", oldSamAccountName, "users"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "User", "todo", oldSamAccountName, "users"));
   }
 
   private String updateUser(

@@ -31,6 +31,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * The type UsersController.
@@ -65,9 +66,11 @@ public class UserMembershipsController extends AbstractEditController
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayUserEditMemberships(true, userName, ou, searchScope, model);
+    return displayUserEditMemberships(
+        true, userName, ou, searchScope, model, redirectAttributes);
   }
 
   @GetMapping(path = "/admin/user-memberships-resolved")
@@ -75,9 +78,11 @@ public class UserMembershipsController extends AbstractEditController
       @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayUserEditMemberships(false, userName, ou, searchScope, model);
+    return displayUserEditMemberships(
+        false, userName, ou, searchScope, model, redirectAttributes);
   }
 
   private String displayUserEditMemberships(
@@ -85,7 +90,8 @@ public class UserMembershipsController extends AbstractEditController
       String userName,
       Dn ou,
       TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(userName)
         .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
@@ -103,7 +109,8 @@ public class UserMembershipsController extends AbstractEditController
           model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "User", "todo", userName, "users"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "User", "todo", userName, "users"));
   }
 
 }

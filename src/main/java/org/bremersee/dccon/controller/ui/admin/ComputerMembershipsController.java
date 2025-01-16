@@ -31,6 +31,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * The type ComputersController.
@@ -65,9 +66,11 @@ public class ComputerMembershipsController extends AbstractEditController
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayComputerEditMemberships(true, computerName, ou, searchScope, model);
+    return displayComputerEditMemberships(
+        true, computerName, ou, searchScope, model, redirectAttributes);
   }
 
   @GetMapping(path = "/admin/computer-memberships-resolved")
@@ -75,9 +78,11 @@ public class ComputerMembershipsController extends AbstractEditController
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayComputerEditMemberships(false, computerName, ou, searchScope, model);
+    return displayComputerEditMemberships(
+        false, computerName, ou, searchScope, model, redirectAttributes);
   }
 
   private String displayComputerEditMemberships(
@@ -85,7 +90,8 @@ public class ComputerMembershipsController extends AbstractEditController
       String computerName,
       Dn ou,
       TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(computerName)
         .flatMap(name -> domainComputerService.getComputer(computerName, ou, searchScope))
@@ -103,7 +109,8 @@ public class ComputerMembershipsController extends AbstractEditController
           model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", computerName, "computers"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", computerName, "computers"));
   }
 
 }

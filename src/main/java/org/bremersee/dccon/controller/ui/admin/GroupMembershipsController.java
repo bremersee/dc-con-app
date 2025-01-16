@@ -30,6 +30,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * The type GroupsController.
@@ -60,9 +61,11 @@ public class GroupMembershipsController extends AbstractEditController
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayGroupEditMemberships(true, groupName, ou, searchScope, model);
+    return displayGroupEditMemberships(
+        true, groupName, ou, searchScope, model, redirectAttributes);
   }
 
   @GetMapping(path = "/admin/group-memberships-resolved")
@@ -70,9 +73,11 @@ public class GroupMembershipsController extends AbstractEditController
       @RequestParam(value = "name", required = false) String groupName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    return displayGroupEditMemberships(false, groupName, ou, searchScope, model);
+    return displayGroupEditMemberships(
+        false, groupName, ou, searchScope, model, redirectAttributes);
   }
 
   private String displayGroupEditMemberships(
@@ -80,7 +85,8 @@ public class GroupMembershipsController extends AbstractEditController
       String groupName,
       Dn ou,
       TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(groupName)
         .flatMap(name -> domainGroupService.getGroup(groupName, ou, searchScope))
@@ -98,7 +104,8 @@ public class GroupMembershipsController extends AbstractEditController
           model.addAttribute("memberships", memberships.toList());
           return page;
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Group", "todo", groupName, "groups"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Group", "todo", groupName, "groups"));
   }
 
 }

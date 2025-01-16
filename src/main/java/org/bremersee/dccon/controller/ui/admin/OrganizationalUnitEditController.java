@@ -74,7 +74,8 @@ public class OrganizationalUnitEditController extends AbstractEditController
   @GetMapping(path = "/admin/organizational-unit-edit")
   public String displayOrganizationalUnitEdit(
       @RequestParam(value = "name", required = false) Dn ouDn,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
     getLogger().debug("displayOrganizationalUnitEdit({})", ouDn);
     String name = Optional.ofNullable(ouDn)
         .map(Dn::getRDn)
@@ -89,7 +90,8 @@ public class OrganizationalUnitEditController extends AbstractEditController
           model.put("ouEditRequest", ouEditRequest);
           return "admin/organizational-unit-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Organizational Unit", "todo", name,
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Organizational Unit", "todo", name,
             "organizational-units"));
   }
 

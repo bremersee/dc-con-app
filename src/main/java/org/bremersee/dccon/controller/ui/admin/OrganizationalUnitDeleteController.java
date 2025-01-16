@@ -65,7 +65,8 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
   @GetMapping(path = "/admin/organizational-unit-delete")
   public String displayOrganizationalUnitDelete(
       @RequestParam(value = "name", required = false) Dn ouDn,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
     getLogger().debug("displayOrganizationalUnitDelete({})", ouDn);
     String name = Optional.ofNullable(ouDn)
         .map(Dn::getRDn)
@@ -83,8 +84,8 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
           model.put("ouDeleteRequest", ouDeleteRequest);
           return "admin/organizational-unit-delete";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Organizational Unit", "todo", name,
-            "organizational-units"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Organizational Unit", "todo", name, "organizational-units"));
   }
 
   @PostMapping(path = "/admin/organizational-unit-delete")

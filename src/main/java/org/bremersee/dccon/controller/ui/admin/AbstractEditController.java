@@ -5,8 +5,8 @@ import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 public abstract class AbstractEditController extends AbstractController
     implements RedirectComponent {
@@ -18,7 +18,7 @@ public abstract class AbstractEditController extends AbstractController
   }
 
   String entityNotFoundRedirect(
-      ModelMap model,
+      RedirectAttributes redirectAttributes,
       String entityType,
       String i18nCode,
       String entityName,
@@ -27,8 +27,7 @@ public abstract class AbstractEditController extends AbstractController
     String msg = String.format("%s '%s' was not found.", entityType, entityName);
     RedirectMessage redirectMessage = getRedirectMessage(RedirectMessageType.WARNING, msg,
         i18nCode, String.valueOf(entityName));
-    // TODO hier fehlen die redirect attributes
-    model.addAttribute(RedirectMessage.ATTRIBUTE_NAME, redirectMessage);
+    redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, redirectMessage);
     String redirectUri = getRedirectUri(redirect, PAGE_AND_OU_PARAMS, getParamterMap());
     logRedirectTo(msg, redirectUri);
     return redirectUri;

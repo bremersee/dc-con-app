@@ -95,7 +95,8 @@ public class ComputerEditController extends AbstractEditController implements Pa
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(computerName)
         .flatMap(name -> domainComputerService.getComputer(name, ou, searchScope))
@@ -107,8 +108,8 @@ public class ComputerEditController extends AbstractEditController implements Pa
           model.addAttribute("computerEditRequest", req);
           return "admin/computer-edit";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Computer", "todo", computerName,
-            "computers"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Computer", "todo", computerName, "computers"));
   }
 
   @PostMapping(path = "/admin/computer-edit")
@@ -128,7 +129,7 @@ public class ComputerEditController extends AbstractEditController implements Pa
         .map(existingComputer -> updateComputer(
             existingComputer, computerEditRequest, model, bindingResult, redirectAttributes))
         .orElseGet(() -> entityNotFoundRedirect(
-            model, "Computer", "todo", samAccountName, "computers"));
+            redirectAttributes, "Computer", "todo", samAccountName, "computers"));
   }
 
   private String updateComputer(

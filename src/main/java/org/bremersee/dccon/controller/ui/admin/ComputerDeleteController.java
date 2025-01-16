@@ -65,7 +65,8 @@ public class ComputerDeleteController extends AbstractEditController implements 
       @RequestParam(value = "name", required = false) String computerName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
     return Optional.ofNullable(computerName)
         .flatMap(name -> domainComputerService.getComputer(computerName, ou, searchScope))
@@ -73,7 +74,8 @@ public class ComputerDeleteController extends AbstractEditController implements 
           model.addAttribute("computer", computer);
           return "admin/computer-delete";
         })
-        .orElseGet(() -> entityNotFoundRedirect(model, "Computer", "todo", computerName, "computers"));
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Computer", "todo", computerName, "computers"));
   }
 
   @PostMapping(path = "/admin/computer-delete")
