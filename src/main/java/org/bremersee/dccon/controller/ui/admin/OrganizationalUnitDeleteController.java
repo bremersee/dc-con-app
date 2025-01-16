@@ -110,6 +110,9 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
         .map(ou -> {
           if (!ou.getName().equalsIgnoreCase(ouDeleteRequest.getVerificationName())) {
             bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
+            model.addAttribute("organizationalUnit", ou);
+            boolean hasChildren = organizationalUnitService.hasChildren(ou.getDn());
+            model.addAttribute("hasChildren", hasChildren);
             return "admin/organizational-unit-delete";
           }
 
@@ -130,7 +133,7 @@ public class OrganizationalUnitDeleteController extends AbstractEditController
 
           Map<String, Object> parameters = getParamterMap();
           String redirect = getRedirectUri("organizational-units", PAGE_AND_OU_PARAMS, parameters);
-          logRedirectTo("Organizational unit successfully added.", redirect);
+          logRedirectTo("Organizational unit successfully deleted.", redirect);
           return redirect;
         })
         .orElseGet(() -> entityNotFoundRedirect(

@@ -24,9 +24,9 @@ import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.controller.ui.model.SamAccountDeleteRequest;
-import org.bremersee.dccon.model.DomainGroup;
+import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.TreeSearchScope;
-import org.bremersee.dccon.service.DomainGroupService;
+import org.bremersee.dccon.service.DomainUserService;
 import org.ldaptive.dn.Dn;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -39,22 +39,22 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * The type GroupsController.
+ * The type UsersController.
  *
  * @author Christian Bremer
  */
 @Controller
-public class GroupDeleteController extends AbstractEditController implements PageableComponent,
+public class UserDeleteController extends AbstractEditController implements PageableComponent,
     OrganizationalUnitComponent {
 
-  private final DomainGroupService domainGroupService;
+  private final DomainUserService domainUserService;
 
-  public GroupDeleteController(
+  public UserDeleteController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
-      DomainGroupService domainGroupService) {
+      DomainUserService domainUserService) {
     super(domainControllerProperties, localeResolver);
-    this.domainGroupService = domainGroupService;
+    this.domainUserService = domainUserService;
   }
 
   @Override
@@ -62,27 +62,27 @@ public class GroupDeleteController extends AbstractEditController implements Pag
     return USER_SORT;
   }
 
-  @GetMapping(path = "/admin/group-delete")
-  public String displayGroupDelete(
-      @RequestParam(value = "name", required = false) String groupName,
+  @GetMapping(path = "/admin/user-delete")
+  public String displayUserDelete(
+      @RequestParam(value = "user", required = false) String userName,
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    return Optional.ofNullable(groupName)
-        .flatMap(name -> domainGroupService.getGroup(groupName, ou, searchScope))
-        .map(group -> {
-          model.addAttribute("group", group);
-          model.addAttribute("deleteRequest", new SamAccountDeleteRequest(group));
-          return "admin/group-delete";
+    return Optional.ofNullable(userName)
+        .flatMap(name -> domainUserService.getUser(userName, ou, searchScope))
+        .map(user -> {
+          model.addAttribute("user", user);
+          model.addAttribute("deleteRequest", new SamAccountDeleteRequest(user));
+          return "admin/user-delete";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Group", "todo", groupName, "groups"));
+            redirectAttributes, "User", "todo", userName, "users"));
   }
 
-  @PostMapping(path = "/admin/group-delete")
-  public String deleteGroup(
+  @PostMapping(path = "/admin/user-delete")
+  public String deleteUser(
       @RequestParam(value = OU, required = false) Dn ou,
       @RequestParam(value = SCOPE, required = false) TreeSearchScope searchScope,
       @ModelAttribute("deleteRequest") SamAccountDeleteRequest deleteRequest,
@@ -90,44 +90,44 @@ public class GroupDeleteController extends AbstractEditController implements Pag
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    getLogger().debug("deleteGroup({})", deleteRequest);
+    getLogger().debug("deleteUser({})", deleteRequest);
     return Optional.ofNullable(deleteRequest.getSamAccountName())
-        .flatMap(name -> domainGroupService.getGroup(name, ou, searchScope))
-        .map(group -> {
-          if (!group.getSamAccountName().equalsIgnoreCase(deleteRequest.getVerificationName())) {
+        .flatMap(name -> domainUserService.getUser(name, ou, searchScope))
+        .map(user -> {
+          if (!user.getSamAccountName().equalsIgnoreCase(deleteRequest.getVerificationName())) {
             bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
-            model.addAttribute("group", group);
-            return "admin/group-delete";
+            model.addAttribute("user", user);
+            return "admin/user-delete";
           }
-          return deleteGroup(group, model, redirectAttributes);
+          return deleteUser(user, model, redirectAttributes);
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Group", "todo", deleteRequest.getSamAccountName(),
-            "groups"));
+            redirectAttributes, "User", "todo", deleteRequest.getSamAccountName(),
+            "users"));
   }
 
-  private String deleteGroup(
-      DomainGroup group,
+  private String deleteUser(
+      DomainUser user,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    boolean result = domainGroupService.deleteGroup(group.getSamAccountName());
+    boolean result = domainUserService.deleteUser(user.getSamAccountName());
     model.clear();
     RedirectMessage rmsg;
     if (result) {
       rmsg = getRedirectMessage(RedirectMessageType.SUCCESS,
-          String.format("Group '%s' was successfully deleted.", group.getName()),
-          "todo", group.getName());
+          String.format("User '%s' was successfully deleted.", user.getName()),
+          "todo", user.getName());
     } else {
       rmsg = getRedirectMessage(RedirectMessageType.WARNING,
-          String.format("Somehow the computer '%s' was not deleted.", group.getName()),
-          "todo", group.getName());
+          String.format("Somehow the computer '%s' was not deleted.", user.getName()),
+          "todo", user.getName());
     }
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
     Map<String, Object> parameters = getParamterMap();
-    String redirect = getRedirectUri("groups", PAGE_AND_OU_PARAMS, parameters);
-    logRedirectTo("Group deletion message.", redirect);
+    String redirect = getRedirectUri("users", PAGE_AND_OU_PARAMS, parameters);
+    logRedirectTo("User deletion message.", redirect);
     return redirect;
   }
 

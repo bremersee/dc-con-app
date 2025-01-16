@@ -94,8 +94,16 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="user-edit-misc.html"
-           th:href="@{user-edit-misc(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+        <a class="nav-link" href="user-delete.html"
+           th:classappend="${user.sid.systemEntity} ? 'disabled' : ''"
+           th:attr="aria-disabled=${user.sid.systemEntity}"
+           th:href="@{user-delete(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
+          <span class="fa fa-trash-alt" aria-hidden="true"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="user-reset-password.html"
+           th:href="@{user-reset-password(user=${user.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">
           <span class="fa fa-shapes" aria-hidden="true"></span>
         </a>
       </li>
