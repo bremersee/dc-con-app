@@ -523,7 +523,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     if (!isEmpty(newOu) && !newOu.isEmpty()) {
       newParentDn = getProperties().getBaseDn(validateOu(newOu));
     } else {
-      newParentDn = getProperties().getParentDn(oldDomainGroup.getDistinguishedName());
+      newParentDn = oldDomainGroup.getDn().getParent();
     }
 
     RDn oldRdn = new Dn(oldDomainGroup.getDistinguishedName()).getRDn();
@@ -539,7 +539,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     String newCn = newDn
         .getRDn().getNameValue().getStringValue();
     boolean cnChanged = !Objects.equals(oldCn, newCn);
-    Dn oldParentDn = getProperties().getParentDn(oldDomainGroup.getDistinguishedName());
+    Dn oldParentDn = oldDomainGroup.getDn().getParent();
 
     String oldSamAccountName = oldDomainGroup.getSamAccountName();
     String newSamAccountName = newDomainGroup.getSamAccountName();
@@ -583,7 +583,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
                           CommandExecutorResponse.toExceptionMessage(response)),
                       EC_UPDATING_GROUP_FAILED)));
     }
-    Dn newParentDn = getProperties().getParentDn(newDn.format());
+    Dn newParentDn = newDn.getParent();
     if (!oldParentDn.isSame(newParentDn)) {
       String ou = getProperties().removeBaseDn(newParentDn).format();
       kinit();

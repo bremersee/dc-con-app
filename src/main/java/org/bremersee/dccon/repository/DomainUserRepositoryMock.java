@@ -276,7 +276,7 @@ public class DomainUserRepositoryMock extends AbstractDomainUserRepository
     }
     Dn parentDn;
     if (!isNull(newOu) && !newOu.isEmpty()) {
-      parentDn = getProperties().getParentDn(domainUser.getDistinguishedName());
+      parentDn = domainUser.getDn().getParent();
     } else {
       parentDn = getProperties().getBaseDn(validateOu(newOu));
     }

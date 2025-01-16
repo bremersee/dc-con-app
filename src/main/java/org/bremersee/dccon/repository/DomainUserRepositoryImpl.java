@@ -615,7 +615,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     if (!isEmpty(newOu) && !newOu.isEmpty()) {
       newParentDn = getProperties().getBaseDn(validateOu(newOu));
     } else {
-      newParentDn = getProperties().getParentDn(oldDomainUser.getDistinguishedName());
+      newParentDn = oldDomainUser.getDn().getParent();
     }
 
     RDn oldRdn = new Dn(oldDomainUser.getDistinguishedName()).getRDn();
@@ -640,7 +640,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
         .getRDn().getNameValue().getStringValue();
     String newCn = newDn
         .getRDn().getNameValue().getStringValue();
-    Dn oldParentDn = getProperties().getParentDn(oldDomainUser.getDistinguishedName());
+    Dn oldParentDn = oldDomainUser.getDn().getParent();
     String oldSamAccountName = oldDomainUser.getSamAccountName();
     String newSamAccountName = newDomainUser.getSamAccountName();
     if (!oldCn.equals(newCn) || !oldSamAccountName.equals(newSamAccountName)) {
@@ -670,7 +670,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
                           CommandExecutorResponse.toExceptionMessage(response)),
                       EC_UPDATING_USER_FAILED)));
     }
-    Dn newParentDn = getProperties().getParentDn(newDn.format());
+    Dn newParentDn = newDn.getParent();
     if (!oldParentDn.isSame(newParentDn)) {
       String ou = getProperties().removeBaseDn(newParentDn).format();
       kinit();

@@ -225,7 +225,6 @@ public class DomainControllerProperties implements Serializable {
   */
 
 
-
   private String nameServerHost = "ns.samdom.example.org";
 
   private String reverseZoneSuffixIp4 = ".in-addr.arpa";
@@ -240,7 +239,6 @@ public class DomainControllerProperties implements Serializable {
   private String ip4Regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$";
 
   private String macRegex = "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$";
-
 
 
   private MailWithCredentialsProperties mailWithCredentials = new MailWithCredentialsProperties();
@@ -267,6 +265,7 @@ public class DomainControllerProperties implements Serializable {
     excludedNodeRegexList.add("ForestDnsZones");
   }
 
+  // TODO move to user props
   public String createDefaultUserPrincipalName(String samAccountName) {
     return samAccountName + "@" + createDomainNameFromBaseDn();
   }
@@ -319,14 +318,6 @@ public class DomainControllerProperties implements Serializable {
       return dn.subDn(0, dn.size() - baseDn.size());
     }
     return dn;
-  }
-
-  public Dn getParentDn(String dn) {
-    Dn sourceDn = new Dn(dn);
-    if (getBaseDn().isSame(sourceDn)) {
-      return sourceDn;
-    }
-    return sourceDn.getParent();
   }
 
   /**
