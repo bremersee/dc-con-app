@@ -72,17 +72,6 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
     return !isEmpty(ou.getDescription()) && ou.getDescription().toLowerCase().contains(query);
   }
 
-  /*
-  OrganizationalUnit withFormattedDn(OrganizationalUnit organizationalUnit) {
-    if (isEmpty(organizationalUnit) || isEmpty(organizationalUnit.getDistinguishedName())) {
-      return organizationalUnit;
-    }
-    return organizationalUnit.toBuilder()
-        .distinguishedName(new Dn(organizationalUnit.getDistinguishedName()).format())
-        .build();
-  }
-  */
-
   @Override
   public Page<OrganizationalUnit> getOrganizationalUnits(Pageable pageable, String query) {
     Stream<OrganizationalUnit> ous = getOrganizationalUnitsWithSystemOus();
@@ -100,18 +89,21 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
   }
 
   @Override
+  public Stream<OrganizationalUnit> getOrganizationalUnits() {
+    return repository.findAll().sorted(Comparator.comparing(OrganizationalUnit::getNameTree));
+  }
+
+  @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithBase() {
     return Stream.concat(
         Stream.of(base),
         repository.findAll()
-            //.map(this::withFormattedDn)
             .sorted(Comparator.comparing(OrganizationalUnit::getNameTree)));
   }
 
   @Override
   public Stream<OrganizationalUnit> getOrganizationalUnitsWithSystemOus() {
     return repository.findAllWithSystemOus()
-        //.map(this::withFormattedDn)
         .sorted(Comparator.comparing(OrganizationalUnit::getNameTree));
   }
 
@@ -127,9 +119,7 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
         .flatMap(repository::findOne)
         .or(() -> Optional.ofNullable(ou)
             .filter(dn -> dn.isSame(properties.getBaseDn()))
-            .map(baseDn -> base))
-        //.map(this::withFormattedDn)
-        ;
+            .map(baseDn -> base));
   }
 
   @Override

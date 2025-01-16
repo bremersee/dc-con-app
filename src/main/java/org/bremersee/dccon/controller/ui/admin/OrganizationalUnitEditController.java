@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.controller.ui.components.RedirectComponent;
@@ -69,7 +70,11 @@ public class OrganizationalUnitEditController extends AbstractEditController
 
   @ModelAttribute("ous")
   public List<OrganizationalUnit> addOrganisationalUnits() {
-    return organizationalUnitService.getOrganizationalUnitsWithBase().toList();
+    Stream<OrganizationalUnit> baseStream = Stream.of(organizationalUnitService.getBase());
+    Stream<OrganizationalUnit> otherParentsStream = organizationalUnitService
+        .getOrganizationalUnits()
+        .filter(ou -> !ou.getSystemOu());
+    return Stream.concat(baseStream, otherParentsStream).toList();
   }
 
   @GetMapping(path = "/admin/organizational-unit-edit")
