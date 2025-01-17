@@ -29,7 +29,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
@@ -205,18 +204,13 @@ public class DnsZoneRepositoryImpl extends AbstractDnsZoneRepository implements 
       final String zoneName,
       final CommandExecutorResponseParser<T> parser) {
 
-    kinit();
     final List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("dns");
     commands.add(dnsCommand);
     commands.add(getProperties().getNameServerHost());
     commands.add(zoneName);
-    auth(commands);
-    return CommandExecutor.exec(
-        commands, null, getProperties().getCli().getExecDir(), parser);
+    return executeAndGet(commands, parser);
   }
 
 }

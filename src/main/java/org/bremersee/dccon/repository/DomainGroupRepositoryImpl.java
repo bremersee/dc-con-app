@@ -42,9 +42,7 @@ import org.bremersee.dccon.model.SamAccount;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.mapper.DomainGroupLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
@@ -253,7 +251,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   @Override
-  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou, TreeSearchScope searchScope) {
+  public Stream<DomainGroupMember> getMembers(String groupName, Dn ou,
+      TreeSearchScope searchScope) {
     DomainGroup group = findOne(groupName, ou, searchScope)
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
             DomainGroup.class.getSimpleName(), groupName, EC_SAM_ACCOUNT_NOT_FOUND));
@@ -433,10 +432,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
    */
   String doAdd(DomainGroup domainGroup, Dn ouDn) {
     Dn ou = getProperties().removeBaseDn(validateOu(ouDn));
-    kinit();
-    final List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
+    List<String> commands = new ArrayList<>();
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("group");
     commands.add("add");
@@ -452,11 +448,8 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     if (!isEmpty(ou) && !ou.isEmpty()) {
       commands.add("--groupou=" + quote(ou.format()));
     }
-    //auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> getDomainRepository().findDnOfSamAccount(domainGroup)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding group '%s' failed: %s",
@@ -550,10 +543,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     boolean emailChanged = !Objects.equals(oldEmail, newEmail);
 
     if (cnChanged || samAccountNameChanged || emailChanged) {
-      kinit();
       List<String> commands = new ArrayList<>();
-      ssh(commands);
-      sudo(commands);
       commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("group");
       commands.add("rename");
@@ -567,12 +557,9 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       if (emailChanged) {
         commands.add(" --mail-address=" + quote(oldEmail));
       }
-      auth(commands);
-      CommandExecutor.exec(
+      execute(
           commands,
-          null,
-          getProperties().getCli().getExecDir(),
-          (CommandExecutorResponseValidator) response -> this
+          response -> this
               .findOne(
                   newSamAccountName,
                   oldParentDn,
@@ -586,22 +573,16 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     Dn newParentDn = newDn.getParent();
     if (!oldParentDn.isSame(newParentDn)) {
       String ou = getProperties().removeBaseDn(newParentDn).format();
-      kinit();
       List<String> commands = new ArrayList<>();
-      ssh(commands);
-      sudo(commands);
       commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("group");
       commands.add("move");
       commands.add(quote(newSamAccountName));
       commands.add(quote(ou));
-      auth(commands);
 
-      CommandExecutor.exec(
+      execute(
           commands,
-          null,
-          getProperties().getCli().getExecDir(),
-          (CommandExecutorResponseValidator) response -> getDomainRepository()
+          response -> getDomainRepository()
               .findDnOfSamAccountName(newSamAccountName)
               .filter(groupDn -> new Dn(groupDn).isSame(newDn))
               .orElseThrow(() -> ServiceException
@@ -644,19 +625,13 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
    * @param groupName the group name
    */
   boolean doDelete(String groupName) {
-    kinit();
-    final List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
+    List<String> commands = new ArrayList<>();
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("group");
     commands.add("delete");
     commands.add(quote(groupName));
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> {
           if (getDomainRepository().samAccountNameExists(groupName)) {
             throw ServiceException.internalServerError(

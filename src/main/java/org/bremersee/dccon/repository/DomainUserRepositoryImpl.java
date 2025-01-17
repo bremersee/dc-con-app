@@ -39,9 +39,7 @@ import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.dccon.repository.img.ImageUtils;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.AbstractLdaptiveErrorHandler;
@@ -399,10 +397,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
         Optional.ofNullable(userOu).map(Dn::format).orElse(null), useUsernameAsCn);
     boolean usernameAsCn = requireNonNullElse(
         useUsernameAsCn, getProperties().getUser().isUseUsernameAsCn());
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("user");
     commands.add("add");
@@ -428,12 +423,9 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
       commands.add("--gid-number=" + domainUser.getGidNumber());
       commands.add("--uid=" + quote(domainUser.getUid()));
     }
-    auth(commands);
 
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> getDomainRepository().findDnOfSamAccount(domainUser)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding user '%s' failed. %s",
@@ -644,22 +636,16 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     String oldSamAccountName = oldDomainUser.getSamAccountName();
     String newSamAccountName = newDomainUser.getSamAccountName();
     if (!oldCn.equals(newCn) || !oldSamAccountName.equals(newSamAccountName)) {
-      kinit();
       List<String> commands = new ArrayList<>();
-      ssh(commands);
-      sudo(commands);
       commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("user");
       commands.add("rename");
       commands.add(quote(oldSamAccountName));
       commands.add("--samaccountname=" + quote(newSamAccountName));
       commands.add("--force-new-cn=" + quote(newCn));
-      auth(commands);
-      CommandExecutor.exec(
+      execute(
           commands,
-          null,
-          getProperties().getCli().getExecDir(),
-          (CommandExecutorResponseValidator) response -> this
+          response -> this
               .findOne(
                   newSamAccountName,
                   oldParentDn,
@@ -673,22 +659,16 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     Dn newParentDn = newDn.getParent();
     if (!oldParentDn.isSame(newParentDn)) {
       String ou = getProperties().removeBaseDn(newParentDn).format();
-      kinit();
       List<String> commands = new ArrayList<>();
-      ssh(commands);
-      sudo(commands);
       commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("user");
       commands.add("move");
       commands.add(quote(newSamAccountName));
       commands.add(quote(ou));
-      auth(commands);
 
-      CommandExecutor.exec(
+      execute(
           commands,
-          null,
-          getProperties().getCli().getExecDir(),
-          (CommandExecutorResponseValidator) response -> getDomainRepository()
+          response -> getDomainRepository()
               .findDnOfSamAccountName(newSamAccountName)
               .filter(userDn -> new Dn(userDn).isSame(newDn))
               .orElseThrow(() -> ServiceException
@@ -784,19 +764,13 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
    * @param userName the username
    */
   boolean doDelete(String userName) {
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("user");
     commands.add("delete");
     commands.add(quote(userName));
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> {
           if (getDomainRepository().samAccountNameExists(userName)) {
             throw ServiceException.internalServerError(

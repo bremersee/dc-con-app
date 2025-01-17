@@ -41,43 +41,43 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
   class Default extends AbstractCommandExecutorResponseParser<DnsZone>
       implements DnsZoneParser {
 
+    private static final String ZONE_NAME = "pszZoneName";
+
+    private static final String ZONE_TYPE = "dwZoneType";
+
+    private static final String IS_REVERSE = "fReverse";
+
+    private static final String ALLOW_UPDATE = "fAllowUpdate";
+
+    private static final String IS_PAUSED = "fPaused";
+
+    private static final String IS_SHUTDOWN = "fShutdown";
+
+    private static final String IS_AUTO_CREATED = "fAutoCreated";
+
+    private static final String IS_USING_DATABASE = "fUseDatabase";
+
+    private static final String DATA_FILE = "pszDataFile";
+
+    private static final String IS_USING_WINS = "fUseWins";
+
+    private static final String IS_USING_NBSTAT = "fUseNbstat";
+
+    private static final String IS_AGING = "fAging";
+
+    private static final String FQDN = "pszDpFqdn";
+
+    private static final String ZONE_DN = "pwszZoneDn";
+
+    private static final String IS_QUEUED_FOR_BACKGROUND_LOAD = "fQueuedForBackgroundLoad";
+
+    private static final String IS_BACKGROUND_LOAD_IN_PRPGRESS = "fBackgroundLoadInProgress";
+
+    private static final String IS_READ_ONLY_ZONE = "fReadOnlyZone";
+
     private static DnsZoneParser.Default INSTANCE;
 
-    static final String ZONE_NAME = "pszZoneName";
-
-    static final String ZONE_TYPE = "dwZoneType";
-
-    static final String IS_REVERSE = "fReverse";
-
-    static final String ALLOW_UPDATE = "fAllowUpdate";
-
-    static final String IS_PAUSED = "fPaused";
-
-    static final String IS_SHUTDOWN = "fShutdown";
-
-    static final String IS_AUTO_CREATED = "fAutoCreated";
-
-    static final String IS_USING_DATABASE = "fUseDatabase";
-
-    static final String DATA_FILE = "pszDataFile";
-
-    static final String IS_USING_WINS = "fUseWins";
-
-    static final String IS_USING_NBSTAT = "fUseNbstat";
-
-    static final String IS_AGING = "fAging";
-
-    static final String FQDN = "pszDpFqdn";
-
-    static final String ZONE_DN = "pwszZoneDn";
-
-    static final String IS_QUEUED_FOR_BACKGROUND_LOAD = "fQueuedForBackgroundLoad";
-
-    static final String IS_BACKGROUND_LOAD_IN_PRPGRESS = "fBackgroundLoadInProgress";
-
-    static final String IS_READ_ONLY_ZONE = "fReadOnlyZone";
-
-    public static DnsZoneParser.Default getInstance() {
+    public static DnsZoneParser getInstance() {
       if (isNull(INSTANCE)) {
         INSTANCE = new DnsZoneParser.Default();
       }

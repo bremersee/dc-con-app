@@ -34,6 +34,9 @@ import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.DistinguishedNameProvider;
 import org.bremersee.dccon.model.NisDomainMember;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
@@ -57,9 +60,7 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
 
   private static final String KINIT_PASSWORD_FILE = "--password-file={}";
 
-  private static final String USE_KERBEROS = "-k";
-
-  private static final String YES = "yes";
+  private static final String USE_KERBEROS = "--use-kerberos=required";
 
   @Getter(AccessLevel.PACKAGE)
   private final DomainControllerProperties properties;
@@ -129,50 +130,59 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
   /**
    * Calls linux command {@code kinit} for authentication.
    */
-  void kinit() {
-    if (getProperties().getCli().getKinit().isUsingKinit()) {
-      synchronized (KINIT_LOCK) {
-        List<String> commands = new ArrayList<>();
-        sudo(commands);
-        commands.add(properties.getCli().getKinit().getKinitBinary());
-        commands.add(KINIT_PASSWORD_FILE.replace("{}",
-            properties.getCli().getKinit().getKinitPasswordFile()));
-        commands.add(properties.getCli().getKinit().getKinitAdministratorName());
-        CommandExecutor.exec(commands, properties.getCli().getExecDir());
+  private void kinit() {
+    synchronized (KINIT_LOCK) {
+      List<String> commands = new ArrayList<>();
+      if (getProperties().getCli().getSudo().isUsingSudo()) {
+        commands.add(properties.getCli().getSudo().getSudoCommand());
+      }
+      commands.add(properties.getCli().getKinit().getKinitBinary());
+      commands.add(KINIT_PASSWORD_FILE.replace("{}",
+          properties.getCli().getKinit().getKinitPasswordFile()));
+      commands.add(properties.getCli().getKinit().getKinitAdministratorName());
+      CommandExecutor.exec(commands, properties.getCli().getExecDir());
+    }
+  }
+
+  CommandExecutorResponse execute(List<String> commands) {
+    return executeAndGet(commands, response -> response);
+  }
+
+  void execute(List<String> commands, CommandExecutorResponseValidator responseValidator) {
+    executeAndGet(commands, (CommandExecutorResponseParser<?>) responseValidator);
+  }
+
+  <T> T executeAndGet(List<String> commands, CommandExecutorResponseParser<T> responseParser) {
+    if (isEmpty(commands)) {
+      return null;
+    }
+    boolean isSambaToolCommand = commands.stream()
+        .anyMatch(cmd -> cmd
+            .equalsIgnoreCase(getProperties().getCli().getSambaToolBinary()));
+    List<String> extendedCommands = new ArrayList<>();
+    if (isSambaToolCommand && getProperties().getCli().getKinit().isUsingKinit()) {
+      kinit();
+    } else if (getProperties().getCli().getSsh().isUsingSsh()) {
+      extendedCommands.add(properties.getCli().getSsh().getSshCommand());
+    }
+    if (getProperties().getCli().getSudo().isUsingSudo()) {
+      extendedCommands.add(properties.getCli().getSudo().getSudoCommand());
+    }
+    extendedCommands.addAll(commands);
+    if (isSambaToolCommand && getProperties().getCli().getKinit().isUsingKinit()) {
+      extendedCommands.add(USE_KERBEROS);
+    } else if (isSambaToolCommand) {
+      boolean needsSambaToolCredentials = commands.stream()
+          .anyMatch(cmd -> cmd.equalsIgnoreCase("dns"));
+      if (needsSambaToolCredentials) {
+        extendedCommands.add(getProperties().getCli().getSambaToolCredentialsOptions());
       }
     }
-  }
-
-  void ssh(List<String> commands) {
-    if (getProperties().getCli().getSsh().isUsingSsh()) {
-      Assert.isTrue(!properties.getCli().getKinit().isUsingKinit(),
-          "Using ssh with kinit is not supported.");
-      commands.add(properties.getCli().getSsh().getSshCommand());
-    }
-  }
-
-  /**
-   * Calls linux command {@code sudo}.
-   *
-   * @param commands the commands
-   */
-  void sudo(List<String> commands) {
-    if (properties.getCli().getSudo().isUsingSudo()) {
-      commands.add(properties.getCli().getSudo().getSudoCommand());
-    }
-  }
-
-  /**
-   * Adds the use kerberos option of the linux command {@code samba-tool} to the list of commands.
-   * This requires a successful authentication with {@code kinit}, see {@link #kinit()}.
-   *
-   * @param commands the commands
-   */
-  void auth(List<String> commands) {
-    if (getProperties().getCli().getKinit().isUsingKinit()) {
-      commands.add(USE_KERBEROS);
-      commands.add(YES);
-    }
+    return CommandExecutor.exec(
+        extendedCommands,
+        null,
+        getProperties().getCli().getExecDir(),
+        responseParser);
   }
 
   abstract Dn getDefaultOu();

@@ -3,7 +3,6 @@ package org.bremersee.dccon.repository;
 import static java.util.Objects.isNull;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -17,7 +16,6 @@ import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
@@ -144,39 +142,28 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     } else {
       samAccountName = name;
     }
-    kinit();
-    List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
-    commands.add(getProperties().getCli().getSambaToolBinary());
-    commands.add("computer");
-    commands.add("delete");
-    commands.add(samAccountName);
-    auth(commands);
-    return CommandExecutor.exec(
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "computer",
+        "delete",
+        samAccountName
+    );
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> findOne(name, null, null).isEmpty());
   }
 
   DomainComputer move(DomainComputer domainComputer, Dn newOu) {
     String ou = getProperties().removeBaseDn(newOu).format();
-    kinit();
-    List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
-    commands.add(getProperties().getCli().getSambaToolBinary());
-    commands.add("computer");
-    commands.add("move");
-    commands.add(domainComputer.getSamAccountNameWithoutTrailingDollarSign());
-    commands.add(quote(ou));
-    auth(commands);
-
-    String newDn = CommandExecutor.exec(
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "computer",
+        "move",
+        domainComputer.getSamAccountNameWithoutTrailingDollarSign(),
+        quote(ou)
+    );
+    String newDn = executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> getDomainRepository()
             .findDnOfSamAccountName(domainComputer.getSamAccountName())
             .orElseThrow(() -> ServiceException

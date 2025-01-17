@@ -265,11 +265,8 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       return;
     }
 
-    kinit();
     for (final DnsRecord record : records) {
       final List<String> commands = new ArrayList<>();
-      ssh(commands);
-      sudo(commands);
       commands.add(getProperties().getCli().getSambaToolBinary());
       commands.add("dns");
       commands.add("add");
@@ -278,8 +275,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       commands.add(nodeName);
       commands.add(record.getRecordType());
       commands.add(record.getRecordValue());
-      auth(commands);
-      CommandExecutor.exec(commands, getProperties().getCli().getExecDir());
+      execute(commands);
     }
   }
 

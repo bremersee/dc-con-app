@@ -31,7 +31,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.PasswordInformationParser;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.LdapAttribute;
@@ -147,7 +146,7 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
   @Override
   public String getDomainSid() {
     String baseDn = getProperties().getBaseDn().format();
-    String[] returnAttributes = new String[] {
+    String[] returnAttributes = new String[]{
         LDAP_OBJECT_SID
     };
     return getLdapTemplate()
@@ -171,19 +170,13 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
   @Override
   public PasswordInformation getPasswordInformation() {
     log.debug("getPasswordInformation()");
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("domain");
     commands.add("passwordsettings");
     commands.add("show");
-    auth(commands);
-    PasswordInformation raw = CommandExecutor.exec(
+    PasswordInformation raw = executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         passwordInformationParser);
     int minLength = raw.getMinimumPasswordLength();
     int maxLength = Math.max(getProperties().getMaximumPasswordLength(), minLength);

@@ -25,7 +25,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
 import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,20 +105,14 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
    * @param all specifies whether to return all leases or only active ones
    * @return the dhcp leases
    */
-  List<DhcpLease> find(final boolean all) {
-    final List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
+  List<DhcpLease> find(boolean all) {
+    List<String> commands = new ArrayList<>(3);
     commands.add(getProperties().getCli().getDhcpLeaseListBinary());
     commands.add("--parsable");
     if (all) {
       commands.add("--all");
     }
-    return CommandExecutor.exec(
-        commands,
-        null,
-        getProperties().getCli().getExecDir(),
-        parser);
+    return executeAndGet(commands, parser);
   }
 
   @Override

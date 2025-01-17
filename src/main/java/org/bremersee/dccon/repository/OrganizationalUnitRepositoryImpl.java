@@ -31,7 +31,6 @@ import org.bremersee.dccon.config.DomainUserProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.mapper.OrganizationalUnitLdapMapper;
 import org.bremersee.exception.ServiceException;
@@ -205,10 +204,7 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
           organizationalUnit.getName(),
           EC_OU_ALREADY_EXISTS);
     }
-    kinit();
-    final List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
+    List<String> commands = new ArrayList<>();
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("add");
@@ -216,11 +212,8 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     if (!isEmpty(organizationalUnit.getDescription())) {
       commands.add("--description=" + quote(organizationalUnit.getDescription()));
     }
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> findOne(dn)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding organization unit '%s' failed: %s",
@@ -300,59 +293,43 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
     Dn newDn = new Dn(new RDn(
         new NameValue(LDAP_OU, oldDn.getRDn().getNameValue().getStringValue())));
     newDn.add(newParentOu);
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("move");
     commands.add(quote(oldDn.format()));
     commands.add(quote(newParentOu.format()));
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
-        response -> {
-          return findOne(newDn)
-              .map(OrganizationalUnit::getDistinguishedName)
-              .map(Dn::new)
-              .orElseThrow(() -> ServiceException.internalServerError(String.format(
-                      "Moving organization unit '%s' to '%s' failed: %s",
-                      oldDn.format(), newParentOu.format(),
-                      CommandExecutorResponse.toExceptionMessage(response)),
-                  ErrorCode.EC_UPDATING_OU_FAILED));
-        });
+        response -> findOne(newDn)
+            .map(OrganizationalUnit::getDistinguishedName)
+            .map(Dn::new)
+            .orElseThrow(() -> ServiceException.internalServerError(String.format(
+                    "Moving organization unit '%s' to '%s' failed: %s",
+                    oldDn.format(), newParentOu.format(),
+                    CommandExecutorResponse.toExceptionMessage(response)),
+                ErrorCode.EC_UPDATING_OU_FAILED)));
   }
 
   Dn rename(Dn ou, String newName) {
     Dn newDn = new Dn(new RDn(new NameValue(LDAP_OU, newName)));
     newDn.add(ou.getParent());
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("rename");
     commands.add(quote(ou.format()));
     commands.add(quote(newDn.format(rdn -> rdn)));
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
-        response -> {
-          return findOne(newDn)
-              .map(OrganizationalUnit::getDistinguishedName)
-              .map(Dn::new)
-              .orElseThrow(() -> ServiceException.internalServerError(String.format(
-                      "Renaming organization unit '%s' to '%s' failed: %s",
-                      ou.format(), newName,
-                      CommandExecutorResponse.toExceptionMessage(response)),
-                  ErrorCode.EC_UPDATING_OU_FAILED));
-        });
+        response -> findOne(newDn)
+            .map(OrganizationalUnit::getDistinguishedName)
+            .map(Dn::new)
+            .orElseThrow(() -> ServiceException.internalServerError(String.format(
+                    "Renaming organization unit '%s' to '%s' failed: %s",
+                    ou.format(), newName,
+                    CommandExecutorResponse.toExceptionMessage(response)),
+                ErrorCode.EC_UPDATING_OU_FAILED)));
   }
 
   @ProfileRequired({"cli", "ldap"})
@@ -369,19 +346,13 @@ public class OrganizationalUnitRepositoryImpl extends AbstractRepository
   }
 
   boolean doDelete(Dn ou) {
-    kinit();
     List<String> commands = new ArrayList<>();
-    ssh(commands);
-    sudo(commands);
     commands.add(getProperties().getCli().getSambaToolBinary());
     commands.add("ou");
     commands.add("delete");
     commands.add(quote(ou.format()));
-    auth(commands);
-    return CommandExecutor.exec(
+    return executeAndGet(
         commands,
-        null,
-        getProperties().getCli().getExecDir(),
         response -> {
           if (exists(ou)) {
             throw ServiceException
