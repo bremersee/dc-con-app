@@ -33,24 +33,4 @@ abstract class AbstractDomainRepository extends AbstractRepository implements Do
     super(properties, ldapTemplate);
   }
 
-  @Override
-  Dn getDefaultOu() {
-    return getProperties().getDomain().getDefaultSystemOu();
-  }
-
-  @Override
-  String getObjectClassValue() {
-    return "";
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    return new String[0];
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    return new String[0];
-  }
-
 }

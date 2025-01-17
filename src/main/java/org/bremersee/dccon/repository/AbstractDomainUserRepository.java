@@ -35,7 +35,7 @@ import org.springframework.context.event.EventListener;
  * @author Christian Bremer
  */
 @Slf4j
-abstract class AbstractDomainUserRepository extends AbstractRepository
+abstract class AbstractDomainUserRepository extends AbstractOrganizedEntryRepository
     implements DomainUserRepository {
 
   @Getter(AccessLevel.PACKAGE)

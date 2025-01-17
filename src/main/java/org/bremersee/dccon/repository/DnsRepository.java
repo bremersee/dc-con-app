@@ -16,11 +16,29 @@
 
 package org.bremersee.dccon.repository;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import java.util.Optional;
+import java.util.stream.Stream;
+import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZoneType;
+import org.ldaptive.dn.Dn;
+import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
+
 /**
  * The interface DnsRepository.
  *
  * @author Christian Bremer
  */
+@Validated
 public interface DnsRepository {
+
+  Stream<DnsZone> findDnsZones(@Nullable DnsZoneType type);
+
+  Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
+
+  Stream<DnsEntry> findDnsEntries(@NotNull Dn zoneDn);
 
 }

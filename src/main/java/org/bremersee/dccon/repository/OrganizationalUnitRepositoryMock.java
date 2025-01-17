@@ -53,26 +53,6 @@ public class OrganizationalUnitRepositoryMock extends AbstractRepository
   }
 
   @Override
-  Dn getDefaultOu() {
-    return getProperties().getBaseDn();
-  }
-
-  @Override
-  String getObjectClassValue() {
-    return LDAP_OBJECT_CLASS_OU;
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    return LDAP_OU_BINARY_ATTRIBUTES;
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    return LDAP_OU_MAPPED_ATTRIBUTES;
-  }
-
-  @Override
   public void resetData() {
     /*
     store.getOuRepo().clear();

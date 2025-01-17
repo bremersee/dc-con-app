@@ -115,9 +115,4 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
     return executeAndGet(commands, parser);
   }
 
-  @Override
-  Dn getDefaultOu() {
-    // TODO
-    return null;
-  }
 }

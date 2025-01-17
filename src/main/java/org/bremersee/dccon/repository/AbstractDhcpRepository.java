@@ -38,23 +38,4 @@ abstract class AbstractDhcpRepository extends AbstractRepository {
     super(properties, ldapTemplate);
   }
 
-  @Override
-  Dn getDefaultOu() {
-    throw new UnsupportedOperationException("There is no default Dn for dhcp configured.");
-  }
-
-  @Override
-  String getObjectClassValue() {
-    throw new UnsupportedOperationException("There is no object class value for dhcp configured.");
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    throw new UnsupportedOperationException("There are no binary attributes for dhcp configured.");
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    throw new UnsupportedOperationException("There are no return attributes for dhcp configured.");
-  }
 }

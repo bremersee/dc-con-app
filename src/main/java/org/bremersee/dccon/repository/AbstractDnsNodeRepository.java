@@ -84,27 +84,6 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
     this.patternIp4 = Pattern.compile(properties.getIp4Regex());
   }
 
-  @Override
-  Dn getDefaultOu() {
-    // TODO
-    return getProperties().getBaseDn();
-  }
-
-  @Override
-  String getObjectClassValue() {
-    return "";
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    return new String[0];
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    return new String[0];
-  }
-
   /**
    * Is non excluded dns node boolean.
    *

@@ -185,23 +185,6 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
         responseParser);
   }
 
-  abstract Dn getDefaultOu();
-
-  Dn validateOu(Dn ou) {
-    Dn ouDn = isEmpty(ou) || ou.isEmpty() ? getDefaultOu() : ou;
-    if (isEmpty(ouDn) || ouDn.isEmpty()) {
-      throw LdaptiveException.badRequest(
-          "Organizational unit cannot be empty.", EC_EMPTY_OU_RDN);
-    }
-    Dn dn = getProperties().getBaseDn(ouDn);
-    if (!isEmpty(getLdapTemplate()) && !getLdapTemplate().exists(dn.format())) {
-      throw LdaptiveException.badRequest(
-          String.format("Organizational unit '%s' does not exist.", ouDn.format()),
-          EC_OU_NOT_FOUND);
-    }
-    return ouDn;
-  }
-
   String validateDn(CommonAttributes object, String dn) {
     if (isEmpty(object.getDistinguishedName())) {
       object.setDistinguishedName(dn);
@@ -211,101 +194,12 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
       if (new Dn(dn).isSame(new Dn(object.getDistinguishedName()))) {
         return dn;
       }
-
     } catch (RuntimeException e) {
       // ignored
     }
     throw ServiceException.badRequest(String.format("Distinguished name of object '%s' is not "
             + "the same distinguished name of the ldap entry '%s'.",
         object.getDistinguishedName(), dn), EC_ILLEGAL_DN);
-  }
-
-  String getNisDomain(NisDomainMember nisDomainMember) {
-    return !isEmpty(nisDomainMember) && !isEmpty(nisDomainMember.getNisDomain())
-        ? nisDomainMember.getNisDomain()
-        : getProperties().getDomain().getDefaultNisDomain();
-  }
-
-
-  abstract String getObjectClassValue();
-
-  String getUniqueNameAttributeName() {
-    return LDAP_SAM_ACCOUNT_NAME;
-  }
-
-  abstract String[] getBinaryAttributes();
-
-  abstract String[] getReturnAttributes();
-
-  Filter objectClassFilter() {
-    return new EqualityFilter(LDAP_OBJECT_CLASS, getObjectClassValue());
-  }
-
-  Filter findOneFilter(String uniqueName) {
-    return new AndFilter(
-        objectClassFilter(),
-        new EqualityFilter(getUniqueNameAttributeName(), uniqueName));
-  }
-
-  SearchRequest searchOneRequest(
-      String uniqueName,
-      String... returnAttributes) {
-    return searchOneRequest(uniqueName, null, null, returnAttributes);
-  }
-
-  SearchRequest searchOneRequest(
-      String uniqueName,
-      Dn ouRdn,
-      SearchScope scope,
-      String... returnAttributes) {
-    return searchOneRequest(uniqueName, ouRdn, null, scope, returnAttributes);
-  }
-
-  SearchRequest searchOneRequest(
-      String uniqueName,
-      Dn ouRdn,
-      Filter filter,
-      SearchScope scope,
-      String... returnAttributes) {
-
-    if (getProperties().isDn(uniqueName)) {
-      return SearchRequest.builder()
-          .dn(uniqueName)
-          .filter(objectClassFilter())
-          .scope(SearchScope.OBJECT)
-          .binaryAttributes(getBinaryAttributes())
-          .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
-          .sizeLimit(1)
-          .build();
-    }
-    Dn ouDn = getProperties().getBaseDn(ouRdn);
-    return SearchRequest.builder()
-        .dn(ouDn.format())
-        .filter(requireNonNullElseGet(filter, () -> findOneFilter(uniqueName)))
-        .scope(Optional.ofNullable(scope)
-            .filter(searchScope -> !ouDn.isSame(getProperties().getBaseDn()))
-            .orElse(SearchScope.SUBTREE))
-        .binaryAttributes(getBinaryAttributes())
-        .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
-        .sizeLimit(1)
-        .build();
-  }
-
-  SearchRequest searchAllRequest(
-      Dn ouRdn,
-      Filter filter,
-      SearchScope scope,
-      String... returnAttributes) {
-    Dn ouDn = getProperties().getBaseDn(ouRdn);
-    return SearchRequest.builder()
-        .dn(ouDn.format())
-        .filter(filter)
-        .scope(Optional.ofNullable(scope)
-            .filter(searchScope -> !ouDn.isSame(getProperties().getBaseDn()))
-            .orElse(SearchScope.SUBTREE))
-        .binaryAttributes(getBinaryAttributes())
-        .returnAttributes(isEmpty(returnAttributes) ? getReturnAttributes() : returnAttributes)
-        .build();
   }
 
 

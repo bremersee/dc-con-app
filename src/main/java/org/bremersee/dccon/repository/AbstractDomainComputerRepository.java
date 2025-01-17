@@ -4,7 +4,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.dn.Dn;
 
-abstract class AbstractDomainComputerRepository extends AbstractRepository
+abstract class AbstractDomainComputerRepository extends AbstractOrganizedEntryRepository
     implements DomainComputerRepositoryConstants {
 
   /**

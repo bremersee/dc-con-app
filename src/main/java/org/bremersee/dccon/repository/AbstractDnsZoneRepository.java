@@ -38,24 +38,4 @@ public class AbstractDnsZoneRepository extends AbstractRepository {
     super(properties, ldapTemplate);
   }
 
-  @Override
-  Dn getDefaultOu() {
-    // TODO
-    return new Dn("CN=MicrosoftDNS,DC=DomainDnsZones");
-  }
-
-  @Override
-  String getObjectClassValue() {
-    return "";
-  }
-
-  @Override
-  String[] getBinaryAttributes() {
-    return new String[0];
-  }
-
-  @Override
-  String[] getReturnAttributes() {
-    return new String[0];
-  }
 }
