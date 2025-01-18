@@ -63,11 +63,6 @@ public class ComputersController extends AbstractController
   }
 
   @Override
-  public Dn getDefaultOrganizationalUnit() {
-    return getProperties().getComputer().getDefaultOu();
-  }
-
-  @Override
   public TreeSearchScope getDefaultSearchScope() {
     return getProperties().getComputer().getDefaultSearchScope();
   }

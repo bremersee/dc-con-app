@@ -63,11 +63,6 @@ public class GroupsController extends AbstractController
   }
 
   @Override
-  public Dn getDefaultOrganizationalUnit() {
-    return getProperties().getGroup().getDefaultOu();
-  }
-
-  @Override
   public TreeSearchScope getDefaultSearchScope() {
     return getProperties().getGroup().getDefaultSearchScope();
   }

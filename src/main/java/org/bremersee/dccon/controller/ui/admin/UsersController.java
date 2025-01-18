@@ -63,11 +63,6 @@ public class UsersController extends AbstractController
   }
 
   @Override
-  public Dn getDefaultOrganizationalUnit() {
-    return getProperties().getUser().getDefaultOu();
-  }
-
-  @Override
   public TreeSearchScope getDefaultSearchScope() {
     return getProperties().getUser().getDefaultSearchScope();
   }

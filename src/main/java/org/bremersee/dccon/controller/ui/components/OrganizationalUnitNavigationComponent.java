@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.controller.ui.components;
 
-import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import org.bremersee.dccon.controller.DomainControllerPropertiesProvider;
@@ -41,9 +40,6 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
 
   OrganizationalUnitService getOrganizationalUnitService();
 
-  @NotNull
-  Dn getDefaultOrganizationalUnit();
-
   TreeSearchScope getDefaultSearchScope();
 
   default void addOrganizationalUnitDropdown(ModelMap model, OrganizationalUnitDropdown selector) {
@@ -56,7 +52,7 @@ public interface OrganizationalUnitNavigationComponent extends DomainControllerP
 
     Dn selectedOuDn = getProperties().getBaseDn(Optional.ofNullable(ou)
         .filter(dn -> getOrganizationalUnitService().organisationUnitExists(dn))
-        .orElseGet(this::getDefaultOrganizationalUnit));
+        .orElse(null));
     List<OrganizationalUnit> orgUnits = getOrganizationalUnitService()
         .getOrganizationalUnitsWithSystemOusAndBase()
         .toList();
