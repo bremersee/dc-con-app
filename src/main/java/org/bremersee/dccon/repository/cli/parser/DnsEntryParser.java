@@ -20,6 +20,9 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DnsEntry;
@@ -30,16 +33,18 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
  *
  * @author Christian Bremer
  */
-public interface DnsEntryParser extends CommandExecutorResponseParser<DnsEntry> {
+public interface DnsEntryParser extends CommandExecutorResponseParser<Stream<DnsEntry>> {
 
   static DnsEntryParser defaultParser() {
     return Default.INSTANCE;
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  class Default extends AbstractCommandExecutorResponseParser<DnsEntry> implements DnsEntryParser {
+  class Default extends AbstractCommandExecutorResponseParser<Stream<DnsEntry>> implements DnsEntryParser {
 
-    private static final String FLAGS = "flags=";
+    private static final String NAME = "Name=";
+
+    private static final String FLAGS = "(flags=";
 
     private static final String SERIAL = "serial=";
 
@@ -55,47 +60,50 @@ public interface DnsEntryParser extends CommandExecutorResponseParser<DnsEntry> 
     }
 
     @Override
-    protected DnsEntry doParse(BufferedReader reader) throws IOException {
-      DnsEntry entry = new DnsEntry();
+    protected Stream<DnsEntry> doParse(BufferedReader reader) throws IOException {
+      Stream<DnsEntry> entries = Stream.empty();
       String line;
       while ((line = reader.readLine()) != null) {
-        line = line.trim();
-        int start = line.indexOf(':');
-        if (start == -1) {
-          continue;
-        }
-        entry.setType(line.substring(0, start).trim());
-        int end = line.indexOf('(', start + 1);
-        if (end == -1) {
-          end = line.length();
-        }
-        entry.setValue(line.substring(start + 1, end).trim());
-        if (end == line.length()) {
-          continue;
-        }
-        line = line.substring(end + 1);
-        entry.setFlags(findMetaData(line, FLAGS));
-        String serial = findMetaData(line, SERIAL);
-        if (!isEmpty(serial)) {
-          try {
-            entry.setSerial(Integer.parseInt(serial));
-          } catch (NumberFormatException ignored) {
-            // ignored
-          }
-        }
-        String ttl = findMetaData(line, TTL);
-        if (!isEmpty(ttl)) {
-          try {
-            entry.setTtlSeconds(Integer.parseInt(ttl));
-          } catch (NumberFormatException ignored) {
-            // ignored
-          }
+        entries = Stream.concat(entries, doParseLine(line.trim()));
+      }
+      return entries;
+    }
+
+    protected Stream<DnsEntry> doParseLine(String line) {
+      DnsEntry entry = new DnsEntry();
+      line = line.trim();
+      int start = line.indexOf(':');
+      if (start == -1) {
+        return Stream.empty();
+      }
+      entry.setType(line.substring(0, start).trim());
+      int end = line.indexOf(FLAGS, start + 1);
+      if (end == -1) {
+        end = line.length();
+      }
+      entry.setValue(line.substring(start + 1, end).trim());
+      if (end == line.length()) {
+        return Stream.of(entry);
+      }
+      line = line.substring(end).trim();
+      entry.setFlags(findMetaData(line, FLAGS));
+      String serial = findMetaData(line, SERIAL);
+      if (!isEmpty(serial)) {
+        try {
+          entry.setSerial(Integer.parseInt(serial));
+        } catch (NumberFormatException ignored) {
+          // ignored
         }
       }
-      if (!isEmpty(entry.getType()) && !isEmpty(entry.getValue())) {
-        return entry;
+      String ttl = findMetaData(line, TTL);
+      if (!isEmpty(ttl)) {
+        try {
+          entry.setTtlSeconds(Integer.parseInt(ttl));
+        } catch (NumberFormatException ignored) {
+          // ignored
+        }
       }
-      return null;
+      return Stream.of(entry);
     }
 
     private String findMetaData(String line, String name) {

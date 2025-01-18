@@ -117,7 +117,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
             EC_SAM_ACCOUNT_NOT_FOUND));
     Dn oldDn = new Dn(existingDomainComputer.getDistinguishedName());
     Dn newDn = getNewDn(existingDomainComputer, domainComputer, newOu);
-    if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+    if (!oldDn.isSame(newDn) && dnExistsWithAnyObjectClass(newDn.format())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           getProperties().removeBaseDn(newDn),
@@ -164,8 +164,7 @@ public class DomainComputerRepositoryImpl extends AbstractDomainComputerReposito
     );
     String newDn = executeAndGet(
         commands,
-        response -> getDomainRepository()
-            .findDnOfSamAccountName(domainComputer.getSamAccountName())
+        response -> findDnOfSamAccountName(domainComputer.getSamAccountName())
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Moving user '%s' to '%s' failed. %s",
                         domainComputer.getSamAccountName(), ou,

@@ -103,7 +103,7 @@ public class DnsNodeLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
     if (ldapEntry == null) {
       return;
     }
-    mapCommonAttributes(ldapEntry, dnsNode);
+    CommonAttributesLdapMapper.mapCommonAttributes(ldapEntry, dnsNode);
     dnsNode.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
     dnsNode.setRecords(LdaptiveEntryMapper
         .getAttributeValuesAsSet(ldapEntry, "dnsRecord", DNS_RECORD_VALUE_TRANSCODER)

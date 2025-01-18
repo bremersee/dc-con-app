@@ -408,7 +408,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
       throw ServiceException.badRequest(
           "Group name (samAccountName) contains illegal characters.", EC_ILLEGAL_SAM_ACCOUNT_NAME);
     }
-    if (getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
+    if (samAccountNameExists(domainGroup.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainGroup.class.getSimpleName(),
           domainGroup.getSamAccountName(),
@@ -450,7 +450,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     }
     return executeAndGet(
         commands,
-        response -> getDomainRepository().findDnOfSamAccount(domainGroup)
+        response -> findDnOfSamAccount(domainGroup)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding group '%s' failed: %s",
                         domainGroup.getSamAccountName(),
@@ -459,7 +459,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
   }
 
   public DomainGroup update(DomainGroup domainGroup) {
-    return getDomainRepository().findDnOfSamAccount(domainGroup)
+    return findDnOfSamAccount(domainGroup)
         .map(dn -> validateDn(domainGroup, dn))
         .map(dn -> getLdapTemplate().save(domainGroup, domainGroupLdapMapper))
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
@@ -480,7 +480,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
           "Group name (samAccountName) contains illegal characters.", EC_ILLEGAL_SAM_ACCOUNT_NAME);
     }
     if (!groupName.equalsIgnoreCase(domainGroup.getSamAccountName())
-        && getDomainRepository().samAccountNameExists(domainGroup.getSamAccountName())) {
+        && samAccountNameExists(domainGroup.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainGroup.class.getSimpleName(),
           domainGroup.getSamAccountName(),
@@ -501,7 +501,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     }
     Dn oldDn = new Dn(existingDomainGroup.getDistinguishedName());
     Dn newDn = getNewDn(existingDomainGroup, domainGroup, newOu);
-    if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+    if (!oldDn.isSame(newDn) && dnExistsWithAnyObjectClass(newDn.format())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainGroup.class.getSimpleName(),
           getProperties().removeBaseDn(newDn),
@@ -582,8 +582,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
 
       execute(
           commands,
-          response -> getDomainRepository()
-              .findDnOfSamAccountName(newSamAccountName)
+          response -> findDnOfSamAccountName(newSamAccountName)
               .filter(groupDn -> new Dn(groupDn).isSame(newDn))
               .orElseThrow(() -> ServiceException
                   .internalServerError(String.format("Moving group '%s' to '%s' failed. %s",
@@ -633,7 +632,7 @@ public class DomainGroupRepositoryImpl extends AbstractDomainGroupRepository
     return executeAndGet(
         commands,
         response -> {
-          if (getDomainRepository().samAccountNameExists(groupName)) {
+          if (samAccountNameExists(groupName)) {
             throw ServiceException.internalServerError(
                 String.format("Deleting group '%s' failed: %s", groupName,
                     CommandExecutorResponse.toExceptionMessage(response)),

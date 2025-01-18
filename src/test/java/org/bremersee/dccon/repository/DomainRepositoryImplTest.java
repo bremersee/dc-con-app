@@ -47,7 +47,7 @@ class DomainRepositoryImplTest {
     DomainControllerProperties properties = new DomainControllerProperties();
 
     repository = new DomainRepositoryImpl(properties, null); // TODO ObjectProvider
-    repository.setPasswordInformationParser(PasswordInformationParser.defaultParser());
+    //repository.setPasswordInformationParser(PasswordInformationParser.defaultParser());
     repository = spy(repository);
     doReturn(model).when(repository).getPasswordInformation();
   }

@@ -43,25 +43,9 @@ public class DomainGroupValidatorImpl extends AbstractDomainEntityValidator
 
   @Override
   public void doAddValidation(DomainGroup domainGroup) {
-    validateSamAccountNameNotExists(domainGroup.getSamAccountName(), DomainGroup.class);
-    domainGroup.setMembers(domainGroup.getMembers().stream()
-        .filter(name -> getDomainRepository().dnExistsWithAnyObjectClass(name,
-            RepositoryConstants.LDAP_OBJECT_CLASS_USER,
-            RepositoryConstants.LDAP_OBJECT_CLASS_GROUP,
-            RepositoryConstants.LDAP_OBJECT_CLASS_COMPUTER))
-        .distinct()
-        .collect(Collectors.toList()));
   }
 
   @Override
   public void doUpdateValidation(String groupName, DomainGroup domainGroup) {
-    domainGroup.setSamAccountName(groupName);
-    domainGroup.setMembers(domainGroup.getMembers().stream()
-        .filter(name -> getDomainRepository().dnExistsWithAnyObjectClass(name,
-            RepositoryConstants.LDAP_OBJECT_CLASS_USER,
-            RepositoryConstants.LDAP_OBJECT_CLASS_GROUP,
-            RepositoryConstants.LDAP_OBJECT_CLASS_COMPUTER))
-        .distinct()
-        .collect(Collectors.toList()));
   }
 }

@@ -16,9 +16,6 @@
 
 package org.bremersee.dccon.repository.cli;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
 /**
  * The command executor response parser.
  *
@@ -34,13 +31,5 @@ public interface CommandExecutorResponseParser<T> {
    * @return the type of the parsed response
    */
   T parse(CommandExecutorResponse response);
-
-  default Optional<T> parseOptional(CommandExecutorResponse response) {
-    return Optional.ofNullable(parse(response));
-  }
-
-  default Stream<T> parseStream(CommandExecutorResponse response) {
-    return Stream.ofNullable(parse(response));
-  }
 
 }

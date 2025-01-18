@@ -36,24 +36,7 @@ import org.passay.PasswordGenerator;
  */
 public interface DomainRepository extends RepositoryConstants, ErrorCode {
 
-  boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses);
-
-  default boolean samAccountExists(SamAccount samAccount) {
-    return findDnOfSamAccount(samAccount).isPresent();
-  }
-
-  default boolean samAccountNameExists(String samAccountName) {
-    return findDnOfSamAccountName(samAccountName).isPresent();
-  }
-
-  default Optional<String> findDnOfSamAccount(SamAccount samAccount) {
-    if (isEmpty(samAccount)) {
-      return Optional.empty();
-    }
-    return findDnOfSamAccountName(samAccount.getSamAccountName());
-  }
-
-  Optional<String> findDnOfSamAccountName(String samAccountName);
+  String getHostName();
 
   String getDomainSid();
 

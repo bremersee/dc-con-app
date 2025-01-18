@@ -16,15 +16,15 @@
 
 package org.bremersee.dccon.repository.cli.parser;
 
-import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Objects;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
+import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
+import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.dn.Dn;
 
 /**
  * The interface DnsZoneListParser.
@@ -33,11 +33,10 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
  */
 public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
 
-  static DnsZoneParser defaultParser() {
-    return DnsZoneParser.Default.getInstance();
+  static DnsZoneParser defaultParser(LdaptiveTemplate ldaptiveTemplate) {
+    return new Default(ldaptiveTemplate);
   }
 
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   class Default extends AbstractCommandExecutorResponseParser<DnsZone>
       implements DnsZoneParser {
 
@@ -75,13 +74,10 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
 
     private static final String IS_READ_ONLY_ZONE = "fReadOnlyZone";
 
-    private static DnsZoneParser.Default INSTANCE;
+    private final LdaptiveTemplate ldaptiveTemplate;
 
-    public static DnsZoneParser getInstance() {
-      if (isNull(INSTANCE)) {
-        INSTANCE = new DnsZoneParser.Default();
-      }
-      return INSTANCE;
+    Default(LdaptiveTemplate ldaptiveTemplate) {
+      this.ldaptiveTemplate = ldaptiveTemplate;
     }
 
     protected DnsZone doParse(BufferedReader reader) throws IOException {
@@ -138,7 +134,9 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
           zone.setFqdn(line.substring(index + 1).trim());
         }
         if (lineContains(line, ZONE_DN, index)) {
-          zone.setDistinguishedName(line.substring(index + 1).trim());
+          String dn = line.substring(index + 1).trim();
+          zone.setDistinguishedName(dn);
+          CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, new Dn(dn), zone);
         }
         if (lineContains(line, IS_QUEUED_FOR_BACKGROUND_LOAD, index)) {
           String value = line.substring(index + 1).trim();
@@ -153,7 +151,7 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
           zone.setReadOnlyZone(Boolean.parseBoolean(value));
         }
       }
-      return Objects.nonNull(zone.getName()) ? zone : null;
+      return nonNull(zone.getName()) ? zone : null;
     }
 
     private static boolean lineContains(String line, String name, int index) {

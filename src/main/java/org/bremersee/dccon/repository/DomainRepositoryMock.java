@@ -16,13 +16,10 @@
 
 package org.bremersee.dccon.repository;
 
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
-import org.bremersee.dccon.model.SamAccount;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -52,20 +49,8 @@ public class DomainRepositoryMock extends AbstractDomainRepository
   }
 
   @Override
-  public boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses) {
-    return store.findCommonAttributes()
-        .map(CommonAttributes::getDistinguishedName)
-        .anyMatch(n -> n.equalsIgnoreCase(dn));
-  }
-
-  @Override
-  public Optional<String> findDnOfSamAccountName(String samAccountName) {
-    return store.findCommonAttributes()
-        .filter(e -> e instanceof SamAccount)
-        .filter(e -> ((SamAccount) e).getSamAccountName()
-            .equalsIgnoreCase(samAccountName))
-        .map(CommonAttributes::getDistinguishedName)
-        .findFirst();
+  public String getHostName() {
+    return getProperties().getHostName();
   }
 
   @Override

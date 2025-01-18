@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
@@ -39,6 +40,6 @@ public interface DnsRepository {
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
 
-  Stream<DnsEntry> findDnsEntries(@NotNull Dn zoneDn);
+  Optional<DnsZoneEntries> findDnsEntries(@NotEmpty String zoneName);
 
 }

@@ -17,36 +17,35 @@
 package org.bremersee.dccon.repository;
 
 import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.DistinguishedNameProvider;
-import org.bremersee.dccon.model.NisDomainMember;
 import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.ldaptive.LdaptiveException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
 import org.ldaptive.dn.Dn;
-import org.ldaptive.filter.AndFilter;
-import org.ldaptive.filter.EqualityFilter;
-import org.ldaptive.filter.Filter;
+import org.ldaptive.filter.PresenceFilter;
 import org.springframework.util.Assert;
 
 /**
@@ -54,6 +53,7 @@ import org.springframework.util.Assert;
  *
  * @author Christian Bremer
  */
+@Slf4j
 abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
 
   private static final Object KINIT_LOCK = new Object();
@@ -202,6 +202,42 @@ abstract class AbstractRepository implements ErrorCode, RepositoryConstants {
         object.getDistinguishedName(), dn), EC_ILLEGAL_DN);
   }
 
+
+  boolean dnExistsWithAnyObjectClass(String dn, String... objectClasses) {
+    log.debug("dnExistsWithAnyObjectClass({}, {})", dn, objectClasses);
+    if (!getProperties().isDn(dn)) {
+      log.debug("Dn '{}' does not exist", dn);
+      return false;
+    }
+    SearchRequest searchRequest = SearchRequest.builder()
+        .dn(dn)
+        .filter(new PresenceFilter(RepositoryConstants.LDAP_OBJECT_CLASS))
+        .scope(SearchScope.OBJECT)
+        .returnAttributes(RepositoryConstants.LDAP_OBJECT_CLASS)
+        .sizeLimit(1)
+        .build();
+    log.debug("dnExistsWithAnyObjectClass, searchRequest = {}", searchRequest);
+    return getLdapTemplate().findOne(searchRequest)
+        .filter(getIgnoredEntryFilter())
+        .map(ldapEntry -> {
+          Set<String> wantedObjectClasses = Stream.ofNullable(objectClasses)
+              .flatMap(Arrays::stream)
+              .filter(cls -> !isEmpty(cls))
+              .map(String::toLowerCase)
+              .collect(Collectors.toSet());
+          if (wantedObjectClasses.isEmpty()) {
+            return true;
+          }
+          return Stream
+              .ofNullable(ldapEntry.getAttribute(RepositoryConstants.LDAP_OBJECT_CLASS))
+              .map(LdapAttribute::getStringValues)
+              .flatMap(Collection::stream)
+              .filter(cls -> !isEmpty(cls))
+              .map(String::toLowerCase)
+              .anyMatch(wantedObjectClasses::contains);
+        })
+        .orElse(false);
+  }
 
   static String quote(String value) {
     if (isEmpty(value)) {

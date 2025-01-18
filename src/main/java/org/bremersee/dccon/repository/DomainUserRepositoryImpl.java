@@ -368,7 +368,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
 
     AttributeModification attributeModification = new AttributeModification(modificationType,
         ldapAttribute);
-    getDomainRepository().findDnOfSamAccountName(userName).ifPresentOrElse(
+    findDnOfSamAccountName(userName).ifPresentOrElse(
         dn -> {
           ModifyRequest modifyRequest = ModifyRequest.builder()
               .dn(dn)
@@ -426,7 +426,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
 
     return executeAndGet(
         commands,
-        response -> getDomainRepository().findDnOfSamAccount(domainUser)
+        response -> findDnOfSamAccount(domainUser)
             .orElseThrow(() -> ServiceException
                 .internalServerError(String.format("Adding user '%s' failed. %s",
                         domainUser.getSamAccountName(),
@@ -450,7 +450,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   public DomainUser add(DomainUser domainUser, Dn ou, Boolean useUsernameAsCn) {
     log.debug("add({}, {}, {})", domainUser.getSamAccountName(), ou, useUsernameAsCn);
     validateDomainUserNames(domainUser);
-    if (getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())
+    if (samAccountNameExists(domainUser.getSamAccountName())
         || existsByPrincipalName(getProperties()
         .createDefaultUserPrincipalName(domainUser.getSamAccountName()))) {
       throw ServiceException.alreadyExistsWithErrorCode(
@@ -519,7 +519,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   @Override
   public DomainUser update(DomainUser domainUser) {
     log.debug("update({})", domainUser);
-    return getDomainRepository().findDnOfSamAccount(domainUser)
+    return findDnOfSamAccount(domainUser)
         .map(dn -> validateDn(domainUser, dn))
         .map(dn -> getLdapTemplate().save(domainUser, domainUserLdapMapper))
         .orElseThrow(() -> ServiceException.notFoundWithErrorCode(
@@ -534,7 +534,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     log.debug("update({}, {}, {})", userName, domainUser.getSamAccountName(), newOu);
     validateDomainUserNames(domainUser);
     if (!userName.equalsIgnoreCase(domainUser.getSamAccountName())
-        && getDomainRepository().samAccountNameExists(domainUser.getSamAccountName())) {
+        && samAccountNameExists(domainUser.getSamAccountName())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           domainUser.getSamAccountName(),
@@ -572,7 +572,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     }
     Dn oldDn = new Dn(existingDomainUser.getDistinguishedName());
     Dn newDn = getNewDn(existingDomainUser, domainUser, newOu);
-    if (!oldDn.isSame(newDn) && getDomainRepository().dnExistsWithAnyObjectClass(newDn.format())) {
+    if (!oldDn.isSame(newDn) && dnExistsWithAnyObjectClass(newDn.format())) {
       throw ServiceException.alreadyExistsWithErrorCode(
           DomainUser.class.getSimpleName(),
           getProperties().removeBaseDn(newDn),
@@ -668,8 +668,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
 
       execute(
           commands,
-          response -> getDomainRepository()
-              .findDnOfSamAccountName(newSamAccountName)
+          response -> findDnOfSamAccountName(newSamAccountName)
               .filter(userDn -> new Dn(userDn).isSame(newDn))
               .orElseThrow(() -> ServiceException
                   .internalServerError(String.format("Moving user '%s' to '%s' failed. %s",
@@ -684,7 +683,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
   @Override
   public void savePassword(String userName, String newPassword) {
     log.debug("savePassword({}, ****)", userName);
-    getDomainRepository().findDnOfSamAccountName(userName).ifPresentOrElse(
+    findDnOfSamAccountName(userName).ifPresentOrElse(
         dn -> doSavePassword(dn, newPassword),
         () -> {
           throw ServiceException.notFoundWithErrorCode(
@@ -772,7 +771,7 @@ public class DomainUserRepositoryImpl extends AbstractDomainUserRepository {
     return executeAndGet(
         commands,
         response -> {
-          if (getDomainRepository().samAccountNameExists(userName)) {
+          if (samAccountNameExists(userName)) {
             throw ServiceException.internalServerError(
                 String.format("Deleting user '%s' failed: %s", userName,
                     CommandExecutorResponse.toExceptionMessage(response)),

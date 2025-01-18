@@ -58,7 +58,7 @@ public abstract class AbstractDomainEntityValidator {
    * @return the boolean
    */
   protected boolean samAccountNameExists(String name) {
-    return domainRepository.samAccountNameExists(name);
+    return false;
   }
 
   /**

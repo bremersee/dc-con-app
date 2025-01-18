@@ -27,7 +27,7 @@ import org.ldaptive.dn.Dn;
  *
  * @author Christian Bremer
  */
-abstract class AbstractDomainGroupRepository extends AbstractOrganizedEntryRepository
+abstract class AbstractDomainGroupRepository extends AbstractSamAccountRepository
     implements DomainGroupRepositoryConstants {
 
   @Getter(AccessLevel.PACKAGE)

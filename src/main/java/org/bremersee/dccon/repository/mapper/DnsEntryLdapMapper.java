@@ -19,27 +19,20 @@ package org.bremersee.dccon.repository.mapper;
 import static org.bremersee.ldaptive.LdaptiveEntryMapper.getAttributeValue;
 
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.ldaptive.AttributeModification;
 import org.ldaptive.LdapEntry;
-import org.ldaptive.dn.Dn;
-import org.ldaptive.dn.NameValue;
-import org.ldaptive.dn.RDn;
 
 /**
- * The dns zone ldap mapper.
+ * The dns node ldap mapper.
  *
  * @author Christian Bremer
  */
-public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEntryMapper<DnsZone> {
+public class DnsEntryLdapMapper extends AbstractLdapMapper
+    implements LdaptiveEntryMapper<DnsEntry> {
 
-  /**
-   * Instantiates a new dns zone ldap mapper.
-   *
-   * @param properties the properties
-   */
-  public DnsZoneLdapMapper(DomainControllerProperties properties) {
+  public DnsEntryLdapMapper(DomainControllerProperties properties) {
     super(properties);
   }
 
@@ -49,24 +42,16 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   }
 
   @Override
-  public String mapDn(final DnsZone dnsZone) {
-    Dn dn = new Dn(new RDn(new NameValue(getProperties().getDnsZoneRdn(), dnsZone.getName())));
-    dn.add(new Dn(getProperties().getDnsZoneBaseDn())); // TODO is it fix? rel to base dn?
-    return dn.format();
-    /*
-    return createDn(
-        getProperties().getDnsZoneRdn(),
-        dnsZone.getName(),
-        getProperties().getDnsZoneBaseDn());
-    */
+  public String mapDn(final DnsEntry dnsEntry) {
+    return dnsEntry.getDistinguishedName();
   }
 
   @Override
-  public DnsZone map(final LdapEntry ldapEntry) {
+  public DnsEntry map(final LdapEntry ldapEntry) {
     if (ldapEntry == null) {
       return null;
     }
-    final DnsZone destination = new DnsZone();
+    final DnsEntry destination = new DnsEntry();
     map(ldapEntry, destination);
     return destination;
   }
@@ -74,21 +59,19 @@ public class DnsZoneLdapMapper extends AbstractLdapMapper implements LdaptiveEnt
   @Override
   public void map(
       final LdapEntry ldapEntry,
-      final DnsZone dnsZone) {
+      final DnsEntry dnsEntry) {
     if (ldapEntry == null) {
       return;
     }
-    CommonAttributesLdapMapper.mapCommonAttributes(ldapEntry, dnsZone);
-    dnsZone.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
-    dnsZone.setDefaultZone(dnsZone.getName() != null
-        && dnsZone.getName().equalsIgnoreCase(getProperties().getDefaultZone()));
-    dnsZone.setReverseZone(getProperties().isReverseZone(dnsZone.getName()));
+    CommonAttributesLdapMapper.mapCommonAttributes(ldapEntry, dnsEntry);
+    dnsEntry.setName(getAttributeValue(ldapEntry, "name", STRING_VALUE_TRANSCODER, null));
   }
 
   @Override
   public AttributeModification[] mapAndComputeModifications(
-      final DnsZone source,
+      final DnsEntry source,
       final LdapEntry destination) {
+
     return new AttributeModification[0];
   }
 

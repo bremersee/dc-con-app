@@ -69,7 +69,7 @@ public class OrganizationalUnitLdapMapper extends AbstractLdapMapper
     if (isEmpty(source)) {
       return;
     }
-    mapCommonAttributes(source, destination);
+    CommonAttributesLdapMapper.mapCommonAttributes(source, destination);
 
     destination.setDescription(
         getAttributeValue(source, LDAP_DESCRIPTION, STRING_VALUE_TRANSCODER, null));

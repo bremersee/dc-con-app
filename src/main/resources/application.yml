@@ -24,10 +24,6 @@ bremersee:
     mail-with-credentials:
       sender: ${spring.mail.username:no-reply@bremersee.org}
       login-url: http://localhost:4200/change-password
-    cli:
-      samba-tool-credentials-options: "--simple-bind-dn='${bremersee.ldaptive.bind-dn}' --password='${bremersee.ldaptive.bind-credentials}'"
-      ssh:
-        ssh-command: ${SSH_COMMAND:ssh root@dc1}
 
 eureka:
   client:
@@ -118,6 +114,10 @@ spring:
     activate:
       on-profile: mock
 
+bremersee:
+  domain-controller:
+    host-name: localhost
+
 ---
 
 spring:
@@ -133,6 +133,10 @@ spring:
         - "LOCAL_USER"
         - "ADMIN"
         - "ACTUATOR_ADMINS"
+
+bremersee:
+  domain-controller:
+    host-name: localhost
 
 ---
 
@@ -187,9 +191,11 @@ spring:
 
 bremersee:
   domain-controller:
-    using-ssh: true
-    ssh-command: "/usr/bin/ssh root@dc1"
-    using-kinit: false
+    cli:
+      samba-tool-credentials-options: "--simple-bind-dn='${bremersee.ldaptive.bind-dn}' --password='${bremersee.ldaptive.bind-credentials}'"
+      ssh:
+        using-ssh: true
+        ssh-command: ${SSH_COMMAND:ssh root@dc1}
 
 ---
 

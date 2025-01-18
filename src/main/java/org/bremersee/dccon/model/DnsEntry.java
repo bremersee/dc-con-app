@@ -40,6 +40,10 @@ public class DnsEntry extends CommonAttributes {
 
   private String name;
 
+  private Boolean conflict;
+
+  private String objectGuid;
+
   private String type;
 
   private String value;
@@ -50,6 +54,11 @@ public class DnsEntry extends CommonAttributes {
 
   private Integer ttlSeconds;
 
-  private DhcpLease dhcpLease;
+  public DnsEntry(String name) {
+    this.name = name;
+  }
 
+  public Boolean getConflict() {
+    return Boolean.TRUE.equals(conflict);
+  }
 }

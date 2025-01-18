@@ -2,14 +2,13 @@ package org.bremersee.dccon.repository.mapper;
 
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMember;
-import org.bremersee.dccon.model.SamAccount;
 import org.bremersee.dccon.repository.DomainGroupRepositoryConstants;
 import org.bremersee.dccon.repository.DomainUserRepositoryConstants;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.ldaptive.LdapEntry;
 
 public interface DomainGroupLdapMapper extends LdaptiveEntryMapper<DomainGroup>,
-    DomainGroupRepositoryConstants {
+    SamAccountLdapMapper, DomainGroupRepositoryConstants {
 
   String[] SAM_ACCOUNT_ATTRIBUTES = new String[]{
       LDAP_WHEN_CREATED,
@@ -32,8 +31,6 @@ public interface DomainGroupLdapMapper extends LdaptiveEntryMapper<DomainGroup>,
       DomainUserRepositoryConstants.LDAP_USER_DISPLAY_NAME,
       LDAP_NAME
   };
-
-  SamAccount mapSamAccount(LdapEntry source);
 
   DomainGroupMember mapDomainGroupMember(LdapEntry entry, boolean selected);
 
