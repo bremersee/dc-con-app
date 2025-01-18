@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Dns Zones</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
+  <div class="row mb-4">
+    <div class="col-1">
+      <a class="btn btn-outline-secondary" href="home.html"
+         th:href="@{../admin}">
+        <span class="fa fa-backward"></span>
+      </a>
+    </div>
+    <div class="col">
+      <div class="container">
+        <div class="d-flex justify-content-center">
+          <h3>DNS Zones</h3>
+        </div>
+        <div class="d-flex justify-content-center">
+          <h3 class="small text-secondary">
+            <span class="fa fa-dna" aria-hidden="true"></span>
+            <span class="mx-1">Primary</span>
+          </h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div class="mb-3 p-3 border border-1">
+    <div class="row justify-content-between">
+      <div class="col col-auto">
+        <div class="row g-3 align-items-center">
+          <div class="col-auto">
+            <div class="input-group">
+              <!--suppress HtmlFormInputWithoutLabel -->
+              <input type="text" id="q" name="q" class="form-control"
+                     placeholder="Search ..."
+                     th:value="${q}">
+              <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
+                <a id="searchInputReset" href="#" title="Reset search"
+                   th:href="@{dns-zones}"
+                   th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
+                   th:disabled="${#strings.isEmpty(q)}"
+                   th:aria-disabled="${#strings.isEmpty(q)}">
+                  <span class="glyphicon glyphicon-remove text-danger" aria-hidden="true"></span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-auto mt-sm-2 mt-md-0">
+        <a id="addUser" href="#" title="Add user" class="btn btn-outline-primary"
+           th:href="@{dns-zones-add}">
+          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${#lists.isEmpty(dnsZones)}"
+       class="alert alert-info" role="alert">
+    No users were found.
+  </div>
+
+  <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
+    <a th:each="entry : ${dnsZones}" href="#"
+       th:href="@{dns-zones}"
+       class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1"
+            th:text="${entry.name}">
+          eixe.bremersee.org
+        </h6>
+        <span class="fa fa-eye" aria-hidden="true"></span>
+      </div>
+      <small class="text-secondary" th:if="${entry.reverseZone}">
+        Reverse Zone
+      </small>
+    </a>
+  </div>
+
+  <!--
+  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(users) > 1}">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 3)}">
+        <a class="page-link" href="#" aria-label="First"
+           th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number - 5)}">
+        <a class="page-link" href="#" aria-label="Previous"
+           th:href="@{${currentPage}(page=${users.number - 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          <span aria-hidden="true">&mldr;</span>
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number - 2)}">
+        <a class="page-link" href="#" th:text="${users.number - 1}"
+           th:href="@{${currentPage}(page=${users.number - 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          1
+        </a>
+      </li>
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 1)}">
+        <a class="page-link" href="#" th:text="${users.number}"
+           th:href="@{${currentPage}(page=${users.number - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          2
+        </a>
+      </li>
+      <li class="page-item disabled">
+        <a class="page-link" href="#" th:text="${users.number + 1}">
+          3
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 1)}">
+        <a class="page-link" href="#" th:text="${users.number + 2}"
+           th:href="@{${currentPage}(page=${users.number + 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          4
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 2)}">
+        <a class="page-link" href="#" th:text="${users.number + 3}"
+           th:href="@{${currentPage}(page=${users.number + 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          5
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 5)}">
+        <a class="page-link" href="#" aria-label="Next"
+           th:href="@{${currentPage}(page=${users.number + 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          <span aria-hidden="true">&mldr;</span>
+        </a>
+      </li>
+      <li class="page-item"
+          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 3)}">
+        <a class="page-link" href="#" aria-label="Last"
+           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(users) - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  -->
+
+</main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('#content-list a').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
+</body>
+</html>

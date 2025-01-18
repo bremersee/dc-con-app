@@ -49,6 +49,8 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <div class="d-flex justify-content-center mb-4">
     <h3>Samba AD DC Management</h3>
   </div>
@@ -70,12 +72,20 @@
        th:href="@{admin/organizational-units}">
       Organizational Units
     </a>
+    <a id="showDns" class="btn btn-outline-secondary" href="dns-zones.html"
+       th:href="@{admin/dns-zones}">
+      DNS
+    </a>
   </div>
 </main>
 <script type="text/javascript" th:inline="javascript">
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('#showDns').on('click', function () {
+      loadingSpinnerModal.show();
+    });
   });
   //]]>
 </script>

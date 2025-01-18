@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Header</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+
+  <div th:fragment="loading-spinner"
+       id="loadingSpinnerModal" class="modal fade"
+       data-bs-backdrop="static"
+       data-bs-keyboard="false"
+       tabindex="-1"
+       aria-labelledby="loadingSpinnerModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered justify-content-center">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

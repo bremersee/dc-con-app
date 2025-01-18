@@ -20,6 +20,7 @@ import static java.util.Objects.nonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
@@ -37,6 +38,7 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
     return new Default(ldaptiveTemplate);
   }
 
+  @Slf4j
   class Default extends AbstractCommandExecutorResponseParser<DnsZone>
       implements DnsZoneParser {
 
@@ -85,6 +87,7 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
       String line;
       while ((line = reader.readLine()) != null) {
         line = line.trim();
+        log.debug("Parsing line: {}", line);
         int index = line.indexOf(':');
         if (lineContains(line, ZONE_NAME, index)) {
           zone.setName(line.substring(index + 1).trim());
@@ -151,11 +154,12 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
           zone.setReadOnlyZone(Boolean.parseBoolean(value));
         }
       }
+      log.debug("Parsed zone: {}", zone);
       return nonNull(zone.getName()) ? zone : null;
     }
 
     private static boolean lineContains(String line, String name, int index) {
-      return line.contains(name) && index > line.length();
+      return line.contains(name) && index < line.length();
     }
 
   }

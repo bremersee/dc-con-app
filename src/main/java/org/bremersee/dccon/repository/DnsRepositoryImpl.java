@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Component;
  */
 @Primary
 @Component("dnsRepository")
+@Slf4j
 public class DnsRepositoryImpl extends AbstractRepository implements DnsRepository {
 
   private final DomainRepository domainRepository;
@@ -70,6 +72,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
 
   @Override
   public Optional<DnsZone> findDnsZone(String zoneName) {
+    log.debug("findDnsZone {}", zoneName);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
