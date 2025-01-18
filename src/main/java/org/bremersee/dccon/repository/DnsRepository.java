@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -52,7 +53,7 @@ public interface DnsRepository {
   Stream<DnsEntry> findDnsEntry(
       @NotNull DnsZone dnsZone,
       @NotEmpty String name,
-      @NotEmpty String type);
+      @NotNull DnsEntryType type);
 
   void addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
 

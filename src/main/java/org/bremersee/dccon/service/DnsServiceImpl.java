@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -91,7 +92,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(query)) {
       return true;
     }
-    if (nonNull(entry.getType()) && entry.getType().toLowerCase().contains(query)) {
+    if (nonNull(entry.getType()) && entry.getType().name().toLowerCase().contains(query)) {
       return true;
     }
     return nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(query);
@@ -118,14 +119,14 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public Stream<DnsEntry> findDnsEntry(String zoneName, String name, String type) {
+  public Stream<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type) {
     return findDnsZone(zoneName)
         .stream()
         .flatMap(dnsZone -> dnsRepository.findDnsEntry(dnsZone, name, type));
   }
 
   @Override
-  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, String type, String value) {
+  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type, String value) {
     return findDnsEntry(zoneName, name, type)
         .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
         .findFirst();

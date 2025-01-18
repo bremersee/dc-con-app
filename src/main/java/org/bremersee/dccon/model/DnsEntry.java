@@ -44,7 +44,7 @@ public class DnsEntry extends CommonAttributes {
 
   private String objectGuid;
 
-  private String type;
+  private DnsEntryType type;
 
   private String value;
 

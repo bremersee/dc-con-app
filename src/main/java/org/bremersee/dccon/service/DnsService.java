@@ -21,6 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -55,12 +56,12 @@ public interface DnsService {
   Stream<DnsEntry> findDnsEntry(
       @NotEmpty String zoneName,
       @NotEmpty String name,
-      @NotEmpty String type);
+      @NotNull DnsEntryType type);
 
   Optional<DnsEntry> findDnsEntry(
       @NotEmpty String zoneName,
       @NotEmpty String name,
-      @NotEmpty String type,
+      @NotNull DnsEntryType type,
       @NotEmpty String value);
 
   @NotNull

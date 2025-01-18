@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
@@ -113,6 +114,7 @@ public interface DnsZoneEntriesParser extends
               parseDnsRecord(line, currentEntry);
               String name = currentEntry.getName();
               if (!isEmpty(name) && !isEmpty(currentEntry.getType())
+                  && !DnsEntryType.ALL.equals(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
                 setCommonAttributes(currentEntry);
                 if (name.equalsIgnoreCase(this.name)) {
@@ -132,7 +134,7 @@ public interface DnsZoneEntriesParser extends
     private void parseDnsRecord(String line, DnsEntry currentEntry) {
       int i0 = line.indexOf(RECORD_LINE_INDICATOR);
       if (i0 > 0) {
-        currentEntry.setType(line.substring(0, i0).trim());
+        currentEntry.setType(DnsEntryType.fromValue(line.substring(0, i0).trim()));
         int i1 = line.indexOf(FLAGS, i0 + 1);
         if (i1 > i0) {
           String value = line.substring(i0 + 1, i1).trim();

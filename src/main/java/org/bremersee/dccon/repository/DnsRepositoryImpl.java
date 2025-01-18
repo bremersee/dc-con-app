@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsEntry;
+import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -32,6 +33,7 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneEntriesParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneListParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneParser;
+import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Primary;
@@ -115,8 +117,13 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
 
 
   private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(
-      DnsZone dnsZone, String name, String type) {
+      DnsZone dnsZone, String name, DnsEntryType type) {
 
+    if (!type.isQueryable()) {
+      throw ServiceException.badRequest(
+          String.format("Dns entry type '%s' is not supported.", type),
+          EC_ILLEGAL_DNS_ENTRY_TYPE);
+    }
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -124,7 +131,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         dnsZone.getName(),
         name,
-        type
+        type.name()
     );
     return executeAndGet(
         commands,
@@ -134,11 +141,12 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   @Override
   public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(DnsZone dnsZone) {
     log.debug("findDnsEntry {}", dnsZone.getName());
-    return Optional.ofNullable(getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, "ALL"));
+    return Optional.ofNullable(
+        getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, DnsEntryType.ALL));
   }
 
   @Override
-  public Stream<DnsEntry> findDnsEntry(DnsZone dnsZone, String name, String type) {
+  public Stream<DnsEntry> findDnsEntry(DnsZone dnsZone, String name, DnsEntryType type) {
     log.debug("findDnsEntry {} {} {}", dnsZone.getName(), name, type);
     return Optional.ofNullable(getDnsZoneEntries(dnsZone, name, type))
         .map(DnsZoneEntries::getDnsEntries)
@@ -149,6 +157,11 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   @Override
   public void addDnsEntry(String zoneName, DnsEntry entry) {
     log.debug("addDnsEntry({}, {})", zoneName, entry);
+    if (!entry.getType().isAddable()) {
+      throw ServiceException.badRequest(
+          String.format("Dns entry type '%s' is not supported.", entry.getType()),
+          EC_ILLEGAL_DNS_ENTRY_TYPE);
+    }
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -156,7 +169,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         zoneName,
         entry.getName(),
-        entry.getType(),
+        entry.getType().name(),
         entry.getValue()
     );
     executeAndLog(commands);
@@ -165,6 +178,11 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   @Override
   public void updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
     log.debug("updateDnsEntry {}, {}, {}", zoneName, entry, newValue);
+    if (!entry.getType().isUpdatable()) {
+      throw ServiceException.badRequest(
+          String.format("Dns entry type '%s' is not supported.", entry.getType()),
+          EC_ILLEGAL_DNS_ENTRY_TYPE);
+    }
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -172,7 +190,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         zoneName,
         entry.getName(),
-        entry.getType(),
+        entry.getType().name(),
         entry.getValue(),
         newValue
     );
@@ -182,6 +200,11 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   @Override
   public void deleteDnsEntry(String zoneName, DnsEntry entry) {
     log.debug("deleteDnsEntry({}, {})", zoneName, entry);
+    if (!entry.getType().isAddable()) {
+      throw ServiceException.badRequest(
+          String.format("Dns entry type '%s' is not supported.", entry.getType()),
+          EC_ILLEGAL_DNS_ENTRY_TYPE);
+    }
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -189,7 +212,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         zoneName,
         entry.getName(),
-        entry.getType(),
+        entry.getType().name(),
         entry.getValue()
     );
     executeAndLog(commands);

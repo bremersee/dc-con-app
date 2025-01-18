@@ -103,4 +103,6 @@ public interface ErrorCode {
 
   String EC_DELETING_DNS_ENTRY_FAILED = EC_PREFIX + "69fcdc93-c029-496f-840f-9bf443a18a3b";
 
+  String EC_ILLEGAL_DNS_ENTRY_TYPE = EC_PREFIX + "69fcdc93-c029-496f-840f-9bf443a18a3b";
+
 }
