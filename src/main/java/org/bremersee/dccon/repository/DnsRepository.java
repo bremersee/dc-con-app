@@ -18,13 +18,11 @@ package org.bremersee.dccon.repository;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
@@ -37,8 +35,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsRepository {
 
-  String ZONE_ENTRIES_NODE_NAME = "@";
-
   Stream<DnsZone> findDnsZones(@Nullable DnsZoneType type);
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
@@ -48,9 +44,7 @@ public interface DnsRepository {
   void deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotNull DnsZone dnsZone);
-
-  Stream<DnsEntry> findDnsEntry(
+  Stream<DnsEntry> findDnsEntries(
       @NotNull DnsZone dnsZone,
       @NotEmpty String name,
       @NotNull DnsEntryType type);

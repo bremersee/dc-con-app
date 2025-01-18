@@ -21,12 +21,10 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
-import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
@@ -39,17 +37,17 @@ import org.ldaptive.dn.RDn;
  *
  * @author Christian Bremer
  */
-public interface DnsZoneEntriesParser extends
-    CommandExecutorResponseParser<DnsZoneEntries<List<DnsEntry>>> {
+public interface DnsEntriesParser extends
+    CommandExecutorResponseParser<Stream<DnsEntry>> {
 
-  static DnsZoneEntriesParser defaultParser(
+  static DnsEntriesParser defaultParser(
       LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String name) {
     return new Default(ldaptiveTemplate, zoneDn, name);
   }
 
   @Slf4j
-  class Default extends AbstractCommandExecutorResponseParser<DnsZoneEntries<List<DnsEntry>>>
-      implements DnsZoneEntriesParser {
+  class Default extends AbstractCommandExecutorResponseParser<Stream<DnsEntry>>
+      implements DnsEntriesParser {
 
     private static final String NAME = "Name=";
 
@@ -80,8 +78,8 @@ public interface DnsZoneEntriesParser extends
     }
 
     @Override
-    protected DnsZoneEntries<List<DnsEntry>> doParse(BufferedReader reader) throws IOException {
-      DnsZoneEntries<List<DnsEntry>> zoneEntries = new DnsZoneEntries<>(ArrayList::new);
+    protected Stream<DnsEntry> doParse(BufferedReader reader) throws IOException {
+      Stream<DnsEntry> entries = Stream.empty();
       DnsEntry currentEntry = null;
       String line;
       while (nonNull(line = reader.readLine())) {
@@ -117,18 +115,14 @@ public interface DnsZoneEntriesParser extends
                   && !DnsEntryType.ALL.equals(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
                 setCommonAttributes(currentEntry);
-                if (name.equalsIgnoreCase(this.name)) {
-                  zoneEntries.getDnsEntries().add(currentEntry);
-                } else {
-                  zoneEntries.getDnsZoneEntries().add(currentEntry);
-                }
+                entries = Stream.concat(entries, Stream.of(currentEntry));
                 currentEntry = new DnsEntry(currentEntry.getName());
               }
             }
           }
         }
       }
-      return zoneEntries;
+      return entries;
     }
 
     private void parseDnsRecord(String line, DnsEntry currentEntry) {

@@ -23,7 +23,6 @@ import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,12 +47,12 @@ public interface DnsService {
   void deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Optional<DnsZoneEntries<Page<DnsEntry>>> findDnsEntries(
+  Page<DnsEntry> findDnsEntries(
       @NotEmpty String zoneName,
       Pageable pageable,
       String query);
 
-  Stream<DnsEntry> findDnsEntry(
+  Stream<DnsEntry> findDnsEntries(
       @NotEmpty String zoneName,
       @NotEmpty String name,
       @NotNull DnsEntryType type);

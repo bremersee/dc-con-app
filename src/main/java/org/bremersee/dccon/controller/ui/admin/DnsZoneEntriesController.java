@@ -22,7 +22,7 @@ import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.model.DnsZoneEntriesPage;
+import org.bremersee.dccon.model.DnsEntryPage;
 import org.bremersee.dccon.service.DnsService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -74,13 +74,12 @@ public class DnsZoneEntriesController extends AbstractEditController
 
     return Optional.ofNullable(zoneName)
         .flatMap(dnsService::findDnsZone)
-        .flatMap(zone -> {
+        .map(zone -> {
           model.addAttribute("zone", zone);
           Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
-          return dnsService.findDnsEntries(zone.getName(), pageable, query);
-        })
-        .map(dnsZoneEntries -> {
-          model.addAttribute("dnsZoneEntries", new DnsZoneEntriesPage(dnsZoneEntries));
+          DnsEntryPage dnsEntryPage = new DnsEntryPage(
+              dnsService.findDnsEntries(zone.getName(), pageable, query));
+          model.addAttribute("dnsEntryPage", dnsEntryPage);
           return "admin/dns-zone-entries";
         })
         .orElseGet(() -> entityNotFoundRedirect(

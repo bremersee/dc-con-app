@@ -26,7 +26,6 @@ import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.repository.DnsRepository;
 import org.bremersee.exception.ServiceException;
@@ -42,6 +41,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class DnsServiceImpl implements DnsService, ErrorCode {
+
+  private static final String ZONE_ENTRIES_NODE_NAME = "@";
 
   private final DnsRepository dnsRepository;
 
@@ -99,35 +100,29 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public Optional<DnsZoneEntries<Page<DnsEntry>>> findDnsEntries(
+  public Page<DnsEntry> findDnsEntries(
       String zoneName,
       Pageable pageable,
       String query) {
 
-    return findDnsZone(zoneName)
-        .flatMap(dnsRepository::findDnsEntries)
-        .map(dnsZoneEntries -> {
-          DnsZoneEntries<Page<DnsEntry>> page = new DnsZoneEntries<>(Page::empty);
-          Page<DnsEntry> entryPage = new PageBuilder<DnsEntry, DnsEntry>()
-              .sourceEntries(dnsZoneEntries.getDnsZoneEntries())
-              .sourceFilter(dnsEntry -> isQueryResult(dnsEntry, query))
-              .pageable(applyDefaults(pageable, null, true, null))
-              .build();
-          page.setDnsZoneEntries(entryPage);
-          return page;
-        });
+    return new PageBuilder<DnsEntry, DnsEntry>()
+        .sourceEntries(findDnsEntries(zoneName, ZONE_ENTRIES_NODE_NAME, DnsEntryType.ALL))
+        .sourceFilter(dnsEntry -> isQueryResult(dnsEntry, query))
+        .pageable(applyDefaults(pageable, null, true, null))
+        .build();
   }
 
   @Override
-  public Stream<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type) {
+  public Stream<DnsEntry> findDnsEntries(String zoneName, String name, DnsEntryType type) {
     return findDnsZone(zoneName)
         .stream()
-        .flatMap(dnsZone -> dnsRepository.findDnsEntry(dnsZone, name, type));
+        .flatMap(dnsZone -> dnsRepository.findDnsEntries(dnsZone, name, type));
   }
 
   @Override
-  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type, String value) {
-    return findDnsEntry(zoneName, name, type)
+  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type,
+      String value) {
+    return findDnsEntries(zoneName, name, type)
         .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
         .findFirst();
   }

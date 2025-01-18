@@ -18,7 +18,6 @@ package org.bremersee.dccon.repository;
 
 import static java.util.Objects.requireNonNullElse;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -27,10 +26,9 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.parser.DnsZoneEntriesParser;
+import org.bremersee.dccon.repository.cli.parser.DnsEntriesParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneListParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneParser;
 import org.bremersee.exception.ServiceException;
@@ -116,8 +114,9 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
 
-  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(
-      DnsZone dnsZone, String name, DnsEntryType type) {
+  @Override
+  public Stream<DnsEntry> findDnsEntries(DnsZone dnsZone, String name, DnsEntryType type) {
+    log.debug("findDnsEntry {} {} {}", dnsZone.getName(), name, type);
 
     if (!type.isQueryable()) {
       throw ServiceException.badRequest(
@@ -133,25 +132,10 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         name,
         type.name()
     );
+    LdaptiveTemplate ldapTemplate = DnsEntryType.ALL.equals(type) ? null : getLdapTemplate();
     return executeAndGet(
         commands,
-        DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn(), name));
-  }
-
-  @Override
-  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(DnsZone dnsZone) {
-    log.debug("findDnsEntry {}", dnsZone.getName());
-    return Optional.ofNullable(
-        getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, DnsEntryType.ALL));
-  }
-
-  @Override
-  public Stream<DnsEntry> findDnsEntry(DnsZone dnsZone, String name, DnsEntryType type) {
-    log.debug("findDnsEntry {} {} {}", dnsZone.getName(), name, type);
-    return Optional.ofNullable(getDnsZoneEntries(dnsZone, name, type))
-        .map(DnsZoneEntries::getDnsEntries)
-        .stream()
-        .flatMap(Collection::stream);
+        DnsEntriesParser.defaultParser(ldapTemplate, dnsZone.getDn(), name));
   }
 
   @Override
