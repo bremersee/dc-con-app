@@ -21,6 +21,8 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZoneEntries;
@@ -36,16 +38,18 @@ import org.ldaptive.dn.RDn;
  *
  * @author Christian Bremer
  */
-public interface DnsZoneEntriesParser extends CommandExecutorResponseParser<DnsZoneEntries> {
+public interface DnsZoneEntriesParser extends
+    CommandExecutorResponseParser<DnsZoneEntries<List<DnsEntry>>> {
 
   String ZONE_ENTRIES_NODE_NAME = "@";
 
-  static DnsZoneEntriesParser defaultParser(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn) {
-    return new Default(ldaptiveTemplate, zoneDn);
+  static DnsZoneEntriesParser defaultParser(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn,
+      String query) {
+    return new Default(ldaptiveTemplate, zoneDn, query);
   }
 
   @Slf4j
-  class Default extends AbstractCommandExecutorResponseParser<DnsZoneEntries>
+  class Default extends AbstractCommandExecutorResponseParser<DnsZoneEntries<List<DnsEntry>>>
       implements DnsZoneEntriesParser {
 
     private static final String NAME = "Name=";
@@ -68,14 +72,17 @@ public interface DnsZoneEntriesParser extends CommandExecutorResponseParser<DnsZ
 
     private final Dn zoneDn;
 
-    Default(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn) {
+    private final String query;
+
+    Default(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String query) {
       this.ldaptiveTemplate = ldaptiveTemplate;
       this.zoneDn = zoneDn;
+      this.query = isEmpty(query) || query.isBlank() ? null : query.toLowerCase();
     }
 
     @Override
-    protected DnsZoneEntries doParse(BufferedReader reader) throws IOException {
-      DnsZoneEntries zoneEntries = new DnsZoneEntries();
+    protected DnsZoneEntries<List<DnsEntry>> doParse(BufferedReader reader) throws IOException {
+      DnsZoneEntries<List<DnsEntry>> zoneEntries = new DnsZoneEntries<>(ArrayList::new);
       DnsEntry currentEntry = null;
       String line;
       while (nonNull(line = reader.readLine())) {
@@ -109,15 +116,11 @@ public interface DnsZoneEntriesParser extends CommandExecutorResponseParser<DnsZ
               String name = currentEntry.getName();
               if (!isEmpty(name) && !isEmpty(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
-                if (!isEmpty(zoneDn) && !zoneDn.isEmpty()) {
-                  Dn dn = new Dn(new RDn(new NameValue("DC", name)));
-                  dn.add(zoneDn);
-                  currentEntry.setDn(dn);
-                  CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, dn, currentEntry);
-                }
                 if (ZONE_ENTRIES_NODE_NAME.equals(name)) {
+                  setCommonAttributes(currentEntry);
                   zoneEntries.getDnsZoneEntries().add(currentEntry);
-                } else {
+                } else if (isQueryResult(currentEntry)) {
+                  setCommonAttributes(currentEntry);
                   zoneEntries.getDnsEntries().add(currentEntry);
                 }
                 currentEntry = new DnsEntry(currentEntry.getName());
@@ -165,6 +168,29 @@ public interface DnsZoneEntriesParser extends CommandExecutorResponseParser<DnsZ
           }
         }
       }
+    }
+
+    private void setCommonAttributes(DnsEntry currentEntry) {
+      if (!isEmpty(zoneDn) && !zoneDn.isEmpty()) {
+        Dn dn = new Dn(new RDn(new NameValue("DC", currentEntry.getName())));
+        dn.add(zoneDn);
+        currentEntry.setDn(dn);
+        CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, dn,
+            currentEntry);
+      }
+    }
+
+    private boolean isQueryResult(DnsEntry entry) {
+      if (isEmpty(query)) {
+        return true;
+      }
+      if (entry.getName().toLowerCase().contains(query)) {
+        return true;
+      }
+      if (entry.getType().toLowerCase().contains(query)) {
+        return true;
+      }
+      return entry.getValue().toLowerCase().contains(query);
     }
 
   }

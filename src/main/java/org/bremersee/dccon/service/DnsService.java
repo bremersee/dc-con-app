@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.repository;
+package org.bremersee.dccon.service;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -34,7 +35,7 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface DnsRepository {
+public interface DnsService {
 
   Stream<DnsZone> findDnsZones(@Nullable DnsZoneType type);
 
@@ -48,6 +49,9 @@ public interface DnsRepository {
   boolean deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotEmpty String zoneName, @Nullable String query);
+  Optional<DnsZoneEntries<Page<DnsEntry>>> findDnsEntries(
+      @NotEmpty String zoneName,
+      Pageable pageable,
+      String query);
 
 }

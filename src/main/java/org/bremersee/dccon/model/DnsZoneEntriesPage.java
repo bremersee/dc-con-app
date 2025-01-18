@@ -16,10 +16,27 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.nonNull;
+
+import org.springframework.data.domain.Page;
+
 /**
- * The enum DnsEntryType.
+ * The type DnsZoneEntriesPage.
  *
  * @author Christian Bremer
  */
-public enum DnsEntryType {
+public class DnsZoneEntriesPage extends DnsZoneEntries<DnsEntryPage> {
+
+  public DnsZoneEntriesPage() {
+    super(DnsEntryPage::new);
+  }
+
+  public DnsZoneEntriesPage(DnsZoneEntries<Page<DnsEntry>> dnsZoneEntries) {
+    this();
+    if (nonNull(dnsZoneEntries)) {
+      setDnsZoneEntries(dnsZoneEntries.getDnsZoneEntries());
+      setDnsEntries(new DnsEntryPage(dnsZoneEntries.getDnsEntries()));
+    }
+  }
+
 }

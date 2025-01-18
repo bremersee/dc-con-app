@@ -16,11 +16,13 @@
 
 package org.bremersee.dccon.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -80,12 +82,51 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public Optional<DnsZoneEntries> findDnsEntries(String zoneName) {
-    return findDnsZone(zoneName)
-        .map(this::getDnsZoneEntries);
+  public boolean existsDnsZone(String zoneName) {
+    return findDnsZone(zoneName).isPresent();
   }
 
-  private DnsZoneEntries getDnsZoneEntries(DnsZone dnsZone) {
+  @Override
+  public DnsZone createDnsZone(String zoneName) {
+    return findDnsZone(zoneName)
+        .orElseGet(() -> {
+          List<String> commands = List.of(
+              getProperties().getCli().getSambaToolBinary(),
+              "dns",
+              "zonecreate",
+              domainRepository.getHostName(),
+              zoneName
+          );
+          execute(commands);
+          return findDnsZone(zoneName)
+              .orElseThrow(
+                  () -> new IllegalArgumentException("Zone " + zoneName + " not found.")); // TODO
+        });
+  }
+
+  @Override
+  public boolean deleteDnsZone(String zoneName) {
+    if (!existsDnsZone(zoneName)) {
+      return false;
+    }
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zonedelete",
+        domainRepository.getHostName(),
+        zoneName
+    );
+    return executeAndGet(commands, response -> !existsDnsZone(zoneName)); // TODO throw exception
+  }
+
+
+  @Override
+  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(String zoneName, String query) {
+    return findDnsZone(zoneName)
+        .map(dnsZone -> getDnsZoneEntries(dnsZone, query));
+  }
+
+  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(DnsZone dnsZone, String query) {
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -97,7 +138,29 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
     );
     return executeAndGet(
         commands,
-        DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn()));
+        DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn(), query));
+  }
+
+  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName) {
+    return findDnsEntries(zoneName, null)
+        .map(DnsZoneEntries::getDnsEntries)
+        .stream()
+        .flatMap(Collection::stream)
+        .filter(dnsEntry -> dnsEntry.getName().equalsIgnoreCase(dnsEntryName));
+  }
+
+  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName, String type) {
+    return getDnsEntries(zoneName, dnsEntryName)
+        .filter(dnsEntry -> dnsEntry.getType().equalsIgnoreCase(type));
+  }
+
+  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName, String type, String value) {
+    return getDnsEntries(zoneName, dnsEntryName, type)
+        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value));
+  }
+
+  public void addDnsEntry(String zoneName, DnsEntry entry) {
+
   }
 
 }

@@ -18,21 +18,37 @@ package org.bremersee.dccon.model;
 
 import static java.util.Objects.isNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
+import java.util.function.Supplier;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * The type DnsZoneEntries.
  *
  * @author Christian Bremer
  */
-@Data
-public class DnsZoneEntries {
+@ToString
+@EqualsAndHashCode
+public class DnsZoneEntries<T> {
 
+  @Setter
   private List<DnsEntry> dnsZoneEntries;
 
-  private List<DnsEntry> dnsEntries;
+  @Setter
+  private T dnsEntries;
+
+  @Hidden
+  @JsonIgnore
+  private final Supplier<T> dnsEntriesSupplier;
+
+  public DnsZoneEntries(Supplier<T> dnsEntriesSupplier) {
+    this.dnsEntriesSupplier = dnsEntriesSupplier;
+  }
 
   public List<DnsEntry> getDnsZoneEntries() {
     if (isNull(dnsZoneEntries)) {
@@ -41,9 +57,9 @@ public class DnsZoneEntries {
     return dnsZoneEntries;
   }
 
-  public List<DnsEntry> getDnsEntries() {
+  public T getDnsEntries() {
     if (isNull(dnsEntries)) {
-      dnsEntries = new ArrayList<>();
+      dnsEntries = dnsEntriesSupplier.get();
     }
     return dnsEntries;
   }
