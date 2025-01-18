@@ -41,17 +41,37 @@ public interface DnsService {
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
 
-  boolean existsDnsZone(@NotEmpty String zoneName);
-
   @NotNull
   DnsZone createDnsZone(@NotEmpty String zoneName);
 
-  boolean deleteDnsZone(@NotEmpty String zoneName);
+  void deleteDnsZone(@NotEmpty String zoneName);
 
 
   Optional<DnsZoneEntries<Page<DnsEntry>>> findDnsEntries(
       @NotEmpty String zoneName,
       Pageable pageable,
       String query);
+
+  Stream<DnsEntry> findDnsEntry(
+      @NotEmpty String zoneName,
+      @NotEmpty String name,
+      @NotEmpty String type);
+
+  Optional<DnsEntry> findDnsEntry(
+      @NotEmpty String zoneName,
+      @NotEmpty String name,
+      @NotEmpty String type,
+      @NotEmpty String value);
+
+  @NotNull
+  DnsEntry addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+
+  @NotNull
+  DnsEntry updateDnsEntry(
+      @NotEmpty String zoneName,
+      @NotNull DnsEntry entry,
+      @NotEmpty String newValue);
+
+  void deleteDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
 
 }

@@ -42,14 +42,25 @@ public interface DnsRepository {
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
 
-  boolean existsDnsZone(@NotEmpty String zoneName);
+  void createDnsZone(@NotEmpty String zoneName);
 
-  @NotNull
-  DnsZone createDnsZone(@NotEmpty String zoneName);
-
-  boolean deleteDnsZone(@NotEmpty String zoneName);
+  void deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotEmpty String zoneName);
+  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotNull DnsZone dnsZone);
+
+  Stream<DnsEntry> findDnsEntry(
+      @NotNull DnsZone dnsZone,
+      @NotEmpty String name,
+      @NotEmpty String type);
+
+  void addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+
+  void updateDnsEntry(
+      @NotEmpty String zoneName,
+      @NotNull DnsEntry entry,
+      @NotEmpty String newValue);
+
+  void deleteDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
 
 }

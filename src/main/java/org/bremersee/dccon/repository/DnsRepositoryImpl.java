@@ -16,9 +16,10 @@
 
 package org.bremersee.dccon.repository;
 
+import static java.util.Objects.requireNonNullElse;
+
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneEntries;
 import org.bremersee.dccon.model.DnsZoneType;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneEntriesParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneListParser;
 import org.bremersee.dccon.repository.cli.parser.DnsZoneParser;
@@ -57,7 +59,8 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
 
   @Override
   public Stream<DnsZone> findDnsZones(DnsZoneType type) {
-    DnsZoneType zoneType = Objects.requireNonNullElse(type, DnsZoneType.PRIMARY);
+    DnsZoneType zoneType = requireNonNullElse(type, DnsZoneType.PRIMARY);
+    log.debug("findDnsZones({})", zoneType);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -85,33 +88,21 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public boolean existsDnsZone(String zoneName) {
-    return findDnsZone(zoneName).isPresent();
+  public void createDnsZone(String zoneName) {
+    log.debug("createDnsZone {}", zoneName);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zonecreate",
+        domainRepository.getHostName(),
+        zoneName
+    );
+    executeAndLog(commands);
   }
 
   @Override
-  public DnsZone createDnsZone(String zoneName) {
-    return findDnsZone(zoneName)
-        .orElseGet(() -> {
-          List<String> commands = List.of(
-              getProperties().getCli().getSambaToolBinary(),
-              "dns",
-              "zonecreate",
-              domainRepository.getHostName(),
-              zoneName
-          );
-          execute(commands);
-          return findDnsZone(zoneName)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Zone " + zoneName + " not found.")); // TODO
-        });
-  }
-
-  @Override
-  public boolean deleteDnsZone(String zoneName) {
-    if (!existsDnsZone(zoneName)) {
-      return false;
-    }
+  public void deleteDnsZone(String zoneName) {
+    log.debug("deleteDnsZone {}", zoneName);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -119,17 +110,13 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         zoneName
     );
-    return executeAndGet(commands, response -> !existsDnsZone(zoneName)); // TODO throw exception
+    executeAndLog(commands);
   }
 
 
-  @Override
-  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(String zoneName) {
-    return findDnsZone(zoneName)
-        .map(dnsZone -> getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, "ALL"));
-  }
+  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(
+      DnsZone dnsZone, String name, String type) {
 
-  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(DnsZone dnsZone, String name, String type) {
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -144,50 +131,73 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn(), name));
   }
 
-  /*
-  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName) {
-    return findDnsEntries(zoneName, null)
-        .map(DnsZoneEntries::getDnsEntries)
-        .stream()
-        .flatMap(Collection::stream)
-        .filter(dnsEntry -> dnsEntry.getName().equalsIgnoreCase(dnsEntryName));
+  @Override
+  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(DnsZone dnsZone) {
+    log.debug("findDnsEntry {}", dnsZone.getName());
+    return Optional.ofNullable(getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, "ALL"));
   }
 
-  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName, String type) {
-    return getDnsEntries(zoneName, dnsEntryName)
-        .filter(dnsEntry -> dnsEntry.getType().equalsIgnoreCase(type));
-  }
-
-  public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName, String type, String value) {
-    return getDnsEntries(zoneName, dnsEntryName, type)
-        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value));
-  }
-  */
-
-  public Stream<DnsEntry> findDnsEntry(String zoneName, String name, String type) {
-    return findDnsZone(zoneName)
-        .map(zone -> getDnsZoneEntries(zone, name, type))
+  @Override
+  public Stream<DnsEntry> findDnsEntry(DnsZone dnsZone, String name, String type) {
+    log.debug("findDnsEntry {} {} {}", dnsZone.getName(), name, type);
+    return Optional.ofNullable(getDnsZoneEntries(dnsZone, name, type))
         .map(DnsZoneEntries::getDnsEntries)
         .stream()
         .flatMap(Collection::stream);
   }
 
-  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, String type, String value) {
-    return findDnsEntry(zoneName, name, type)
-        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
-        .findFirst();
+  @Override
+  public void addDnsEntry(String zoneName, DnsEntry entry) {
+    log.debug("addDnsEntry({}, {})", zoneName, entry);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "add",
+        domainRepository.getHostName(),
+        zoneName,
+        entry.getName(),
+        entry.getType(),
+        entry.getValue()
+    );
+    executeAndLog(commands);
   }
 
-  public DnsEntry addDnsEntry(String zoneName, DnsEntry entry) {
-    return null;
+  @Override
+  public void updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
+    log.debug("updateDnsEntry {}, {}, {}", zoneName, entry, newValue);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "update",
+        domainRepository.getHostName(),
+        zoneName,
+        entry.getName(),
+        entry.getType(),
+        entry.getValue(),
+        newValue
+    );
+    executeAndLog(commands);
   }
 
-  public DnsEntry updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
-    return null;
-  }
-
+  @Override
   public void deleteDnsEntry(String zoneName, DnsEntry entry) {
+    log.debug("deleteDnsEntry({}, {})", zoneName, entry);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "delete",
+        domainRepository.getHostName(),
+        zoneName,
+        entry.getName(),
+        entry.getType(),
+        entry.getValue()
+    );
+    executeAndLog(commands);
+  }
 
+  private void executeAndLog(List<String> commands) {
+    CommandExecutorResponse response = execute(commands);
+    log.debug("response = {}", response);
   }
 
 }
