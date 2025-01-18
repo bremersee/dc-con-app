@@ -84,25 +84,6 @@
   <div class="mb-3 p-3 border border-1">
     <div class="row justify-content-between">
       <div class="col col-auto">
-        <div class="row g-3 align-items-center">
-          <div class="col-auto">
-            <div class="input-group">
-              <!--suppress HtmlFormInputWithoutLabel -->
-              <input type="text" id="q" name="q" class="form-control"
-                     placeholder="Search ..."
-                     th:value="${q}">
-              <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
-                <a id="searchInputReset" href="#" title="Reset search"
-                   th:href="@{dns-zones}"
-                   th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
-                   th:disabled="${#strings.isEmpty(q)}"
-                   th:aria-disabled="${#strings.isEmpty(q)}">
-                  <span class="glyphicon glyphicon-remove text-danger" aria-hidden="true"></span>
-                </a>
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
       <div class="col col-auto mt-sm-2 mt-md-0">
         <a id="addUser" href="#" title="Add user" class="btn btn-outline-primary"
@@ -115,7 +96,7 @@
 
   <div th:if="${#lists.isEmpty(dnsZones)}"
        class="alert alert-info" role="alert">
-    No users were found.
+    No dns zones were found.
   </div>
 
   <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
@@ -134,72 +115,6 @@
       </small>
     </a>
   </div>
-
-  <!--
-  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(users) > 1}">
-    <ul class="pagination justify-content-center">
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 3)}">
-        <a class="page-link" href="#" aria-label="First"
-           th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number - 5)}">
-        <a class="page-link" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(page=${users.number - 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          <span aria-hidden="true">&mldr;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number - 2)}">
-        <a class="page-link" href="#" th:text="${users.number - 1}"
-           th:href="@{${currentPage}(page=${users.number - 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          1
-        </a>
-      </li>
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(users, users.number - 1)}">
-        <a class="page-link" href="#" th:text="${users.number}"
-           th:href="@{${currentPage}(page=${users.number - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          2
-        </a>
-      </li>
-      <li class="page-item disabled">
-        <a class="page-link" href="#" th:text="${users.number + 1}">
-          3
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 1)}">
-        <a class="page-link" href="#" th:text="${users.number + 2}"
-           th:href="@{${currentPage}(page=${users.number + 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          4
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 2)}">
-        <a class="page-link" href="#" th:text="${users.number + 3}"
-           th:href="@{${currentPage}(page=${users.number + 2},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          5
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 5)}">
-        <a class="page-link" href="#" aria-label="Next"
-           th:href="@{${currentPage}(page=${users.number + 5},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          <span aria-hidden="true">&mldr;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(users, users.number + 3)}">
-        <a class="page-link" href="#" aria-label="Last"
-           th:href="@{${currentPage}(page=${@paginationHelper.getTotalPages(users) - 1},size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectedScope.parameterValue})}">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
-  -->
 
 </main>
 <script type="text/javascript" th:inline="javascript">
