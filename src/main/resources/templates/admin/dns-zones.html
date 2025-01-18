@@ -101,7 +101,7 @@
 
   <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
     <a th:each="entry : ${dnsZones}" href="#"
-       th:href="@{dns-zones}"
+       th:href="@{dns-zone-entries(zone-name=${entry.name})}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1"

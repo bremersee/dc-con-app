@@ -31,4 +31,6 @@ public interface SortOrderConstants extends ControllerConstants {
 
   String OU_SORT = "nameTree";
 
+  String DNS_ENTRY_SORT = "name;type;value";
+
 }
