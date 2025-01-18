@@ -36,6 +36,8 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsRepository {
 
+  String ZONE_ENTRIES_NODE_NAME = "@";
+
   Stream<DnsZone> findDnsZones(@Nullable DnsZoneType type);
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
@@ -48,6 +50,6 @@ public interface DnsRepository {
   boolean deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotEmpty String zoneName, @Nullable String query);
+  Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(@NotEmpty String zoneName);
 
 }

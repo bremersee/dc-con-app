@@ -34,8 +34,8 @@ public class DnsZoneEntriesPage extends DnsZoneEntries<DnsEntryPage> {
   public DnsZoneEntriesPage(DnsZoneEntries<Page<DnsEntry>> dnsZoneEntries) {
     this();
     if (nonNull(dnsZoneEntries)) {
-      setDnsZoneEntries(dnsZoneEntries.getDnsZoneEntries());
-      setDnsEntries(new DnsEntryPage(dnsZoneEntries.getDnsEntries()));
+      setDnsEntries(dnsZoneEntries.getDnsEntries());
+      setDnsZoneEntries(new DnsEntryPage(dnsZoneEntries.getDnsZoneEntries()));
     }
   }
 

@@ -110,13 +110,13 @@
     </div>
   </div>
 
-  <div th:if="${#lists.isEmpty(dnsZoneEntries.dnsEntries.content)}"
+  <div th:if="${#lists.isEmpty(dnsZoneEntries.dnsZoneEntries.content)}"
        class="alert alert-info" role="alert">
     No entries were found.
   </div>
 
-  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZoneEntries.dnsEntries.content)}">
-    <a th:each="entry : ${dnsZoneEntries.dnsEntries.content}" href="#"
+  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZoneEntries.dnsZoneEntries.content)}">
+    <a th:each="entry : ${dnsZoneEntries.dnsZoneEntries.content}" href="#"
        th:href="@{dns-zone-entries}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
@@ -136,64 +136,64 @@
     </a>
   </div>
 
-  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(dnsZoneEntries.dnsEntries) > 1}">
+  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(dnsZoneEntries.dnsZoneEntries) > 1}">
     <ul class="pagination justify-content-center">
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number - 3)}">
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number - 3)}">
         <a class="page-link" href="#" aria-label="First"
            th:href="@{${currentPage}(zone-name=${zone.name},page=0,size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&laquo;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number - 5)}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number - 5)}">
         <a class="page-link" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number - 5},size=${size},sort=${sort},q=${q})}">
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number - 5},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number - 2)}">
-        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsEntries.number - 1}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number - 2},size=${size},sort=${sort},q=${q})}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number - 2)}">
+        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsZoneEntries.number - 1}"
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number - 2},size=${size},sort=${sort},q=${q})}">
           1
         </a>
       </li>
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number - 1)}">
-        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsEntries.number}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number - 1},size=${size},sort=${sort},q=${q})}">
+      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number - 1)}">
+        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsZoneEntries.number}"
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number - 1},size=${size},sort=${sort},q=${q})}">
           2
         </a>
       </li>
       <li class="page-item disabled">
-        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsEntries.number + 1}">
+        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsZoneEntries.number + 1}">
           3
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number + 1)}">
-        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsEntries.number + 2}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number + 1},size=${size},sort=${sort},q=${q})}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number + 1)}">
+        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsZoneEntries.number + 2}"
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number + 1},size=${size},sort=${sort},q=${q})}">
           4
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number + 2)}">
-        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsEntries.number + 3}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number + 2},size=${size},sort=${sort},q=${q})}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number + 2)}">
+        <a class="page-link" href="#" th:text="${dnsZoneEntries.dnsZoneEntries.number + 3}"
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number + 2},size=${size},sort=${sort},q=${q})}">
           5
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number + 5)}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number + 5)}">
         <a class="page-link" href="#" aria-label="Next"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsEntries.number + 5},size=${size},sort=${sort},q=${q})}">
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsZoneEntries.dnsZoneEntries.number + 5},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsEntries, dnsZoneEntries.dnsEntries.number + 3)}">
+          th:if="${@paginationHelper.isValidPageNumber(dnsZoneEntries.dnsZoneEntries, dnsZoneEntries.dnsZoneEntries.number + 3)}">
         <a class="page-link" href="#" aria-label="Last"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${@paginationHelper.getTotalPages(dnsZoneEntries.dnsEntries) - 1},size=${size},sort=${sort},q=${q})}">
+           th:href="@{${currentPage}(zone-name=${zone.name},page=${@paginationHelper.getTotalPages(dnsZoneEntries.dnsZoneEntries) - 1},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&raquo;</span>
         </a>
       </li>

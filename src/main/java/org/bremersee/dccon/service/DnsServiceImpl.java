@@ -16,7 +16,9 @@
 
 package org.bremersee.dccon.service;
 
+import static java.util.Objects.nonNull;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -75,15 +77,32 @@ public class DnsServiceImpl implements DnsService {
       Pageable pageable,
       String query) {
 
-    return dnsRepository.findDnsEntries(zoneName, query)
+    return dnsRepository.findDnsEntries(zoneName)
         .map(dnsZoneEntries -> {
           DnsZoneEntries<Page<DnsEntry>> page = new DnsZoneEntries<>(Page::empty);
           Page<DnsEntry> entryPage = new PageBuilder<DnsEntry, DnsEntry>()
-              .sourceEntries(dnsZoneEntries.getDnsEntries())
+              .sourceEntries(dnsZoneEntries.getDnsZoneEntries())
+              .sourceFilter(dnsEntry -> isQueryResult(dnsEntry, query))
               .pageable(applyDefaults(pageable, null, true, null))
               .build();
-          page.setDnsEntries(entryPage);
+          page.setDnsZoneEntries(entryPage);
           return page;
         });
+  }
+
+  private boolean isQueryResult(DnsEntry entry, String query) {
+    if (isEmpty(entry)) {
+      return false;
+    }
+    if (isEmpty(query)) {
+      return true;
+    }
+    if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(query)) {
+      return true;
+    }
+    if (nonNull(entry.getType()) && entry.getType().toLowerCase().contains(query)) {
+      return true;
+    }
+    return nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(query);
   }
 }

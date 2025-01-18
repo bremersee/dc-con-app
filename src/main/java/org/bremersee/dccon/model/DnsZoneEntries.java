@@ -37,10 +37,10 @@ import lombok.ToString;
 public class DnsZoneEntries<T> {
 
   @Setter
-  private List<DnsEntry> dnsZoneEntries;
+  private List<DnsEntry> dnsEntries;
 
   @Setter
-  private T dnsEntries;
+  private T dnsZoneEntries;
 
   @Hidden
   @JsonIgnore
@@ -50,18 +50,18 @@ public class DnsZoneEntries<T> {
     this.dnsEntriesSupplier = dnsEntriesSupplier;
   }
 
-  public List<DnsEntry> getDnsZoneEntries() {
-    if (isNull(dnsZoneEntries)) {
-      dnsZoneEntries = new ArrayList<>();
-    }
-    return dnsZoneEntries;
-  }
-
-  public T getDnsEntries() {
+  public List<DnsEntry> getDnsEntries() {
     if (isNull(dnsEntries)) {
-      dnsEntries = dnsEntriesSupplier.get();
+      dnsEntries = new ArrayList<>();
     }
     return dnsEntries;
+  }
+
+  public T getDnsZoneEntries() {
+    if (isNull(dnsZoneEntries)) {
+      dnsZoneEntries = dnsEntriesSupplier.get();
+    }
+    return dnsZoneEntries;
   }
 
 }

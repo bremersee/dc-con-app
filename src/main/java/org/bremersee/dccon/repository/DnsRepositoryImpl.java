@@ -124,26 +124,27 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
 
 
   @Override
-  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(String zoneName, String query) {
+  public Optional<DnsZoneEntries<List<DnsEntry>>> findDnsEntries(String zoneName) {
     return findDnsZone(zoneName)
-        .map(dnsZone -> getDnsZoneEntries(dnsZone, query));
+        .map(dnsZone -> getDnsZoneEntries(dnsZone, ZONE_ENTRIES_NODE_NAME, "ALL"));
   }
 
-  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(DnsZone dnsZone, String query) {
+  private DnsZoneEntries<List<DnsEntry>> getDnsZoneEntries(DnsZone dnsZone, String name, String type) {
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
         "query",
         domainRepository.getHostName(),
         dnsZone.getName(),
-        DnsZoneEntriesParser.ZONE_ENTRIES_NODE_NAME,
-        "ALL"
+        name,
+        type
     );
     return executeAndGet(
         commands,
-        DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn(), query));
+        DnsZoneEntriesParser.defaultParser(getLdapTemplate(), dnsZone.getDn(), name));
   }
 
+  /*
   public Stream<DnsEntry> getDnsEntries(String zoneName, String dnsEntryName) {
     return findDnsEntries(zoneName, null)
         .map(DnsZoneEntries::getDnsEntries)
@@ -161,8 +162,31 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
     return getDnsEntries(zoneName, dnsEntryName, type)
         .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value));
   }
+  */
 
-  public void addDnsEntry(String zoneName, DnsEntry entry) {
+  public Stream<DnsEntry> findDnsEntry(String zoneName, String name, String type) {
+    return findDnsZone(zoneName)
+        .map(zone -> getDnsZoneEntries(zone, name, type))
+        .map(DnsZoneEntries::getDnsEntries)
+        .stream()
+        .flatMap(Collection::stream);
+  }
+
+  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, String type, String value) {
+    return findDnsEntry(zoneName, name, type)
+        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
+        .findFirst();
+  }
+
+  public DnsEntry addDnsEntry(String zoneName, DnsEntry entry) {
+    return null;
+  }
+
+  public DnsEntry updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
+    return null;
+  }
+
+  public void deleteDnsEntry(String zoneName, DnsEntry entry) {
 
   }
 

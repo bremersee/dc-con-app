@@ -41,11 +41,9 @@ import org.ldaptive.dn.RDn;
 public interface DnsZoneEntriesParser extends
     CommandExecutorResponseParser<DnsZoneEntries<List<DnsEntry>>> {
 
-  String ZONE_ENTRIES_NODE_NAME = "@";
-
-  static DnsZoneEntriesParser defaultParser(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn,
-      String query) {
-    return new Default(ldaptiveTemplate, zoneDn, query);
+  static DnsZoneEntriesParser defaultParser(
+      LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String name) {
+    return new Default(ldaptiveTemplate, zoneDn, name);
   }
 
   @Slf4j
@@ -72,12 +70,12 @@ public interface DnsZoneEntriesParser extends
 
     private final Dn zoneDn;
 
-    private final String query;
+    private final String name;
 
-    Default(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String query) {
+    Default(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String name) {
       this.ldaptiveTemplate = ldaptiveTemplate;
       this.zoneDn = zoneDn;
-      this.query = isEmpty(query) || query.isBlank() ? null : query.toLowerCase();
+      this.name = name;
     }
 
     @Override
@@ -96,7 +94,7 @@ public interface DnsZoneEntriesParser extends
             name = line.substring(NAME.length()).trim();
           }
           if (name.isEmpty()) {
-            name = ZONE_ENTRIES_NODE_NAME;
+            name = this.name;
           }
           currentEntry = new DnsEntry(name);
         } else if (nonNull(currentEntry)) {
@@ -116,12 +114,11 @@ public interface DnsZoneEntriesParser extends
               String name = currentEntry.getName();
               if (!isEmpty(name) && !isEmpty(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
-                if (ZONE_ENTRIES_NODE_NAME.equals(name)) {
-                  setCommonAttributes(currentEntry);
-                  zoneEntries.getDnsZoneEntries().add(currentEntry);
-                } else if (isQueryResult(currentEntry)) {
-                  setCommonAttributes(currentEntry);
+                setCommonAttributes(currentEntry);
+                if (name.equalsIgnoreCase(this.name)) {
                   zoneEntries.getDnsEntries().add(currentEntry);
+                } else {
+                  zoneEntries.getDnsZoneEntries().add(currentEntry);
                 }
                 currentEntry = new DnsEntry(currentEntry.getName());
               }
@@ -178,19 +175,6 @@ public interface DnsZoneEntriesParser extends
         CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, dn,
             currentEntry);
       }
-    }
-
-    private boolean isQueryResult(DnsEntry entry) {
-      if (isEmpty(query)) {
-        return true;
-      }
-      if (entry.getName().toLowerCase().contains(query)) {
-        return true;
-      }
-      if (entry.getType().toLowerCase().contains(query)) {
-        return true;
-      }
-      return entry.getValue().toLowerCase().contains(query);
     }
 
   }
