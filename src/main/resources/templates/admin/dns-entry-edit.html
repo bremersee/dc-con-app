@@ -135,7 +135,7 @@
       <div class="mb-3" th:if="${dnsEntry.type.name() != 'SOA'}">
         <label for="newType" class="form-label">Type</label>
         <select id="newType" class="form-select" aria-label="Dns entry types"
-                aria-describedby="newTypeValidation"
+                aria-describedby="newTypeValidation" required
                 th:classappend="${#fields.hasErrors('newType')} ? 'is-invalid' : ''"
                 th:field="*{newType}">
           <option th:each="o : ${types}" th:value="${o}" th:text="${o}">

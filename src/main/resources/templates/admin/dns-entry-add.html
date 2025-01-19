@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Add dns entry</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-1">
+      <a class="btn btn-outline-secondary show-spinner" href="dns-zone-entries.html"
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-backward"></span>
+      </a>
+    </div>
+    <div class="col">
+      <div class="container">
+        <div class="d-flex justify-content-center">
+          <h3>Add dns entry</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+  <form id="editDnsEntryForm" th:action="@{dns-entry-add}" th:object="${dnsEntryAddRequest}"
+        action="#" method="post">
+    <input type="hidden" name="page" th:value="${page}"/>
+    <input type="hidden" name="size" th:value="${size}"/>
+    <input type="hidden" name="sort" th:value="${sort}"/>
+    <input type="hidden" name="q" th:value="${q}"/>
+
+    <input type="hidden" name="zone-type" th:value="${zoneType}"/>
+    <input type="hidden" name="zone-name" th:value="${zoneName}"/>
+
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" class="form-control" id="name" name="name"
+             aria-describedby="nameValidation" required
+             th:field="*{name}"
+             th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"/>
+      <div id="nameValidation" class="invalid-feedback"
+           th:text="${#fields.hasErrors('name')} ? ${#fields.errors('name')[0]} : ''">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="type" class="form-label">Type</label>
+      <select id="type" class="form-select" aria-label="Dns entry types"
+              aria-describedby="typeValidation" required
+              th:classappend="${#fields.hasErrors('type')} ? 'is-invalid' : ''"
+              th:field="*{type}">
+        <option th:each="o : ${types}" th:value="${o}" th:text="${o}">
+          AAAA
+        </option>
+      </select>
+      <div id="typeValidation" class="invalid-feedback"
+           th:text="${#fields.hasErrors('type')} ? ${#fields.errors('type')[0]} : ''">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="value" class="form-label">Value</label>
+      <input type="text" class="form-control" id="value" name="value"
+             aria-describedby="valueValidation" required
+             th:classappend="${#fields.hasErrors('value')} ? 'is-invalid' : ''"
+             th:field="*{value}" />
+      <div id="valueValidation" class="invalid-feedback"
+           th:text="${#fields.hasErrors('value')} ? ${#fields.errors('value')[0]} : ''">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3 show-spinner">
+      Add
+    </button>
+    <a href="dns-zone-entries.html"
+       th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}"
+       class="btn btn-secondary ml-3 mt-3 show-spinner" role="button">
+      Cancel
+    </a>
+  </form>
+
+</main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+    $('#editDnsEntryForm').on('submit', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
+</body>
+</html>

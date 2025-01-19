@@ -108,8 +108,9 @@
         </div>
       </div>
       <div class="col col-auto mt-sm-2 mt-md-0">
-        <a id="addDnsEntry" href="#" title="Add dns entry" class="btn btn-outline-primary"
-           th:href="@{dns-zone-entries(page=${page},size=${size},sort=${sort},q=${q})}">
+        <a id="addDnsEntry" href="dns-entry-add.html" title="Add dns entry"
+           class="btn btn-outline-primary"
+           th:href="@{dns-entry-add(zone-type=${zoneType},zone-name=${zone.name},page=${page},size=${size},sort=${sort},q=${q})}">
           <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
         </a>
       </div>
