@@ -57,4 +57,6 @@ public interface ControllerConstants {
 
   String ZONE_TYPE_DEFAULT = "primary";
 
+  String ZONE_NAME = "zone-name";
+
 }

@@ -65,7 +65,7 @@ public class DnsZoneEntriesController extends AbstractEditController
 
   @GetMapping(path = "/admin/dns-zone-entries")
   public String displayDnsZoneEntries(
-      @RequestParam(name = "zone-name", required = false) String zoneName,
+      @RequestParam(name = ZONE_NAME, required = false) String zoneName,
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
       @RequestParam(name = SORT, defaultValue = DNS_ENTRY_SORT) SortOrders sort,

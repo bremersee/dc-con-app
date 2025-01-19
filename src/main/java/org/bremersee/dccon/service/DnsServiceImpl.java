@@ -144,7 +144,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   @Override
   public DnsEntry updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
-    if (findDnsEntry(zoneName, entry.getName(), entry.getType(), newValue).isEmpty()) {
+    if (findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue()).isEmpty()) {
       throw ServiceException.notFoundWithErrorCode("DnsEntry", entry.getName(),
           EC_DNS_ENTRY_NOT_FOUND);
     }

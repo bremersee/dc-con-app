@@ -29,21 +29,9 @@ import org.bremersee.dccon.model.DnsEntry;
 @NoArgsConstructor
 public class DnsEntryEditRequest {
 
-  private String zoneName;
-
-  private String dnsEntryName;
-
-  private String dnsEntryType;
-
-  private String dnsEntryValue;
-
   private String newDnsEntryValue;
 
-  public DnsEntryEditRequest(String zoneName, DnsEntry dnsEntry) {
-    this.zoneName = zoneName;
-    this.dnsEntryName = dnsEntry.getName();
-    this.dnsEntryType = dnsEntry.getType().name();
-    this.dnsEntryValue = dnsEntry.getValue();
+  public DnsEntryEditRequest(DnsEntry dnsEntry) {
+    this.newDnsEntryValue = dnsEntry.getValue();
   }
-
 }

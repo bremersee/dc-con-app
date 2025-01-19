@@ -87,7 +87,8 @@
       <div class="mb-3">
         <label for="samAccountName" class="form-label">Group name</label>
         <input type="text" class="form-control" id="samAccountName" name="samAccountName"
-               aria-describedby="samAccountNameValidation" required th:field="*{samAccountName}"
+               aria-describedby="samAccountNameValidation" required
+               th:field="*{samAccountName}"
                th:classappend="${#fields.hasErrors('samAccountName')} ? 'is-invalid' : ''"/>
         <div id="samAccountNameValidation" class="invalid-feedback"
              th:text="${#fields.hasErrors('samAccountName')} ? ${#fields.errors('samAccountName')[0]} : ''">
