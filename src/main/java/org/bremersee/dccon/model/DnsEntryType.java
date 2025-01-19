@@ -19,6 +19,7 @@ package org.bremersee.dccon.model;
 import static java.util.Objects.isNull;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -514,12 +515,14 @@ public enum DnsEntryType {
   public static List<DnsEntryType> getSupportedAddOrDeleteTypes() {
     return Arrays.stream(values())
         .filter(DnsEntryType::isAddable)
+        .sorted(Comparator.comparing(DnsEntryType::name))
         .toList();
   }
 
   public static List<DnsEntryType> getSupportedUpdateTypes(DnsEntry dnsEntry) {
     return Arrays.stream(values())
         .filter(type -> SOA.equals(type) ? isSoa(dnsEntry) : type.isUpdatable())
+        .sorted(Comparator.comparing(DnsEntryType::name))
         .toList();
   }
 

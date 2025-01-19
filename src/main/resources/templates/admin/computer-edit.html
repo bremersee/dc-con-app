@@ -93,7 +93,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#"
+        <a class="nav-link" href="computer-delete.html"
            th:classappend="${computer.criticalSystemObject} ? 'disabled' : ''"
            th:attr="aria-disabled=${computer.criticalSystemObject}"
            th:href="@{computer-delete(name=${computer.samAccountName},page=${page},size=${size},sort=${sort},q=${q},ou=${ou},scope=${scope})}">

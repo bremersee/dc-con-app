@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Delete dns entry</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-1">
+      <a class="btn btn-outline-secondary show-spinner" href="dns-zone-entries.html"
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-backward"></span>
+      </a>
+    </div>
+    <div class="col">
+      <div class="container">
+        <div class="d-flex justify-content-center">
+          <h3 class="small">DNS entry</h3>
+        </div>
+        <div class="d-flex justify-content-center">
+          <h3 th:text="${dnsEntry.name}">zander</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link show-spinner" href="dns-entry-edit.html"
+         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-edit" aria-hidden="true"></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="#">
+        <span class="fa fa-trash-alt" aria-hidden="true"></span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="mx-0 mx-sm-1 mx-md-3">
+
+    <div class="mb-4 p-3 border border-1 border-danger">
+      <div class="h5 mb-3">
+        <span>Delete dns entry </span>
+        <span class="badge text-bg-secondary" th:text="${dnsEntry.name}">zander</span>
+      </div>
+      <form id="deleteDnsEntryForm" th:action="@{dns-entry-delete}"
+            th:object="${dnsEntryDeleteRequest}" action="#" method="post">
+        <input type="hidden" name="page" th:value="${page}"/>
+        <input type="hidden" name="size" th:value="${size}"/>
+        <input type="hidden" name="sort" th:value="${sort}"/>
+        <input type="hidden" name="q" th:value="${q}"/>
+
+        <input type="hidden" name="zone-type" th:value="${zoneType}"/>
+        <input type="hidden" name="zone-name" th:value="${zoneName}"/>
+        <input type="hidden" name="name" th:value="${dnsEntry.name}"/>
+        <input type="hidden" name="type" th:value="${dnsEntry.type}"/>
+        <input type="hidden" name="value" th:value="${dnsEntry.value}"/>
+
+        <div class="mb-3">
+          <input type="text" class="form-control" id="verificationName" name="verificationName"
+                 aria-describedby="verificationNameValidation" required
+                 th:classappend="${#fields.hasErrors('verificationName')} ? 'is-invalid' : ''"
+                 th:field="*{verificationName}" />
+          <label for="verificationName" id="verificationNameHelp" class="form-text">
+            Please enter the dns entry name for deletion.
+          </label>
+          <div id="verificationNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('verificationName')} ? ${#fields.errors('verificationName')[0]} : ''">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-danger mt-3 mb-3 show-spinner">
+          Delete
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+    $('#deleteDnsEntryForm').on('submit', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
+</body>
+</html>

@@ -86,7 +86,10 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="#" disabled>
+      <a class="nav-link show-spinner" href="dns-entry-delete.html"
+         th:classappend="${dnsEntry.type.name() == 'SOA'} ? 'disabled' : ''"
+         th:attr="aria-disabled=${dnsEntry.type.name() == 'SOA'}"
+         th:href="@{dns-entry-delete(zone-type=${zoneType},zone-name=${zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-trash-alt" aria-hidden="true"></span>
       </a>
     </li>
