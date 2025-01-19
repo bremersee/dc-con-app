@@ -34,11 +34,8 @@ import org.ldaptive.SearchRequest;
 import org.ldaptive.ad.SecurityIdentifier;
 import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 /**
  * The domain repository implementation.
@@ -78,9 +75,14 @@ public class DomainRepositoryImpl extends AbstractDomainRepository
     if (isEmpty(hostName)) {
       hostName = Optional.ofNullable(getProperties().getHostName())
           .filter(name -> !name.isBlank())
-          .orElseGet(() -> executeAndGet(
-              List.of(getProperties().getCli().getHostnameBinary()),
-              hostNameResponseParser));
+          .orElseGet(() -> {
+            List<String> commands = new ArrayList<>(2);
+            commands.add(getProperties().getCli().getHostnameBinary());
+            if (!isEmpty(getProperties().getCli().getHostnameOptions())) {
+              commands.add(getProperties().getCli().getHostnameOptions());
+            }
+            return executeAndGet(commands, hostNameResponseParser);
+          });
     }
     return hostName;
   }

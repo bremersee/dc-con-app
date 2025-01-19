@@ -36,7 +36,9 @@ public class CliProperties {
 
   private String execDir = System.getProperty("java.io.tmpdir");
 
-  private String hostnameBinary = "/usr/bin/hostname"; // mit ' --fqdn'?; // if hostname in domain properties is empty
+  private String hostnameBinary = "/usr/bin/hostname";
+
+  private String hostnameOptions; // maybe '--fqdn'
 
   private String sambaToolBinary = "/usr/bin/samba-tool";
 
