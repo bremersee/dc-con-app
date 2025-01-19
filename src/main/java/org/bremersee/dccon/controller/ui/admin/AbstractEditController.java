@@ -17,11 +17,24 @@ public abstract class AbstractEditController extends AbstractController
     super(properties, localeResolver);
   }
 
+  @Deprecated
   String entityNotFoundRedirect(
       RedirectAttributes redirectAttributes,
       String entityType,
       String i18nCode,
       String entityName,
+      String redirect) {
+
+    return entityNotFoundRedirect(redirectAttributes, entityType, i18nCode, entityName,
+        PAGE_AND_OU_PARAMS, redirect);
+  }
+
+  String entityNotFoundRedirect(
+      RedirectAttributes redirectAttributes,
+      String entityType,
+      String i18nCode,
+      String entityName,
+      String parameterTemplate,
       String redirect) {
 
     String msg = String.format("%s '%s' was not found.", entityType, entityName);

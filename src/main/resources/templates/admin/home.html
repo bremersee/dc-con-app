@@ -72,7 +72,7 @@
        th:href="@{admin/organizational-units}">
       Organizational Units
     </a>
-    <a id="showDns" class="btn btn-outline-secondary" href="dns-zones.html"
+    <a id="showDns" class="btn btn-outline-secondary show-spinner" href="dns-zones.html"
        th:href="@{admin/dns-zones}">
       DNS
     </a>
@@ -83,7 +83,7 @@
   "use strict";
   $(document).ready(function () {
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
-    $('#showDns').on('click', function () {
+    $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();
     });
   });

@@ -66,7 +66,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         "dns",
         "zonelist",
         domainRepository.getHostName(),
-        "--" + zoneType.getParameterName()
+        "--" + zoneType.getParameterValue()
     );
     return executeAndGet(commands, DnsZoneListParser.defaultParser()).stream()
         .map(this::findDnsZone)

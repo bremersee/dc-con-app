@@ -129,7 +129,7 @@ public class ComputerEditController extends AbstractEditController implements Pa
         .map(existingComputer -> updateComputer(
             existingComputer, computerEditRequest, model, bindingResult, redirectAttributes))
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Computer", "todo", samAccountName, "computers"));
+            redirectAttributes, "Computer", "todo", samAccountName, PAGE_AND_OU_PARAMS, "computers"));
   }
 
   private String updateComputer(
@@ -154,7 +154,7 @@ public class ComputerEditController extends AbstractEditController implements Pa
           "todo", updatedComputer.getName());
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-      Map<String, Object> parameters = getParamterMap(updatedComputer.getDn().getParent()); // TODO ou from updated -> in others, too
+      Map<String, Object> parameters = getParamterMap(updatedComputer.getDn().getParent());
       String redirect = getRedirectUri("computer-edit?name={{computer.samAccountName}}",
           PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "computer", updatedComputer));
       logRedirectTo("Computer successfully updated.", redirect);

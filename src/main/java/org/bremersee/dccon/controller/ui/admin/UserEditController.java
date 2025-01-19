@@ -122,7 +122,7 @@ public class UserEditController extends AbstractEditController implements Pageab
           return "admin/user-edit";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "User", "todo", userName, "users"));
+            redirectAttributes, "User", "todo", userName, PAGE_AND_OU_PARAMS, "users"));
   }
 
   @PostMapping(path = "/admin/user-edit")
@@ -152,7 +152,7 @@ public class UserEditController extends AbstractEditController implements Pageab
         .map(existingUser -> updateUser(
             existingUser, userEditRequest, model, bindingResult, redirectAttributes))
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "User", "todo", oldSamAccountName, "users"));
+            redirectAttributes, "User", "todo", oldSamAccountName, PAGE_AND_OU_PARAMS, "users"));
   }
 
   private String updateUser(

@@ -36,7 +36,7 @@ import org.springframework.validation.annotation.Validated;
  */
 @Validated
 public interface OrganizationalUnitNavigationComponent extends DomainControllerPropertiesProvider,
-    CurrentPageNameProvider, MessageProvider {
+    CurrentPageNameProvider, PageableComponent, MessageProvider {
 
   OrganizationalUnitService getOrganizationalUnitService();
 

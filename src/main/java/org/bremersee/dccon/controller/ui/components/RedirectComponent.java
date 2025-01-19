@@ -30,6 +30,7 @@ import java.util.Optional;
 import org.bremersee.dccon.controller.ui.ControllerConstants;
 import org.bremersee.dccon.controller.ui.LoggerProvider;
 import org.bremersee.dccon.converter.DnConverter;
+import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
@@ -54,44 +55,27 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
       + "&" + OU + "={{" + OU + "}}"
       + "&" + SCOPE + "={{" + SCOPE + "}}";
 
-  default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
-      String query) {
-    return Map.of(
-        PAGE, Optional.ofNullable(page)
-            .filter(p -> p >= 0)
-            .orElse(findPageParameterValue()),
-        SIZE, Optional.ofNullable(size)
-            .filter(s -> s > 0)
-            .orElse(findSizeParameterValue()),
-        SORT, Optional.ofNullable(sort)
-            .or(() -> findParameterValue(SORT))
-            .orElse(""),
-        QUERY, Optional.ofNullable(query)
-            .or(() -> findParameterValue(QUERY))
-            .orElse("")
-    );
-  }
+  String PAGE_AND_ZONE_TYPE_PARAMS = PAGE_PARAMS
+      + "&" + ZONE_TYPE + "={{" + ZONE_TYPE + "}}";
 
-  default Map<String, Object> getParamterMap(Integer page, Integer size, String sort,
-      String query, Dn ou, TreeSearchScope scope) {
-    Map<String, Object> paramterMap = new HashMap<>(getParamterMap(page, size, sort, query));
-    paramterMap.put(
-        OU,
-        Optional.ofNullable(ou)
+  default Map<String, Object> getParamterMap(Dn ou) {
+    return Map.of(
+        PAGE, findPageParameterValue(),
+        SIZE, findSizeParameterValue(),
+        SORT, findParameterValue(SORT).orElse(""),
+        QUERY, findParameterValue(QUERY).orElse(""),
+        OU, Optional.ofNullable(ou)
             .or(this::findOuParameterValue)
             .filter(dn -> !dn.isEmpty())
             .map(Dn::format)
-            .orElse(""));
-    paramterMap.put(
-        SCOPE,
-        Optional.ofNullable(scope)
-            .or(this::findScopeParameterValue)
-            .orElse(TreeSearchScope.ONELEVEL));
-    return paramterMap;
-  }
-
-  default Map<String, Object> getParamterMap(Dn ou) {
-    return getParamterMap(null, null, null, null, ou, null);
+            .orElse(""),
+        SCOPE, findScopeParameterValue()
+            .map(TreeSearchScope::getParameterValue)
+            .orElse(""),
+        ZONE_TYPE, findZoneTypeParameterValue()
+            .map(DnsZoneType::getParameterValue)
+            .orElse("")
+    );
   }
 
   default Map<String, Object> getParamterMap() {
@@ -150,6 +134,11 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   default Optional<TreeSearchScope> findScopeParameterValue() {
     return findParameterValue(SCOPE)
         .map(TreeSearchScope::fromValue);
+  }
+
+  default Optional<DnsZoneType> findZoneTypeParameterValue() {
+    return findParameterValue(ZONE_TYPE)
+        .map(DnsZoneType::fromValue);
   }
 
   default String getRedirectUri(

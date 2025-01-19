@@ -90,13 +90,14 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     if (isEmpty(query)) {
       return true;
     }
-    if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(query)) {
+    String q = query.toLowerCase();
+    if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(q)) {
       return true;
     }
-    if (nonNull(entry.getType()) && entry.getType().name().toLowerCase().contains(query)) {
+    if (nonNull(entry.getType()) && entry.getType().name().toLowerCase().contains(q)) {
       return true;
     }
-    return nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(query);
+    return nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(q);
   }
 
   @Override
@@ -124,7 +125,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
       String value) {
     return findDnsEntries(zoneName, name, type)
         .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
-        .findFirst();
+        .filter(dnsEntry -> !dnsEntry.getConflict())
+        .findFirst(); // TODO how to find and handle conflicts?
   }
 
   @Override

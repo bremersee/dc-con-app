@@ -49,4 +49,12 @@ public interface ControllerConstants {
 
   String SCOPE = "scope";
 
+  String ZONE_TYPE_DROPDOWN = "zoneTypeDropdown";
+
+  String ZONE_TYPE_VARIABLE = "zoneType";
+
+  String ZONE_TYPE = "zone-type";
+
+  String ZONE_TYPE_DEFAULT = "primary";
+
 }

@@ -49,10 +49,12 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <div class="row mb-4">
     <div class="col-1">
-      <a class="btn btn-outline-secondary" href="dns-zones.html"
-         th:href="@{dns-zones}">
+      <a class="btn btn-outline-secondary show-spinner" href="dns-zones.html"
+         th:href="@{dns-zones(zone-type=${zoneType})}">
         <span class="fa fa-backward"></span>
       </a>
     </div>
@@ -79,7 +81,7 @@
 
   <div class="mb-3 p-3 border border-1">
     <div class="row justify-content-between">
-      <div class="col col-auto">
+      <div class="col col-auto w-75">
         <div class="row g-3 align-items-center">
           <div class="col-auto">
             <div class="input-group">
@@ -87,10 +89,14 @@
               <input type="text" id="q" name="q" class="form-control"
                      placeholder="Search ..."
                      th:value="${q}">
+              <span class="input-group-text">
+                <a id="searchInputSubmit" href="#" title="Search">
+                  <span class="glyphicon glyphicon-search text-primary" aria-hidden="true"></span>
+                </a>
+              </span>
               <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
-                <!-- TODO on enter? -->
-                <a id="searchInputReset" href="#" title="Reset search"
-                   th:href="@{dns-zone-entries(page='0',size=${size},sort=${sort})}"
+                <a id="searchInputReset" href="#" title="Reset search" class="show-spinner"
+                   th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=0,size=${size},sort=${sort})}"
                    th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
                    th:disabled="${#strings.isEmpty(q)}"
                    th:aria-disabled="${#strings.isEmpty(q)}">
@@ -120,9 +126,11 @@
        th:href="@{dns-zone-entries}"
        class="list-group-item list-group-item-action">
       <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1"
-            th:text="${entry.name}">
-          zander
+        <h6 class="mb-1">
+          <span th:text="${entry.name}">zander</span>
+          <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
+                th:if="${entry.conflict}">
+          </span>
         </h6>
         <span class="glyphicon glyphicon-ban-circle text-danger"
               aria-hidden="true">
@@ -139,28 +147,28 @@
   <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(dnsEntryPage) > 1}">
     <ul class="pagination justify-content-center">
       <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 3)}">
-        <a class="page-link" href="#" aria-label="First"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=0,size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" aria-label="First"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=0,size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&laquo;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 5)}">
-        <a class="page-link" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number - 5},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" aria-label="Previous"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 5},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 2)}">
-        <a class="page-link" href="#" th:text="${dnsEntryPage.number - 1}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number - 2},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number - 1}"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 2},size=${size},sort=${sort},q=${q})}">
           1
         </a>
       </li>
       <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 1)}">
-        <a class="page-link" href="#" th:text="${dnsEntryPage.number}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number - 1},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number}"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 1},size=${size},sort=${sort},q=${q})}">
           2
         </a>
       </li>
@@ -171,29 +179,29 @@
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 1)}">
-        <a class="page-link" href="#" th:text="${dnsEntryPage.number + 2}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number + 1},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 2}"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 1},size=${size},sort=${sort},q=${q})}">
           4
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 2)}">
-        <a class="page-link" href="#" th:text="${dnsEntryPage.number + 3}"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number + 2},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 3}"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 2},size=${size},sort=${sort},q=${q})}">
           5
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 5)}">
-        <a class="page-link" href="#" aria-label="Next"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${dnsEntryPage.number + 5},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" aria-label="Next"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 5},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&mldr;</span>
         </a>
       </li>
       <li class="page-item"
           th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 3)}">
-        <a class="page-link" href="#" aria-label="Last"
-           th:href="@{${currentPage}(zone-name=${zone.name},page=${@paginationHelper.getTotalPages(dnsEntryPage) - 1},size=${size},sort=${sort},q=${q})}">
+        <a class="page-link show-spinner" href="#" aria-label="Last"
+           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${@paginationHelper.getTotalPages(dnsEntryPage) - 1},size=${size},sort=${sort},q=${q})}">
           <span aria-hidden="true">&raquo;</span>
         </a>
       </li>
@@ -205,6 +213,42 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const currentPage = /*[[${currentPage}]]*/ "dns-zone-entries";
+    const zoneName = /*[[${zone.name}]]*/ "intranet";
+    const zoneType = /*[[${zoneType}]]*/ "primary";
+    const size = /*[[${size}]]*/ "";
+    const sort = /*[[${sort}]]*/ "";
+    const lastSearchValue = /*[[${q}]]*/ "";
+    const searchInput = $('#q');
+
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+
+    function search() {
+      const value = searchInput.val();
+      if (value !== lastSearchValue) {
+        loadingSpinnerModal.show();
+        window.location.href = currentPage
+            + "?page=0"
+            + "&zone-name=" + encodeURIComponent(zoneName)
+            + "&zone-type=" + encodeURIComponent(zoneType)
+            + "&size=" + size
+            + "&sort=" + encodeURIComponent(sort)
+            + "&q=" + encodeURIComponent(searchInput.val());
+      }
+    }
+    searchInput.on('keypress', function (e) {
+      if (e.which === 13) {
+        search();
+      }
+    });
+    $('#searchInputSubmit')
+    .on('click', function () {
+      search();
+    });
+
   });
   //]]>
 </script>

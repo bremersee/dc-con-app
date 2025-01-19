@@ -60,13 +60,7 @@
     <div class="col">
       <div class="container">
         <div class="d-flex justify-content-center">
-          <h3>DNS Zones</h3>
-        </div>
-        <div class="d-flex justify-content-center">
-          <h3 class="small text-secondary">
-            <span class="fa fa-dna" aria-hidden="true"></span>
-            <span class="mx-1">Primary</span>
-          </h3>
+          <h3 th:text="#{${zoneTypeDropdown.selectedZoneType.i18nCode}}">Primary Zones</h3>
         </div>
       </div>
     </div>
@@ -101,14 +95,14 @@
 
   <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
     <a th:each="entry : ${dnsZones}" href="#"
-       th:href="@{dns-zone-entries(zone-name=${entry.name})}"
-       class="list-group-item list-group-item-action">
+       th:href="@{dns-zone-entries(zone-name=${entry.name},zone-type=${zoneTypeDropdown.selectedZoneType.parameterValue})}"
+       class="list-group-item list-group-item-action show-spinner">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1"
             th:text="${entry.name}">
           eixe.bremersee.org
         </h6>
-        <span class="fa fa-eye" aria-hidden="true"></span>
+        <span class="fa-solid fa-globe" aria-hidden="true"></span>
       </div>
       <small class="text-secondary" th:if="${entry.reverseZone}">
         Reverse Zone
@@ -122,7 +116,7 @@
   "use strict";
   $(document).ready(function () {
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
-    $('#content-list a').on('click', function () {
+    $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();
     });
   });

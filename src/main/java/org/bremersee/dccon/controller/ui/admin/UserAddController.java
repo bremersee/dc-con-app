@@ -159,7 +159,7 @@ public class UserAddController extends AbstractController
         "i18n.user.added", addedUser.getName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    Map<String, Object> parameters = getParamterMap(userAddRequest.getNewOuDn());
+    Map<String, Object> parameters = getParamterMap(addedUser.getDn().getParent());
     String redirect = getRedirectUri("user-edit?user={{user.samAccountName}}",
         PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "user", addedUser));
     logRedirectTo("User successfully added.", redirect);

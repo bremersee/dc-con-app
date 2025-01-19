@@ -69,7 +69,7 @@
             <li><hr class="dropdown-divider" /></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/organizational-units}">Organizational Units</a></li>
             <li><hr class="dropdown-divider" /></li>
-            <li><a class="dropdown-item" href="#" th:href="@{/admin/dns-zones}">DNS</a></li>
+            <li><a class="dropdown-item show-spinner" href="#" th:href="@{/admin/dns-zones}">DNS</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown" th:if="${ouDropdown != null}">
@@ -83,11 +83,8 @@
             <li><hr class="dropdown-divider" /></li>
             <li><a class="dropdown-item" href="#" th:href="@{/admin/organizational-units}">Organizational Units</a></li>
             <li><hr class="dropdown-divider" /></li>
-            <li><a class="dropdown-item" href="#" th:href="@{/admin/dns-zones}">DNS</a></li>
+            <li><a class="dropdown-item show-spinner" href="#" th:href="@{/admin/dns-zones}">DNS</a></li>
           </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
         </li>
         <li class="nav-item dropdown" th:if="${ouDropdown != null}">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -106,11 +103,6 @@
                 </span>
               </a>
             </li>
-            <!--
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-            -->
           </ul>
         </li>
         <li class="nav-item dropdown" th:if="${ouDropdown != null}">
@@ -127,6 +119,23 @@
               <a class="dropdown-item" href="#" th:text="${ouDropdown.selectableScopeDisplayValue}"
                  th:href="@{${currentPage}(page=0,size=${size},sort=${sort},q=${q},ou=${ouDropdown.selectedOu.distinguishedName},scope=${ouDropdown.selectableScope.parameterValue})}">
                 One level
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown" th:if="${zoneTypeDropdown != null}">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="mx-1" th:text="#{${zoneTypeDropdown.selectedZoneType.i18nCode}}">
+              Primary Zones
+            </span>
+          </a>
+          <ul class="dropdown-menu">
+            <li th:each="entry : ${zoneTypeDropdown.selectableZoneTypes}">
+              <a class="dropdown-item show-spinner" href="#"
+                 th:href="@{${currentPage}(zone-type=${entry.parameterValue})}">
+                <span class="mx-1" th:text="#{${entry.i18nCode}}">
+                  Secondary Zones
+                </span>
               </a>
             </li>
           </ul>

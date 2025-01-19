@@ -101,7 +101,7 @@ public class GroupEditController extends AbstractEditController implements Pagea
           return "admin/group-edit";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Group", "todo", groupName, "groups"));
+            redirectAttributes, "Group", "todo", groupName, PAGE_AND_OU_PARAMS, "groups"));
   }
 
   @PostMapping(path = "/admin/group-edit")
@@ -122,7 +122,7 @@ public class GroupEditController extends AbstractEditController implements Pagea
         .map(existingGroup -> updateGroup(
             existingGroup, groupEditRequest, model, bindingResult, redirectAttributes))
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Group", "todo", oldSamAccountName, "groups"));
+            redirectAttributes, "Group", "todo", oldSamAccountName, PAGE_AND_OU_PARAMS, "groups"));
   }
 
   private String updateGroup(

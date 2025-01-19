@@ -21,6 +21,7 @@ import org.bremersee.comparator.model.SortOrders;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
+import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.model.DnsEntryPage;
 import org.bremersee.dccon.service.DnsService;
@@ -40,7 +41,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  */
 @Controller
 public class DnsZoneEntriesController extends AbstractEditController
-    implements CurrentPageNameProvider, PageableComponent {
+    implements CurrentPageNameProvider, PageableComponent, DnsZoneTypeComponent {
 
   private final DnsService dnsService;
 
@@ -83,7 +84,8 @@ public class DnsZoneEntriesController extends AbstractEditController
           return "admin/dns-zone-entries";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "DNS Zone", "todo", zoneName, "dns-zones"));
+            redirectAttributes, "DNS Zone", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
+            "dns-zones"));
   }
 
 }

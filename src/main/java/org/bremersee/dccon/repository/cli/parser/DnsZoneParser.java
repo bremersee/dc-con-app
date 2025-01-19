@@ -100,7 +100,7 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
           zone.setReverseZone(Boolean.parseBoolean(value));
         }
         if (lineContains(line, ALLOW_UPDATE, index)) {
-          zone.setZoneType(line.substring(index + 1).trim());
+          zone.setAllowUpdate(line.substring(index + 1).trim());
         }
         if (lineContains(line, IS_PAUSED, index)) {
           String value = line.substring(index + 1).trim();

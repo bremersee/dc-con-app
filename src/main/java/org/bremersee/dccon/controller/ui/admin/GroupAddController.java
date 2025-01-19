@@ -124,7 +124,7 @@ public class GroupAddController extends AbstractController implements PageableCo
         "i18n.group.added", addedGroup.getSamAccountName());
     redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-    Map<String, Object> parameters = getParamterMap(groupAddRequest.getNewOuDn());
+    Map<String, Object> parameters = getParamterMap(addedGroup.getDn().getParent());
     String redirect = getRedirectUri("group-edit?name={{group.samAccountName}}",
         PAGE_AND_OU_PARAMS, putToParameterMap(parameters, "group", addedGroup));
     logRedirectTo("Group successfully added.", redirect);

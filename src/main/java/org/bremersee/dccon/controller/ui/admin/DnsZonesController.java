@@ -16,15 +16,18 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import java.util.Comparator;
 import java.util.List;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
+import org.bremersee.dccon.controller.ui.components.DnsZoneTypeNavigationComponent;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.service.DnsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
 
 /**
@@ -33,7 +36,8 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class DnsZonesController extends AbstractController {
+public class DnsZonesController extends AbstractController
+    implements DnsZoneTypeNavigationComponent, DnsZoneTypeComponent {
 
   private final DnsService dnsService;
 
@@ -45,10 +49,21 @@ public class DnsZonesController extends AbstractController {
     this.dnsService = dnsService;
   }
 
+  @Override
+  public String getCurrentPageName() {
+    return "dns-zones";
+  }
+
+  @Override
+  public String getDefaultSort() {
+    return "";
+  }
+
   @GetMapping(path = "/admin/dns-zones")
-  public String displayDnsZones(ModelMap model) {
-    List<DnsZone> dnsZones = dnsService.findDnsZones(null)
-        .sorted(Comparator.comparing(DnsZone::getName))
+  public String displayDnsZones(
+      @RequestParam(name = ZONE_TYPE, defaultValue = ZONE_TYPE_DEFAULT) DnsZoneType zoneType,
+      ModelMap model) {
+    List<DnsZone> dnsZones = dnsService.findDnsZones(zoneType)
         .toList();
     model.addAttribute("dnsZones", dnsZones);
     return "admin/dns-zones";
