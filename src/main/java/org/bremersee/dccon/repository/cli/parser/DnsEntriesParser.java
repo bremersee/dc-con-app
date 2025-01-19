@@ -128,7 +128,7 @@ public interface DnsEntriesParser extends
     private void parseDnsRecord(String line, DnsEntry currentEntry) {
       int i0 = line.indexOf(RECORD_LINE_INDICATOR);
       if (i0 > 0) {
-        currentEntry.setType(DnsEntryType.fromValue(line.substring(0, i0).trim()));
+        currentEntry.setType(DnsEntryType.fromValue(line.substring(0, i0).trim(), null));
         int i1 = line.indexOf(FLAGS, i0 + 1);
         if (i1 > i0) {
           String value = line.substring(i0 + 1, i1).trim();

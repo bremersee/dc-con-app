@@ -49,6 +49,8 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <!--suppress ThymeleafVariablesResolveInspection -->
   <div th:if="${rmsg != null}"
        class="alert alert-success"
@@ -203,6 +205,11 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+
     $('#memberTypeSwitch :checkbox').on("change", function () {
       const checkbox = $(this);
       const value = checkbox.val();

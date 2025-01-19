@@ -106,28 +106,52 @@
       <input type="hidden" name="type" th:value="${dnsEntry.type}"/>
       <input type="hidden" name="value" th:value="${dnsEntry.value}"/>
 
-      <div class="mb-3">
+      <div class="mb-3" th:if="${dnsEntry.type.name() == 'SOA'}">
         <div class="form-label">Name</div>
         <div class="form-control text-secondary" th:text="${dnsEntry.name}">
           zander
         </div>
       </div>
+      <div class="mb-3" th:if="${dnsEntry.type.name() != 'SOA'}">
+        <label for="newName" class="form-label">Name</label>
+        <input type="text" class="form-control" id="newName" name="newName"
+               aria-describedby="newNameValidation" required
+               th:field="*{newName}"
+               th:classappend="${#fields.hasErrors('newName')} ? 'is-invalid' : ''"/>
+        <div id="newNameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('newName')} ? ${#fields.errors('newName')[0]} : ''">
+        </div>
+      </div>
 
-      <div class="mb-3">
+      <div class="mb-3" th:if="${dnsEntry.type.name() == 'SOA'}">
         <div class="form-label">Type</div>
         <div class="form-control text-secondary" th:text="${dnsEntry.type}">
           A
         </div>
       </div>
+      <div class="mb-3" th:if="${dnsEntry.type.name() != 'SOA'}">
+        <label for="newType" class="form-label">Type</label>
+        <select id="newType" class="form-select" aria-label="Dns entry types"
+                aria-describedby="newTypeValidation"
+                th:classappend="${#fields.hasErrors('newType')} ? 'is-invalid' : ''"
+                th:field="*{newType}">
+          <option th:each="o : ${types}" th:value="${o}" th:text="${o}">
+            AAAA
+          </option>
+        </select>
+        <div id="newTypeValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('newType')} ? ${#fields.errors('newType')[0]} : ''">
+        </div>
+      </div>
 
       <div class="mb-3">
-        <label for="newDnsEntryValue" class="form-label">New Value</label>
-        <input type="text" class="form-control" id="newDnsEntryValue" name="newDnsEntryValue"
-               aria-describedby="newDnsEntryValueValidation" required
-               th:classappend="${#fields.hasErrors('newDnsEntryValue')} ? 'is-invalid' : ''"
-               th:field="*{newDnsEntryValue}" />
-        <div id="newDnsEntryValueValidation" class="invalid-feedback"
-             th:text="${#fields.hasErrors('newDnsEntryValue')} ? ${#fields.errors('newDnsEntryValue')[0]} : ''">
+        <label for="newValue" class="form-label">New Value</label>
+        <input type="text" class="form-control" id="newValue" name="newValue"
+               aria-describedby="newValueValidation" required
+               th:classappend="${#fields.hasErrors('newValue')} ? 'is-invalid' : ''"
+               th:field="*{newValue}" />
+        <div id="newValueValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('newValue')} ? ${#fields.errors('newValue')[0]} : ''">
         </div>
       </div>
 

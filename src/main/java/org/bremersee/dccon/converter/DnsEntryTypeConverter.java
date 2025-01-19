@@ -14,39 +14,23 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.controller.ui.model;
+package org.bremersee.dccon.converter;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
 
 /**
- * The type DnsEntryEditRequest.
+ * The type DnsEntryTypeConverter.
  *
  * @author Christian Bremer
  */
-@Data
-@NoArgsConstructor
-public class DnsEntryEditRequest {
+@Component
+public class DnsEntryTypeConverter implements Converter<String, DnsEntryType> {
 
-  private String newName;
-
-  private DnsEntryType newType;
-
-  private String newValue;
-
-  public DnsEntryEditRequest(DnsEntry dnsEntry) {
-    this.newName = dnsEntry.getName();
-    this.newType = dnsEntry.getType();
-    this.newValue = dnsEntry.getValue();
-  }
-
-  public DnsEntry toNewDnsEntry() {
-    DnsEntry dnsEntry = new DnsEntry();
-    dnsEntry.setName(newName);
-    dnsEntry.setType(newType);
-    dnsEntry.setValue(newValue);
-    return dnsEntry;
+  @Override
+  public DnsEntryType convert(@NonNull String source) {
+    return DnsEntryType.fromValue(source, null);
   }
 }

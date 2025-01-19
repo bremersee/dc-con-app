@@ -47,6 +47,8 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <div class="row mb-4">
     <div class="col-1">
       <a class="btn btn-outline-secondary" href="groups.html"
@@ -173,5 +175,16 @@
     </form>
   </div>
 </main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
 </body>
 </html>

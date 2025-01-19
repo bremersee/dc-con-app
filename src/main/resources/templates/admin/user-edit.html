@@ -46,6 +46,9 @@
   </div>
 </nav>
 <main role="main" class="container">
+
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <!--suppress ThymeleafVariablesResolveInspection -->
   <div th:if="${rmsg != null}"
        class="alert alert-success mb-4"
@@ -425,6 +428,11 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+
     const avatarImage = document.getElementById("avatarImage");
     const avatarInput = document.getElementById("newAvatar");
     avatarInput.onchange = function(event) {

@@ -49,6 +49,8 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <div class="row mb-4">
     <div class="col-1">
       <a class="btn btn-outline-secondary" href="home.html"
@@ -204,6 +206,11 @@
     const sort = /*[[${sort}]]*/ "";
     const ou = /*[[${ouDropdown.selectedOu.distinguishedName}]]*/ "";
     const scope = /*[[${ouDropdown.selectedScope.parameterValue}]]*/ "";
+
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
 
     function moveCursorToEnd(input) {
       const length = input.value.length;

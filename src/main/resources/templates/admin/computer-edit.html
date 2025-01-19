@@ -49,6 +49,8 @@
 </nav>
 <main role="main" class="container">
 
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
   <!--suppress ThymeleafVariablesResolveInspection -->
   <div th:if="${rmsg != null}"
        class="alert alert-success"
@@ -202,5 +204,16 @@
     </form>
   </div>
 </main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
 </body>
 </html>

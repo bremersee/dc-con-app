@@ -16,7 +16,11 @@
 
 package org.bremersee.dccon.model;
 
+import static java.util.Objects.isNull;
+
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 
@@ -497,23 +501,33 @@ public enum DnsEntryType {
    * Find dns record type by string.
    *
    * @param value the value
+   * @param defaultType the default type
    * @return the dns record type
    */
-  public static DnsEntryType fromValue(String value) {
+  public static DnsEntryType fromValue(String value, DnsEntryType defaultType) {
     if (value == null) {
-      return ALL;
+      return defaultType;
     }
-    return STRING_TYPE_MAP.getOrDefault(value.toUpperCase(), ALL);
+    return STRING_TYPE_MAP.getOrDefault(value.toUpperCase(), defaultType);
   }
 
-  /**
-   * Determine whether this dns record equals the given one.
-   *
-   * @param recordType the record type
-   * @return the boolean
-   */
-  public boolean is(String recordType) {
-    return this == fromValue(recordType);
+  public static List<DnsEntryType> getSupportedAddOrDeleteTypes() {
+    return Arrays.stream(values())
+        .filter(DnsEntryType::isAddable)
+        .toList();
+  }
+
+  public static List<DnsEntryType> getSupportedUpdateTypes(DnsEntry dnsEntry) {
+    return Arrays.stream(values())
+        .filter(type -> SOA.equals(type) ? isSoa(dnsEntry) : type.isUpdatable())
+        .toList();
+  }
+
+  private static boolean isSoa(DnsEntry dnsEntry) {
+    if (isNull(dnsEntry) || isNull(dnsEntry.getType())) {
+      return false;
+    }
+    return SOA.equals(dnsEntry.getType());
   }
 
 }

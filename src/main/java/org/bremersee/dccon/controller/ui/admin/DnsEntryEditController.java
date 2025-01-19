@@ -29,7 +29,6 @@ import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.service.DnsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -81,6 +80,7 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
         .map(dnsEntry -> {
           model.addAttribute("zoneName", zoneName);
           model.addAttribute("dnsEntry", dnsEntry);
+          model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(dnsEntry));
           model.addAttribute("dnsEntryEditRequest", new DnsEntryEditRequest(dnsEntry));
           return "admin/dns-entry-edit";
         })
@@ -97,7 +97,7 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       @RequestParam(name = "value") String value,
       @ModelAttribute(name = "dnsEntryEditRequest") DnsEntryEditRequest dnsEntryEditRequest,
       ModelMap model,
-      BindingResult bindingResult,
+      // BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
     log.debug("updateDnsEntry()");
@@ -105,8 +105,16 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
     dnsEntry.setName(name);
     dnsEntry.setType(type);
     dnsEntry.setValue(value);
-    DnsEntry updatedDnsEntry = dnsService
-        .updateDnsEntry(zoneName, dnsEntry, dnsEntryEditRequest.getNewDnsEntryValue());
+    DnsEntry updatedDnsEntry;
+    if (name.equals(dnsEntryEditRequest.getNewName())
+        && type.equals(dnsEntryEditRequest.getNewType())) {
+      updatedDnsEntry = dnsService
+          .updateDnsEntry(zoneName, dnsEntry, dnsEntryEditRequest.getNewValue());
+    } else {
+      dnsService.deleteDnsEntry(zoneName, dnsEntry);
+      updatedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntryEditRequest.toNewDnsEntry());
+    }
+
     model.clear();
     String msg = String.format("Dns entry '%s' was successfully updated.",
         updatedDnsEntry.getName());
