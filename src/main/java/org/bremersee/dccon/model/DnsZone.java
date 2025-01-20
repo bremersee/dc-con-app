@@ -107,6 +107,10 @@ public class DnsZone extends CommonAttributes {
 
   private Boolean readOnlyZone;
 
+  public DnsZone(String name) {
+    this.name = name;
+  }
+
   /**
    * Instantiates a new dns zone.
    *

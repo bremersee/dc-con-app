@@ -61,10 +61,10 @@
     <div class="col">
       <div class="container">
         <div class="d-flex justify-content-center">
-          <h3 class="small">DNS entries of zone</h3>
+          <h3 class="small">Dns entries of zone</h3>
         </div>
         <div class="d-flex justify-content-center">
-          <h3 th:text="${zone.name}">eixe.bremersee.org</h3>
+          <h3 th:text="${zoneName}">eixe.bremersee.org</h3>
         </div>
       </div>
     </div>
@@ -79,135 +79,157 @@
     Status message
   </div>
 
-  <div class="mb-3 p-3 border border-1">
-    <div class="row justify-content-between">
-      <div class="col col-auto w-75">
-        <div class="row g-3 align-items-center">
-          <div class="col-auto">
-            <div class="input-group">
-              <!--suppress HtmlFormInputWithoutLabel -->
-              <input type="text" id="q" name="q" class="form-control"
-                     placeholder="Search ..."
-                     th:value="${q}">
-              <span class="input-group-text">
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="#">
+        <span class="fa fa-list" aria-hidden="true"></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link show-spinner" href="dns-zone-info.html"
+         th:href="@{dns-zone-info(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-info" aria-hidden="true"></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="dns-zone-delete.html"
+         th:href="@{dns-zone-delete(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-trash-alt" aria-hidden="true"></span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="mx-0 mx-sm-1 mx-md-3">
+    <div class="mb-3 p-3 border border-1">
+      <div class="row justify-content-between">
+        <div class="col col-auto w-75">
+          <div class="row g-3 align-items-center">
+            <div class="col-auto">
+              <div class="input-group">
+                <!--suppress HtmlFormInputWithoutLabel -->
+                <input type="text" id="q" name="q" class="form-control"
+                       placeholder="Search ..."
+                       th:value="${q}">
+                <span class="input-group-text">
                 <a id="searchInputSubmit" href="#" title="Search">
                   <span class="glyphicon glyphicon-search text-primary" aria-hidden="true"></span>
                 </a>
               </span>
-              <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
+                <span class="input-group-text" th:if="${not #strings.isEmpty(q)}">
                 <a id="searchInputReset" href="#" title="Reset search" class="show-spinner"
-                   th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=0,size=${size},sort=${sort})}"
+                   th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=0,size=${size},sort=${sort})}"
                    th:classappend="${#strings.isEmpty(q)} ? 'disabled' : ''"
                    th:disabled="${#strings.isEmpty(q)}"
                    th:aria-disabled="${#strings.isEmpty(q)}">
                   <span class="glyphicon glyphicon-remove text-danger" aria-hidden="true"></span>
                 </a>
               </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="col col-auto mt-sm-2 mt-md-0">
-        <a id="addDnsEntry" href="dns-entry-add.html" title="Add dns entry"
-           class="btn btn-outline-primary"
-           th:href="@{dns-entry-add(zone-type=${zoneType},zone-name=${zone.name},page=${page},size=${size},sort=${sort},q=${q})}">
-          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-        </a>
+        <div class="col col-auto mt-sm-2 mt-md-0">
+          <a id="addDnsEntry" href="dns-entry-add.html" title="Add dns entry"
+             class="btn btn-outline-primary"
+             th:href="@{dns-entry-add(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+          </a>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div th:if="${#lists.isEmpty(dnsEntryPage.content)}"
-       class="alert alert-info" role="alert">
-    No entries were found.
-  </div>
+    <div th:if="${#lists.isEmpty(dnsEntryPage.content)}"
+         class="alert alert-info" role="alert">
+      No entries were found.
+    </div>
 
-  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsEntryPage.content)}">
-    <a th:each="entry : ${dnsEntryPage.content}" href="dns-entry-edit.html"
-       th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zone.name},name=${entry.name},type=${entry.type},value=${entry.value},cnf=${entry.conflict},guid=${entry.objectGuid},page=${page},size=${size},sort=${sort},q=${q})}"
-       class="list-group-item list-group-item-action show-spinner">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1">
-          <span th:text="${entry.name}">zander</span>
-          <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
-                th:if="${entry.conflict}">
+    <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsEntryPage.content)}">
+      <a th:each="entry : ${dnsEntryPage.content}" href="dns-entry-edit.html"
+         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zoneName},name=${entry.name},type=${entry.type},value=${entry.value},cnf=${entry.conflict},guid=${entry.objectGuid},page=${page},size=${size},sort=${sort},q=${q})}"
+         class="list-group-item list-group-item-action show-spinner">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">
+            <span th:text="${entry.name}">zander</span>
+            <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
+                  th:if="${entry.conflict}">
           </span>
-        </h6>
-        <span class="glyphicon glyphicon-ban-circle text-danger"
-              aria-hidden="true">
+          </h6>
+          <span class="glyphicon glyphicon-ban-circle text-danger"
+                aria-hidden="true">
         </span>
-      </div>
-      <div class="small text-secondary">
-        <span th:text="${entry.type}">A</span>
-        <span class="mx-1 my-1">:</span>
-        <span th:text="${entry.value}">192.168.1.112</span>
-      </div>
-    </a>
-  </div>
+        </div>
+        <div class="small text-secondary">
+          <span th:text="${entry.type}">A</span>
+          <span class="mx-1 my-1">:</span>
+          <span th:text="${entry.value}">192.168.1.112</span>
+        </div>
+      </a>
+    </div>
 
-  <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(dnsEntryPage) > 1}">
-    <ul class="pagination justify-content-center">
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 3)}">
-        <a class="page-link show-spinner" href="#" aria-label="First"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=0,size=${size},sort=${sort},q=${q})}">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 5)}">
-        <a class="page-link show-spinner" href="#" aria-label="Previous"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 5},size=${size},sort=${sort},q=${q})}">
-          <span aria-hidden="true">&mldr;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 2)}">
-        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number - 1}"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 2},size=${size},sort=${sort},q=${q})}">
-          1
-        </a>
-      </li>
-      <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 1)}">
-        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number}"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number - 1},size=${size},sort=${sort},q=${q})}">
-          2
-        </a>
-      </li>
-      <li class="page-item disabled">
-        <a class="page-link" href="#" th:text="${dnsEntryPage.number + 1}">
-          3
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 1)}">
-        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 2}"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 1},size=${size},sort=${sort},q=${q})}">
-          4
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 2)}">
-        <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 3}"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 2},size=${size},sort=${sort},q=${q})}">
-          5
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 5)}">
-        <a class="page-link show-spinner" href="#" aria-label="Next"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${dnsEntryPage.number + 5},size=${size},sort=${sort},q=${q})}">
-          <span aria-hidden="true">&mldr;</span>
-        </a>
-      </li>
-      <li class="page-item"
-          th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 3)}">
-        <a class="page-link show-spinner" href="#" aria-label="Last"
-           th:href="@{${currentPage}(zone-name=${zone.name},zone-type=${zoneType},page=${@paginationHelper.getTotalPages(dnsEntryPage) - 1},size=${size},sort=${sort},q=${q})}">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
+    <nav aria-label="Page navigation example" th:if="${@paginationHelper.getTotalPages(dnsEntryPage) > 1}">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 3)}">
+          <a class="page-link show-spinner" href="#" aria-label="First"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=0,size=${size},sort=${sort},q=${q})}">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 5)}">
+          <a class="page-link show-spinner" href="#" aria-label="Previous"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number - 5},size=${size},sort=${sort},q=${q})}">
+            <span aria-hidden="true">&mldr;</span>
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 2)}">
+          <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number - 1}"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number - 2},size=${size},sort=${sort},q=${q})}">
+            1
+          </a>
+        </li>
+        <li class="page-item" th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number - 1)}">
+          <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number}"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number - 1},size=${size},sort=${sort},q=${q})}">
+            2
+          </a>
+        </li>
+        <li class="page-item disabled">
+          <a class="page-link" href="#" th:text="${dnsEntryPage.number + 1}">
+            3
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 1)}">
+          <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 2}"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number + 1},size=${size},sort=${sort},q=${q})}">
+            4
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 2)}">
+          <a class="page-link show-spinner" href="#" th:text="${dnsEntryPage.number + 3}"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number + 2},size=${size},sort=${sort},q=${q})}">
+            5
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 5)}">
+          <a class="page-link show-spinner" href="#" aria-label="Next"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${dnsEntryPage.number + 5},size=${size},sort=${sort},q=${q})}">
+            <span aria-hidden="true">&mldr;</span>
+          </a>
+        </li>
+        <li class="page-item"
+            th:if="${@paginationHelper.isValidPageNumber(dnsEntryPage, dnsEntryPage.number + 3)}">
+          <a class="page-link show-spinner" href="#" aria-label="Last"
+             th:href="@{${currentPage}(zone-name=${zoneName},zone-type=${zoneType},page=${@paginationHelper.getTotalPages(dnsEntryPage) - 1},size=${size},sort=${sort},q=${q})}">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 
 </main>
 <script type="text/javascript" th:inline="javascript">
@@ -215,7 +237,7 @@
   "use strict";
   $(document).ready(function () {
     const currentPage = /*[[${currentPage}]]*/ "dns-zone-entries";
-    const zoneName = /*[[${zone.name}]]*/ "intranet";
+    const zoneName = /*[[${zoneName}]]*/ "intranet";
     const zoneType = /*[[${zoneType}]]*/ "primary";
     const size = /*[[${size}]]*/ "";
     const sort = /*[[${sort}]]*/ "";

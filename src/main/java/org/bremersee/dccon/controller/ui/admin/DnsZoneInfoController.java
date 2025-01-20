@@ -16,21 +16,17 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import org.bremersee.comparator.model.SortOrders;
-import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.model.DnsEntryPage;
 import org.bremersee.dccon.service.DnsService;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * The type DnsZoneEntriesController.
@@ -38,12 +34,12 @@ import org.springframework.web.servlet.LocaleResolver;
  * @author Christian Bremer
  */
 @Controller
-public class DnsZoneEntriesController extends AbstractEditController
+public class DnsZoneInfoController extends AbstractEditController
     implements CurrentPageNameProvider, PageableComponent, DnsZoneTypeComponent {
 
   private final DnsService dnsService;
 
-  public DnsZoneEntriesController(
+  public DnsZoneInfoController(
       DomainControllerProperties properties,
       LocaleResolver localeResolver,
       DnsService dnsService) {
@@ -53,7 +49,7 @@ public class DnsZoneEntriesController extends AbstractEditController
 
   @Override
   public String getCurrentPageName() {
-    return "dns-zone-entries";
+    return "dns-zone-info";
   }
 
   @Override
@@ -61,21 +57,20 @@ public class DnsZoneEntriesController extends AbstractEditController
     return DNS_ENTRY_SORT;
   }
 
-  @GetMapping(path = "/admin/dns-zone-entries")
-  public String displayDnsZoneEntries(
+  @GetMapping(path = "/admin/dns-zone-info")
+  public String displayDnsZoneInfo(
       @RequestParam(name = ZONE_NAME) String zoneName,
-      @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
-      @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = DNS_ENTRY_SORT) SortOrders sort,
-      @RequestParam(name = QUERY, required = false) String query,
-      ModelMap model) {
+      ModelMap model,
+      RedirectAttributes redirectAttributes) {
 
-    Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
-    DnsEntryPage dnsEntryPage = new DnsEntryPage(
-        dnsService.findDnsEntries(zoneName, pageable, query));
-    model.addAttribute("dnsEntryPage", dnsEntryPage);
-    model.addAttribute("zoneName", zoneName);
-    return "admin/dns-zone-entries";
+    return dnsService.findDnsZone(zoneName)
+        .map(zone -> {
+          model.addAttribute("zone", zone);
+          return "admin/dns-zone-info";
+        })
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "DNS Zone", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
+            "dns-zones"));
   }
 
 }

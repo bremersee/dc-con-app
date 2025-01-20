@@ -64,24 +64,21 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
 
   @GetMapping(path = "/admin/dns-entry-delete")
   public String displayDeleteDnsEntry(
-      @RequestParam(name = ZONE_NAME, required = false) String zoneName,
-      @RequestParam(name = "name", required = false) String name,
-      @RequestParam(name = "type", required = false) DnsEntryType type,
-      @RequestParam(name = "value", required = false) String value,
-      ModelMap model,
-      RedirectAttributes redirectAttributes) {
+      @RequestParam(name = ZONE_NAME) String zoneName,
+      @RequestParam(name = "name") String name,
+      @RequestParam(name = "type") DnsEntryType type,
+      @RequestParam(name = "value") String value,
+      ModelMap model) {
 
     log.debug("displayDeleteDnsEntry({}, {}, {}, {})", zoneName, name, type, value);
-    return dnsService.findDnsEntry(zoneName, name, type, value)
-        .map(dnsEntry -> {
-          model.addAttribute("zoneName", zoneName);
-          model.addAttribute("dnsEntry", dnsEntry);
-          model.addAttribute("dnsEntryDeleteRequest", new DnsEntryDeleteRequest());
-          return "admin/dns-entry-delete";
-        })
-        .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "DNS Entry", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
-            "dns-zone-entries"));
+    model.addAttribute("zoneName", zoneName);
+    DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setName(name);
+    dnsEntry.setType(type);
+    dnsEntry.setValue(value);
+    model.addAttribute("dnsEntry", dnsEntry);
+    model.addAttribute("dnsEntryDeleteRequest", new DnsEntryDeleteRequest());
+    return "admin/dns-entry-delete";
   }
 
   @PostMapping(path = "/admin/dns-entry-delete")
@@ -120,9 +117,8 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
 
     } catch (ServiceException e) {
 
-      log.error("Deleting dns entry failed.", e);
-
       String msg = String.format("Deletion of dns entry '%s' failed.", name);
+      log.error(msg, e);
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
           "todo", name);
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);

@@ -19,17 +19,17 @@ package org.bremersee.dccon.controller.ui.admin;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.model.DnsEntryAddRequest;
+import org.bremersee.dccon.controller.ui.model.DnsZoneDeleteRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
-import org.bremersee.dccon.model.DnsEntry;
-import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.service.DnsService;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,22 +38,28 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * The type DnsEntryAddController.
+ * The type DnsZoneEntriesController.
  *
  * @author Christian Bremer
  */
 @Controller
 @Slf4j
-public class DnsEntryAddController extends AbstractEditController implements PageableComponent,
-    DnsZoneTypeComponent {
+public class DnsZoneDeleteController extends AbstractEditController
+    implements CurrentPageNameProvider, PageableComponent, DnsZoneTypeComponent {
 
   private final DnsService dnsService;
 
-  public DnsEntryAddController(
+  public DnsZoneDeleteController(
       DomainControllerProperties properties,
-      LocaleResolver localeResolver, DnsService dnsService) {
+      LocaleResolver localeResolver,
+      DnsService dnsService) {
     super(properties, localeResolver);
     this.dnsService = dnsService;
+  }
+
+  @Override
+  public String getCurrentPageName() {
+    return "dns-zone-delete";
   }
 
   @Override
@@ -61,61 +67,55 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
     return DNS_ENTRY_SORT;
   }
 
-  @GetMapping(path = "/admin/dns-entry-add")
-  public String displayAddDnsEntry(
+  @GetMapping(path = "/admin/dns-zone-delete")
+  public String displayDnsZoneInfo(
       @RequestParam(name = ZONE_NAME) String zoneName,
       ModelMap model) {
 
-    log.debug("displayAddDnsEntry({})", zoneName);
     model.addAttribute("zoneName", zoneName);
-    model.addAttribute("types", DnsEntryType.getSupportedAddOrDeleteTypes());
-    model.addAttribute("dnsEntryAddRequest", new DnsEntryAddRequest(zoneName));
-    return "admin/dns-entry-add";
+    model.addAttribute("dnsZoneDeleteRequest", new DnsZoneDeleteRequest());
+    return "admin/dns-zone-delete";
   }
 
-  @PostMapping(path = "/admin/dns-entry-add")
-  public String addDnsEntry(
+  @PostMapping(path = "/admin/dns-zone-delete")
+  public String deleteDnsZone(
       @RequestParam(name = ZONE_NAME) String zoneName,
-      @ModelAttribute(name = "dnsEntryAddRequest") DnsEntryAddRequest dnsEntryAddRequest,
+      @ModelAttribute(name = "dnsZoneDeleteRequest") DnsZoneDeleteRequest deleteRequest,
       ModelMap model,
+      BindingResult bindingResult,
       RedirectAttributes redirectAttributes) {
 
-    log.debug("updateDnsEntry({}, {})", zoneName, dnsEntryAddRequest);
-    DnsEntry dnsEntry = dnsEntryAddRequest.toDnsEntry();
+    log.debug("deleteDnsEntry({}, {})", zoneName, deleteRequest);
+
+    if (!zoneName.equalsIgnoreCase(deleteRequest.getVerificationName())) {
+      bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
+      model.addAttribute("zoneName", zoneName);
+      return "admin/dns-zone-delete";
+    }
 
     model.clear();
-    Map<String, Object> parameters = getParamterMap();
-    parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
-
     try {
-      DnsEntry addedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntry);
+      dnsService.deleteDnsZone(zoneName);
 
-      String msg = String.format("Dns entry '%s' was successfully added.",
-          addedDnsEntry.getName());
+      String msg = String.format("Dns zone '%s' was successfully deleted.", zoneName);
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-          "todo", addedDnsEntry.getName());
+          "todo", zoneName);
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-
-      parameters = putToParameterMap(parameters, "name", addedDnsEntry.getName());
-      parameters = putToParameterMap(parameters, "type", addedDnsEntry.getType());
-      parameters = putToParameterMap(parameters, "value", addedDnsEntry.getValue());
-      String redirect = getRedirectUri("dns-entry-edit",
-          PAGE_AND_DNS_ENTRY_PARAMS, parameters);
-      logRedirectTo("Dns entry successfully added.", redirect);
-      return redirect;
 
     } catch (ServiceException e) {
 
-      String msg = String.format("Adding of dns entry '%s' failed.", dnsEntryAddRequest.getName());
+      String msg = String.format("Deletion of dns zone '%s' failed.", zoneName);
       log.error(msg, e);
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
-          "todo", dnsEntryAddRequest.getName());
+          "todo", zoneName);
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
-          PAGE_AND_ZONE_TYPE_PARAMS, parameters);
-      logRedirectTo("Adding dns entry failed.", redirect);
-      return redirect;
     }
+
+    Map<String, Object> parameters = getParamterMap();
+    String redirect = getRedirectUri("dns-zones",
+        PAGE_AND_ZONE_TYPE_PARAMS, parameters);
+    logRedirectTo("Dns zone deletion redirect.", redirect);
+    return redirect;
   }
 
 }

@@ -70,6 +70,7 @@ public class DnsZoneCreateController extends AbstractController {
     } catch (ServiceException e) {
 
       String msg = String.format("Creation of dns zone '%s' failed.", name);
+      log.error(msg, e);
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
           "todo", name);
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);

@@ -17,6 +17,7 @@
 package org.bremersee.dccon.repository;
 
 import static java.util.Objects.requireNonNullElse;
+import static java.util.Objects.requireNonNullElseGet;
 
 import java.util.List;
 import java.util.Optional;
@@ -68,9 +69,9 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         "--" + zoneType.getParameterValue()
     );
-    return executeAndGet(commands, DnsZoneListParser.defaultParser()).stream()
-        .map(this::findDnsZone)
-        .flatMap(Optional::stream);
+    Stream<DnsZone> zoneStream = executeAndGet(commands, DnsZoneListParser.defaultParser()).stream()
+        .map(DnsZone::new);
+    return requireNonNullElseGet(zoneStream, Stream::empty);
   }
 
   @Override
@@ -133,9 +134,10 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         type.name()
     );
     LdaptiveTemplate ldapTemplate = DnsEntryType.ALL.equals(type) ? null : getLdapTemplate();
-    return executeAndGet(
+    Stream<DnsEntry> dnsEntryStream = executeAndGet(
         commands,
-        DnsEntriesParser.defaultParser(ldapTemplate, dnsZone.getDn(), name));
+        DnsEntriesParser.defaultParser(name, dnsZone.getDn(), ldapTemplate));
+    return requireNonNullElseGet(dnsEntryStream, Stream::empty);
   }
 
   @Override

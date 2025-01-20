@@ -41,8 +41,8 @@ public interface DnsEntriesParser extends
     CommandExecutorResponseParser<Stream<DnsEntry>> {
 
   static DnsEntriesParser defaultParser(
-      LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String name) {
-    return new Default(ldaptiveTemplate, zoneDn, name);
+      String name, Dn zoneDn, LdaptiveTemplate ldaptiveTemplate) {
+    return new Default(name, zoneDn, ldaptiveTemplate);
   }
 
   @Slf4j
@@ -65,16 +65,16 @@ public interface DnsEntriesParser extends
 
     private static final char END = ')';
 
-    private final LdaptiveTemplate ldaptiveTemplate;
+    private final String name;
 
     private final Dn zoneDn;
 
-    private final String name;
+    private final LdaptiveTemplate ldaptiveTemplate;
 
-    Default(LdaptiveTemplate ldaptiveTemplate, Dn zoneDn, String name) {
-      this.ldaptiveTemplate = ldaptiveTemplate;
-      this.zoneDn = zoneDn;
+    Default(String name, Dn zoneDn, LdaptiveTemplate ldaptiveTemplate) {
       this.name = name;
+      this.zoneDn = zoneDn;
+      this.ldaptiveTemplate = ldaptiveTemplate;
     }
 
     @Override

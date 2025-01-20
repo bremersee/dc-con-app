@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       lang="en"
       data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Dns Zones</title>
+  <title>DNS Zone Entries</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -52,15 +53,18 @@
 
   <div class="row mb-4">
     <div class="col-1">
-      <a class="btn btn-outline-secondary" href="home.html"
-         th:href="@{../admin}">
+      <a class="btn btn-outline-secondary show-spinner" href="dns-zones.html"
+         th:href="@{dns-zones(zone-type=${zoneType})}">
         <span class="fa fa-backward"></span>
       </a>
     </div>
     <div class="col">
       <div class="container">
         <div class="d-flex justify-content-center">
-          <h3 th:text="#{${zoneTypeDropdown.selectedZoneType.i18nCode}}">Primary Zones</h3>
+          <h3 class="small">Delete dns zone</h3>
+        </div>
+        <div class="d-flex justify-content-center">
+          <h3 th:text="${zoneName}">eixe.bremersee.org</h3>
         </div>
       </div>
     </div>
@@ -75,36 +79,62 @@
     Status message
   </div>
 
-  <div class="mb-3 p-3 border border-1">
-    <div class="row justify-content-between">
-      <div class="col col-auto">
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link show-spinner" href="dns-zone-entries.html"
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-list" aria-hidden="true"></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link show-spinner" href="dns-zone-info.html"
+         th:href="@{dns-zone-info(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+        <span class="fa fa-info" aria-hidden="true"></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="#">
+        <span class="fa fa-trash-alt" aria-hidden="true"></span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="mx-0 mx-sm-1 mx-md-3">
+
+    <div class="mb-4 p-3 border border-1 border-danger">
+      <div class="h5 mb-3">
+        <span>Delete dns zone </span>
+        <span class="badge text-bg-secondary" th:text="${zoneName}">intranet</span>
       </div>
-      <div class="col col-auto mt-sm-2 mt-md-0">
-        <a id="addUser" href="dns-zone-create.html" title="Add user" class="btn btn-outline-primary"
-           th:href="@{dns-zone-create}">
-          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-        </a>
-      </div>
+      <form id="deleteDnsEntryForm" th:action="@{dns-zone-delete}"
+            th:object="${dnsZoneDeleteRequest}" action="#" method="post">
+        <input type="hidden" name="page" th:value="${page}"/>
+        <input type="hidden" name="size" th:value="${size}"/>
+        <input type="hidden" name="sort" th:value="${sort}"/>
+        <input type="hidden" name="q" th:value="${q}"/>
+
+        <input type="hidden" name="zone-type" th:value="${zoneType}"/>
+        <input type="hidden" name="zone-name" th:value="${zoneName}"/>
+
+        <div class="mb-3">
+          <input type="text" class="form-control" id="verificationName" name="verificationName"
+                 aria-describedby="verificationNameValidation" required
+                 th:classappend="${#fields.hasErrors('verificationName')} ? 'is-invalid' : ''"
+                 th:field="*{verificationName}" />
+          <label for="verificationName" id="verificationNameHelp" class="form-text">
+            Please enter the dns zone name for deletion.
+          </label>
+          <div id="verificationNameValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('verificationName')} ? ${#fields.errors('verificationName')[0]} : ''">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-danger mt-3 mb-3 show-spinner">
+          Delete
+        </button>
+      </form>
     </div>
-  </div>
 
-  <div th:if="${#lists.isEmpty(dnsZones)}"
-       class="alert alert-info" role="alert">
-    No dns zones were found.
-  </div>
-
-  <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
-    <a th:each="entry : ${dnsZones}" href="#"
-       th:href="@{dns-zone-entries(zone-name=${entry.name},zone-type=${zoneTypeDropdown.selectedZoneType.parameterValue})}"
-       class="list-group-item list-group-item-action show-spinner">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1"
-            th:text="${entry.name}">
-          eixe.bremersee.org
-        </h6>
-        <span class="fa-solid fa-globe" aria-hidden="true"></span>
-      </div>
-    </a>
   </div>
 
 </main>

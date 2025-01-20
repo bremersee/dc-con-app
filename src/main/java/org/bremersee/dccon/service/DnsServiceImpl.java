@@ -22,6 +22,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.Optional;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Service;
  * @author Christian Bremer
  */
 @Service
+@Slf4j
 public class DnsServiceImpl implements DnsService, ErrorCode {
 
   private static final String ZONE_ENTRIES_NODE_NAME = "@";
@@ -115,9 +117,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   @Override
   public Stream<DnsEntry> findDnsEntries(String zoneName, String name, DnsEntryType type) {
-    return findDnsZone(zoneName)
-        .stream()
-        .flatMap(dnsZone -> dnsRepository.findDnsEntries(dnsZone, name, type));
+    return dnsRepository.findDnsEntries(new DnsZone(zoneName), name, type);
   }
 
   @Override
