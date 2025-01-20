@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>Dns Zones</title>
+  <title>Create dns Zone</title>
   <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
         th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
   <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
@@ -50,23 +50,6 @@
 
   <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
 
-  <div class="row mb-4">
-    <div class="col-1">
-      <a class="btn btn-outline-secondary" href="home.html"
-         th:href="@{../admin}">
-        <span class="fa fa-backward"></span>
-      </a>
-    </div>
-    <div class="col">
-      <div class="container">
-        <div class="d-flex justify-content-center">
-          <h3 th:text="#{${zoneTypeDropdown.selectedZoneType.i18nCode}}">Primary Zones</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-1"></div>
-  </div>
-
   <!--suppress ThymeleafVariablesResolveInspection -->
   <div th:if="${rmsg != null}"
        class="alert alert-success"
@@ -75,40 +58,38 @@
     Status message
   </div>
 
-  <div class="mb-3 p-3 border border-1">
-    <div class="row justify-content-between">
-      <div class="col col-auto">
-      </div>
-      <div class="col col-auto mt-sm-2 mt-md-0">
-        <a id="addUser" href="dns-zone-create.html" title="Add user" class="btn btn-outline-primary"
-           th:href="@{dns-zone-create}">
-          <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-        </a>
+  <div class="row mb-4">
+    <div class="col-1">
+      <a class="btn btn-outline-secondary" href="dns-zones.html"
+         th:href="@{dns-zones}">
+        <span class="fa fa-backward"></span>
+      </a>
+    </div>
+    <div class="col">
+      <div class="container">
+        <div class="d-flex justify-content-center">
+          <h3>Create Zone</h3>
+        </div>
       </div>
     </div>
+    <div class="col-1"></div>
   </div>
 
-  <div th:if="${#lists.isEmpty(dnsZones)}"
-       class="alert alert-info" role="alert">
-    No dns zones were found.
-  </div>
+  <form th:action="@{dns-zone-create}" action="#" method="post">
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" class="form-control" id="name" name="name" required/>
+    </div>
 
-  <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
-    <a th:each="entry : ${dnsZones}" href="#"
-       th:href="@{dns-zone-entries(zone-name=${entry.name},zone-type=${zoneTypeDropdown.selectedZoneType.parameterValue})}"
-       class="list-group-item list-group-item-action show-spinner">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1"
-            th:text="${entry.name}">
-          eixe.bremersee.org
-        </h6>
-        <span class="fa-solid fa-globe" aria-hidden="true"></span>
-      </div>
-      <small class="text-secondary" th:if="${entry.reverseZone}">
-        Reverse Zone
-      </small>
+    <button type="submit" class="btn btn-primary mt-3 show-spinner">
+      Create
+    </button>
+    <a href="dns-zones.html"
+       th:href="@{dns-zones}"
+       class="btn btn-secondary ml-3 mt-3 show-spinner" role="button">
+      Cancel
     </a>
-  </div>
+  </form>
 
 </main>
 <script type="text/javascript" th:inline="javascript">
