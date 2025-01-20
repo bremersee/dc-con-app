@@ -59,9 +59,9 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public Stream<DnsZone> findDnsZones(DnsZoneType type) {
+  public List<String> findDnsZoneNames(DnsZoneType type) {
     DnsZoneType zoneType = requireNonNullElse(type, DnsZoneType.PRIMARY);
-    log.debug("findDnsZones({})", zoneType);
+    log.debug("findDnsZoneNames({})", zoneType);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -69,9 +69,8 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         domainRepository.getHostName(),
         "--" + zoneType.getParameterValue()
     );
-    Stream<DnsZone> zoneStream = executeAndGet(commands, DnsZoneListParser.defaultParser()).stream()
-        .map(DnsZone::new);
-    return requireNonNullElseGet(zoneStream, Stream::empty);
+    List<String> zoneNames = executeAndGet(commands, DnsZoneListParser.defaultParser());
+    return requireNonNullElseGet(zoneNames, List::of);
   }
 
   @Override

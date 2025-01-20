@@ -88,19 +88,19 @@
     </div>
   </div>
 
-  <div th:if="${#lists.isEmpty(dnsZones)}"
+  <div th:if="${#lists.isEmpty(dnsZoneNames)}"
        class="alert alert-info" role="alert">
     No dns zones were found.
   </div>
 
-  <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZones)}">
-    <a th:each="entry : ${dnsZones}" href="#"
-       th:href="@{dns-zone-entries(zone-name=${entry.name},zone-type=${zoneTypeDropdown.selectedZoneType.parameterValue})}"
+  <div id="content-list" class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsZoneNames)}">
+    <a th:each="zoneName : ${dnsZoneNames}" href="#"
+       th:href="@{dns-zone-entries(zone-name=${zoneName},zone-type=${zoneTypeDropdown.selectedZoneType.parameterValue})}"
        class="list-group-item list-group-item-action show-spinner">
       <div class="d-flex w-100 justify-content-between">
         <h6 class="mb-1"
-            th:text="${entry.name}">
-          eixe.bremersee.org
+            th:text="${zoneName}">
+          intranet
         </h6>
         <span class="fa-solid fa-globe" aria-hidden="true"></span>
       </div>

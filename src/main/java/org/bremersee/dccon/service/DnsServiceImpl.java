@@ -20,6 +20,7 @@ import static java.util.Objects.nonNull;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -53,8 +54,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public Stream<DnsZone> findDnsZones(DnsZoneType type) {
-    return dnsRepository.findDnsZones(type);
+  public List<String> findDnsZoneNames(DnsZoneType type) {
+    return dnsRepository.findDnsZoneNames(type);
   }
 
   @Override

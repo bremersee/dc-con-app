@@ -63,9 +63,8 @@ public class DnsZonesController extends AbstractController
   public String displayDnsZones(
       @RequestParam(name = ZONE_TYPE, defaultValue = ZONE_TYPE_DEFAULT) DnsZoneType zoneType,
       ModelMap model) {
-    List<DnsZone> dnsZones = dnsService.findDnsZones(zoneType)
-        .toList();
-    model.addAttribute("dnsZones", dnsZones);
+    List<String> dnsZones = dnsService.findDnsZoneNames(zoneType);
+    model.addAttribute("dnsZoneNames", dnsZones);
     return "admin/dns-zones";
   }
 

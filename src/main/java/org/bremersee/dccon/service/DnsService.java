@@ -18,6 +18,7 @@ package org.bremersee.dccon.service;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
@@ -37,7 +38,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsService {
 
-  Stream<DnsZone> findDnsZones(@Nullable DnsZoneType type);
+  List<String> findDnsZoneNames(@Nullable DnsZoneType type);
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
 
