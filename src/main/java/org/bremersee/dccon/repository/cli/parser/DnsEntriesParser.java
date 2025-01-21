@@ -26,11 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
-import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
-import org.bremersee.ldaptive.LdaptiveTemplate;
-import org.ldaptive.dn.Dn;
-import org.ldaptive.dn.NameValue;
-import org.ldaptive.dn.RDn;
 
 /**
  * The interface DnsEntriesParser.
@@ -40,9 +35,8 @@ import org.ldaptive.dn.RDn;
 public interface DnsEntriesParser extends
     CommandExecutorResponseParser<Stream<DnsEntry>> {
 
-  static DnsEntriesParser defaultParser(
-      String name, Dn zoneDn, LdaptiveTemplate ldaptiveTemplate) {
-    return new Default(name, zoneDn, ldaptiveTemplate);
+  static DnsEntriesParser defaultParser(String name) {
+    return new Default(name);
   }
 
   @Slf4j
@@ -67,14 +61,13 @@ public interface DnsEntriesParser extends
 
     private final String name;
 
-    private final Dn zoneDn;
-
-    private final LdaptiveTemplate ldaptiveTemplate;
-
-    Default(String name, Dn zoneDn, LdaptiveTemplate ldaptiveTemplate) {
+    Default(String name) {
       this.name = name;
-      this.zoneDn = zoneDn;
-      this.ldaptiveTemplate = ldaptiveTemplate;
+    }
+
+    @Override
+    protected Stream<DnsEntry> getDefaultValue() {
+      return Stream.empty();
     }
 
     @Override
@@ -114,7 +107,6 @@ public interface DnsEntriesParser extends
               if (!isEmpty(name) && !isEmpty(currentEntry.getType())
                   && !DnsEntryType.ALL.equals(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
-                setCommonAttributes(currentEntry);
                 entries = Stream.concat(entries, Stream.of(currentEntry));
                 currentEntry = new DnsEntry(currentEntry.getName());
               }
@@ -160,16 +152,6 @@ public interface DnsEntriesParser extends
             }
           }
         }
-      }
-    }
-
-    private void setCommonAttributes(DnsEntry currentEntry) {
-      if (!isEmpty(zoneDn) && !zoneDn.isEmpty()) {
-        Dn dn = new Dn(new RDn(new NameValue("DC", currentEntry.getName())));
-        dn.add(zoneDn);
-        currentEntry.setDn(dn);
-        CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, dn,
-            currentEntry);
       }
     }
 

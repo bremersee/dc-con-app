@@ -32,6 +32,8 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 public abstract class AbstractCommandExecutorResponseParser<T>
     implements CommandExecutorResponseParser<T> {
 
+  protected abstract T getDefaultValue();
+
   @Override
   public T parse(CommandExecutorResponse response) {
     if (!response.stdoutHasText()) {
@@ -41,7 +43,7 @@ public abstract class AbstractCommandExecutorResponseParser<T>
       } else {
         log.warn("Command did not produce output. Error is also not present.");
       }
-      return null;
+      return getDefaultValue();
     }
     String output = response.getStdout();
     try (BufferedReader reader = new BufferedReader(new StringReader(output))) {
@@ -49,7 +51,7 @@ public abstract class AbstractCommandExecutorResponseParser<T>
 
     } catch (IOException e) {
       log.error("Parsing response of command failed:\n{}\n", output, e);
-      return null;
+      return getDefaultValue();
     }
   }
 

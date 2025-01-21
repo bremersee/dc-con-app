@@ -64,6 +64,8 @@ public interface DnsService {
       @NotNull DnsEntryType type,
       @NotEmpty String value);
 
+  Stream<DnsEntry> findDnsEntriesWithConflict(String zoneName, DnsEntry dnsEntry);
+
   @NotNull
   DnsEntry addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
 

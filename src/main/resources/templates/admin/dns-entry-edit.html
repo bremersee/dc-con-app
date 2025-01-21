@@ -114,6 +114,7 @@
         <div class="form-control text-secondary" th:text="${dnsEntry.name}">
           zander
         </div>
+        <input type="hidden" th:field="*{newName}">
       </div>
       <div class="mb-3" th:if="${dnsEntry.type.name() != 'SOA'}">
         <label for="newName" class="form-label">Name</label>
@@ -131,6 +132,7 @@
         <div class="form-control text-secondary" th:text="${dnsEntry.type}">
           A
         </div>
+        <input type="hidden" th:field="*{newType}">
       </div>
       <div class="mb-3" th:if="${dnsEntry.type.name() != 'SOA'}">
         <label for="newType" class="form-label">Type</label>

@@ -51,6 +51,11 @@ public interface DnsZoneListParser extends CommandExecutorResponseParser<List<St
       return INSTANCE;
     }
 
+    @Override
+    protected List<String> getDefaultValue() {
+      return List.of();
+    }
+
     protected List<String> doParse(BufferedReader reader) throws IOException {
       List<String> result = new ArrayList<>();
       String line;

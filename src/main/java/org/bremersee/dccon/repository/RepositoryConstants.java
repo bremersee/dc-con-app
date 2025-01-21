@@ -49,6 +49,8 @@ public interface RepositoryConstants {
 
   String LDAP_OBJECT_CLASS_USER = "user";
 
+  String LDAP_OBJECT_CLASS_DNS_NODE = "dnsNode";
+
   String LDAP_DN = "distinguishedName";
 
   String LDAP_WHEN_CREATED = "whenCreated";
@@ -82,6 +84,8 @@ public interface RepositoryConstants {
    * The constant NIS_NAME. Attribute of the username / group name (rfc2307).
    */
   String LDAP_NIS_NAME = "msSFU30Name";
+
+  String LDAP_OBJECT_GUID = "objectGUID";
 
   /**
    * The constant OBJECT_SID.

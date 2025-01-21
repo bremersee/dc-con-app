@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Edit dns entry</title>
+  <link rel="stylesheet" href="../../static/lib/bootstrap/5.3.3/css/bootstrap.min.css"
+        th:href="@{/lib/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/bootstrap-social/5.1.1/bootstrap-social.css"
+        th:href="@{/lib/bootstrap-social/5.1.1/bootstrap-social.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/fontawesome.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/fontawesome.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/brands.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/brands.min.css}"/>
+  <link rel="stylesheet" href="../../static/lib/fontawesome/6.5.2/css/solid.min.css"
+        th:href="@{/lib/fontawesome/6.5.2/css/solid.min.css}"/>
+  <link rel="stylesheet" href="../../static/css/app.css"
+        th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" href="../../static/css/glyphicons.css"
+        th:href="@{/css/glyphicons.css}"/>
+  <script src="../../static/lib/jquery/jquery-3.7.1.min.js"
+          th:src="@{/lib/jquery/jquery-3.7.1.min.js}"></script>
+  <script src="../../static/lib/popper/2.11.8/popper.min.js"
+          th:src="@{/lib/popper/2.11.8/popper.min.js}"></script>
+  <script src="../../static/lib/jquery-typewatch.js"
+          th:src="@{/lib/jquery-typewatch.js}"></script>
+  <script src="../../static/lib/bootstrap/5.3.3/js/bootstrap.min.js"
+          th:src="@{/lib/bootstrap/5.3.3/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"
+     th:replace="~{fragments/header :: header}">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">bremersee.org</a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+    </div>
+  </div>
+</nav>
+<main role="main" class="container">
+
+  <div th:replace="~{fragments/loading-spinner :: loading-spinner}"></div>
+
+  <!--suppress ThymeleafVariablesResolveInspection -->
+  <div th:if="${rmsg != null}"
+       class="alert alert-success"
+       th:class="${rmsg != null} ? ${rmsg.msgType.cssClass} : ''" role="alert"
+       th:text="${rmsg != null} ? ${rmsg.msg} : ''">
+    Status message
+  </div>
+
+  <div th:if="${#lists.isEmpty(dnsEntries)}"
+       class="alert alert-info" role="alert">
+    No entries were found.
+  </div>
+
+  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsEntries)}">
+    <div th:each="entry : ${dnsEntries}"
+       class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1">
+          <span th:text="${entry.name}">zander</span>
+          <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
+                th:if="${entry.conflict}">
+          </span>
+        </h6>
+        <span class="glyphicon glyphicon-ban-circle text-danger"
+              aria-hidden="true">
+        </span>
+      </div>
+      <div class="small text-secondary">
+        <div class="row">
+          <div class="col col-1">
+            Type:
+          </div>
+          <div class="col" th:text="${entry.type}">
+            A
+          </div>
+        </div>
+        <div class="row">
+          <div class="col col-1">
+            Value:
+          </div>
+          <div class="col" th:text="${entry.value}">
+            192.168.1.112
+          </div>
+        </div>
+        <div class="row">
+          <div class="col col-1">
+            Created:
+          </div>
+          <div class="col" th:text="${entry.created}">
+            2014-11-23
+          </div>
+        </div>
+        <div class="row">
+          <div class="col col-1">
+            Modified:
+          </div>
+          <div class="col" th:text="${entry.modified}">
+            2014-11-23
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+<script type="text/javascript" th:inline="javascript">
+  //<![CDATA[
+  "use strict";
+  $(document).ready(function () {
+    const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
+    $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+  });
+  //]]>
+</script>
+</body>
+</html>

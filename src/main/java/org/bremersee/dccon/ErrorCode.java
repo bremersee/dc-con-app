@@ -105,4 +105,14 @@ public interface ErrorCode {
 
   String EC_ILLEGAL_DNS_ENTRY_TYPE = EC_PREFIX + "69fcdc93-c029-496f-840f-9bf443a18a3b";
 
+  String EC_DNS_FQDN_MISSING = EC_PREFIX + "f7d38bb5-ca98-4263-9fd4-3fb53b0534f8";
+
+  String EC_DNS_SOA_MISSING = EC_PREFIX + "73375d7b-c007-471a-b45e-7857ddde020d";
+
+  String EC_DNS_MX_MISSING = EC_PREFIX + "2af5b55b-7c37-43ed-8835-0d1d456f88eb";
+
+  String EC_DNS_SRV_MISSING = EC_PREFIX + "5deeb2e0-6def-4ff3-9f61-ab359d4aa271";
+
+  String EC_DNS_TXT_MISSING = EC_PREFIX + "80022879-605b-4a57-a6eb-a485b29f4666";
+
 }

@@ -16,6 +16,7 @@
 
 package org.bremersee.dccon.repository.cli;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.StringTokenizer;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,9 @@ import org.springframework.util.StringUtils;
 @EqualsAndHashCode
 @AllArgsConstructor
 public class CommandExecutorResponse implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   private final String stdout;
 

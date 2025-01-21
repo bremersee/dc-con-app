@@ -22,6 +22,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.StringTokenizer;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
@@ -32,6 +33,7 @@ import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.repository.DnsRepository;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.pagebuilder.PageBuilder;
+import org.ldaptive.dn.Dn;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -94,13 +96,20 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
       return true;
     }
     String q = query.toLowerCase();
-    if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(q)) {
-      return true;
+    StringTokenizer st = new StringTokenizer(q, " ");
+    while (st.hasMoreTokens()) {
+      String token = st.nextToken();
+      if (nonNull(entry.getName()) && entry.getName().toLowerCase().contains(token)) {
+        return true;
+      }
+      if (nonNull(entry.getType()) && entry.getType().name().toLowerCase().contains(token)) {
+        return true;
+      }
+      if (nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(token)) {
+        return true;
+      }
     }
-    if (nonNull(entry.getType()) && entry.getType().name().toLowerCase().contains(q)) {
-      return true;
-    }
-    return nonNull(entry.getValue()) && entry.getValue().toLowerCase().contains(q);
+    return false;
   }
 
   @Override
@@ -118,16 +127,38 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   @Override
   public Stream<DnsEntry> findDnsEntries(String zoneName, String name, DnsEntryType type) {
-    return dnsRepository.findDnsEntries(new DnsZone(zoneName), name, type);
+    return dnsRepository.findDnsEntries(zoneName, name, type);
   }
 
   @Override
   public Optional<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type,
       String value) {
     return findDnsEntries(zoneName, name, type)
-        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(value))
+        .filter(dnsEntry -> dnsEntry.getType().getToSambaToolValueTransformer()
+            .apply(dnsEntry.getValue()).equalsIgnoreCase(dnsEntry.getType()
+                .getToSambaToolValueTransformer().apply(value)))
         .filter(dnsEntry -> !dnsEntry.getConflict())
-        .findFirst(); // TODO how to find and handle conflicts?
+        .findFirst();
+  }
+
+  @Override
+  public Stream<DnsEntry> findDnsEntriesWithConflict(String zoneName, DnsEntry dnsEntry) {
+    return findDnsZone(zoneName)
+        .map(DnsZone::getDn)
+        .stream()
+        .flatMap(zoneDn -> dnsRepository.findDnsEntryWithConflict(zoneDn, dnsEntry)
+            .stream()
+            .flatMap(cnfEntry -> Stream.concat(
+                Stream.of(cnfEntry),
+                findPossibleConflicts(zoneDn, dnsEntry))));
+  }
+
+  private Stream<DnsEntry> findPossibleConflicts(Dn zoneDn, DnsEntry dnsEntry) {
+    String zoneName = zoneDn.getRDn().getNameValue().getStringValue();
+    return dnsRepository.findDnsEntries(zoneName, ZONE_ENTRIES_NODE_NAME, dnsEntry.getType())
+        .filter(entry -> !entry.getConflict())
+        .filter(entry -> isQueryResult(entry, dnsEntry.getName() + " " + dnsEntry.getValue()))
+        .map(entry -> dnsRepository.setCommonAttributes(zoneDn, entry));
   }
 
   @Override

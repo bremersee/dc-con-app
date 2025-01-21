@@ -25,6 +25,7 @@ import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
+import org.ldaptive.dn.Dn;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
@@ -46,9 +47,13 @@ public interface DnsRepository {
 
 
   Stream<DnsEntry> findDnsEntries(
-      @NotNull DnsZone dnsZone,
+      @NotEmpty String zoneName,
       @NotEmpty String name,
       @NotNull DnsEntryType type);
+
+  Optional<DnsEntry> findDnsEntryWithConflict(Dn zoneDn, DnsEntry dnsEntry);
+
+  DnsEntry setCommonAttributes(@NotNull Dn zoneDn, @NotNull DnsEntry entry);
 
   void addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
 

@@ -20,12 +20,11 @@ import static java.util.Objects.nonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
-import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
-import org.bremersee.ldaptive.LdaptiveTemplate;
-import org.ldaptive.dn.Dn;
 
 /**
  * The interface DnsZoneListParser.
@@ -34,10 +33,11 @@ import org.ldaptive.dn.Dn;
  */
 public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
 
-  static DnsZoneParser defaultParser(LdaptiveTemplate ldaptiveTemplate) {
-    return new Default(ldaptiveTemplate);
+  static DnsZoneParser defaultParser() {
+    return new Default();
   }
 
+  @NoArgsConstructor(access = AccessLevel.PACKAGE)
   @Slf4j
   class Default extends AbstractCommandExecutorResponseParser<DnsZone>
       implements DnsZoneParser {
@@ -76,10 +76,9 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
 
     private static final String IS_READ_ONLY_ZONE = "fReadOnlyZone";
 
-    private final LdaptiveTemplate ldaptiveTemplate;
-
-    Default(LdaptiveTemplate ldaptiveTemplate) {
-      this.ldaptiveTemplate = ldaptiveTemplate;
+    @Override
+    protected DnsZone getDefaultValue() {
+      return null;
     }
 
     protected DnsZone doParse(BufferedReader reader) throws IOException {
@@ -139,7 +138,6 @@ public interface DnsZoneParser extends CommandExecutorResponseParser<DnsZone> {
         if (lineContains(line, ZONE_DN, index)) {
           String dn = line.substring(index + 1).trim();
           zone.setDistinguishedName(dn);
-          CommonAttributesLdapMapper.mapCommonAttributes(ldaptiveTemplate, new Dn(dn), zone);
         }
         if (lineContains(line, IS_QUEUED_FOR_BACKGROUND_LOAD, index)) {
           String value = line.substring(index + 1).trim();

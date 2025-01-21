@@ -16,8 +16,8 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
@@ -46,12 +46,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  */
 @Controller
 @Slf4j
-public class DnsEntryEditController extends AbstractEditController implements PageableComponent,
+public class DnsEntryConflictController extends AbstractEditController implements PageableComponent,
     DnsZoneTypeComponent {
 
   private final DnsService dnsService;
 
-  public DnsEntryEditController(
+  public DnsEntryConflictController(
       DomainControllerProperties properties,
       LocaleResolver localeResolver, DnsService dnsService) {
     super(properties, localeResolver);
@@ -63,43 +63,33 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
     return DNS_ENTRY_SORT;
   }
 
-  @GetMapping(path = "/admin/dns-entry-edit")
-  public String displayEditDnsEntry(
-      @RequestParam(name = ZONE_NAME, required = false) String zoneName,
-      @RequestParam(name = "name", required = false) String name,
-      @RequestParam(name = "type", required = false) DnsEntryType type,
-      @RequestParam(name = "value", required = false) String value,
-      @RequestParam(name = "cnf", defaultValue = "false") boolean isConflict,
-      @RequestParam(name = "guid", required = false) String objectGuid,
-      ModelMap model,
-      RedirectAttributes redirectAttributes) {
+  @GetMapping(path = "/admin/dns-entry-conflict")
+  public String displayDnsEntryConflict(
+      @RequestParam(name = ZONE_NAME) String zoneName,
+      @RequestParam(name = "name") String name,
+      @RequestParam(name = "type") DnsEntryType type,
+      @RequestParam(name = "value") String value,
+      @RequestParam(name = "guid") String objectGuid,
+      ModelMap model) {
 
-    log.debug("displayEditDnsEntry({}, {}, {}, {}, {}, {})",
-        zoneName, name, type, value, isConflict, objectGuid);
-    if (isConflict && !isEmpty(objectGuid)) {
-      Map<String, Object> parameters = getParamterMap();
-      parameters = putToParameterMap(parameters, "zone-name", zoneName);
-      parameters = putToParameterMap(parameters, "name", name);
-      parameters = putToParameterMap(parameters, "type", type);
-      parameters = putToParameterMap(parameters, "value", value);
-      parameters = putToParameterMap(parameters, "guid", objectGuid);
-      return getRedirectUri("dns-entry-conflict?guid={{guid}}", PAGE_AND_DNS_ENTRY_PARAMS,
-          parameters);
-    }
-    return dnsService.findDnsEntry(zoneName, name, type, value)
-        .map(dnsEntry -> {
-          model.addAttribute("zoneName", zoneName);
-          model.addAttribute("dnsEntry", dnsEntry);
-          model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(dnsEntry));
-          model.addAttribute("dnsEntryEditRequest", new DnsEntryEditRequest(dnsEntry));
-          return "admin/dns-entry-edit";
-        })
-        .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "DNS Entry", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
-            "dns-zone-entries"));
+    log.debug("displayDnsEntryConflict({}, {}, {}, {}, {})",
+        zoneName, name, type, value, objectGuid);
+
+    DnsEntry entry = new DnsEntry();
+    entry.setName(name);
+    entry.setType(type);
+    entry.setValue(value);
+    entry.setConflict(true);
+    entry.setObjectGuid(objectGuid);
+    List<DnsEntry> dnsEntries = dnsService.findDnsEntriesWithConflict(zoneName, entry)
+        .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
+        .toList();
+    model.addAttribute("zoneName", zoneName);
+    model.addAttribute("dnsEntries", dnsEntries);
+    return "admin/dns-entry-conflict";
   }
 
-  @PostMapping(path = "/admin/dns-entry-edit")
+  @PostMapping(path = "/admin/dns-entry-conflict")
   public String updateDnsEntry(
       @RequestParam(name = ZONE_NAME) String zoneName,
       @RequestParam(name = "name") String name,

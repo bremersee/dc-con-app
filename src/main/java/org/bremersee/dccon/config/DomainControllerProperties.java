@@ -80,9 +80,9 @@ public class DomainControllerProperties implements Serializable {
 
   private String emailRegex = EMAIL_REGEX;
 
-  private String hostName; // TODO -> samba-tool dns <server>; via command?
+  private String hostName;
 
-  private String domainName;
+  private String domainName;  // TODO get from domain info
 
   private Dn baseDn = new Dn("dc=eixe,dc=bremersee,dc=org");
 

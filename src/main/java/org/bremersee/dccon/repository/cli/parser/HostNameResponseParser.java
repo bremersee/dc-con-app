@@ -49,6 +49,11 @@ public interface HostNameResponseParser extends CommandExecutorResponseParser<St
     }
 
     @Override
+    protected String getDefaultValue() {
+      return "";
+    }
+
+    @Override
     protected String doParse(BufferedReader reader) throws IOException {
       String hostName = reader.readLine();
       if (nonNull(hostName)) {
