@@ -85,6 +85,7 @@ public class DnsEntryConflictController extends AbstractEditController implement
         .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
         .toList();
     model.addAttribute("zoneName", zoneName);
+    model.addAttribute("dnsEntry", entry);
     model.addAttribute("dnsEntries", dnsEntries);
     return "admin/dns-entry-conflict";
   }

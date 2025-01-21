@@ -194,8 +194,10 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
 
   @Override
   public DnsEntry setCommonAttributes(Dn zoneDn, DnsEntry entry) {
+    // TODO das funktioniert nur, wenn kein conflict
     Dn dn = new Dn(new RDn(new NameValue("DC", entry.getName())));
     dn.add(zoneDn);
+    // TODO dNSTombstoned?
     CommonAttributesLdapMapper.mapCommonAttributes(getLdapTemplate(), dn, entry);
     return entry;
   }
