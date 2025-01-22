@@ -64,6 +64,8 @@ public interface DnsService {
       @NotNull DnsEntryType type,
       @NotEmpty String value);
 
+  Optional<DnsEntry> findReverseDnsEntry(String zoneName, DnsEntry dnsEntry);
+
   Stream<DnsEntry> findDnsEntriesWithConflict(String zoneName, DnsEntry dnsEntry);
 
   @NotNull

@@ -16,9 +16,12 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
@@ -30,8 +33,10 @@ import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.service.DnsService;
 import org.bremersee.exception.ServiceException;
+import org.ldaptive.LdapUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,64 +96,23 @@ public class DnsEntryConflictController extends AbstractEditController implement
   }
 
   @PostMapping(path = "/admin/dns-entry-conflict")
-  public String updateDnsEntry(
+  public String deleteDnsEntries(
       @RequestParam(name = ZONE_NAME) String zoneName,
-      @RequestParam(name = "name") String name,
-      @RequestParam(name = "type") DnsEntryType type,
-      @RequestParam(name = "value") String value,
-      @ModelAttribute(name = "dnsEntryEditRequest") DnsEntryEditRequest dnsEntryEditRequest,
+      @RequestParam(name = "dns-entry-id") List<String> internalIds,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    log.debug("updateDnsEntry({}, {}, {}, {}, {})",
-        zoneName, name, type, value, dnsEntryEditRequest);
-    DnsEntry dnsEntry = new DnsEntry();
-    dnsEntry.setName(name);
-    dnsEntry.setType(type);
-    dnsEntry.setValue(value);
+    log.debug("deleteDnsEntries({}, {})", zoneName, internalIds);
 
-    model.clear();
-    Map<String, Object> parameters = getParamterMap();
-    parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
+    List<DnsEntry> dnsEntries = Stream.ofNullable(internalIds)
+        .flatMap(Collection::stream)
+        .filter(id -> !ObjectUtils.isEmpty(id))
+            .map(DnsEntry::fromInternalId)
+        .toList();
 
-    try {
-      DnsEntry updatedDnsEntry;
-      if (name.equals(dnsEntryEditRequest.getNewName())
-          && type.equals(dnsEntryEditRequest.getNewType())) {
-        updatedDnsEntry = dnsService
-            .updateDnsEntry(zoneName, dnsEntry, dnsEntryEditRequest.getNewValue());
-      } else {
-        dnsService.deleteDnsEntry(zoneName, dnsEntry);
-        updatedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntryEditRequest.toNewDnsEntry());
-      }
+    log.debug("deleteDnsEntries({}, {})", zoneName, dnsEntries);
 
-      String msg = String.format("Dns entry '%s' was successfully updated.",
-          updatedDnsEntry.getName());
-      RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-          "todo", updatedDnsEntry.getName());
-      redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-
-      parameters = putToParameterMap(parameters, "name", updatedDnsEntry.getName());
-      parameters = putToParameterMap(parameters, "type", updatedDnsEntry.getType());
-      parameters = putToParameterMap(parameters, "value", updatedDnsEntry.getValue());
-      String redirect = getRedirectUri("dns-entry-edit",
-          PAGE_AND_DNS_ENTRY_PARAMS, parameters);
-      logRedirectTo("Dns entry successfully updated.", redirect);
-      return redirect;
-
-    } catch (ServiceException e) {
-
-      log.error("Updating dns entry failed.", e);
-
-      String msg = String.format("Updating of dns entry '%s' failed.", name);
-      RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
-          "todo", name);
-      redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
-          PAGE_AND_ZONE_TYPE_PARAMS, parameters);
-      logRedirectTo("Updating dns entry failed.", redirect);
-      return redirect;
-    }
+    return "redirect:dns-entries?zoneName=" + zoneName;
   }
 
 }

@@ -35,8 +35,8 @@ import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 public interface DnsEntriesParser extends
     CommandExecutorResponseParser<Stream<DnsEntry>> {
 
-  static DnsEntriesParser defaultParser(String name) {
-    return new Default(name);
+  static DnsEntriesParser defaultParser(String zoneName, String name) {
+    return new Default(zoneName, name);
   }
 
   @Slf4j
@@ -59,9 +59,12 @@ public interface DnsEntriesParser extends
 
     private static final char END = ')';
 
+    private final String zoneName;
+
     private final String name;
 
-    Default(String name) {
+    Default(String zoneName, String name) {
+      this.zoneName = zoneName;
       this.name = name;
     }
 
@@ -88,7 +91,7 @@ public interface DnsEntriesParser extends
           if (name.isEmpty()) {
             name = this.name;
           }
-          currentEntry = new DnsEntry(name);
+          currentEntry = new DnsEntry(zoneName, name);
         } else if (nonNull(currentEntry)) {
           int i0 = line.indexOf(RECORD_LINE_INDICATOR);
           if (i0 > 0) {
@@ -108,7 +111,7 @@ public interface DnsEntriesParser extends
                   && !DnsEntryType.ALL.equals(currentEntry.getType())
                   && !isEmpty(currentEntry.getValue())) {
                 entries = Stream.concat(entries, Stream.of(currentEntry));
-                currentEntry = new DnsEntry(currentEntry.getName());
+                currentEntry = new DnsEntry(zoneName, currentEntry.getName());
               }
             }
           }

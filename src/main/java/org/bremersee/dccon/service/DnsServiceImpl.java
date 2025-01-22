@@ -16,13 +16,16 @@
 
 package org.bremersee.dccon.service;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
@@ -48,6 +51,12 @@ import org.springframework.stereotype.Service;
 public class DnsServiceImpl implements DnsService, ErrorCode {
 
   private static final String ZONE_ENTRIES_NODE_NAME = "@";
+
+  private static final String REVERSE_ZONE_POSTFIX = ".in-addr.arpa";
+
+  private static final Pattern IPV4_PATTERN = Pattern.compile(
+      "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)" +
+          "(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
   private final DnsRepository dnsRepository;
 
@@ -138,7 +147,74 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
             .apply(dnsEntry.getValue()).equalsIgnoreCase(dnsEntry.getType()
                 .getToSambaToolValueTransformer().apply(value)))
         .filter(dnsEntry -> !dnsEntry.getConflict())
+        .findFirst()
+        .map(entry -> findDnsZone(entry.getZoneName())
+            .map(zone -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
+            .orElse(entry));
+  }
+
+  private Optional<DnsEntry> findReverseDnsEntryOfA(String zoneName, DnsEntry dnsEntry) {
+    return findDnsZoneNames(DnsZoneType.REVERSE).stream()
+        .flatMap(zone -> findDnsEntries(zone, ZONE_ENTRIES_NODE_NAME, DnsEntryType.PTR))
+        .filter(entry -> dnsEntry.getValue().toLowerCase()
+            .contains(entry.getName().toLowerCase())) // '192.168.1.122' contains '122'
+        .filter(entry -> entry.getValue()
+            .equalsIgnoreCase(dnsEntry.getName() + '.' + zoneName)) // 'hostname.zone-name'
+        .findFirst()
+        .map(entry -> findDnsZone(entry.getZoneName())
+            .map(zone -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
+            .orElse(entry));
+  }
+
+  private Optional<DnsEntry> findReverseDnsEntryOfPtr(String zoneName, DnsEntry dnsEntry) {
+    DnsEntryType type = getDnsEntryTypeFromReverseZone(zoneName);
+    if (isNull(type)) {
+      return Optional.empty();
+    }
+    return findDnsZoneNames(DnsZoneType.PRIMARY).stream()
+        .flatMap(zone -> findDnsZone(zone).stream())
+        .filter(zone -> !zone.getReverseZone())
+        .flatMap(zone -> findDnsEntries(zone.getName(), ZONE_ENTRIES_NODE_NAME, type)
+            .filter(entry -> entry.getValue().toLowerCase()
+                .contains(dnsEntry.getName().toLowerCase()))
+            .filter(entry -> dnsEntry.getValue()
+                .equalsIgnoreCase(entry.getName() + '.' + zone.getName()))
+            .findFirst()
+            .map(entry -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
+            .stream())
         .findFirst();
+  }
+
+  private DnsEntryType getDnsEntryTypeFromReverseZone(String zoneName) {
+    if (isNull(zoneName) || !zoneName.toLowerCase().endsWith(REVERSE_ZONE_POSTFIX)) {
+      return null;
+    }
+    String tmp = zoneName.substring(0, zoneName.length() - REVERSE_ZONE_POSTFIX.length());
+    String[] parts = tmp.split(Pattern.quote("."));
+    if (parts.length > 3) {
+      return DnsEntryType.AAAA;
+    }
+    List<String> ipList = new ArrayList<>(4);
+    for (int i = parts.length - 1; i >= 0; i--) {
+      ipList.add(parts[i]);
+    }
+    for (int i = 3 - parts.length; i >= 0; i--) {
+      ipList.add("1");
+    }
+    String ip = String.join(".", ipList);
+    if (IPV4_PATTERN.matcher(ip).matches()) {
+      return DnsEntryType.A;
+    }
+    return DnsEntryType.AAAA;
+  }
+
+  public Optional<DnsEntry> findReverseDnsEntry(String zoneName, DnsEntry dnsEntry) {
+    if (DnsEntryType.A.equals(dnsEntry.getType()) || DnsEntryType.AAAA.equals(dnsEntry.getType())) {
+      return findReverseDnsEntryOfA(zoneName, dnsEntry);
+    } else if (DnsEntryType.PTR.equals(dnsEntry.getType())) {
+      return findReverseDnsEntryOfPtr(zoneName, dnsEntry);
+    }
+    return Optional.empty();
   }
 
   @Override

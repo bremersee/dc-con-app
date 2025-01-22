@@ -150,7 +150,7 @@
       </div>
 
       <div class="mb-3">
-        <label for="newValue" class="form-label">New Value</label>
+        <label for="newValue" class="form-label">Value</label>
         <input type="text" class="form-control" id="newValue" name="newValue"
                aria-describedby="newValueValidation" required
                th:classappend="${#fields.hasErrors('newValue')} ? 'is-invalid' : ''"
@@ -166,27 +166,87 @@
           Flag
         </div>
       </div>
-
       <div class="mb-3">
         <div class="form-label">Serial</div>
         <div class="form-control text-secondary" th:text="${dnsEntry.serial}">
           100
         </div>
       </div>
-
       <div class="mb-3">
         <div class="form-label">TTL (seconds)</div>
         <div class="form-control text-secondary" th:text="${dnsEntry.ttlSeconds}">
           600
         </div>
       </div>
+      <div class="mb-3">
+        <div class="form-label">Created</div>
+        <div class="form-control text-secondary" th:text="${#temporals.format(dnsEntry.created, #locale)}">
+          25-10-2014 13:54:46
+        </div>
+      </div>
+      <div class="mb-3">
+        <div class="form-label">Modified</div>
+        <div class="form-control text-secondary" th:text="${#temporals.format(dnsEntry.modified, #locale)}">
+          25-10-2014 13:54:46
+        </div>
+      </div>
 
-      <button type="submit" class="btn btn-primary mt-3 show-spinner">
+      <div id="reverseDnsEntryEditDiv" class="mt-4 mb-3 p-3 border border-1 border-secondary"
+           th:if="${reverseDnsEntryExists}">
+        <input type="hidden" name="reverse-zone-name" th:value="${reverseDnsEntry.zoneName}"/>
+        <input type="hidden" name="reverse-name" th:value="${reverseDnsEntry.name}"/>
+        <input type="hidden" name="reverse-type" th:value="${reverseDnsEntry.type}"/>
+        <input type="hidden" name="reverse-value" th:value="${reverseDnsEntry.value}"/>
+        <div class="h5 mb-3">
+          <span>Reverse dns entry </span>
+        </div>
+        <div class="mb-3">
+          <label for="newNameOfReverseEntry" class="form-label">Name</label>
+          <input type="text" class="form-control" id="newNameOfReverseEntry" name="newNameOfReverseEntry"
+                 aria-describedby="newNameOfReverseEntryValidation" required
+                 th:field="*{newNameOfReverseEntry}"
+                 th:classappend="${#fields.hasErrors('newNameOfReverseEntry')} ? 'is-invalid' : ''"/>
+          <div id="newNameOfReverseEntryValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('newNameOfReverseEntry')} ? ${#fields.errors('newNameOfReverseEntry')[0]} : ''">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="newValueOfReverseEntry" class="form-label">Value</label>
+          <input type="text" class="form-control" id="newValueOfReverseEntry" name="newValueOfReverseEntry"
+                 aria-describedby="newValueOfReverseEntryValidation" required
+                 th:classappend="${#fields.hasErrors('newValueOfReverseEntry')} ? 'is-invalid' : ''"
+                 th:field="*{newValueOfReverseEntry}" />
+          <div id="newValueOfReverseEntryValidation" class="invalid-feedback"
+               th:text="${#fields.hasErrors('newValueOfReverseEntry')} ? ${#fields.errors('newValueOfReverseEntry')[0]} : ''">
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="form-label">Created</div>
+          <div class="form-control text-secondary" th:text="${#temporals.format(reverseDnsEntry.created, #locale)}">
+            25-10-2014 13:54:46
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="form-label">Modified</div>
+          <div class="form-control text-secondary" th:text="${#temporals.format(reverseDnsEntry.modified, #locale)}">
+            25-10-2014 13:54:46
+          </div>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="updateReverseEntry"
+                 name="updateReverseEntry" th:field="*{updateReverseEntry}" />
+          <label class="form-check-label" for="updateReverseEntry">
+            Also update reverse entry
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-1 mb-4 show-spinner">
         Update
       </button>
       <a href="dns-zone-entries.html"
          th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}"
-         class="btn btn-secondary ml-3 mt-3 show-spinner" role="button">
+         class="btn btn-secondary mx-2 mt-1 mb-4 show-spinner" role="button">
         Cancel
       </a>
     </form>
@@ -197,6 +257,19 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const reverseDnsEntryExists = /*[[${reverseDnsEntryExists}]]*/ false;
+    const dnsEntryType =  /*[[${dnsEntry.type}]]*/ "";
+    if (reverseDnsEntryExists) {
+      const reverseDnsEntryEditDiv = $('#reverseDnsEntryEditDiv');
+      $('#newType').on('change', function () {
+        if (dnsEntryType === $(this).val()) {
+          reverseDnsEntryEditDiv.show();
+        } else {
+          reverseDnsEntryEditDiv.hide();
+        }
+      });
+    }
+
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

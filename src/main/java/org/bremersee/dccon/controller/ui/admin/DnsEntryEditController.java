@@ -91,11 +91,21 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
           model.addAttribute("zoneName", zoneName);
           model.addAttribute("dnsEntry", dnsEntry);
           model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(dnsEntry));
-          model.addAttribute("dnsEntryEditRequest", new DnsEntryEditRequest(dnsEntry));
+          DnsEntryEditRequest entryEditRequest = dnsService.findReverseDnsEntry(zoneName, dnsEntry)
+              .map(reverseDnsEntry -> {
+                model.addAttribute("reverseDnsEntryExists", true);
+                model.addAttribute("reverseDnsEntry", reverseDnsEntry);
+                return new DnsEntryEditRequest(dnsEntry, reverseDnsEntry);
+              })
+              .orElseGet(() -> {
+                model.addAttribute("reverseDnsEntryExists", false);
+                return new DnsEntryEditRequest(dnsEntry);
+              });
+          model.addAttribute("dnsEntryEditRequest", entryEditRequest);
           return "admin/dns-entry-edit";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "DNS Entry", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
+            redirectAttributes, "Dns Entry", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
             "dns-zone-entries"));
   }
 
@@ -105,6 +115,10 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       @RequestParam(name = "name") String name,
       @RequestParam(name = "type") DnsEntryType type,
       @RequestParam(name = "value") String value,
+      @RequestParam(name = "reverse-zone-name", required = false) String reverseZoneName,
+      @RequestParam(name = "reverse-name", required = false) String reverseName,
+      @RequestParam(name = "reverse-type", required = false) DnsEntryType reverseType,
+      @RequestParam(name = "reverse-value", required = false) String reverseValue,
       @ModelAttribute(name = "dnsEntryEditRequest") DnsEntryEditRequest dnsEntryEditRequest,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
@@ -129,6 +143,24 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       } else {
         dnsService.deleteDnsEntry(zoneName, dnsEntry);
         updatedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntryEditRequest.toNewDnsEntry());
+      }
+      if (dnsEntryEditRequest.isUpdateReverseEntry() && !isEmpty(reverseZoneName)
+          && !isEmpty(reverseName) && !isEmpty(reverseType) && !isEmpty(reverseValue)
+          && !isEmpty(dnsEntryEditRequest.getNewNameOfReverseEntry())
+          && !isEmpty(dnsEntryEditRequest.getNewValueOfReverseEntry())
+          && type.equals(updatedDnsEntry.getType())) {
+        DnsEntry reverseDnsEntry = new DnsEntry(reverseZoneName, reverseName);
+        reverseDnsEntry.setType(reverseType);
+        reverseDnsEntry.setValue(reverseValue);
+        if (reverseName.equals(dnsEntryEditRequest.getNewNameOfReverseEntry())) {
+          dnsService.updateDnsEntry(
+              reverseZoneName, reverseDnsEntry, dnsEntryEditRequest.getNewValueOfReverseEntry());
+        } else {
+          dnsService.deleteDnsEntry(reverseZoneName, reverseDnsEntry);
+          reverseDnsEntry.setName(dnsEntryEditRequest.getNewNameOfReverseEntry());
+          reverseDnsEntry.setValue(dnsEntryEditRequest.getNewValueOfReverseEntry());
+          dnsService.addDnsEntry(reverseZoneName, reverseDnsEntry);
+        }
       }
 
       String msg = String.format("Dns entry '%s' was successfully updated.",

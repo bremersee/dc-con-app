@@ -39,6 +39,7 @@ import org.bremersee.dccon.repository.cli.parser.DnsZoneParser;
 import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveTemplate;
+import org.ldaptive.DeleteRequest;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.SearchRequest;
 import org.ldaptive.SearchScope;
@@ -153,7 +154,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
     );
     return executeAndGet(
         commands,
-        DnsEntriesParser.defaultParser(name));
+        DnsEntriesParser.defaultParser(zoneName, name));
   }
 
   private Optional<LdapEntry> findDnsLdapEntryWithConflict(Dn zoneDn, DnsEntry dnsEntry) {
@@ -187,6 +188,9 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
     // TODO
     return findDnsLdapEntryWithConflict(zoneDn, dnsEntry)
         .map(ldapEntry -> {
+          DeleteRequest.builder()
+              .dn(ldapEntry.getDn())
+              .build();
           return true;
         })
         .orElse(false);

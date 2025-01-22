@@ -34,6 +34,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type DnsEntry.
@@ -47,7 +48,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @NoArgsConstructor
+@Slf4j
 public class DnsEntry extends CommonAttributes {
+
+  private String zoneName;
 
   private String name;
 
@@ -65,7 +69,8 @@ public class DnsEntry extends CommonAttributes {
 
   private Integer ttlSeconds;
 
-  public DnsEntry(String name) {
+  public DnsEntry(String zoneName, String name) {
+    this.zoneName = zoneName;
     this.name = name;
   }
 
@@ -82,14 +87,16 @@ public class DnsEntry extends CommonAttributes {
     String typeStr = Optional.ofNullable(getType()).map(DnsEntryType::name).orElse("");
     String valueStr = requireNonNullElse(getValue(), "");
     String id = nameStr + ':' + conflictStr + ':' + guidStr + ':' + typeStr + ':' + valueStr;
+    log.debug("====> id = {}", id);
     return Base64.getEncoder().encodeToString(id.getBytes(StandardCharsets.UTF_8));
   }
 
   public static DnsEntry fromInternalId(String internalId) {
-    if (isNull(internalId) || !internalId.isBlank()) {
+    if (isNull(internalId) || internalId.isBlank()) {
       return null;
     }
     String id = new String(Base64.getDecoder().decode(internalId), StandardCharsets.UTF_8);
+    log.debug("====> id = {}", id);
     DnsEntry entry = new DnsEntry();
     String[] parts = id.split(Pattern.quote(":"));
     if (parts.length > 0) {

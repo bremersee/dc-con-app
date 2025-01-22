@@ -16,6 +16,8 @@
 
 package org.bremersee.dccon.controller.ui.model;
 
+import static java.util.Objects.nonNull;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DnsEntry;
@@ -36,10 +38,25 @@ public class DnsEntryEditRequest {
 
   private String newValue;
 
+  private boolean updateReverseEntry;
+
+  private String newNameOfReverseEntry;
+
+  private String newValueOfReverseEntry;
+
   public DnsEntryEditRequest(DnsEntry dnsEntry) {
+    this(dnsEntry, null);
+  }
+
+  public DnsEntryEditRequest(DnsEntry dnsEntry, DnsEntry reverseDnsEntry) {
     this.newName = dnsEntry.getName();
     this.newType = dnsEntry.getType();
     this.newValue = dnsEntry.getValue();
+    if (nonNull(reverseDnsEntry)) {
+      this.updateReverseEntry = true;
+      this.newNameOfReverseEntry = reverseDnsEntry.getName();
+      this.newValueOfReverseEntry = reverseDnsEntry.getValue();
+    }
   }
 
   public DnsEntry toNewDnsEntry() {
@@ -49,4 +66,5 @@ public class DnsEntryEditRequest {
     dnsEntry.setValue(newValue);
     return dnsEntry;
   }
+
 }
