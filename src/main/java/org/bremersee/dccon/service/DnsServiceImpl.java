@@ -64,34 +64,26 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   @Override
   public List<String> findDnsZoneNames(DnsZoneType type) {
+    if (isNull(type)) {
+      return dnsRepository.findDnsZoneNames(DnsZoneType.PRIMARY);
+    }
     return dnsRepository.findDnsZoneNames(type);
   }
 
   @Override
-  public Optional<DnsZone> findDnsZone(String zoneName) {
+  public DnsZone findDnsZone(String zoneName) {
     return dnsRepository.findDnsZone(zoneName);
+
   }
 
   @Override
   public DnsZone createDnsZone(String zoneName) {
-    return findDnsZone(zoneName)
-        .orElseGet(() -> {
-          dnsRepository.createDnsZone(zoneName);
-          return findDnsZone(zoneName)
-              .orElseThrow(() -> ServiceException.internalServerError(
-                  String.format("Creating dns zone '%s' failed.", zoneName),
-                  EC_CREATING_DNS_ZONE_FAILED));
-        });
+    return dnsRepository.createDnsZone(zoneName);
   }
 
   @Override
   public void deleteDnsZone(String zoneName) {
     dnsRepository.deleteDnsZone(zoneName);
-    if (findDnsZone(zoneName).isPresent()) {
-      throw ServiceException.internalServerError(
-          String.format("Deleting dns zone '%s' failed.", zoneName),
-          EC_DELETING_DNS_ZONE_FAILED);
-    }
   }
 
 
@@ -146,9 +138,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
                 .getToSambaToolValueTransformer().apply(value)))
         .filter(dnsEntry -> !dnsEntry.getConflict())
         .findFirst()
-        .map(entry -> findDnsZone(entry.getZoneName())
-            .map(zone -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
-            .orElse(entry));
+        .map(entry -> dnsRepository
+            .setCommonAttributes(findDnsZone(entry.getZoneName()).getDn(), entry));
   }
 
   private Optional<DnsEntry> findReverseDnsEntryOfA(DnsEntry dnsEntry) {
@@ -161,9 +152,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
             .equalsIgnoreCase(
                 dnsEntry.getName() + '.' + dnsEntry.getZoneName())) // 'hostname.zone-name'
         .findFirst()
-        .map(entry -> findDnsZone(entry.getZoneName())
-            .map(zone -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
-            .orElse(entry));
+        .map(entry -> dnsRepository
+            .setCommonAttributes(findDnsZone(entry.getZoneName()).getDn(), entry));
   }
 
   private Optional<DnsEntry> findReverseDnsEntryOfPtr(DnsEntry dnsEntry) {
@@ -172,7 +162,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
       return Optional.empty();
     }
     return findDnsZoneNames(DnsZoneType.PRIMARY).stream()
-        .flatMap(zone -> findDnsZone(zone).stream())
+        .map(this::findDnsZone)
         .filter(zone -> !zone.getReverseZone())
         .flatMap(zone -> findDnsEntries(zone.getName(), ZONE_ENTRIES_NODE_NAME, type)
             .filter(entry -> !entry.getConflict())
@@ -221,15 +211,12 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   @Override
   public Stream<DnsEntry> findDnsEntriesWithConflict(DnsEntry dnsEntry) {
-    String zoneName = dnsEntry.getZoneName();
-    return findDnsZone(zoneName)
-        .map(DnsZone::getDn)
+    Dn zoneDn = findDnsZone(dnsEntry.getZoneName()).getDn();
+    return dnsRepository.findDnsEntryWithConflict(zoneDn, dnsEntry)
         .stream()
-        .flatMap(zoneDn -> dnsRepository.findDnsEntryWithConflict(zoneDn, dnsEntry)
-            .stream()
-            .flatMap(cnfEntry -> Stream.concat(
-                Stream.of(cnfEntry),
-                findPossibleConflicts(zoneDn, dnsEntry))));
+        .flatMap(cnfEntry -> Stream.concat(
+            Stream.of(cnfEntry),
+            findPossibleConflicts(zoneDn, dnsEntry)));
   }
 
   private Stream<DnsEntry> findPossibleConflicts(Dn zoneDn, DnsEntry dnsEntry) {

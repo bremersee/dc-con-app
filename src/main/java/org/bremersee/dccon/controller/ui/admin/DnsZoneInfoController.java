@@ -21,6 +21,7 @@ import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.service.DnsService;
+import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,14 +64,16 @@ public class DnsZoneInfoController extends AbstractEditController
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    return dnsService.findDnsZone(zoneName)
-        .map(zone -> {
-          model.addAttribute("zone", zone);
-          return "admin/dns-zone-info";
-        })
-        .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "DNS Zone", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
-            "dns-zones"));
+    try {
+      model.addAttribute("zone", dnsService.findDnsZone(zoneName));
+      return "admin/dns-zone-info";
+
+    } catch (ServiceException serviceException) {
+
+      return entityNotFoundRedirect(
+          redirectAttributes, "DNS Zone", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
+          "dns-zones");
+    }
   }
 
 }

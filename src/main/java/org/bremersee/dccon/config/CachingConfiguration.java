@@ -16,8 +16,27 @@
 
 package org.bremersee.dccon.config;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import javax.cache.configuration.FactoryBuilder;
+import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
+import javax.cache.configuration.MutableConfiguration;
+import javax.cache.event.CacheEntryCreatedListener;
+import javax.cache.event.CacheEntryEvent;
+import javax.cache.event.CacheEntryEventFilter;
+import javax.cache.event.CacheEntryExpiredListener;
+import javax.cache.event.CacheEntryListener;
+import javax.cache.event.CacheEntryListenerException;
+import javax.cache.event.CacheEntryRemovedListener;
+import javax.cache.event.CacheEntryUpdatedListener;
+import javax.cache.expiry.CreatedExpiryPolicy;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.dccon.model.DhcpLease;
+import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -26,33 +45,25 @@ import org.springframework.context.annotation.Configuration;
  * @author Christian Bremer
  */
 @Configuration
-//@EnableCaching
+@EnableCaching
 @Slf4j
 public class CachingConfiguration {
 
   /*
-  import java.io.Serializable;
-  import java.util.Map;
-  import java.util.concurrent.TimeUnit;
-  import javax.cache.configuration.FactoryBuilder;
-  import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
-  import javax.cache.configuration.MutableConfiguration;
-  import javax.cache.event.CacheEntryCreatedListener;
-  import javax.cache.event.CacheEntryEvent;
-  import javax.cache.event.CacheEntryEventFilter;
-  import javax.cache.event.CacheEntryExpiredListener;
-  import javax.cache.event.CacheEntryListener;
-  import javax.cache.event.CacheEntryListenerException;
-  import javax.cache.event.CacheEntryRemovedListener;
-  import javax.cache.event.CacheEntryUpdatedListener;
-  import javax.cache.expiry.CreatedExpiryPolicy;
-  import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
-  import org.springframework.context.annotation.Bean;
-
   @Bean
   public JCacheManagerCustomizer cacheManagerCustomizer() {
     return cacheManager -> {
-      final TimeUnit durationUnit = TimeUnit.SECONDS;
+      TimeUnit durationUnit = TimeUnit.SECONDS;
+      if (Objects.isNull(cacheManager.getCache("dnsZoneCache"))) {
+        log.info("Creating cache 'dnsZoneCache'.");
+        cacheManager.createCache("dnsZoneCache", new MutableConfiguration<>()
+            .setExpiryPolicyFactory(CreatedExpiryPolicy
+                .factoryOf(new javax.cache.expiry.Duration(TimeUnit.DAYS, 1L)))
+            .setStoreByValue(false)
+            .setStatisticsEnabled(true)
+        );
+      }
+
       if (cacheManager.getCache("dhcp-leases-by-ip") == null) {
         log.info("msg=[Creating cache 'dhcp-leases-by-ip']");
         cacheManager.createCache(
@@ -87,6 +98,7 @@ public class CachingConfiguration {
         FactoryBuilder.factoryOf(new DhcpLeaseCacheEntryEventFilter()),
         false, true);
   }
+  */
 
   @Slf4j
   static class DhcpLeaseCacheEntryEventFilter
@@ -138,6 +150,6 @@ public class CachingConfiguration {
     }
 
   }
-  */
+
 
 }

@@ -44,6 +44,9 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DnsZone extends CommonAttributes {
 
+  @Serial
+  private static final long serialVersionUID = 1L;
+
   /**
    * The constant NAME.
    */

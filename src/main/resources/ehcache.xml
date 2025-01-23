@@ -1,12 +1,17 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns="http://www.ehcache.org/v3"
-  xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
+  xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
+  xsi:schemaLocation="
+    http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+    http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
 
-  <cache-template name="dhcp-leases-template">
+  <!-- <persistence directory="${java.io.tmpdir}"/> -->
+  <persistence directory="/Users/cbr/cache"/>
+
+  <cache-template name="default">
     <expiry>
-      <ttl unit="seconds">30</ttl>
+      <ttl unit="hours">1</ttl>
     </expiry>
-    <!--
     <listeners>
       <listener>
         <class>org.bremersee.dccon.config.CacheEventLogger</class>
@@ -19,16 +24,19 @@
         <events-to-fire-on>UPDATED</events-to-fire-on>
       </listener>
     </listeners>
-    -->
     <resources>
-      <heap unit="entries">1</heap>
-      <offheap unit="MB">1</offheap>
+      <heap unit="entries">500</heap>
+      <offheap unit="MB">4</offheap>
+      <disk persistent="true" unit="MB">8</disk>
     </resources>
   </cache-template>
 
-  <cache alias="dhcp-leases-by-ip" uses-template="dhcp-leases-template">
+  <cache alias="dnsZoneCache" uses-template="default">
+    <!-- <key-type>java.lang.Object</key-type> -->
+    <value-type>org.bremersee.dccon.model.DnsZone</value-type>
   </cache>
 
+  <!--
   <cache alias="dhcp-leases-by-name" uses-template="dhcp-leases-template">
   </cache>
 
@@ -51,5 +59,6 @@
       <offheap unit="MB">1</offheap>
     </resources>
   </cache>
+  -->
 
 </config>

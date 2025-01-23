@@ -36,7 +36,7 @@ spring:
     name: ${APPLICATION_NAME:dc-con-app}
   cache:
     jcache:
-      config: classpath:_ehcache.xml
+      config: classpath:ehcache.xml
   cloud:
     config:
       enabled: ${CONFIG_CLIENT_ENABLED:false}
@@ -52,7 +52,6 @@ spring:
   messages:
     use-code-as-default-message: true
     fallback-to-system-locale: false
-
 management:
   endpoints:
     web:

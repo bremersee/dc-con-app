@@ -26,7 +26,6 @@ import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.ldaptive.dn.Dn;
-import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -37,11 +36,12 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsRepository {
 
-  List<String> findDnsZoneNames(@Nullable DnsZoneType type);
+  List<String> findDnsZoneNames(@NotNull DnsZoneType type);
 
-  Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
+  DnsZone findDnsZone(@NotEmpty String zoneName);
 
-  void createDnsZone(@NotEmpty String zoneName);
+  @NotNull
+  DnsZone createDnsZone(@NotEmpty String zoneName);
 
   void deleteDnsZone(@NotEmpty String zoneName);
 

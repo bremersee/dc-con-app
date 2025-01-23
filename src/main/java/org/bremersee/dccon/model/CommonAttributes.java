@@ -17,9 +17,12 @@
 package org.bremersee.dccon.model;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.Hidden;
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Optional;
@@ -36,14 +39,19 @@ import org.ldaptive.dn.Dn;
  */
 @Data
 @NoArgsConstructor
-public abstract class CommonAttributes implements DistinguishedNameProvider {
+public abstract class CommonAttributes implements Serializable, DistinguishedNameProvider {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /**
    * The distinguished name in the active directory.
    */
   @Hidden
   @JsonIgnore
-  Dn dn;
+  transient Dn dn;
+
+  String distinguishedName;
 
   /**
    * The creation date.
@@ -85,31 +93,41 @@ public abstract class CommonAttributes implements DistinguishedNameProvider {
   @Hidden
   @JsonIgnore
   public Dn getDn() {
+    if (isNull(dn) && nonNull(distinguishedName)) {
+      dn = new Dn(distinguishedName);
+    }
     return dn;
   }
 
   @Hidden
   @JsonIgnore
   public void setDn(Dn dn) {
-    this.dn = dn;
+    if (isNull(dn) || dn.isEmpty()) {
+      this.dn = null;
+      this.distinguishedName = null;
+    } else {
+      this.dn = dn;
+      this.distinguishedName = dn.format();
+    }
   }
 
   public String getDistinguishedName() {
-    return isNull(dn) ? null : dn.format();
+    return isNull(getDn()) ? null : getDn().format();
   }
 
   public void setDistinguishedName(String distinguishedName) {
     if (isNull(distinguishedName) || distinguishedName.isEmpty()) {
       this.dn = null;
+      this.distinguishedName = null;
     } else {
-      this.dn = new Dn(distinguishedName);
+      setDn(new Dn(distinguishedName));
     }
   }
 
   @Hidden
   @JsonIgnore
   public String getDistinguishedNameUnformatted() {
-    return isNull(dn) ? null : dn.format(rdn -> rdn);
+    return isNull(getDn()) ? null : getDn().format(rdn -> rdn);
   }
 
   @Hidden

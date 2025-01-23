@@ -50,6 +50,9 @@ import org.ldaptive.filter.AndFilter;
 import org.ldaptive.filter.EqualityFilter;
 import org.ldaptive.filter.Filter;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -87,9 +90,17 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
     return executeAndGet(commands, DnsZoneListParser.defaultParser());
   }
 
+  @Cacheable(value = "dnsZoneCache", key = "{ #p0 }")
   @Override
-  public Optional<DnsZone> findDnsZone(String zoneName) {
+  public DnsZone findDnsZone(String zoneName) {
     log.debug("findDnsZone {}", zoneName);
+    return doFindDnsZone(zoneName)
+        .orElseThrow(() -> ServiceException.internalServerError(
+            String.format("Dns zone '%s' was not found.", zoneName),
+            "todo")); // TODO
+  }
+
+  private Optional<DnsZone> doFindDnsZone(String zoneName) {
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
         "dns",
@@ -107,8 +118,9 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         });
   }
 
+  @CachePut(value = "dnsZoneCache", key = "{ #result.name }")
   @Override
-  public void createDnsZone(String zoneName) {
+  public DnsZone createDnsZone(String zoneName) {
     log.debug("createDnsZone {}", zoneName);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),
@@ -118,8 +130,13 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         zoneName
     );
     execute(commands, new DnsZoneCreateValidator(zoneName));
+    return doFindDnsZone(zoneName)
+        .orElseThrow(() -> ServiceException.internalServerError(
+            String.format("Creating dns zone '%s' failed.", zoneName),
+            EC_CREATING_DNS_ZONE_FAILED));
   }
 
+  @CacheEvict(value = "dnsZoneCache", key = "{ #p0 }")
   @Override
   public void deleteDnsZone(String zoneName) {
     log.debug("deleteDnsZone {}", zoneName);

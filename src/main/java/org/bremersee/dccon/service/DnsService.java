@@ -42,7 +42,7 @@ public interface DnsService {
 
   List<String> findDnsZoneNames(@Nullable DnsZoneType type);
 
-  Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
+  DnsZone findDnsZone(@NotEmpty String zoneName);
 
   @NotNull
   DnsZone createDnsZone(@NotEmpty String zoneName);
@@ -60,7 +60,7 @@ public interface DnsService {
       @NotEmpty String name,
       @NotNull DnsEntryType type);
 
-  Optional<DnsEntry> findDnsEntry(
+  Optional<DnsEntry> findDnsEntry( // TODO get
       @NotEmpty String zoneName,
       @NotEmpty String name,
       @NotNull DnsEntryType type,
