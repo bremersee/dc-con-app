@@ -91,7 +91,7 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
           model.addAttribute("zoneName", zoneName);
           model.addAttribute("dnsEntry", dnsEntry);
           model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(dnsEntry));
-          DnsEntryEditRequest entryEditRequest = dnsService.findReverseDnsEntry(zoneName, dnsEntry)
+          DnsEntryEditRequest entryEditRequest = dnsService.findReverseDnsEntry(dnsEntry)
               .map(reverseDnsEntry -> {
                 model.addAttribute("reverseDnsEntryExists", true);
                 model.addAttribute("reverseDnsEntry", reverseDnsEntry);
@@ -126,6 +126,7 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
     log.debug("updateDnsEntry({}, {}, {}, {}, {})",
         zoneName, name, type, value, dnsEntryEditRequest);
     DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setZoneName(zoneName);
     dnsEntry.setName(name);
     dnsEntry.setType(type);
     dnsEntry.setValue(value);
@@ -139,10 +140,10 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       if (name.equals(dnsEntryEditRequest.getNewName())
           && type.equals(dnsEntryEditRequest.getNewType())) {
         updatedDnsEntry = dnsService
-            .updateDnsEntry(zoneName, dnsEntry, dnsEntryEditRequest.getNewValue());
+            .updateDnsEntry(dnsEntry, dnsEntryEditRequest.getNewValue());
       } else {
-        dnsService.deleteDnsEntry(zoneName, dnsEntry);
-        updatedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntryEditRequest.toNewDnsEntry());
+        dnsService.deleteDnsEntry(dnsEntry);
+        updatedDnsEntry = dnsService.addDnsEntry(dnsEntryEditRequest.toNewDnsEntry(zoneName));
       }
       if (dnsEntryEditRequest.isUpdateReverseEntry() && !isEmpty(reverseZoneName)
           && !isEmpty(reverseName) && !isEmpty(reverseType) && !isEmpty(reverseValue)
@@ -154,12 +155,12 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
         reverseDnsEntry.setValue(reverseValue);
         if (reverseName.equals(dnsEntryEditRequest.getNewNameOfReverseEntry())) {
           dnsService.updateDnsEntry(
-              reverseZoneName, reverseDnsEntry, dnsEntryEditRequest.getNewValueOfReverseEntry());
+              reverseDnsEntry, dnsEntryEditRequest.getNewValueOfReverseEntry());
         } else {
-          dnsService.deleteDnsEntry(reverseZoneName, reverseDnsEntry);
+          dnsService.deleteDnsEntry(reverseDnsEntry);
           reverseDnsEntry.setName(dnsEntryEditRequest.getNewNameOfReverseEntry());
           reverseDnsEntry.setValue(dnsEntryEditRequest.getNewValueOfReverseEntry());
-          dnsService.addDnsEntry(reverseZoneName, reverseDnsEntry);
+          dnsService.addDnsEntry(reverseDnsEntry);
         }
       }
 

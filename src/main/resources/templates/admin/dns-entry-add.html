@@ -123,6 +123,54 @@
       </div>
     </div>
 
+    <div id="reverseDnsEntryAddDiv" class="mt-4 mb-3 p-3 border border-1 border-secondary"
+         th:if="${not #lists.isEmpty(dnsReverseZones)}">
+      <div class="h5 mb-3">
+        <span>Reverse dns entry </span>
+      </div>
+      <div class="mb-3">
+        <label for="reverseZoneName" class="form-label">Reverse zone name</label>
+        <select id="reverseZoneName" class="form-select" aria-label="Reverse zone names"
+                aria-describedby="reverseZoneNameValidation"
+                th:classappend="${#fields.hasErrors('reverseZoneName')} ? 'is-invalid' : ''"
+                th:field="*{reverseZoneName}">
+          <option th:each="o : ${dnsReverseZones}" th:value="${o}" th:text="${o}">
+            1.168.192.in-addr.arpa
+          </option>
+        </select>
+        <div id="reverseZoneNameValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('reverseZoneName')} ? ${#fields.errors('reverseZoneName')[0]} : ''">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="nameOfReverseEntry" class="form-label">Name of reverse entry</label>
+        <input type="text" class="form-control" id="nameOfReverseEntry" name="nameOfReverseEntry"
+               aria-describedby="nameOfReverseEntryValidation"
+               th:field="*{nameOfReverseEntry}"
+               th:classappend="${#fields.hasErrors('nameOfReverseEntry')} ? 'is-invalid' : ''"/>
+        <div id="nameOfReverseEntryValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('nameOfReverseEntry')} ? ${#fields.errors('nameOfReverseEntry')[0]} : ''">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="valueOfReverseEntry" class="form-label">Value</label>
+        <input type="text" class="form-control" id="valueOfReverseEntry" name="valueOfReverseEntry"
+               aria-describedby="valueOfReverseEntryValidation"
+               th:classappend="${#fields.hasErrors('valueOfReverseEntry')} ? 'is-invalid' : ''"
+               th:field="*{valueOfReverseEntry}" />
+        <div id="valueOfReverseEntryValidation" class="invalid-feedback"
+             th:text="${#fields.hasErrors('valueOfReverseEntry')} ? ${#fields.errors('valueOfReverseEntry')[0]} : ''">
+        </div>
+      </div>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="addReverseEntry"
+               name="addReverseEntry" th:field="*{addReverseEntry}" />
+        <label class="form-check-label" for="addReverseEntry">
+          Also add reverse entry
+        </label>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary mt-3 show-spinner">
       Add
     </button>
@@ -138,6 +186,18 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    const hasReverseZones = /*[[${not #lists.isEmpty(dnsReverseZones)}]]*/ false;
+    if (hasReverseZones) {
+      const reverseDnsEntryEditDiv = $('#reverseDnsEntryAddDiv');
+      $('#type').on('change', function () {
+        if ($(this).val() === 'A' || $(this).val() === 'AAAA') {
+          reverseDnsEntryEditDiv.show();
+        } else {
+          reverseDnsEntryEditDiv.hide();
+        }
+      });
+    }
+
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

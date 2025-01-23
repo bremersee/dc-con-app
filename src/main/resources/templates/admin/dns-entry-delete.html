@@ -126,6 +126,15 @@
           </div>
         </div>
 
+        <div class="form-check form-switch mb-3" th:if="${mayHasReverseEntry}">
+          <input class="form-check-input" type="checkbox" role="switch" id="deleteReverseEntry"
+                 name="deleteReverseEntry" th:field="*{deleteReverseEntry}" />
+          <label class="form-check-label" for="deleteReverseEntry">
+            Also delete reverse entry
+          </label>
+        </div>
+
+
         <button type="submit" class="btn btn-danger mt-3 mb-3 show-spinner">
           Delete
         </button>

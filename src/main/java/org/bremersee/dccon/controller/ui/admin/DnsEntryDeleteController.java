@@ -77,7 +77,11 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
     dnsEntry.setType(type);
     dnsEntry.setValue(value);
     model.addAttribute("dnsEntry", dnsEntry);
-    model.addAttribute("dnsEntryDeleteRequest", new DnsEntryDeleteRequest());
+    DnsEntryDeleteRequest deleteRequest = new DnsEntryDeleteRequest();
+    boolean mayHasReverseEntry = mayHasReverseEntry(dnsEntry);
+    model.addAttribute("mayHasReverseEntry", mayHasReverseEntry);
+    deleteRequest.setDeleteReverseEntry(mayHasReverseEntry);
+    model.addAttribute("dnsEntryDeleteRequest", deleteRequest);
     return "admin/dns-entry-delete";
   }
 
@@ -95,6 +99,7 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
     log.debug("deleteDnsEntry({}, {}, {}, {}, {})", zoneName, name, type, value, deleteRequest);
 
     DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setZoneName(zoneName);
     dnsEntry.setName(name);
     dnsEntry.setType(type);
     dnsEntry.setValue(value);
@@ -103,12 +108,19 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
       bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
       model.addAttribute("zoneName", zoneName);
       model.addAttribute("dnsEntry", dnsEntry);
+      model.addAttribute("mayHasReverseEntry", mayHasReverseEntry(dnsEntry));
       return "admin/dns-entry-delete";
     }
 
     model.clear();
     try {
-      dnsService.deleteDnsEntry(zoneName, dnsEntry);
+      dnsService.deleteDnsEntry(dnsEntry);
+
+      if (deleteRequest.isDeleteReverseEntry() && (DnsEntryType.A.equals(type)
+          || DnsEntryType.AAAA.equals(type) || DnsEntryType.PTR.equals(type))) {
+        dnsService.findReverseDnsEntry(dnsEntry)
+            .ifPresent(dnsService::deleteDnsEntry);
+      }
 
       String msg = String.format("Dns entry '%s' was successfully deleted.", name);
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
@@ -130,6 +142,12 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
         PAGE_AND_ZONE_TYPE_PARAMS, parameters);
     logRedirectTo("Dns deletion redirect.", redirect);
     return redirect;
+  }
+
+  private boolean mayHasReverseEntry(DnsEntry dnsEntry) {
+    return DnsEntryType.A.equals(dnsEntry.getType())
+        || DnsEntryType.AAAA.equals(dnsEntry.getType())
+        || DnsEntryType.PTR.equals(dnsEntry.getType());
   }
 
 }

@@ -55,13 +55,10 @@ public interface DnsRepository {
 
   DnsEntry setCommonAttributes(@NotNull Dn zoneDn, @NotNull DnsEntry entry);
 
-  void addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+  void addDnsEntry(@NotNull DnsEntry entry);
 
-  void updateDnsEntry(
-      @NotEmpty String zoneName,
-      @NotNull DnsEntry entry,
-      @NotEmpty String newValue);
+  void updateDnsEntry(@NotNull DnsEntry entry, @NotEmpty String newValue);
 
-  void deleteDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+  void deleteDnsEntry(@NotNull DnsEntry entry);
 
 }

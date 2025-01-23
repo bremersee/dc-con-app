@@ -52,8 +52,6 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
 
   private static final String ZONE_ENTRIES_NODE_NAME = "@";
 
-  private static final String REVERSE_ZONE_POSTFIX = ".in-addr.arpa";
-
   private static final Pattern IPV4_PATTERN = Pattern.compile(
       "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)" +
           "(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
@@ -153,21 +151,23 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
             .orElse(entry));
   }
 
-  private Optional<DnsEntry> findReverseDnsEntryOfA(String zoneName, DnsEntry dnsEntry) {
+  private Optional<DnsEntry> findReverseDnsEntryOfA(DnsEntry dnsEntry) {
     return findDnsZoneNames(DnsZoneType.REVERSE).stream()
         .flatMap(zone -> findDnsEntries(zone, ZONE_ENTRIES_NODE_NAME, DnsEntryType.PTR))
+        .filter(entry -> !entry.getConflict())
         .filter(entry -> dnsEntry.getValue().toLowerCase()
             .contains(entry.getName().toLowerCase())) // '192.168.1.122' contains '122'
         .filter(entry -> entry.getValue()
-            .equalsIgnoreCase(dnsEntry.getName() + '.' + zoneName)) // 'hostname.zone-name'
+            .equalsIgnoreCase(
+                dnsEntry.getName() + '.' + dnsEntry.getZoneName())) // 'hostname.zone-name'
         .findFirst()
         .map(entry -> findDnsZone(entry.getZoneName())
             .map(zone -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
             .orElse(entry));
   }
 
-  private Optional<DnsEntry> findReverseDnsEntryOfPtr(String zoneName, DnsEntry dnsEntry) {
-    DnsEntryType type = getDnsEntryTypeFromReverseZone(zoneName);
+  private Optional<DnsEntry> findReverseDnsEntryOfPtr(DnsEntry dnsEntry) {
+    DnsEntryType type = getDnsEntryTypeFromReverseZone(dnsEntry.getZoneName());
     if (isNull(type)) {
       return Optional.empty();
     }
@@ -175,6 +175,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
         .flatMap(zone -> findDnsZone(zone).stream())
         .filter(zone -> !zone.getReverseZone())
         .flatMap(zone -> findDnsEntries(zone.getName(), ZONE_ENTRIES_NODE_NAME, type)
+            .filter(entry -> !entry.getConflict())
             .filter(entry -> entry.getValue().toLowerCase()
                 .contains(dnsEntry.getName().toLowerCase()))
             .filter(entry -> dnsEntry.getValue()
@@ -208,17 +209,19 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     return DnsEntryType.AAAA;
   }
 
-  public Optional<DnsEntry> findReverseDnsEntry(String zoneName, DnsEntry dnsEntry) {
+  @Override
+  public Optional<DnsEntry> findReverseDnsEntry(DnsEntry dnsEntry) {
     if (DnsEntryType.A.equals(dnsEntry.getType()) || DnsEntryType.AAAA.equals(dnsEntry.getType())) {
-      return findReverseDnsEntryOfA(zoneName, dnsEntry);
+      return findReverseDnsEntryOfA(dnsEntry);
     } else if (DnsEntryType.PTR.equals(dnsEntry.getType())) {
-      return findReverseDnsEntryOfPtr(zoneName, dnsEntry);
+      return findReverseDnsEntryOfPtr(dnsEntry);
     }
     return Optional.empty();
   }
 
   @Override
-  public Stream<DnsEntry> findDnsEntriesWithConflict(String zoneName, DnsEntry dnsEntry) {
+  public Stream<DnsEntry> findDnsEntriesWithConflict(DnsEntry dnsEntry) {
+    String zoneName = dnsEntry.getZoneName();
     return findDnsZone(zoneName)
         .map(DnsZone::getDn)
         .stream()
@@ -238,10 +241,11 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public DnsEntry addDnsEntry(String zoneName, DnsEntry entry) {
+  public DnsEntry addDnsEntry(DnsEntry entry) {
+    String zoneName = entry.getZoneName();
     return findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue())
         .orElseGet(() -> {
-          dnsRepository.addDnsEntry(zoneName, entry);
+          dnsRepository.addDnsEntry(entry);
           return findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue())
               .orElseThrow(() -> ServiceException.internalServerError(
                   String.format("Creating dns entry '%s' in zone '%s' failed.",
@@ -251,12 +255,13 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public DnsEntry updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
+  public DnsEntry updateDnsEntry(DnsEntry entry, String newValue) {
+    String zoneName = entry.getZoneName();
     if (findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue()).isEmpty()) {
       throw ServiceException.notFoundWithErrorCode("DnsEntry", entry.getName(),
           EC_DNS_ENTRY_NOT_FOUND);
     }
-    dnsRepository.updateDnsEntry(zoneName, entry, newValue);
+    dnsRepository.updateDnsEntry(entry, newValue);
     return findDnsEntry(zoneName, entry.getName(), entry.getType(), newValue)
         .orElseThrow(() -> ServiceException.internalServerError(
             String.format("Updating dns entry '%s' in zone '%s' failed.",
@@ -265,8 +270,9 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public void deleteDnsEntry(String zoneName, DnsEntry entry) {
-    dnsRepository.deleteDnsEntry(zoneName, entry);
+  public void deleteDnsEntry(DnsEntry entry) {
+    dnsRepository.deleteDnsEntry(entry);
+    String zoneName = entry.getZoneName();
     if (findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue()).isPresent()) {
       throw ServiceException.internalServerError(
           String.format("Deleting dns entry '%s' in zone '%s' failed.",

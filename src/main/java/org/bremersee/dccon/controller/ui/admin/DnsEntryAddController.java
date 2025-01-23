@@ -16,7 +16,9 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
@@ -26,6 +28,7 @@ import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
+import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.service.DnsService;
 import org.bremersee.exception.ServiceException;
 import org.springframework.stereotype.Controller;
@@ -69,7 +72,13 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
     log.debug("displayAddDnsEntry({})", zoneName);
     model.addAttribute("zoneName", zoneName);
     model.addAttribute("types", DnsEntryType.getSupportedAddOrDeleteTypes());
-    model.addAttribute("dnsEntryAddRequest", new DnsEntryAddRequest(zoneName));
+    DnsEntryAddRequest addRequest = new DnsEntryAddRequest(zoneName);
+    List<String> reverseZones = dnsService.findDnsZoneNames(DnsZoneType.REVERSE);
+    if (!reverseZones.isEmpty()) {
+      addRequest.setReverseZoneName(reverseZones.get(0));
+    }
+    model.addAttribute("dnsReverseZones", reverseZones);
+    model.addAttribute("dnsEntryAddRequest", addRequest);
     return "admin/dns-entry-add";
   }
 
@@ -81,14 +90,15 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
       RedirectAttributes redirectAttributes) {
 
     log.debug("updateDnsEntry({}, {})", zoneName, dnsEntryAddRequest);
-    DnsEntry dnsEntry = dnsEntryAddRequest.toDnsEntry();
+    DnsEntry dnsEntry = dnsEntryAddRequest.toDnsEntry(zoneName);
 
     model.clear();
     Map<String, Object> parameters = getParamterMap();
     parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
 
     try {
-      DnsEntry addedDnsEntry = dnsService.addDnsEntry(zoneName, dnsEntry);
+      DnsEntry addedDnsEntry = dnsService.addDnsEntry(dnsEntry);
+      dnsEntryAddRequest.toReverseDnsEntry().ifPresent(dnsService::addDnsEntry);
 
       String msg = String.format("Dns entry '%s' was successfully added.",
           addedDnsEntry.getName());

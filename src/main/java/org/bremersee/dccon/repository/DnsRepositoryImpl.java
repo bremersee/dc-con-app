@@ -207,8 +207,8 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public void addDnsEntry(String zoneName, DnsEntry entry) {
-    log.debug("addDnsEntry({}, {})", zoneName, entry);
+  public void addDnsEntry(DnsEntry entry) {
+    log.debug("addDnsEntry({}, {})", entry);
     if (!entry.getType().isAddable()) {
       throw ServiceException.badRequest(
           String.format("Dns entry type '%s' is not supported.", entry.getType()),
@@ -219,7 +219,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         "dns",
         "add",
         domainRepository.getHostName(),
-        zoneName,
+        entry.getZoneName(),
         entry.getName(),
         entry.getType().name(),
         entry.getType().getToSambaToolValueTransformer().apply(entry.getValue())
@@ -228,8 +228,8 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public void updateDnsEntry(String zoneName, DnsEntry entry, String newValue) {
-    log.debug("updateDnsEntry {}, {}, {}", zoneName, entry, newValue);
+  public void updateDnsEntry(DnsEntry entry, String newValue) {
+    log.debug("updateDnsEntry {}, {}", entry, newValue);
     if (!entry.getType().isUpdatable()) {
       throw ServiceException.badRequest(
           String.format("Dns entry type '%s' is not supported.", entry.getType()),
@@ -240,7 +240,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         "dns",
         "update",
         domainRepository.getHostName(),
-        zoneName,
+        entry.getZoneName(),
         entry.getName(),
         entry.getType().name(),
         entry.getType().getToSambaToolValueTransformer().apply(entry.getValue()),
@@ -250,8 +250,8 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
   }
 
   @Override
-  public void deleteDnsEntry(String zoneName, DnsEntry entry) {
-    log.debug("deleteDnsEntry({}, {})", zoneName, entry);
+  public void deleteDnsEntry(DnsEntry entry) {
+    log.debug("deleteDnsEntry({})", entry);
     if (!entry.getType().isAddable()) {
       throw ServiceException.badRequest(
           String.format("Dns entry type '%s' is not supported.", entry.getType()),
@@ -262,7 +262,7 @@ public class DnsRepositoryImpl extends AbstractRepository implements DnsReposito
         "dns",
         "delete",
         domainRepository.getHostName(),
-        zoneName,
+        entry.getZoneName(),
         entry.getName(),
         entry.getType().name(),
         entry.getType().getToSambaToolValueTransformer().apply(entry.getValue())

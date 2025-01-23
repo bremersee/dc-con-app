@@ -81,12 +81,13 @@ public class DnsEntryConflictController extends AbstractEditController implement
         zoneName, name, type, value, objectGuid);
 
     DnsEntry entry = new DnsEntry();
+    entry.setZoneName(zoneName);
     entry.setName(name);
     entry.setType(type);
     entry.setValue(value);
     entry.setConflict(true);
     entry.setObjectGuid(objectGuid);
-    List<DnsEntry> dnsEntries = dnsService.findDnsEntriesWithConflict(zoneName, entry)
+    List<DnsEntry> dnsEntries = dnsService.findDnsEntriesWithConflict(entry)
         .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
         .toList();
     model.addAttribute("zoneName", zoneName);

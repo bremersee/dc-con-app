@@ -38,6 +38,8 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public interface DnsService {
 
+  String REVERSE_ZONE_POSTFIX = ".in-addr.arpa";
+
   List<String> findDnsZoneNames(@Nullable DnsZoneType type);
 
   Optional<DnsZone> findDnsZone(@NotEmpty String zoneName);
@@ -64,19 +66,16 @@ public interface DnsService {
       @NotNull DnsEntryType type,
       @NotEmpty String value);
 
-  Optional<DnsEntry> findReverseDnsEntry(String zoneName, DnsEntry dnsEntry);
+  Optional<DnsEntry> findReverseDnsEntry(DnsEntry dnsEntry);
 
-  Stream<DnsEntry> findDnsEntriesWithConflict(String zoneName, DnsEntry dnsEntry);
-
-  @NotNull
-  DnsEntry addDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+  Stream<DnsEntry> findDnsEntriesWithConflict(DnsEntry dnsEntry);
 
   @NotNull
-  DnsEntry updateDnsEntry(
-      @NotEmpty String zoneName,
-      @NotNull DnsEntry entry,
-      @NotEmpty String newValue);
+  DnsEntry addDnsEntry(@NotNull DnsEntry entry);
 
-  void deleteDnsEntry(@NotEmpty String zoneName, @NotNull DnsEntry entry);
+  @NotNull
+  DnsEntry updateDnsEntry(@NotNull DnsEntry entry, @NotEmpty String newValue);
+
+  void deleteDnsEntry(@NotNull DnsEntry entry);
 
 }

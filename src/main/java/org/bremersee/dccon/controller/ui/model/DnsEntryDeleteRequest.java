@@ -30,4 +30,6 @@ public class DnsEntryDeleteRequest {
 
   private String verificationName;
 
+  private boolean deleteReverseEntry;
+
 }

@@ -59,8 +59,9 @@ public class DnsEntryEditRequest {
     }
   }
 
-  public DnsEntry toNewDnsEntry() {
+  public DnsEntry toNewDnsEntry(String zoneName) {
     DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setZoneName(zoneName);
     dnsEntry.setName(newName);
     dnsEntry.setType(newType);
     dnsEntry.setValue(newValue);

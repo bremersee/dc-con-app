@@ -17,11 +17,14 @@
 package org.bremersee.dccon.controller.ui.model;
 
 import static java.util.Objects.nonNull;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
+import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
+import org.bremersee.dccon.service.DnsService;
 
 /**
  * The type DnsEntryAddRequest.
@@ -38,17 +41,40 @@ public class DnsEntryAddRequest {
 
   private String value;
 
+  private boolean addReverseEntry;
+
+  private String reverseZoneName;
+
+  private String nameOfReverseEntry;
+
+  private String valueOfReverseEntry;
+
   public DnsEntryAddRequest(String zoneName) {
-    if (nonNull(zoneName) && zoneName.toLowerCase().endsWith(".in-addr.arpa")) {
+    if (nonNull(zoneName) && zoneName.toLowerCase().endsWith(DnsService.REVERSE_ZONE_POSTFIX)) {
       type = DnsEntryType.PTR;
     }
   }
 
-  public DnsEntry toDnsEntry() {
+  public DnsEntry toDnsEntry(String zoneName) {
     DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setZoneName(zoneName);
     dnsEntry.setName(name);
     dnsEntry.setType(type);
     dnsEntry.setValue(value);
     return dnsEntry;
+  }
+
+  public Optional<DnsEntry> toReverseDnsEntry() {
+    if (!addReverseEntry || isEmpty(reverseZoneName)
+        || isEmpty(nameOfReverseEntry) || isEmpty(valueOfReverseEntry)
+        || !(DnsEntryType.A.equals(type) || DnsEntryType.AAAA.equals(type))) {
+      return Optional.empty();
+    }
+    DnsEntry dnsEntry = new DnsEntry();
+    dnsEntry.setZoneName(reverseZoneName);
+    dnsEntry.setName(nameOfReverseEntry);
+    dnsEntry.setType(DnsEntryType.PTR);
+    dnsEntry.setValue(valueOfReverseEntry);
+    return Optional.of(dnsEntry);
   }
 }
