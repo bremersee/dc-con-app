@@ -65,7 +65,7 @@ public class DnsZoneInfoController extends AbstractEditController
       RedirectAttributes redirectAttributes) {
 
     try {
-      model.addAttribute("zone", dnsService.findDnsZone(zoneName));
+      model.addAttribute("zone", dnsService.getDnsZone(zoneName));
       return "admin/dns-zone-info";
 
     } catch (ServiceException serviceException) {

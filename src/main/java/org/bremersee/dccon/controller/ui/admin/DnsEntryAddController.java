@@ -18,7 +18,6 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
@@ -73,7 +72,7 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
     model.addAttribute("zoneName", zoneName);
     model.addAttribute("types", DnsEntryType.getSupportedAddOrDeleteTypes());
     DnsEntryAddRequest addRequest = new DnsEntryAddRequest(zoneName);
-    List<String> reverseZones = dnsService.findDnsZoneNames(DnsZoneType.REVERSE);
+    List<String> reverseZones = dnsService.getDnsZoneNames(DnsZoneType.REVERSE);
     if (!reverseZones.isEmpty()) {
       addRequest.setReverseZoneName(reverseZones.get(0));
     }
@@ -89,26 +88,25 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    log.debug("updateDnsEntry({}, {})", zoneName, dnsEntryAddRequest);
+    log.debug("addDnsEntry({}, {})", zoneName, dnsEntryAddRequest);
     DnsEntry dnsEntry = dnsEntryAddRequest.toDnsEntry(zoneName);
 
     model.clear();
     Map<String, Object> parameters = getParamterMap();
-    parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
 
     try {
-      DnsEntry addedDnsEntry = dnsService.addDnsEntry(dnsEntry);
+      dnsService.addDnsEntry(dnsEntry);
       dnsEntryAddRequest.toReverseDnsEntry().ifPresent(dnsService::addDnsEntry);
 
       String msg = String.format("Dns entry '%s' was successfully added.",
-          addedDnsEntry.getName());
+          dnsEntry.getDisplayName());
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
-          "todo", addedDnsEntry.getName());
+          "todo", dnsEntry.getDisplayName());
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
 
-      parameters = putToParameterMap(parameters, "name", addedDnsEntry.getName());
-      parameters = putToParameterMap(parameters, "type", addedDnsEntry.getType());
-      parameters = putToParameterMap(parameters, "value", addedDnsEntry.getValue());
+      parameters = putToParameterMap(parameters, "name", dnsEntry.getName());
+      parameters = putToParameterMap(parameters, "type", dnsEntry.getType());
+      parameters = putToParameterMap(parameters, "value", dnsEntry.getValue());
       String redirect = getRedirectUri("dns-entry-edit",
           PAGE_AND_DNS_ENTRY_PARAMS, parameters);
       logRedirectTo("Dns entry successfully added.", redirect);
@@ -121,8 +119,8 @@ public class DnsEntryAddController extends AbstractEditController implements Pag
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
           "todo", dnsEntryAddRequest.getName());
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
-          PAGE_AND_ZONE_TYPE_PARAMS, parameters);
+      String redirect = getRedirectUri("dns-zone-entries",
+          PAGE_AND_ZONE_NAME_PARAMS, parameters);
       logRedirectTo("Adding dns entry failed.", redirect);
       return redirect;
     }

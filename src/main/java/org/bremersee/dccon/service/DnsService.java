@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
-import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.springframework.data.domain.Page;
@@ -40,9 +39,9 @@ public interface DnsService {
 
   String REVERSE_ZONE_POSTFIX = ".in-addr.arpa";
 
-  List<String> findDnsZoneNames(@Nullable DnsZoneType type);
+  List<String> getDnsZoneNames(@Nullable DnsZoneType type);
 
-  DnsZone findDnsZone(@NotEmpty String zoneName);
+  DnsZone getDnsZone(@NotEmpty String zoneName);
 
   @NotNull
   DnsZone createDnsZone(@NotEmpty String zoneName);
@@ -50,31 +49,20 @@ public interface DnsService {
   void deleteDnsZone(@NotEmpty String zoneName);
 
 
-  Page<DnsEntry> findDnsEntries(
+  Page<DnsEntry> getDnsEntries(
       @NotEmpty String zoneName,
       Pageable pageable,
       String query);
 
-  Stream<DnsEntry> findDnsEntries(
-      @NotEmpty String zoneName,
-      @NotEmpty String name,
-      @NotNull DnsEntryType type);
+  Optional<DnsEntry> findDnsEntry(@NotNull DnsEntry dnsEntry);
 
-  Optional<DnsEntry> findDnsEntry( // TODO get
-      @NotEmpty String zoneName,
-      @NotEmpty String name,
-      @NotNull DnsEntryType type,
-      @NotEmpty String value);
+  Optional<DnsEntry> findReverseDnsEntry(@NotNull DnsEntry dnsEntry);
 
-  Optional<DnsEntry> findReverseDnsEntry(DnsEntry dnsEntry);
+  Stream<DnsEntry> findDnsEntriesConflictingWith(@NotNull DnsEntry dnsEntry);
 
-  Stream<DnsEntry> findDnsEntriesWithConflict(DnsEntry dnsEntry);
+  void addDnsEntry(@NotNull DnsEntry entry);
 
-  @NotNull
-  DnsEntry addDnsEntry(@NotNull DnsEntry entry);
-
-  @NotNull
-  DnsEntry updateDnsEntry(@NotNull DnsEntry entry, @NotEmpty String newValue);
+  void updateDnsEntry(@NotNull DnsEntry entry, @NotEmpty String newValue);
 
   void deleteDnsEntry(@NotNull DnsEntry entry);
 

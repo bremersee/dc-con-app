@@ -19,13 +19,7 @@ package org.bremersee.dccon.repository;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 import org.bremersee.dccon.model.DnsEntry;
-import org.bremersee.dccon.model.DnsEntryType;
-import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.model.DnsZoneType;
-import org.ldaptive.dn.Dn;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -34,26 +28,13 @@ import org.springframework.validation.annotation.Validated;
  * @author Christian Bremer
  */
 @Validated
-public interface DnsRepository {
+public interface DnsEntryRepository {
 
-  List<String> findDnsZoneNames(@NotNull DnsZoneType type);
+  String ZONE_ENTRIES_NODE_NAME = "@";
 
-  DnsZone findDnsZone(@NotEmpty String zoneName);
+  List<DnsEntry> getDnsEntries(@NotEmpty String zoneName);
 
-  @NotNull
-  DnsZone createDnsZone(@NotEmpty String zoneName);
-
-  void deleteDnsZone(@NotEmpty String zoneName);
-
-
-  Stream<DnsEntry> findDnsEntries(
-      @NotEmpty String zoneName,
-      @NotEmpty String name,
-      @NotNull DnsEntryType type);
-
-  Optional<DnsEntry> findDnsEntryWithConflict(Dn zoneDn, DnsEntry dnsEntry);
-
-  DnsEntry setCommonAttributes(@NotNull Dn zoneDn, @NotNull DnsEntry entry);
+  DnsEntry addCommonAttributes(@NotNull DnsEntry entry);
 
   void addDnsEntry(@NotNull DnsEntry entry);
 

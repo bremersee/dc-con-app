@@ -62,7 +62,7 @@
   <div class="row mb-4">
     <div class="col-1">
       <a class="btn btn-outline-secondary show-spinner" href="dns-zone-entries.html"
-         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-backward"></span>
       </a>
     </div>
@@ -72,93 +72,154 @@
           <h3 class="small">Resolve conflicts of dns entry</h3>
         </div>
         <div class="d-flex justify-content-center">
-          <h3 th:text="${dnsEntry.name}">zander</h3>
+          <h3 th:text="${dnsEntry.displayName}">zander</h3>
         </div>
       </div>
     </div>
     <div class="col-1"></div>
   </div>
 
-  <div th:if="${#lists.isEmpty(dnsEntries)}"
-       class="alert alert-info" role="alert">
-    No entries were found.
-  </div>
-
-  <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsEntries)}">
-    <form id="dnsEntryConflictForm" th:action="@{dns-entry-conflict}" action="#" method="post">
-      <input type="hidden" name="page" th:value="${page}"/>
-      <input type="hidden" name="size" th:value="${size}"/>
-      <input type="hidden" name="sort" th:value="${sort}"/>
-      <input type="hidden" name="q" th:value="${q}"/>
-
-      <input type="hidden" name="zone-type" th:value="${zoneType}"/>
-      <input type="hidden" name="zone-name" th:value="${zoneName}"/>
-
-      <div th:each="entry,iter : ${dnsEntries}"
-           class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">
-            <span th:text="${entry.name}">zander</span>
-            <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
-                  th:if="${entry.conflict}">
-          </span>
-          </h6>
-          <span class="glyphicon glyphicon-ban-circle text-danger"
-                aria-hidden="true">
-        </span>
+  <div class="mx-0 mx-sm-1 mx-md-3">
+    <div class="mb-4 p-3 border border-1 border-danger">
+      <div class="h5 mb-3">
+        <div>This dns entry is marked as conflict.</div>
+      </div>
+      <div class="row">
+        <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+          <span>Name</span>:
         </div>
-        <div class="small text-secondary">
-          <div class="row">
-            <div class="col col-1">
-              Type:
-            </div>
-            <div class="col" th:text="${entry.type}">
-              A
-            </div>
+        <div class="col col-auto">
+          <span class="me-1" th:text="${dnsEntry.displayName}">zander</span>
+          <a id="copyNameToClipboard" href="#">
+            <span class="fas fa-clipboard" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div class="small text-secondary">
+        <div class="row">
+          <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+            Type:
           </div>
-          <div class="row">
-            <div class="col col-1">
-              Value:
-            </div>
-            <div class="col" th:text="${entry.value}">
-              192.168.1.112
-            </div>
+          <div class="col col-auto" th:text="${dnsEntry.type}">
+            A
           </div>
-          <div class="row">
-            <div class="col col-1">
-              Created:
-            </div>
-            <div class="col" th:text="${entry.created}">
-              2014-11-23
-            </div>
+        </div>
+        <div class="row">
+          <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+            Value:
           </div>
-          <div class="row">
-            <div class="col col-1">
-              Modified:
-            </div>
-            <div class="col" th:text="${entry.modified}">
-              2014-11-23
-            </div>
+          <div class="col col-auto" th:text="${dnsEntry.value}">
+            192.168.1.112
           </div>
-          <div class="row">
-            <div class="col col-1">
-              <label th:for="'dnsEntryId-' + ${iter.index}" for="dnsEntryId" id="verificationNameHelp" class="form-text">
-                Delete?
-              </label>
-            </div>
-            <div class="col">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="dnsEntryId" name="dns-entry-id"
-                       th:id="'dnsEntryId-' + ${iter.index}" th:value="${entry.internalId}" />
-              </div>
-            </div>
+        </div>
+        <div class="row">
+          <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+            Created:
+          </div>
+          <div class="col col-auto" th:text="${#temporals.format(dnsEntry.created, #locale)}">
+            2014-11-23
+          </div>
+        </div>
+        <div class="row">
+          <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+            Modified:
+          </div>
+          <div class="col col-auto" th:text="${#temporals.format(dnsEntry.modified, #locale)}">
+            2014-11-23
           </div>
         </div>
       </div>
-      <button type="submit" class="btn btn-danger mt-3 mb-3 show-spinner">
-        Delete
-      </button>
-    </form>
+      <div class="mt-3">
+        <form id="dnsEntryConflictForm" th:action="@{dns-entry-conflict}" action="#" method="post"
+              th:object="${dnsEntryDeleteRequest}">
+          <input type="hidden" name="page" th:value="${page}"/>
+          <input type="hidden" name="size" th:value="${size}"/>
+          <input type="hidden" name="sort" th:value="${sort}"/>
+          <input type="hidden" name="q" th:value="${q}"/>
+
+          <input type="hidden" name="zone-type" th:value="${zoneType}"/>
+          <input type="hidden" name="zone-name" th:value="${dnsEntry.zoneName}"/>
+          <input type="hidden" name="name" th:value="${dnsEntry.name}"/>
+          <input type="hidden" name="type" th:value="${dnsEntry.type}"/>
+          <input type="hidden" name="value" th:value="${dnsEntry.value}"/>
+
+          <div>
+            <input type="text" class="form-control" id="verificationName" name="verificationName"
+                   aria-describedby="verificationNameValidation" required
+                   th:classappend="${#fields.hasErrors('verificationName')} ? 'is-invalid' : ''"
+                   th:field="*{verificationName}" />
+            <div>
+              <label for="verificationName" id="verificationNameHelp" class="form-text">
+                Please enter the dns entry name for deletion.
+              </label>
+            </div>
+            <div id="verificationNameValidation" class="invalid-feedback"
+                 th:text="${#fields.hasErrors('verificationName')} ? ${#fields.errors('verificationName')[0]} : ''">
+            </div>
+            <div>
+              <button type="submit" class="btn btn-danger mt-3 show-spinner">
+                Delete
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(dnsEntries)}">
+      <div class="h5 mb-2">
+        <span>It may have conflicts with</span>:
+      </div>
+      <div class="list-group list-group-flush">
+        <a th:each="entry,iter : ${dnsEntries}"
+           target="_blank" href="dns-entry-edit.html"
+           th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},name=${entry.name},type=${entry.type},value=${entry.value},page=${page},size=${size},sort=${sort},q=${q})}"
+           class="list-group-item list-group-item-action">
+          <div class="row">
+            <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+              <span>Name</span>:
+            </div>
+            <div class="col col-auto" th:text="${entry.displayName}">
+              zander
+            </div>
+          </div>
+          <div class="small text-secondary">
+            <div class="row">
+              <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+                Type:
+              </div>
+              <div class="col col-auto" th:text="${entry.type}">
+                A
+              </div>
+            </div>
+            <div class="row">
+              <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+                Value:
+              </div>
+              <div class="col col-auto" th:text="${entry.value}">
+                192.168.1.112
+              </div>
+            </div>
+            <div class="row">
+              <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+                Created:
+              </div>
+              <div class="col col-auto" th:text="${#temporals.format(entry.created, #locale)}">
+                2014-11-23
+              </div>
+            </div>
+            <div class="row">
+              <div class="col col-3 col-sm-2 col-md-2 col-lg-1 me-1">
+                Modified:
+              </div>
+              <div class="col col-auto" th:text="${#temporals.format(entry.modified, #locale)}">
+                2014-11-23
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -166,8 +227,15 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${dnsEntry.displayName}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
+      loadingSpinnerModal.show();
+    });
+    $('#dnsEntryConflictForm').on('submit', function () {
       loadingSpinnerModal.show();
     });
   });

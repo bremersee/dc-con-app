@@ -19,7 +19,7 @@ package org.bremersee.dccon.service;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.repository.DnsZoneRepository;
+import org.bremersee.dccon.repository.DnsZoneRepositoryObsolete;
 
 /**
  * The dns zone comparator.
@@ -29,14 +29,14 @@ import org.bremersee.dccon.repository.DnsZoneRepository;
 @Slf4j
 public class DnsZoneComparator extends AbstractDnsComparator<DnsZone> {
 
-  private final DnsZoneRepository dnsZoneRepository;
+  private final DnsZoneRepositoryObsolete dnsZoneRepository;
 
   /**
    * Instantiates a new dns zone comparator.
    *
    * @param dnsZoneRepository the dns zone repository
    */
-  DnsZoneComparator(DnsZoneRepository dnsZoneRepository) {
+  DnsZoneComparator(DnsZoneRepositoryObsolete dnsZoneRepository) {
     super(true);
     this.dnsZoneRepository = dnsZoneRepository;
   }

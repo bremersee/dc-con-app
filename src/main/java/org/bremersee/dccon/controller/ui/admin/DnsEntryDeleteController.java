@@ -71,16 +71,12 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
       ModelMap model) {
 
     log.debug("displayDeleteDnsEntry({}, {}, {}, {})", zoneName, name, type, value);
-    model.addAttribute("zoneName", zoneName);
-    DnsEntry dnsEntry = new DnsEntry();
-    dnsEntry.setName(name);
-    dnsEntry.setType(type);
-    dnsEntry.setValue(value);
+    DnsEntry dnsEntry = new DnsEntry(zoneName, name, type, value);
     model.addAttribute("dnsEntry", dnsEntry);
     DnsEntryDeleteRequest deleteRequest = new DnsEntryDeleteRequest();
-    boolean mayHasReverseEntry = mayHasReverseEntry(dnsEntry);
-    model.addAttribute("mayHasReverseEntry", mayHasReverseEntry);
-    deleteRequest.setDeleteReverseEntry(mayHasReverseEntry);
+    boolean mayHaveReverseEntry = mayHaveReverseEntry(dnsEntry);
+    model.addAttribute("mayHaveReverseEntry", mayHaveReverseEntry);
+    deleteRequest.setDeleteReverseEntry(mayHaveReverseEntry);
     model.addAttribute("dnsEntryDeleteRequest", deleteRequest);
     return "admin/dns-entry-delete";
   }
@@ -98,17 +94,11 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
 
     log.debug("deleteDnsEntry({}, {}, {}, {}, {})", zoneName, name, type, value, deleteRequest);
 
-    DnsEntry dnsEntry = new DnsEntry();
-    dnsEntry.setZoneName(zoneName);
-    dnsEntry.setName(name);
-    dnsEntry.setType(type);
-    dnsEntry.setValue(value);
-
+    DnsEntry dnsEntry = new DnsEntry(zoneName, name, type, value);
     if (!name.equalsIgnoreCase(deleteRequest.getVerificationName())) {
       bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
-      model.addAttribute("zoneName", zoneName);
       model.addAttribute("dnsEntry", dnsEntry);
-      model.addAttribute("mayHasReverseEntry", mayHasReverseEntry(dnsEntry));
+      model.addAttribute("mayHaveReverseEntry", mayHaveReverseEntry(dnsEntry));
       return "admin/dns-entry-delete";
     }
 
@@ -137,14 +127,13 @@ public class DnsEntryDeleteController extends AbstractEditController implements 
     }
 
     Map<String, Object> parameters = getParamterMap();
-    parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
-    String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
-        PAGE_AND_ZONE_TYPE_PARAMS, parameters);
+    String redirect = getRedirectUri("dns-zone-entries",
+        PAGE_AND_ZONE_NAME_PARAMS, parameters);
     logRedirectTo("Dns deletion redirect.", redirect);
     return redirect;
   }
 
-  private boolean mayHasReverseEntry(DnsEntry dnsEntry) {
+  private boolean mayHaveReverseEntry(DnsEntry dnsEntry) {
     return DnsEntryType.A.equals(dnsEntry.getType())
         || DnsEntryType.AAAA.equals(dnsEntry.getType())
         || DnsEntryType.PTR.equals(dnsEntry.getType());

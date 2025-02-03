@@ -58,8 +58,10 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
   String PAGE_AND_ZONE_TYPE_PARAMS = PAGE_PARAMS
       + "&" + ZONE_TYPE + "={{" + ZONE_TYPE + "}}";
 
-  String PAGE_AND_DNS_ENTRY_PARAMS = PAGE_AND_ZONE_TYPE_PARAMS
-      + "&" + ZONE_NAME + "={{" + ZONE_NAME + "}}"
+  String PAGE_AND_ZONE_NAME_PARAMS = PAGE_AND_ZONE_TYPE_PARAMS
+      + "&" + ZONE_NAME + "={{" + ZONE_NAME + "}}";
+
+  String PAGE_AND_DNS_ENTRY_PARAMS = PAGE_AND_ZONE_NAME_PARAMS
       + "&name={{name}}"
       + "&type={{type}}"
       + "&value={{value}}";
@@ -80,7 +82,8 @@ public interface RedirectComponent extends ControllerConstants, LoggerProvider {
             .orElse(""),
         ZONE_TYPE, findZoneTypeParameterValue()
             .map(DnsZoneType::getParameterValue)
-            .orElse("")
+            .orElse(""),
+        ZONE_NAME, findParameterValue(ZONE_NAME).orElse("")
     );
   }
 

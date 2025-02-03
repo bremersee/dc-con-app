@@ -69,43 +69,36 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       @RequestParam(name = "name", required = false) String name,
       @RequestParam(name = "type", required = false) DnsEntryType type,
       @RequestParam(name = "value", required = false) String value,
-      @RequestParam(name = "cnf", defaultValue = "false") boolean isConflict,
-      @RequestParam(name = "guid", required = false) String objectGuid,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    log.debug("displayEditDnsEntry({}, {}, {}, {}, {}, {})",
-        zoneName, name, type, value, isConflict, objectGuid);
-    if (isConflict && !isEmpty(objectGuid)) {
-      Map<String, Object> parameters = getParamterMap();
-      parameters = putToParameterMap(parameters, "zone-name", zoneName);
-      parameters = putToParameterMap(parameters, "name", name);
-      parameters = putToParameterMap(parameters, "type", type);
-      parameters = putToParameterMap(parameters, "value", value);
-      parameters = putToParameterMap(parameters, "guid", objectGuid);
-      return getRedirectUri("dns-entry-conflict?guid={{guid}}", PAGE_AND_DNS_ENTRY_PARAMS,
-          parameters);
-    }
-    return dnsService.findDnsEntry(zoneName, name, type, value)
-        .map(dnsEntry -> {
-          model.addAttribute("zoneName", zoneName);
-          model.addAttribute("dnsEntry", dnsEntry);
-          model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(dnsEntry));
-          DnsEntryEditRequest entryEditRequest = dnsService.findReverseDnsEntry(dnsEntry)
+    log.debug("displayEditDnsEntry({}, {}, {}, {})", zoneName, name, type, value);
+    return dnsService.findDnsEntry(new DnsEntry(zoneName, name, type, value))
+        .map(entry -> {
+          if (entry.isConflict()) {
+            Map<String, Object> parameters = getParamterMap();
+            parameters = putToParameterMap(parameters, "name", name);
+            parameters = putToParameterMap(parameters, "type", type);
+            parameters = putToParameterMap(parameters, "value", value);
+            return getRedirectUri("dns-entry-conflict", PAGE_AND_DNS_ENTRY_PARAMS, parameters);
+          }
+          model.addAttribute("dnsEntry", entry);
+          model.addAttribute("types", DnsEntryType.getSupportedUpdateTypes(entry));
+          DnsEntryEditRequest entryEditRequest = dnsService.findReverseDnsEntry(entry)
               .map(reverseDnsEntry -> {
                 model.addAttribute("reverseDnsEntryExists", true);
                 model.addAttribute("reverseDnsEntry", reverseDnsEntry);
-                return new DnsEntryEditRequest(dnsEntry, reverseDnsEntry);
+                return new DnsEntryEditRequest(entry, reverseDnsEntry);
               })
               .orElseGet(() -> {
                 model.addAttribute("reverseDnsEntryExists", false);
-                return new DnsEntryEditRequest(dnsEntry);
+                return new DnsEntryEditRequest(entry);
               });
           model.addAttribute("dnsEntryEditRequest", entryEditRequest);
           return "admin/dns-entry-edit";
         })
         .orElseGet(() -> entityNotFoundRedirect(
-            redirectAttributes, "Dns Entry", "todo", zoneName, PAGE_AND_ZONE_TYPE_PARAMS,
+            redirectAttributes, "Dns Entry", "todo", name, PAGE_AND_ZONE_NAME_PARAMS,
             "dns-zone-entries"));
   }
 
@@ -125,34 +118,27 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
 
     log.debug("updateDnsEntry({}, {}, {}, {}, {})",
         zoneName, name, type, value, dnsEntryEditRequest);
-    DnsEntry dnsEntry = new DnsEntry();
-    dnsEntry.setZoneName(zoneName);
-    dnsEntry.setName(name);
-    dnsEntry.setType(type);
-    dnsEntry.setValue(value);
 
     model.clear();
     Map<String, Object> parameters = getParamterMap();
-    parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
 
     try {
-      DnsEntry updatedDnsEntry;
+      DnsEntry dnsEntry = new DnsEntry(zoneName, name, type, value);
+      DnsEntry updatedDnsEntry = dnsEntryEditRequest.toNewDnsEntry(zoneName);
       if (name.equals(dnsEntryEditRequest.getNewName())
           && type.equals(dnsEntryEditRequest.getNewType())) {
-        updatedDnsEntry = dnsService
-            .updateDnsEntry(dnsEntry, dnsEntryEditRequest.getNewValue());
+        dnsService.updateDnsEntry(dnsEntry, dnsEntryEditRequest.getNewValue());
       } else {
         dnsService.deleteDnsEntry(dnsEntry);
-        updatedDnsEntry = dnsService.addDnsEntry(dnsEntryEditRequest.toNewDnsEntry(zoneName));
+        dnsService.addDnsEntry(dnsEntryEditRequest.toNewDnsEntry(zoneName));
       }
       if (dnsEntryEditRequest.isUpdateReverseEntry() && !isEmpty(reverseZoneName)
           && !isEmpty(reverseName) && !isEmpty(reverseType) && !isEmpty(reverseValue)
           && !isEmpty(dnsEntryEditRequest.getNewNameOfReverseEntry())
           && !isEmpty(dnsEntryEditRequest.getNewValueOfReverseEntry())
           && type.equals(updatedDnsEntry.getType())) {
-        DnsEntry reverseDnsEntry = new DnsEntry(reverseZoneName, reverseName);
-        reverseDnsEntry.setType(reverseType);
-        reverseDnsEntry.setValue(reverseValue);
+        DnsEntry reverseDnsEntry = new DnsEntry(
+            reverseZoneName, reverseName, reverseType, reverseValue);
         if (reverseName.equals(dnsEntryEditRequest.getNewNameOfReverseEntry())) {
           dnsService.updateDnsEntry(
               reverseDnsEntry, dnsEntryEditRequest.getNewValueOfReverseEntry());
@@ -186,8 +172,8 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
       RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
           "todo", name);
       redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
-      String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
-          PAGE_AND_ZONE_TYPE_PARAMS, parameters);
+      String redirect = getRedirectUri("dns-zone-entries",
+          PAGE_AND_ZONE_NAME_PARAMS, parameters);
       logRedirectTo("Updating dns entry failed.", redirect);
       return redirect;
     }

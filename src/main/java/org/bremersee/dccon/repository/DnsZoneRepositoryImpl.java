@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,201 +16,122 @@
 
 package org.bremersee.dccon.repository;
 
-import static org.bremersee.dccon.repository.cli.CommandExecutorResponse.toExceptionMessage;
+import static java.util.Objects.requireNonNullElse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsZone;
-import org.bremersee.dccon.repository.automock.MockComponent;
-import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
-import org.bremersee.dccon.repository.cli.CommandExecutorResponseValidator;
-import org.bremersee.dccon.repository.mapper.DnsZoneLdapMapper;
+import org.bremersee.dccon.model.DnsZoneType;
+import org.bremersee.dccon.repository.cli.parser.DnsZoneCreateValidator;
+import org.bremersee.dccon.repository.cli.parser.DnsZoneDeleteValidator;
+import org.bremersee.dccon.repository.cli.parser.DnsZoneListParser;
+import org.bremersee.dccon.repository.cli.parser.DnsZoneParser;
+import org.bremersee.dccon.repository.mapper.CommonAttributesLdapMapper;
 import org.bremersee.exception.ServiceException;
-import org.bremersee.ldaptive.LdaptiveEntryMapper;
 import org.bremersee.ldaptive.LdaptiveTemplate;
-import org.ldaptive.FilterTemplate;
-import org.ldaptive.SearchRequest;
+import org.ldaptive.dn.Dn;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
- * The dns zone repository.
+ * The type DnsRepositoryImpl.
  *
  * @author Christian Bremer
  */
 @Primary
 @Component("dnsZoneRepository")
-@ProfileRequired("ldap")
-@MockComponent(value = DnsZoneRepositoryMock.class, methodsOf = DnsZoneRepository.class)
 @Slf4j
-public class DnsZoneRepositoryImpl extends AbstractDnsZoneRepository implements DnsZoneRepository {
+public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZoneRepository {
 
-  private final List<Pattern> excludedZoneNamePatterns;
+  private final DomainRepository domainRepository;
 
-  private LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper;
-
-  /**
-   * Instantiates a new dns zone repository.
-   *
-   * @param properties the properties
-   * @param ldapTemplateProvider the ldap template provider
-   */
   public DnsZoneRepositoryImpl(
-      final DomainControllerProperties properties,
-      final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider) {
+      DomainControllerProperties properties,
+      ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
+      DomainRepository domainRepository) {
     super(properties, ldapTemplateProvider.getIfAvailable());
-    this.dnsZoneLdapMapper = new DnsZoneLdapMapper(properties);
-    this.excludedZoneNamePatterns = properties.getExcludedZoneRegexList().stream()
-        .map(Pattern::compile).collect(Collectors.toList());
+    this.domainRepository = domainRepository;
   }
 
-  /**
-   * Sets dns zone ldap mapper.
-   *
-   * @param dnsZoneLdapMapper the dns zone ldap mapper
-   */
-  @SuppressWarnings("unused")
-  public void setDnsZoneLdapMapper(final LdaptiveEntryMapper<DnsZone> dnsZoneLdapMapper) {
-    if (dnsZoneLdapMapper != null) {
-      this.dnsZoneLdapMapper = dnsZoneLdapMapper;
-    }
-  }
-
-  private boolean isNonExcludedDnsZone(final DnsZone zone) {
-    return zone != null && !isExcludedDnsZone(zone);
-  }
-
-  private boolean isNonExcludedDnsZone(final String zoneName) {
-    return zoneName != null && !isExcludedDnsZone(zoneName);
-  }
-
-  private boolean isExcludedDnsZone(final DnsZone zone) {
-    return zone != null && isExcludedDnsZone(zone.getName());
-  }
-
-  private boolean isExcludedDnsZone(final String zoneName) {
-    return zoneName != null && excludedZoneNamePatterns.stream()
-        .anyMatch(pattern -> pattern.matcher(zoneName).matches());
-  }
-
+  @Cacheable(value = "dnsZoneListCache", key = "{ #p0 }")
   @Override
-  public boolean isDnsReverseZone(final String dnsZoneName) {
-    return getProperties().isReverseZone(dnsZoneName);
+  public List<String> getDnsZoneNames(DnsZoneType type) {
+    DnsZoneType zoneType = requireNonNullElse(type, DnsZoneType.PRIMARY);
+    log.debug("findDnsZoneNames({})", zoneType);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zonelist",
+        domainRepository.getHostName(),
+        "--" + zoneType.getParameterValue()
+    );
+    return executeAndGet(commands, DnsZoneListParser.defaultParser());
   }
 
+  @Cacheable(value = "dnsZoneCache", key = "{ #p0 }")
   @Override
-  public Stream<DnsZone> findAll() {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getDnsZoneBaseDn())
-        .filter(getProperties().getDnsZoneFindAllFilter())
-        .scope(getProperties().getDnsZoneFindAllSearchScope())
-        .build();
-    return getLdapTemplate().findAll(searchRequest, dnsZoneLdapMapper)
-        .filter(this::isNonExcludedDnsZone);
+  public DnsZone getDnsZone(String zoneName) {
+    log.debug("findDnsZone {}", zoneName);
+    return doFindDnsZone(zoneName)
+        .orElseThrow(() -> ServiceException.internalServerError(
+            String.format("Dns zone '%s' was not found.", zoneName),
+            "todo")); // TODO
   }
 
-  @Override
-  public boolean exists(final String zoneName) {
-    return false;
-    /*
-    return isNonExcludedDnsZone(zoneName)
-        && getLdapTemplate().exists(DnsZone.builder().name(zoneName).build(), dnsZoneLdapMapper);
-
-     */
-  }
-
-  @Override
-  public Optional<DnsZone> findOne(final String zoneName) {
-    SearchRequest searchRequest = SearchRequest.builder()
-        .dn(getProperties().getDnsZoneBaseDn())
-        .filter(FilterTemplate.builder()
-            .filter(getProperties().getDnsZoneFindOneFilter())
-            .parameters(zoneName)
-            .build())
-        .scope(getProperties().getDnsZoneFindOneSearchScope())
-        .build();
-    return getLdapTemplate()
-        .findOne(searchRequest, dnsZoneLdapMapper)
-        .filter(this::isNonExcludedDnsZone);
-  }
-
-  @ProfileRequired({"ldap", "cli"})
-  @Override
-  public DnsZone save(final String zoneName) {
-    if (isExcludedDnsZone(zoneName)) {
-      throw ServiceException.badRequest(
-          "Zone name is not allowed.",
-          "org.bremersee:dc-con-app:bc02abb3-f5d9-4a95-9761-98def37d12a9");
-    }
-    return findOne(zoneName)
-        .orElseGet(() -> doSave(zoneName));
-  }
-
-  /**
-   * Save dns zone.
-   *
-   * @param zoneName the zone name
-   * @return the dns zone
-   */
-  DnsZone doSave(final String zoneName) {
-    return execDnsZoneCmd(
-        "zonecreate",
-        zoneName, response -> findOne(zoneName)
-            .orElseThrow(() -> ServiceException.internalServerError(
-                "msg=[Saving dns zone failed.] "
-                    + CommandExecutorResponse.toExceptionMessage(response),
-                "org.bremersee:dc-con-app:905a21c0-0ab9-4562-a83f-b849dbbea6c0")));
-  }
-
-  @ProfileRequired({"ldap", "cli"})
-  @Override
-  public boolean delete(final String zoneName) {
-    if (exists(zoneName)) {
-      doDelete(zoneName);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Delete dns zone.
-   *
-   * @param zoneName the zone name
-   */
-  void doDelete(final String zoneName) {
-    execDnsZoneCmd(
-        "zonedelete",
-        zoneName,
-        (CommandExecutorResponseValidator) response -> {
-          if (exists(zoneName)) {
-            throw ServiceException.internalServerError(
-                "msg=[Deleting dns zone failed.] " + toExceptionMessage(response),
-                "org.bremersee:dc-con-app:346a54dd-c882-4c41-8503-7089928aeaa3");
-          }
+  private Optional<DnsZone> doFindDnsZone(String zoneName) {
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zoneinfo",
+        domainRepository.getHostName(),
+        zoneName
+    );
+    return Optional.ofNullable(executeAndGet(commands, DnsZoneParser.defaultParser()))
+        .map(zone -> {
+          CommonAttributesLdapMapper.mapCommonAttributes(
+              getLdapTemplate(),
+              new Dn(zone.getDistinguishedName()),
+              zone);
+          return zone;
         });
   }
 
-  private <T> T execDnsZoneCmd(
-      final String dnsCommand,
-      final String zoneName,
-      final CommandExecutorResponseParser<T> parser) {
+  @CachePut(value = "dnsZoneCache", key = "{ #result.name }")
+  @Override
+  public DnsZone createDnsZone(String zoneName) {
+    log.debug("createDnsZone {}", zoneName);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zonecreate",
+        domainRepository.getHostName(),
+        zoneName
+    );
+    execute(commands, new DnsZoneCreateValidator(zoneName));
+    return doFindDnsZone(zoneName)
+        .orElseThrow(() -> ServiceException.internalServerError(
+            String.format("Creating dns zone '%s' failed.", zoneName),
+            EC_CREATING_DNS_ZONE_FAILED));
+  }
 
-    final List<String> commands = new ArrayList<>();
-    commands.add(getProperties().getCli().getSambaToolBinary());
-    commands.add("dns");
-    commands.add(dnsCommand);
-    commands.add(getProperties().getNameServerHost());
-    commands.add(zoneName);
-    return executeAndGet(commands, parser);
+  @CacheEvict(value = "dnsZoneCache", key = "{ #p0 }")
+  @Override
+  public void deleteDnsZone(String zoneName) {
+    log.debug("deleteDnsZone {}", zoneName);
+    List<String> commands = List.of(
+        getProperties().getCli().getSambaToolBinary(),
+        "dns",
+        "zonedelete",
+        domainRepository.getHostName(),
+        zoneName
+    );
+    execute(commands, new DnsZoneDeleteValidator(zoneName));
   }
 
 }

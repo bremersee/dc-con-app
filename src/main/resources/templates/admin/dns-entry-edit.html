@@ -62,7 +62,7 @@
   <div class="row mb-4">
     <div class="col-1">
       <a class="btn btn-outline-secondary show-spinner" href="dns-zone-entries.html"
-         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-backward"></span>
       </a>
     </div>
@@ -89,7 +89,7 @@
       <a class="nav-link show-spinner" href="dns-entry-delete.html"
          th:classappend="${dnsEntry.type.name() == 'SOA'} ? 'disabled' : ''"
          th:attr="aria-disabled=${dnsEntry.type.name() == 'SOA'}"
-         th:href="@{dns-entry-delete(zone-type=${zoneType},zone-name=${zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
+         th:href="@{dns-entry-delete(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-trash-alt" aria-hidden="true"></span>
       </a>
     </li>
@@ -104,7 +104,7 @@
       <input type="hidden" name="q" th:value="${q}"/>
 
       <input type="hidden" name="zone-type" th:value="${zoneType}"/>
-      <input type="hidden" name="zone-name" th:value="${zoneName}"/>
+      <input type="hidden" name="zone-name" th:value="${dnsEntry.zoneName}"/>
       <input type="hidden" name="name" th:value="${dnsEntry.name}"/>
       <input type="hidden" name="type" th:value="${dnsEntry.type}"/>
       <input type="hidden" name="value" th:value="${dnsEntry.value}"/>
@@ -245,7 +245,7 @@
         Update
       </button>
       <a href="dns-zone-entries.html"
-         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}"
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},page=${page},size=${size},sort=${sort},q=${q})}"
          class="btn btn-secondary mx-2 mt-1 mb-4 show-spinner" role="button">
         Cancel
       </a>

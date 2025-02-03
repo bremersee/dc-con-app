@@ -145,11 +145,11 @@
 
     <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(dnsEntryPage.content)}">
       <a th:each="entry : ${dnsEntryPage.content}" href="dns-entry-edit.html"
-         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zoneName},name=${entry.name},type=${entry.type},value=${entry.value},cnf=${entry.conflict},guid=${entry.objectGuid},page=${page},size=${size},sort=${sort},q=${q})}"
+         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zoneName},name=${entry.name},type=${entry.type},value=${entry.value},page=${page},size=${size},sort=${sort},q=${q})}"
          class="list-group-item list-group-item-action show-spinner">
         <div class="d-flex w-100 justify-content-between">
           <h6 class="mb-1">
-            <span th:text="${entry.name}">zander</span>
+            <span th:text="${entry.displayName}">zander</span>
             <span class="mx-1 text-warning fas fa-exclamation-triangle" aria-hidden="true"
                   th:if="${entry.conflict}">
           </span>

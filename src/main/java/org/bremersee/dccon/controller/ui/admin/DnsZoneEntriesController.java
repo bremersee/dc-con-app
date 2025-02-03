@@ -72,7 +72,7 @@ public class DnsZoneEntriesController extends AbstractEditController
 
     Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
     DnsEntryPage dnsEntryPage = new DnsEntryPage(
-        dnsService.findDnsEntries(zoneName, pageable, query));
+        dnsService.getDnsEntries(zoneName, pageable, query));
     model.addAttribute("dnsEntryPage", dnsEntryPage);
     model.addAttribute("zoneName", zoneName);
     return "admin/dns-zone-entries";

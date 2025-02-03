@@ -33,10 +33,12 @@ import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
-import org.bremersee.dccon.repository.DnsRepository;
-import org.bremersee.exception.ServiceException;
+import org.bremersee.dccon.repository.DnsEntryRepository;
+import org.bremersee.dccon.repository.DnsZoneRepository;
 import org.bremersee.pagebuilder.PageBuilder;
-import org.ldaptive.dn.Dn;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,40 +52,49 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DnsServiceImpl implements DnsService, ErrorCode {
 
-  private static final String ZONE_ENTRIES_NODE_NAME = "@";
-
   private static final Pattern IPV4_PATTERN = Pattern.compile(
       "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)" +
           "(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
-  private final DnsRepository dnsRepository;
+  private final DnsZoneRepository dnsZoneRepository;
 
-  public DnsServiceImpl(DnsRepository dnsRepository) {
-    this.dnsRepository = dnsRepository;
+  private final DnsEntryRepository dnsEntryRepository;
+
+  private final CacheManager cacheManager;
+
+  public DnsServiceImpl(
+      DnsZoneRepository dnsZoneRepository,
+      DnsEntryRepository dnsEntryRepository,
+      CacheManager cacheManager) {
+    this.dnsZoneRepository = dnsZoneRepository;
+    this.dnsEntryRepository = dnsEntryRepository;
+    this.cacheManager = cacheManager;
   }
 
   @Override
-  public List<String> findDnsZoneNames(DnsZoneType type) {
+  public List<String> getDnsZoneNames(DnsZoneType type) {
     if (isNull(type)) {
-      return dnsRepository.findDnsZoneNames(DnsZoneType.PRIMARY);
+      return dnsZoneRepository.getDnsZoneNames(DnsZoneType.PRIMARY);
     }
-    return dnsRepository.findDnsZoneNames(type);
+    return dnsZoneRepository.getDnsZoneNames(type);
   }
 
   @Override
-  public DnsZone findDnsZone(String zoneName) {
-    return dnsRepository.findDnsZone(zoneName);
+  public DnsZone getDnsZone(String zoneName) {
+    return dnsZoneRepository.getDnsZone(zoneName);
 
   }
 
+  @CacheEvict(value = "dnsZoneListCache", allEntries = true)
   @Override
   public DnsZone createDnsZone(String zoneName) {
-    return dnsRepository.createDnsZone(zoneName);
+    return dnsZoneRepository.createDnsZone(zoneName);
   }
 
+  @CacheEvict(value = "dnsZoneListCache", allEntries = true)
   @Override
   public void deleteDnsZone(String zoneName) {
-    dnsRepository.deleteDnsZone(zoneName);
+    dnsZoneRepository.deleteDnsZone(zoneName);
   }
 
 
@@ -112,48 +123,60 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public Page<DnsEntry> findDnsEntries(
+  public Page<DnsEntry> getDnsEntries(
       String zoneName,
       Pageable pageable,
       String query) {
 
+    if (isEmpty(query) && pageable.getPageNumber() == 0) {
+      Optional.ofNullable(cacheManager.getCache("dnsEntryListCache"))
+          .ifPresent(Cache::invalidate);
+    }
     return new PageBuilder<DnsEntry, DnsEntry>()
-        .sourceEntries(findDnsEntries(zoneName, ZONE_ENTRIES_NODE_NAME, DnsEntryType.ALL))
+        .sourceEntries(dnsEntryRepository.getDnsEntries(zoneName))
         .sourceFilter(dnsEntry -> isQueryResult(dnsEntry, query))
         .pageable(applyDefaults(pageable, null, true, null))
         .build();
   }
 
-  @Override
-  public Stream<DnsEntry> findDnsEntries(String zoneName, String name, DnsEntryType type) {
-    return dnsRepository.findDnsEntries(zoneName, name, type);
+  private Stream<DnsEntry> findDnsEntries(String zoneName, String name, DnsEntryType type) {
+    return dnsEntryRepository.getDnsEntries(zoneName).stream()
+        .filter(entry -> DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(name)
+            || entry.getName().equalsIgnoreCase(name))
+        .filter(entry -> DnsEntryType.ALL.equals(type) || entry.getType().equals(type));
+  }
+
+  public Optional<DnsEntry> findDnsEntry(DnsEntry dnsEntry) {
+    return findDnsEntries(dnsEntry.getZoneName(), dnsEntry.getName(), dnsEntry.getType())
+        .filter(entry -> entry.getType().getToSambaToolValueTransformer()
+            .apply(entry.getValue()).equalsIgnoreCase(dnsEntry.getType()
+                .getToSambaToolValueTransformer().apply(dnsEntry.getValue())))
+        .findFirst()
+        .map(dnsEntryRepository::addCommonAttributes);
   }
 
   @Override
-  public Optional<DnsEntry> findDnsEntry(String zoneName, String name, DnsEntryType type,
-      String value) {
-    return findDnsEntries(zoneName, name, type)
-        .filter(dnsEntry -> dnsEntry.getType().getToSambaToolValueTransformer()
-            .apply(dnsEntry.getValue()).equalsIgnoreCase(dnsEntry.getType()
-                .getToSambaToolValueTransformer().apply(value)))
-        .filter(dnsEntry -> !dnsEntry.getConflict())
-        .findFirst()
-        .map(entry -> dnsRepository
-            .setCommonAttributes(findDnsZone(entry.getZoneName()).getDn(), entry));
+  public Optional<DnsEntry> findReverseDnsEntry(DnsEntry dnsEntry) {
+    if (DnsEntryType.A.equals(dnsEntry.getType()) || DnsEntryType.AAAA.equals(dnsEntry.getType())) {
+      return findReverseDnsEntryOfA(dnsEntry);
+    } else if (DnsEntryType.PTR.equals(dnsEntry.getType())) {
+      return findReverseDnsEntryOfPtr(dnsEntry);
+    }
+    return Optional.empty();
   }
 
   private Optional<DnsEntry> findReverseDnsEntryOfA(DnsEntry dnsEntry) {
-    return findDnsZoneNames(DnsZoneType.REVERSE).stream()
-        .flatMap(zone -> findDnsEntries(zone, ZONE_ENTRIES_NODE_NAME, DnsEntryType.PTR))
-        .filter(entry -> !entry.getConflict())
+    return getDnsZoneNames(DnsZoneType.REVERSE).stream()
+        .flatMap(zone -> findDnsEntries(zone, DnsEntryRepository.ZONE_ENTRIES_NODE_NAME,
+            DnsEntryType.PTR))
+        .filter(entry -> !entry.isConflict())
         .filter(entry -> dnsEntry.getValue().toLowerCase()
             .contains(entry.getName().toLowerCase())) // '192.168.1.122' contains '122'
         .filter(entry -> entry.getValue()
             .equalsIgnoreCase(
                 dnsEntry.getName() + '.' + dnsEntry.getZoneName())) // 'hostname.zone-name'
         .findFirst()
-        .map(entry -> dnsRepository
-            .setCommonAttributes(findDnsZone(entry.getZoneName()).getDn(), entry));
+        .map(dnsEntryRepository::addCommonAttributes);
   }
 
   private Optional<DnsEntry> findReverseDnsEntryOfPtr(DnsEntry dnsEntry) {
@@ -161,18 +184,19 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     if (isNull(type)) {
       return Optional.empty();
     }
-    return findDnsZoneNames(DnsZoneType.PRIMARY).stream()
-        .map(this::findDnsZone)
+    return getDnsZoneNames(DnsZoneType.PRIMARY).stream()
+        .map(this::getDnsZone)
         .filter(zone -> !zone.getReverseZone())
-        .flatMap(zone -> findDnsEntries(zone.getName(), ZONE_ENTRIES_NODE_NAME, type)
-            .filter(entry -> !entry.getConflict())
-            .filter(entry -> entry.getValue().toLowerCase()
-                .contains(dnsEntry.getName().toLowerCase()))
-            .filter(entry -> dnsEntry.getValue()
-                .equalsIgnoreCase(entry.getName() + '.' + zone.getName()))
-            .findFirst()
-            .map(entry -> dnsRepository.setCommonAttributes(zone.getDn(), entry))
-            .stream())
+        .flatMap(
+            zone -> findDnsEntries(zone.getName(), DnsEntryRepository.ZONE_ENTRIES_NODE_NAME, type)
+                .filter(entry -> !entry.isConflict())
+                .filter(entry -> entry.getValue().toLowerCase()
+                    .contains(dnsEntry.getName().toLowerCase()))
+                .filter(entry -> dnsEntry.getValue()
+                    .equalsIgnoreCase(entry.getName() + '.' + zone.getName()))
+                .findFirst()
+                .map(dnsEntryRepository::addCommonAttributes)
+                .stream())
         .findFirst();
   }
 
@@ -200,72 +224,27 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   }
 
   @Override
-  public Optional<DnsEntry> findReverseDnsEntry(DnsEntry dnsEntry) {
-    if (DnsEntryType.A.equals(dnsEntry.getType()) || DnsEntryType.AAAA.equals(dnsEntry.getType())) {
-      return findReverseDnsEntryOfA(dnsEntry);
-    } else if (DnsEntryType.PTR.equals(dnsEntry.getType())) {
-      return findReverseDnsEntryOfPtr(dnsEntry);
-    }
-    return Optional.empty();
-  }
-
-  @Override
-  public Stream<DnsEntry> findDnsEntriesWithConflict(DnsEntry dnsEntry) {
-    Dn zoneDn = findDnsZone(dnsEntry.getZoneName()).getDn();
-    return dnsRepository.findDnsEntryWithConflict(zoneDn, dnsEntry)
-        .stream()
-        .flatMap(cnfEntry -> Stream.concat(
-            Stream.of(cnfEntry),
-            findPossibleConflicts(zoneDn, dnsEntry)));
-  }
-
-  private Stream<DnsEntry> findPossibleConflicts(Dn zoneDn, DnsEntry dnsEntry) {
-    String zoneName = zoneDn.getRDn().getNameValue().getStringValue();
-    return dnsRepository.findDnsEntries(zoneName, ZONE_ENTRIES_NODE_NAME, dnsEntry.getType())
-        .filter(entry -> !entry.getConflict())
+  public Stream<DnsEntry> findDnsEntriesConflictingWith(DnsEntry dnsEntry) {
+    return findDnsEntries(dnsEntry.getZoneName(), DnsEntryRepository.ZONE_ENTRIES_NODE_NAME,
+        dnsEntry.getType())
+        .filter(entry -> !entry.isConflict())
         .filter(entry -> isQueryResult(entry, dnsEntry.getName() + " " + dnsEntry.getValue()))
-        .map(entry -> dnsRepository.setCommonAttributes(zoneDn, entry));
+        .map(dnsEntryRepository::addCommonAttributes);
   }
 
   @Override
-  public DnsEntry addDnsEntry(DnsEntry entry) {
-    String zoneName = entry.getZoneName();
-    return findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue())
-        .orElseGet(() -> {
-          dnsRepository.addDnsEntry(entry);
-          return findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue())
-              .orElseThrow(() -> ServiceException.internalServerError(
-                  String.format("Creating dns entry '%s' in zone '%s' failed.",
-                      entry.getName(), zoneName),
-                  EC_ADDING_DNS_ENTRY_FAILED));
-        });
+  public void addDnsEntry(DnsEntry entry) {
+    dnsEntryRepository.addDnsEntry(entry);
   }
 
   @Override
-  public DnsEntry updateDnsEntry(DnsEntry entry, String newValue) {
-    String zoneName = entry.getZoneName();
-    if (findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue()).isEmpty()) {
-      throw ServiceException.notFoundWithErrorCode("DnsEntry", entry.getName(),
-          EC_DNS_ENTRY_NOT_FOUND);
-    }
-    dnsRepository.updateDnsEntry(entry, newValue);
-    return findDnsEntry(zoneName, entry.getName(), entry.getType(), newValue)
-        .orElseThrow(() -> ServiceException.internalServerError(
-            String.format("Updating dns entry '%s' in zone '%s' failed.",
-                entry.getName(), zoneName),
-            EC_UPDATING_DNS_ENTRY_FAILED));
+  public void updateDnsEntry(DnsEntry entry, String newValue) {
+    dnsEntryRepository.updateDnsEntry(entry, newValue);
   }
 
   @Override
   public void deleteDnsEntry(DnsEntry entry) {
-    dnsRepository.deleteDnsEntry(entry);
-    String zoneName = entry.getZoneName();
-    if (findDnsEntry(zoneName, entry.getName(), entry.getType(), entry.getValue()).isPresent()) {
-      throw ServiceException.internalServerError(
-          String.format("Deleting dns entry '%s' in zone '%s' failed.",
-              entry.getName(), zoneName),
-          EC_DELETING_DNS_ENTRY_FAILED);
-    }
+    dnsEntryRepository.deleteDnsEntry(entry);
   }
 
 }

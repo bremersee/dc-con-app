@@ -21,7 +21,6 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeNavigationComponent;
-import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
 import org.bremersee.dccon.service.DnsService;
 import org.springframework.stereotype.Controller;
@@ -63,7 +62,7 @@ public class DnsZonesController extends AbstractController
   public String displayDnsZones(
       @RequestParam(name = ZONE_TYPE, defaultValue = ZONE_TYPE_DEFAULT) DnsZoneType zoneType,
       ModelMap model) {
-    List<String> dnsZones = dnsService.findDnsZoneNames(zoneType);
+    List<String> dnsZones = dnsService.getDnsZoneNames(zoneType);
     model.addAttribute("dnsZoneNames", dnsZones);
     return "admin/dns-zones";
   }

@@ -17,7 +17,6 @@
 package org.bremersee.dccon.repository;
 
 import static org.bremersee.dccon.model.UnknownFilter.ALL;
-import static org.bremersee.dccon.model.UnknownFilter.NO_UNKNOWN;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +37,6 @@ import org.bremersee.dccon.model.DnsPair;
 import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
-import org.ldaptive.dn.Dn;
 import org.springframework.util.StringUtils;
 
 /**
@@ -53,7 +51,7 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
   private final DhcpRepository dhcpRepository;
 
   @Getter(AccessLevel.PACKAGE)
-  private final DnsZoneRepository dnsZoneRepository;
+  private final DnsZoneRepositoryObsolete dnsZoneRepository;
 
   @Getter(AccessLevel.PACKAGE)
   private final List<Pattern> excludedNodeNamePatterns;
@@ -73,7 +71,7 @@ abstract class AbstractDnsNodeRepository extends AbstractRepository
       final DomainControllerProperties properties,
       final LdaptiveTemplate ldapTemplate,
       final DhcpRepository dhcpRepository,
-      final DnsZoneRepository dnsZoneRepository) {
+      final DnsZoneRepositoryObsolete dnsZoneRepository) {
 
     super(properties, ldapTemplate);
     this.dhcpRepository = dhcpRepository;

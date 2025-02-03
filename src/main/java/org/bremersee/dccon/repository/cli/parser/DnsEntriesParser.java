@@ -47,7 +47,7 @@ public interface DnsEntriesParser extends
 
     private static final String RECORDS = ", Records=";
 
-    private static final String CONFLICT = "CNF";
+    private static final String CONFLICT = DnsEntry.CONFLICT_IDENTIFIER;
 
     private static final char RECORD_LINE_INDICATOR = ':';
 
@@ -97,13 +97,15 @@ public interface DnsEntriesParser extends
           if (i0 > 0) {
             String recordType = line.substring(0, i0).trim();
             if (CONFLICT.equalsIgnoreCase(recordType)) {
-              currentEntry.setConflict(true);
               int i1 = line.indexOf(RECORDS);
+              StringBuilder sb = new StringBuilder(currentEntry.getName())
+                  .append(DnsEntry.CONFLICT_NAME_PART);
               if (i1 > i0) {
-                currentEntry.setObjectGuid(line.substring(i0 + 1, i1).trim());
+                sb.append(line.substring(i0 + 1, i1).trim());
               } else {
-                currentEntry.setObjectGuid(line.substring(i0 + 1).trim());
+                sb.append(line.substring(i0 + 1).trim());
               }
+              currentEntry.setName(sb.toString());
             } else {
               parseDnsRecord(line, currentEntry);
               String name = currentEntry.getName();

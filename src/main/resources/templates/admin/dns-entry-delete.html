@@ -62,7 +62,7 @@
   <div class="row mb-4">
     <div class="col-1">
       <a class="btn btn-outline-secondary show-spinner" href="dns-zone-entries.html"
-         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
+         th:href="@{dns-zone-entries(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-backward"></span>
       </a>
     </div>
@@ -82,7 +82,7 @@
   <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
       <a class="nav-link show-spinner" href="dns-entry-edit.html"
-         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
+         th:href="@{dns-entry-edit(zone-type=${zoneType},zone-name=${dnsEntry.zoneName},name=${dnsEntry.name},type=${dnsEntry.type},value=${dnsEntry.value},page=${page},size=${size},sort=${sort},q=${q})}">
         <span class="fa fa-edit" aria-hidden="true"></span>
       </a>
     </li>
@@ -97,8 +97,14 @@
 
     <div class="mb-4 p-3 border border-1 border-danger">
       <div class="h5 mb-3">
-        <span>Delete dns entry </span>
-        <span class="badge text-bg-secondary" th:text="${dnsEntry.name}">zander</span>
+        <span>Delete dns entry</span>
+        <span> </span>
+        <b>
+          <span class="me-1" th:text="${dnsEntry.name}">zander</span>
+        </b>
+        <a id="copyNameToClipboard" href="#">
+          <span class="fas fa-clipboard" aria-hidden="true"></span>
+        </a>
       </div>
       <form id="deleteDnsEntryForm" th:action="@{dns-entry-delete}"
             th:object="${dnsEntryDeleteRequest}" action="#" method="post">
@@ -108,7 +114,7 @@
         <input type="hidden" name="q" th:value="${q}"/>
 
         <input type="hidden" name="zone-type" th:value="${zoneType}"/>
-        <input type="hidden" name="zone-name" th:value="${zoneName}"/>
+        <input type="hidden" name="zone-name" th:value="${dnsEntry.zoneName}"/>
         <input type="hidden" name="name" th:value="${dnsEntry.name}"/>
         <input type="hidden" name="type" th:value="${dnsEntry.type}"/>
         <input type="hidden" name="value" th:value="${dnsEntry.value}"/>
@@ -126,7 +132,7 @@
           </div>
         </div>
 
-        <div class="form-check form-switch mb-3" th:if="${mayHasReverseEntry}">
+        <div class="form-check form-switch mb-3" th:if="${mayHaveReverseEntry}">
           <input class="form-check-input" type="checkbox" role="switch" id="deleteReverseEntry"
                  name="deleteReverseEntry" th:field="*{deleteReverseEntry}" />
           <label class="form-check-label" for="deleteReverseEntry">
@@ -148,6 +154,10 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${dnsEntry.displayName}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

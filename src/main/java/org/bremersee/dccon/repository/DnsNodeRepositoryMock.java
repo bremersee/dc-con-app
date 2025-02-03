@@ -17,19 +17,14 @@
 package org.bremersee.dccon.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DnsNode;
-import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -39,7 +34,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * The dns node repository mock.
@@ -75,7 +69,7 @@ public class DnsNodeRepositoryMock extends AbstractDnsNodeRepository implements 
   public DnsNodeRepositoryMock(
       DomainControllerProperties properties,
       DhcpRepository dhcpRepository,
-      DnsZoneRepository dnsZoneRepository,
+      DnsZoneRepositoryObsolete dnsZoneRepository,
       Jackson2ObjectMapperBuilder objectMapperBuilder) {
     super(properties, null, dhcpRepository, dnsZoneRepository);
     this.objectMapper = objectMapperBuilder.build();

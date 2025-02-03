@@ -102,8 +102,14 @@
 
       <div class="mb-4 p-3 border border-1 border-danger" th:if="${not computer.criticalSystemObject}">
         <div class="h5 mb-3">
-          <span>Delete Computer </span>
-          <span class="badge text-bg-secondary" th:text="${computer.name}">zander</span>
+          <span>Delete Computer</span>
+          <span> </span>
+          <b>
+            <span class="me-1" th:text="${computer.name}">zander</span>
+          </b>
+          <a id="copyNameToClipboard" href="#">
+            <span class="fas fa-clipboard" aria-hidden="true"></span>
+          </a>
         </div>
         <form th:action="@{computer-delete}" th:object="${deleteRequest}" action="#" method="post">
           <input type="hidden" name="page" th:value="${page}"/>
@@ -140,6 +146,10 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${computer.name}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

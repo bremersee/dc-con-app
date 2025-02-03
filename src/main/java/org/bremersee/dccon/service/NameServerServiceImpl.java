@@ -33,7 +33,7 @@ import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsNodeRepository;
-import org.bremersee.dccon.repository.DnsZoneRepository;
+import org.bremersee.dccon.repository.DnsZoneRepositoryObsolete;
 import org.bremersee.dccon.repository.RepositoryMock;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.pagebuilder.PageBuilder;
@@ -53,7 +53,7 @@ public class NameServerServiceImpl implements NameServerService {
 
   private final DhcpRepository dhcpRepository;
 
-  private final DnsZoneRepository dnsZoneRepository;
+  private final DnsZoneRepositoryObsolete dnsZoneRepository;
 
   private final DnsNodeRepository dnsNodeRepository;
 
@@ -76,7 +76,7 @@ public class NameServerServiceImpl implements NameServerService {
   public NameServerServiceImpl(
       final DomainControllerProperties properties,
       final DhcpRepository dhcpRepository,
-      final DnsZoneRepository dnsZoneRepository,
+      final DnsZoneRepositoryObsolete dnsZoneRepository,
       final DnsNodeRepository dnsNodeRepository) {
     this.dhcpRepository = dhcpRepository;
     this.dnsZoneRepository = dnsZoneRepository;

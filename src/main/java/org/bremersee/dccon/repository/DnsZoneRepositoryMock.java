@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.repository;
 
-import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +33,10 @@ import org.springframework.stereotype.Component;
  *
  * @author Christian Bremer
  */
-@Profile("mock")
+//@Profile("mock")
 @Component("dnsZoneRepositoryMock")
 @Slf4j
-public class DnsZoneRepositoryMock implements DnsZoneRepository {
+public class DnsZoneRepositoryMock implements DnsZoneRepositoryObsolete {
 
   private static final String DISTINGUISHED_NAME_TEMPLATE = "DC=%s,"
       + "CN=MicrosoftDNS,DC=DomainDnsZones,DC=samdom,DC=example,DC=org";

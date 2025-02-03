@@ -17,18 +17,10 @@
 package org.bremersee.dccon.model;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.requireNonNullElse;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,13 +43,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DnsEntry extends CommonAttributes {
 
+  public static final String CONFLICT_IDENTIFIER = "CNF";
+
+  public static final String CONFLICT_NAME_PART =
+      "\\0A" + CONFLICT_IDENTIFIER + ':'; // TODO is it json conform?
+
   private String zoneName;
 
   private String name;
-
-  private Boolean conflict;
-
-  private String objectGuid;
 
   private DnsEntryType type;
 
@@ -74,15 +67,44 @@ public class DnsEntry extends CommonAttributes {
     this.name = name;
   }
 
-  public Boolean getConflict() {
-    return Boolean.TRUE.equals(conflict);
+  public DnsEntry(String zoneName, String name, DnsEntryType type, String value) {
+    this.zoneName = zoneName;
+    this.name = name;
+    this.type = type;
+    this.value = value;
   }
 
+  public String getDisplayName() {
+    if (isNull(name)) {
+      return null;
+    }
+    int index = name.indexOf(CONFLICT_NAME_PART);
+    return index > 0 ? name.substring(0, index) : name;
+  }
+
+  public boolean isConflict() {
+    if (isNull(name)) {
+      return false;
+    }
+    int index = name.indexOf(CONFLICT_NAME_PART);
+    if (index < 0) {
+      return false;
+    }
+    String guid = name.substring(index + CONFLICT_NAME_PART.length());
+    try {
+      UUID.fromString(guid);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
+
+  /*
   @Hidden
   @JsonIgnore
   public final String getInternalId() {
     String nameStr = requireNonNullElse(getName(), "");
-    String conflictStr = getConflict().toString();
+    String conflictStr = isConflict().toString();
     String guidStr = requireNonNullElse(getObjectGuid(), "");
     String typeStr = Optional.ofNullable(getType()).map(DnsEntryType::name).orElse("");
     String valueStr = requireNonNullElse(getValue(), "");
@@ -123,5 +145,6 @@ public class DnsEntry extends CommonAttributes {
     }
     return entry;
   }
+  */
 
 }

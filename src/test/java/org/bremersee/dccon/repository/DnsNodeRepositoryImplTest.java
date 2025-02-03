@@ -17,39 +17,23 @@
 package org.bremersee.dccon.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Stream;
-import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.bremersee.dccon.config.DomainControllerProperties;
-import org.bremersee.dccon.model.DhcpLease;
-import org.bremersee.dccon.model.DnsNode;
-import org.bremersee.dccon.model.DnsRecord;
-import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.UnknownFilter;
-import org.bremersee.dccon.repository.mapper.DnsNodeLdapMapper;
-import org.bremersee.exception.ServiceException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
@@ -67,7 +51,7 @@ class DnsNodeRepositoryImplTest {
 
   private static LdaptiveTemplate ldaptiveTemplate;
 
-  private static DnsZoneRepository dnsZoneRepository;
+  private static DnsZoneRepositoryObsolete dnsZoneRepository;
 
   private static DnsNodeRepositoryImpl dnsNodeRepository;
 

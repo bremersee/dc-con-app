@@ -33,7 +33,6 @@ import org.bremersee.dccon.model.DnsRecord;
 import org.bremersee.dccon.model.UnknownFilter;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.CommandExecutor;
 import org.bremersee.dccon.repository.mapper.DnsNodeLdapMapper;
 import org.bremersee.exception.ServiceException;
 import org.bremersee.ldaptive.LdaptiveEntryMapper;
@@ -72,7 +71,7 @@ public class DnsNodeRepositoryImpl extends AbstractDnsNodeRepository {
       final DomainControllerProperties properties,
       final ObjectProvider<LdaptiveTemplate> ldapTemplateProvider,
       final DhcpRepository dhcpRepository,
-      final DnsZoneRepository dnsZoneRepository) {
+      final DnsZoneRepositoryObsolete dnsZoneRepository) {
     super(properties, ldapTemplateProvider.getIfAvailable(), dhcpRepository, dnsZoneRepository);
     this.dnsNodeLdapMapperMap = new ConcurrentHashMap<>();
     this.dnsNodeLdapMapperProvider = (zoneName, unknownFilter) -> new DnsNodeLdapMapper(

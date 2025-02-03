@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,83 +17,27 @@
 package org.bremersee.dccon.repository;
 
 import jakarta.validation.constraints.NotEmpty;
-import java.util.Optional;
-import java.util.stream.Stream;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import org.bremersee.dccon.model.DnsZone;
+import org.bremersee.dccon.model.DnsZoneType;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * The dns zone repository.
+ * The interface DnsRepository.
  *
  * @author Christian Bremer
  */
 @Validated
 public interface DnsZoneRepository {
 
-  /**
-   * Determines whether the given zone is a reverse zone.
-   *
-   * @param dnsZoneName the dns zone name
-   * @return the boolean
-   */
-  boolean isDnsReverseZone(final String dnsZoneName);
+  List<String> getDnsZoneNames(@NotNull DnsZoneType type);
 
-  /**
-   * Find all dns zones.
-   *
-   * @return the dns zones
-   */
-  Stream<DnsZone> findAll();
+  DnsZone getDnsZone(@NotEmpty String zoneName);
 
-  /**
-   * Find dns reverse zones stream.
-   *
-   * @return the stream
-   */
-  default Stream<DnsZone> findDnsReverseZones() {
-    return findAll().filter(dnsZone -> isDnsReverseZone(dnsZone.getName()));
-  }
+  @NotNull
+  DnsZone createDnsZone(@NotEmpty String zoneName);
 
-  /**
-   * Find non dns reverse zones stream.
-   *
-   * @return the stream
-   */
-  default Stream<DnsZone> findNonDnsReverseZones() {
-    return findAll().filter(dnsZone -> !isDnsReverseZone(dnsZone.getName()));
-  }
-
-  /**
-   * Check whether dns zone exists or not.
-   *
-   * @param zoneName the zone name
-   * @return {@code true} if the dns zone exists, otherwise {@code false}
-   */
-  boolean exists(@NotEmpty String zoneName);
-
-  /**
-   * Find dns zone.
-   *
-   * @param zoneName the zone name
-   * @return the dns zone
-   */
-  Optional<DnsZone> findOne(@NotEmpty String zoneName);
-
-  /**
-   * Save dns zone.
-   *
-   * @param zoneName the zone name
-   * @return the dns zone
-   */
-  DnsZone save(@NotEmpty String zoneName);
-
-  /**
-   * Delete dns zone.
-   *
-   * @param zoneName the zone name
-   * @return {@code true} is the repository was deleted, otherwise {@code false}
-   */
-  boolean delete(@NotEmpty String zoneName);
-
+  void deleteDnsZone(@NotEmpty String zoneName);
 
 }

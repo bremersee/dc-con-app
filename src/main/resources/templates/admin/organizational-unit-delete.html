@@ -95,8 +95,14 @@
     </div>
     <div class="mb-4 p-3 border border-1 border-danger" th:if="${not hasChildren}">
       <div class="h5 mb-3">
-        <span>Delete Organizational Unit </span>
-        <span class="badge text-bg-secondary" th:text="${organizationalUnit.name}">Users</span>
+        <span>Delete Organizational Unit</span>
+        <span> </span>
+        <b>
+          <span class="me-1" th:text="${organizationalUnit.name}">Users</span>
+        </b>
+        <a id="copyNameToClipboard" href="#">
+          <span class="fas fa-clipboard" aria-hidden="true"></span>
+        </a>
       </div>
       <form th:action="@{organizational-unit-delete}" th:object="${ouDeleteRequest}" action="#"
             method="post">
@@ -131,6 +137,10 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${organizationalUnit.name}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

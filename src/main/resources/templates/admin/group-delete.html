@@ -108,8 +108,14 @@
 
       <div class="mb-4 p-3 border border-1 border-danger" th:if="${not group.sid.systemEntity}">
         <div class="h5 mb-3">
-          <span>Delete Group </span>
-          <span class="badge text-bg-secondary" th:text="${group.samAccountName}">anna</span>
+          <span>Delete Group</span>
+          <span> </span>
+          <b>
+            <span class="me-1" th:text="${group.samAccountName}">anna</span>
+          </b>
+          <a id="copyNameToClipboard" href="#">
+            <span class="fas fa-clipboard" aria-hidden="true"></span>
+          </a>
         </div>
         <form th:action="@{group-delete}" th:object="${deleteRequest}" action="#" method="post">
           <input type="hidden" name="page" th:value="${page}"/>
@@ -146,6 +152,10 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${group.samAccountName}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

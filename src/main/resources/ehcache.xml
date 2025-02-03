@@ -25,15 +25,20 @@
       </listener>
     </listeners>
     <resources>
-      <heap unit="entries">500</heap>
+      <heap>1000</heap>
       <offheap unit="MB">4</offheap>
       <disk persistent="true" unit="MB">8</disk>
     </resources>
   </cache-template>
 
   <cache alias="dnsZoneCache" uses-template="default">
-    <!-- <key-type>java.lang.Object</key-type> -->
     <value-type>org.bremersee.dccon.model.DnsZone</value-type>
+  </cache>
+
+  <cache alias="dnsZoneListCache" uses-template="default">
+  </cache>
+
+  <cache alias="dnsEntryListCache" uses-template="default">
   </cache>
 
   <!--

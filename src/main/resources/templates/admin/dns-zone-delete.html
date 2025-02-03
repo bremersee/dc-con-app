@@ -103,8 +103,14 @@
 
     <div class="mb-4 p-3 border border-1 border-danger">
       <div class="h5 mb-3">
-        <span>Delete dns zone </span>
-        <span class="badge text-bg-secondary" th:text="${zoneName}">intranet</span>
+        <span>Delete dns zone</span>
+        <span> </span>
+        <b>
+          <span class="me-1" th:text="${zoneName}">intranet</span>
+        </b>
+        <a id="copyNameToClipboard" href="#">
+          <span class="fas fa-clipboard" aria-hidden="true"></span>
+        </a>
       </div>
       <form id="deleteDnsEntryForm" th:action="@{dns-zone-delete}"
             th:object="${dnsZoneDeleteRequest}" action="#" method="post">
@@ -142,6 +148,10 @@
   //<![CDATA[
   "use strict";
   $(document).ready(function () {
+    $('#copyNameToClipboard').on('click', function () {
+      const name = /*[[${zoneName}]]*/ "static-name";
+      navigator.clipboard.writeText(name);
+    });
     const loadingSpinnerModal = new bootstrap.Modal('#loadingSpinnerModal');
     $('a.show-spinner').on('click', function () {
       loadingSpinnerModal.show();

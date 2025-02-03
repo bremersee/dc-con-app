@@ -16,27 +16,23 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.components.DnsZoneTypeComponent;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
-import org.bremersee.dccon.controller.ui.model.DnsEntryEditRequest;
+import org.bremersee.dccon.controller.ui.model.DnsEntryDeleteRequest;
 import org.bremersee.dccon.controller.ui.model.RedirectMessage;
 import org.bremersee.dccon.controller.ui.model.RedirectMessageType;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.service.DnsService;
 import org.bremersee.exception.ServiceException;
-import org.ldaptive.LdapUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.util.ObjectUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,46 +70,85 @@ public class DnsEntryConflictController extends AbstractEditController implement
       @RequestParam(name = "name") String name,
       @RequestParam(name = "type") DnsEntryType type,
       @RequestParam(name = "value") String value,
-      @RequestParam(name = "guid") String objectGuid,
-      ModelMap model) {
-
-    log.debug("displayDnsEntryConflict({}, {}, {}, {}, {})",
-        zoneName, name, type, value, objectGuid);
-
-    DnsEntry entry = new DnsEntry();
-    entry.setZoneName(zoneName);
-    entry.setName(name);
-    entry.setType(type);
-    entry.setValue(value);
-    entry.setConflict(true);
-    entry.setObjectGuid(objectGuid);
-    List<DnsEntry> dnsEntries = dnsService.findDnsEntriesWithConflict(entry)
-        .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
-        .toList();
-    model.addAttribute("zoneName", zoneName);
-    model.addAttribute("dnsEntry", entry);
-    model.addAttribute("dnsEntries", dnsEntries);
-    return "admin/dns-entry-conflict";
-  }
-
-  @PostMapping(path = "/admin/dns-entry-conflict")
-  public String deleteDnsEntries(
-      @RequestParam(name = ZONE_NAME) String zoneName,
-      @RequestParam(name = "dns-entry-id") List<String> internalIds,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 
-    log.debug("deleteDnsEntries({}, {})", zoneName, internalIds);
+    log.debug("displayDnsEntryConflict({}, {}, {}, {})", zoneName, name, type, value);
+    return dnsService.findDnsEntry(new DnsEntry(zoneName, name, type, value))
+        .map(entry -> {
+          if (!entry.isConflict()) {
+            Map<String, Object> parameters = getParamterMap();
+            parameters = putToParameterMap(parameters, "name", name);
+            parameters = putToParameterMap(parameters, "type", type);
+            parameters = putToParameterMap(parameters, "value", value);
+            return getRedirectUri("dns-entry-edit", PAGE_AND_DNS_ENTRY_PARAMS, parameters);
+          }
+          model.addAttribute("dnsEntry", entry);
+          List<DnsEntry> dnsEntries = dnsService.findDnsEntriesConflictingWith(entry)
+              .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
+              .toList();
+          model.addAttribute("dnsEntries", dnsEntries);
+          model.addAttribute("dnsEntryDeleteRequest", new DnsEntryDeleteRequest());
+          return "admin/dns-entry-conflict";
+        })
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Dns Entry", "todo", name, PAGE_AND_ZONE_NAME_PARAMS,
+            "dns-zone-entries"));
+  }
 
-    List<DnsEntry> dnsEntries = Stream.ofNullable(internalIds)
-        .flatMap(Collection::stream)
-        .filter(id -> !ObjectUtils.isEmpty(id))
-            .map(DnsEntry::fromInternalId)
-        .toList();
+  @PostMapping(path = "/admin/dns-entry-conflict")
+  public String deleteDnsEntryConflict(
+      @RequestParam(name = ZONE_NAME) String zoneName,
+      @RequestParam(name = "name") String name,
+      @RequestParam(name = "type") DnsEntryType type,
+      @RequestParam(name = "value") String value,
+      @ModelAttribute(name = "dnsEntryDeleteRequest") DnsEntryDeleteRequest deleteRequest,
+      ModelMap model,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes) {
 
-    log.debug("deleteDnsEntries({}, {})", zoneName, dnsEntries);
+    log.debug("deleteDnsEntryConflict({}, {}, {}, {}, {})",
+        zoneName, name, type, value, deleteRequest);
 
-    return "redirect:dns-entries?zoneName=" + zoneName;
+    return dnsService.findDnsEntry(new DnsEntry(zoneName, name, type, value))
+        .map(entry -> {
+          if (!entry.getDisplayName().equals(deleteRequest.getVerificationName())) {
+            bindingResult.rejectValue("verificationName", "todo", "The name doesn't match.");
+            model.addAttribute("dnsEntry", entry);
+            List<DnsEntry> dnsEntries = dnsService.findDnsEntriesConflictingWith(entry)
+                .sorted(Comparator.comparing(DnsEntry::getModified).reversed())
+                .toList();
+            model.addAttribute("dnsEntries", dnsEntries);
+            return "admin/dns-entry-conflict";
+          }
+          model.clear();
+          try {
+            dnsService.deleteDnsEntry(entry);
+
+            String msg = String.format("Dns entry '%s' was successfully deleted.", name);
+            RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.SUCCESS, msg,
+                "todo", name);
+            redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
+
+          } catch (ServiceException e) {
+
+            String msg = String.format("Deletion of dns entry '%s' failed.", name);
+            log.error(msg, e);
+            RedirectMessage rmsg = getRedirectMessage(RedirectMessageType.WARNING, msg,
+                "todo", name);
+            redirectAttributes.addFlashAttribute(RedirectMessage.ATTRIBUTE_NAME, rmsg);
+          }
+
+          Map<String, Object> parameters = getParamterMap();
+          parameters = putToParameterMap(parameters, ZONE_NAME, zoneName);
+          String redirect = getRedirectUri("dns-zone-entries?zone-name={{zone-name}}",
+              PAGE_AND_ZONE_TYPE_PARAMS, parameters);
+          logRedirectTo("Dns deletion redirect.", redirect);
+          return redirect;
+        })
+        .orElseGet(() -> entityNotFoundRedirect(
+            redirectAttributes, "Dns Entry", "todo", name, PAGE_AND_ZONE_NAME_PARAMS,
+            "dns-zone-entries"));
   }
 
 }
