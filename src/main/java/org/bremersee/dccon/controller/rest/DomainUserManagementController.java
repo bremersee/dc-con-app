@@ -20,7 +20,6 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
-import org.bremersee.dccon.api.DomainUserManagementApi;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.DomainUserPage;
@@ -54,7 +53,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 public class DomainUserManagementController {// implements DomainUserManagementApi {
 
-  DomainUserManagementApi n;
   public static final String ADMIN_ROLE_NAME = "ROLE_ADMIN"; // TODO
 
   private final DomainUserService domainUserService;

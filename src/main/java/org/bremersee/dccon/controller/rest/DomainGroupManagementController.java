@@ -17,7 +17,6 @@
 package org.bremersee.dccon.controller.rest;
 
 import jakarta.validation.Valid;
-import org.bremersee.dccon.api.DomainGroupManagementApi;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupPage;
 import org.bremersee.dccon.service.DomainGroupService;

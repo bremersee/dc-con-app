@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.controller.rest;
 
-import org.bremersee.dccon.api.DomainManagementApi;
 import org.bremersee.dccon.model.Password;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.service.DomainService;
