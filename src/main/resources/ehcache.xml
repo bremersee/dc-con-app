@@ -41,6 +41,9 @@
   <cache alias="dnsEntryListCache" uses-template="default">
   </cache>
 
+  <cache alias="dhcpLeasesCache" uses-template="default">
+  </cache>
+
   <!--
   <cache alias="dhcp-leases-by-name" uses-template="dhcp-leases-template">
   </cache>

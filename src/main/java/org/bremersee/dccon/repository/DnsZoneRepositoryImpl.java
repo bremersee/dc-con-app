@@ -61,8 +61,7 @@ public class DnsZoneRepositoryImpl extends AbstractRepository implements DnsZone
 
   @Cacheable(value = "dnsZoneListCache", key = "{ #p0 }")
   @Override
-  public List<String> getDnsZoneNames(DnsZoneType type) {
-    DnsZoneType zoneType = requireNonNullElse(type, DnsZoneType.PRIMARY);
+  public List<String> getDnsZoneNames(DnsZoneType zoneType) {
     log.debug("findDnsZoneNames({})", zoneType);
     List<String> commands = List.of(
         getProperties().getCli().getSambaToolBinary(),

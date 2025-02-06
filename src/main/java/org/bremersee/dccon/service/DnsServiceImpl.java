@@ -29,10 +29,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.ErrorCode;
+import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsEntryType;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
+import org.bremersee.dccon.repository.DhcpRepository;
 import org.bremersee.dccon.repository.DnsEntryRepository;
 import org.bremersee.dccon.repository.DnsZoneRepository;
 import org.bremersee.pagebuilder.PageBuilder;
@@ -40,6 +42,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -53,21 +56,24 @@ import org.springframework.stereotype.Service;
 public class DnsServiceImpl implements DnsService, ErrorCode {
 
   private static final Pattern IPV4_PATTERN = Pattern.compile(
-      "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)" +
-          "(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
+      "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
   private final DnsZoneRepository dnsZoneRepository;
 
   private final DnsEntryRepository dnsEntryRepository;
+
+  private final DhcpRepository dhcpRepository;
 
   private final CacheManager cacheManager;
 
   public DnsServiceImpl(
       DnsZoneRepository dnsZoneRepository,
       DnsEntryRepository dnsEntryRepository,
+      DhcpRepository dhcpRepository,
       CacheManager cacheManager) {
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsEntryRepository = dnsEntryRepository;
+    this.dhcpRepository = dhcpRepository;
     this.cacheManager = cacheManager;
   }
 
@@ -146,6 +152,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
         .filter(entry -> DnsEntryType.ALL.equals(type) || entry.getType().equals(type));
   }
 
+  @Override
   public Optional<DnsEntry> findDnsEntry(DnsEntry dnsEntry) {
     return findDnsEntries(dnsEntry.getZoneName(), dnsEntry.getName(), dnsEntry.getType())
         .filter(entry -> entry.getType().getToSambaToolValueTransformer()
@@ -153,6 +160,20 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
                 .getToSambaToolValueTransformer().apply(dnsEntry.getValue())))
         .findFirst()
         .map(dnsEntryRepository::addCommonAttributes);
+  }
+
+  @Override
+  public Optional<DnsEntry> findDnsEntry(String ipAddress) {
+    PageRequest pageRequest = PageRequest.of(0, Integer.MAX_VALUE);
+    String query = "";
+    return getDnsZoneNames(DnsZoneType.PRIMARY).stream()
+        .map(this::getDnsZone)
+        .filter(zone -> !zone.getReverseZone())
+        .flatMap(zone -> getDnsEntries(zone.getName(), pageRequest, query).stream())
+        .filter(dnsEntry -> dnsEntry.getValue().equalsIgnoreCase(ipAddress)
+            && (DnsEntryType.A.equals(dnsEntry.getType())
+            || DnsEntryType.AAAA.equals(dnsEntry.getType())))
+        .findFirst();
   }
 
   @Override
@@ -245,6 +266,48 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   @Override
   public void deleteDnsEntry(DnsEntry entry) {
     dnsEntryRepository.deleteDnsEntry(entry);
+  }
+
+
+  private boolean isQueryResult(DhcpLease lease, String query) {
+    if (isEmpty(lease)) {
+      return false;
+    }
+    if (isEmpty(query)) {
+      return true;
+    }
+    String q = query.toLowerCase();
+    StringTokenizer st = new StringTokenizer(q, " ");
+    while (st.hasMoreTokens()) {
+      String token = st.nextToken();
+      if (nonNull(lease.getIp()) && lease.getIp().toLowerCase().contains(token)) {
+        return true;
+      }
+      if (nonNull(lease.getHostname()) && lease.getHostname().toLowerCase().contains(token)) {
+        return true;
+      }
+      if (nonNull(lease.getMac()) && lease.getMac().toLowerCase().contains(token)) {
+        return true;
+      }
+      if (nonNull(lease.getManufacturer())
+          && lease.getManufacturer().toLowerCase().contains(token)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public Page<DhcpLease> getDhcpLeases(Pageable pageable, String query) {
+
+    if (isEmpty(query) && pageable.getPageNumber() == 0) {
+      Optional.ofNullable(cacheManager.getCache("dhcpLeasesCache"))
+          .ifPresent(Cache::invalidate);
+    }
+    return new PageBuilder<DhcpLease, DhcpLease>()
+        .sourceEntries(dhcpRepository.findAll())
+        .sourceFilter(dhcpLease -> isQueryResult(dhcpLease, query))
+        .pageable(applyDefaults(pageable, null, true, null))
+        .build();
   }
 
 }

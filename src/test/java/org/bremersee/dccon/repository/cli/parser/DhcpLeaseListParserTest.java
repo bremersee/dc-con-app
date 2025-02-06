@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.repository.cli;
+package org.bremersee.dccon.repository.cli.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
 import org.junit.jupiter.api.Test;
 
 /**

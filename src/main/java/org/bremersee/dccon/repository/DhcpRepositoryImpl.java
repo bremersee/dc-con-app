@@ -25,8 +25,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
-import org.ldaptive.dn.Dn;
+import org.bremersee.dccon.repository.cli.parser.DhcpLeaseParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
@@ -68,18 +67,19 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
     }
   }
 
+  @Cacheable(cacheNames = "dhcpLeasesCache")
   @Override
   public List<DhcpLease> findAll() {
-    return find(true);
+    return find(false);
   }
 
-  @Cacheable(cacheNames = "dhcp-leases-by-ip")
+  //@Cacheable(cacheNames = "dhcp-leases-by-ip")
   @Override
   public Map<String, DhcpLease> findActiveByIp() {
     return findActiveMap(true);
   }
 
-  @Cacheable(cacheNames = "dhcp-leases-by-name")
+  //@Cacheable(cacheNames = "dhcp-leases-by-name")
   @Override
   public Map<String, DhcpLease> findActiveByHostName() {
     return findActiveMap(false);
@@ -106,7 +106,7 @@ public class DhcpRepositoryImpl extends AbstractDhcpRepository implements DhcpRe
    * @return the dhcp leases
    */
   List<DhcpLease> find(boolean all) {
-    List<String> commands = new ArrayList<>(3);
+    List<String> commands = new ArrayList<>();
     commands.add(getProperties().getCli().getDhcpLeaseListBinary());
     commands.add("--parsable");
     if (all) {

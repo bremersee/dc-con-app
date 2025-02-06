@@ -65,10 +65,10 @@ public class DnsEntryEditController extends AbstractEditController implements Pa
 
   @GetMapping(path = "/admin/dns-entry-edit")
   public String displayEditDnsEntry(
-      @RequestParam(name = ZONE_NAME, required = false) String zoneName,
-      @RequestParam(name = "name", required = false) String name,
-      @RequestParam(name = "type", required = false) DnsEntryType type,
-      @RequestParam(name = "value", required = false) String value,
+      @RequestParam(name = ZONE_NAME) String zoneName,
+      @RequestParam(name = "name") String name,
+      @RequestParam(name = "type") DnsEntryType type,
+      @RequestParam(name = "value") String value,
       ModelMap model,
       RedirectAttributes redirectAttributes) {
 

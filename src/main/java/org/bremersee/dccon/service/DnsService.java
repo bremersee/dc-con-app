@@ -21,6 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
 import org.bremersee.dccon.model.DnsZone;
 import org.bremersee.dccon.model.DnsZoneType;
@@ -51,10 +52,12 @@ public interface DnsService {
 
   Page<DnsEntry> getDnsEntries(
       @NotEmpty String zoneName,
-      Pageable pageable,
+      @NotNull Pageable pageable,
       String query);
 
   Optional<DnsEntry> findDnsEntry(@NotNull DnsEntry dnsEntry);
+
+  Optional<DnsEntry> findDnsEntry(@NotEmpty String ipAddress);
 
   Optional<DnsEntry> findReverseDnsEntry(@NotNull DnsEntry dnsEntry);
 
@@ -65,5 +68,7 @@ public interface DnsService {
   void updateDnsEntry(@NotNull DnsEntry entry, @NotEmpty String newValue);
 
   void deleteDnsEntry(@NotNull DnsEntry entry);
+
+  Page<DhcpLease> getDhcpLeases(@NotNull Pageable pageable, String query);
 
 }

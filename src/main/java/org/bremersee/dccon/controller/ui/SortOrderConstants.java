@@ -33,4 +33,6 @@ public interface SortOrderConstants extends ControllerConstants {
 
   String DNS_ENTRY_SORT = "name;type;value";
 
+  String DHCP_LEASE_SORT = "ip";
+
 }

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.repository.cli;
+package org.bremersee.dccon.repository.cli.parser;
+
+import static java.util.Objects.requireNonNullElse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,14 +28,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.DhcpLease;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 import org.springframework.util.StringUtils;
 
 /**
- * The dhcp lease list parser parses the response of the linux command line tool {@code dhcp-lease-list}.
+ * The dhcp lease list parser parses the response of the linux command line tool
+ * {@code dhcp-lease-list}.
  *
  * <p>A response of {@code dhcp-lease-list} looks like this:
  * <pre>
@@ -92,10 +97,12 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
   /**
    * Default parser dhcp leases parser.
    *
-   * <p>The unknown host converter converts the unknown host name {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into
+   * <p>The unknown host converter converts the unknown host name
+   * {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into
    * another host name. The parameters of the function are MAC and IP.
    *
-   * @param unknownHostConverter the unknown host converter; first parameter is mac, second is ip
+   * @param unknownHostConverter the unknown host converter; first parameter is mac, second is
+   *     ip
    * @return the dhcp leases parser
    */
   static DhcpLeaseParser defaultParser(BiFunction<String, String, String> unknownHostConverter) {
@@ -120,15 +127,16 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
     /**
      * Instantiates a new default parser.
      *
-     * <p>The unknown host converter converts the unknown host name {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into
-     * another host name. The parameters of the function are MAC and IP.
+     * <p>The unknown host converter converts the unknown host name
+     * {@link DhcpLeaseParser#HOSTNAME_UNKNOWN} into another host name. The parameters of the
+     * function are MAC and IP.
      *
      * @param unknownHostConverter the unknown host converter
      */
     Default(
         BiFunction<String, String, String> unknownHostConverter) {
-      this.unknownHostConverter = Objects.requireNonNullElseGet(unknownHostConverter,
-          () -> (mac, ip) -> "dhcp-" + ip.replace(".", "-"));
+      this.unknownHostConverter = requireNonNullElse(unknownHostConverter,
+          DefaultUnknownHostConverter.getInstance());
     }
 
     @Override
@@ -143,7 +151,7 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
         return parseDhcpLeaseList(reader);
 
       } catch (IOException e) {
-        log.error("Parsing dhcp lease list failed:\n" + output + "\n", e);
+        log.error("Parsing dhcp lease list failed:\n{}\n", output, e);
         return Collections.emptyList();
       }
     }
@@ -204,7 +212,26 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
       // As of https://linux.die.net/man/5/dhcpd.leases the time zone is always UTC
       return OffsetDateTime.of(localDateTime, ZoneOffset.UTC);
     }
+  }
 
+  class DefaultUnknownHostConverter implements BiFunction<String, String, String> {
+
+    private static final DefaultUnknownHostConverter INSTANCE = new DefaultUnknownHostConverter();
+
+    static DefaultUnknownHostConverter getInstance() {
+      return INSTANCE;
+    }
+
+    private static final Pattern IPV4_PATTERN = Pattern.compile(
+        "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
+
+    @Override
+    public String apply(String mac, String ip) {
+      if (IPV4_PATTERN.matcher(ip).matches()) {
+        return "dhcp-" + ip.replace('.', '-');
+      }
+      return HOSTNAME_UNKNOWN;
+    }
   }
 
 }

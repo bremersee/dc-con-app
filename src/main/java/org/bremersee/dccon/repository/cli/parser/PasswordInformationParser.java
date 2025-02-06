@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bremersee.dccon.repository.cli;
+package org.bremersee.dccon.repository.cli.parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +23,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.dccon.model.PasswordComplexity;
 import org.bremersee.dccon.model.PasswordInformation;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
+import org.bremersee.dccon.repository.cli.CommandExecutorResponseParser;
 
 /**
  * The password information parser.

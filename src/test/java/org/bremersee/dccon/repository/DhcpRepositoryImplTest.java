@@ -26,7 +26,7 @@ import java.util.Map;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.repository.cli.CommandExecutorResponse;
-import org.bremersee.dccon.repository.cli.DhcpLeaseParser;
+import org.bremersee.dccon.repository.cli.parser.DhcpLeaseParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

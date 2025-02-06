@@ -26,7 +26,7 @@ import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.PasswordInformation;
 import org.bremersee.dccon.repository.automock.MockComponent;
 import org.bremersee.dccon.repository.automock.ProfileRequired;
-import org.bremersee.dccon.repository.cli.PasswordInformationParser;
+import org.bremersee.dccon.repository.cli.parser.PasswordInformationParser;
 import org.bremersee.dccon.repository.cli.parser.HostNameResponseParser;
 import org.bremersee.ldaptive.LdaptiveTemplate;
 import org.ldaptive.LdapAttribute;
