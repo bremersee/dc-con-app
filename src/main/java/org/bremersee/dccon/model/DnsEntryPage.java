@@ -17,7 +17,7 @@
 package org.bremersee.dccon.model;
 
 import java.util.List;
-import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.comparator.model.SortOrder;
 import org.bremersee.pagebuilder.model.JsonPageDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -38,7 +38,7 @@ public class DnsEntryPage extends JsonPageDto<DnsEntry> {
   }
 
   public DnsEntryPage(List<? extends DnsEntry> content, int number, int size,
-      long totalElements, SortOrders sort) {
+      long totalElements, SortOrder sort) {
     super(content, number, size, totalElements, sort);
   }
 

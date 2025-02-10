@@ -22,6 +22,10 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.bremersee.comparator.ComparatorBuilder;
+import org.bremersee.comparator.model.SortOrderItem;
+import org.bremersee.comparator.model.SortOrderItem.CaseHandling;
+import org.bremersee.comparator.model.SortOrderItem.Direction;
+import org.bremersee.comparator.model.SortOrderItem.NullHandling;
 import org.bremersee.dccon.model.CommonAttributes;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupPage;
@@ -110,7 +114,7 @@ class DomainGroupManagementControllerTest {
         .isEqualTo(HttpStatus.OK);
     actual = response.getBody();
     expectedContent.sort(ComparatorBuilder.newInstance()
-        .add("distinguished", false, true, false)
+        .add(new SortOrderItem("distinguished", Direction.DESC, CaseHandling.INSENSITIVE, NullHandling.NATIVE))
         .build());
     softly.assertThat(actual)
         .isNotNull()

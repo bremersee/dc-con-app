@@ -23,7 +23,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.comparator.model.SortOrder;
 import org.bremersee.pagebuilder.model.JsonPageDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -63,7 +63,7 @@ public class DhcpLeasePage extends JsonPageDto<DhcpLease> {
    * @param sort the sort
    */
   public DhcpLeasePage(List<? extends DhcpLease> content, int number, int size, long totalElements,
-      SortOrders sort) {
+      SortOrder sort) {
     super(content, number, size, totalElements, sort);
   }
 

@@ -17,7 +17,7 @@
 package org.bremersee.dccon.controller.ui.admin;
 
 import lombok.Getter;
-import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.comparator.model.SortOrder;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
@@ -47,6 +47,8 @@ import org.springframework.web.servlet.LocaleResolver;
 public class GroupsController extends AbstractController
     implements PageableComponent, OrganizationalUnitNavigationComponent {
 
+  private final SortMapper sortMapper;
+
   private final DomainGroupService domainGroupService;
 
   @Getter
@@ -55,9 +57,11 @@ public class GroupsController extends AbstractController
   public GroupsController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
+      SortMapper sortMapper,
       DomainGroupService domainGroupService,
       OrganizationalUnitService organizationalUnitService) {
     super(domainControllerProperties, localeResolver);
+    this.sortMapper = sortMapper;
     this.domainGroupService = domainGroupService;
     this.organizationalUnitService = organizationalUnitService;
   }
@@ -81,7 +85,7 @@ public class GroupsController extends AbstractController
   public String displayGroups(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = GROUP_SORT) SortOrders sort,
+      @RequestParam(name = SORT, defaultValue = GROUP_SORT) SortOrder sort,
       @RequestParam(name = QUERY, required = false) String query,
       @RequestParam(name = OU, required = false) Dn ou,
       @RequestParam(name = SCOPE, required = false) TreeSearchScope scope,
@@ -89,7 +93,7 @@ public class GroupsController extends AbstractController
 
     OrganizationalUnitDropdown ouDropdown = getOrganizationalUnitDropdown(ou, scope);
     addOrganizationalUnitDropdown(model, ouDropdown);
-    Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
+    Pageable pageable = PageRequest.of(page, size, sortMapper.toSort(sort));
     DomainGroupPage groupPage = new DomainGroupPage(domainGroupService.getGroups(
         pageable, query, ou, ouDropdown.getSelectedScope()));
     model.addAttribute("groups", groupPage);

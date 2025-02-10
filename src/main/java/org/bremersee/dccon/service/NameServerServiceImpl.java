@@ -51,6 +51,8 @@ import org.springframework.util.ObjectUtils;
 @Slf4j
 public class NameServerServiceImpl implements NameServerService {
 
+  private final SortMapper sortMapper;
+
   private final DhcpRepository dhcpRepository;
 
   private final DnsZoneRepositoryObsolete dnsZoneRepository;
@@ -75,9 +77,11 @@ public class NameServerServiceImpl implements NameServerService {
    */
   public NameServerServiceImpl(
       final DomainControllerProperties properties,
+      SortMapper sortMapper,
       final DhcpRepository dhcpRepository,
       final DnsZoneRepositoryObsolete dnsZoneRepository,
       final DnsNodeRepository dnsNodeRepository) {
+    this.sortMapper = sortMapper;
     this.dhcpRepository = dhcpRepository;
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsNodeRepository = dnsNodeRepository;
@@ -111,7 +115,7 @@ public class NameServerServiceImpl implements NameServerService {
     }
     return new PageBuilder<DnsNode, DnsNode>()
         .sourceEntries(dnsNodes)
-        .pageable(SortMapper.applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 
@@ -133,7 +137,7 @@ public class NameServerServiceImpl implements NameServerService {
     }
     return new PageBuilder<DhcpLease, DhcpLease>()
         .sourceEntries(leases)
-        .pageable(SortMapper.applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 

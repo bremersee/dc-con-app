@@ -1,8 +1,7 @@
 package org.bremersee.dccon.service;
 
-import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
-
 import java.util.Optional;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.model.DomainComputer;
 import org.bremersee.dccon.model.TreeSearchScope;
 import org.bremersee.dccon.repository.DomainComputerRepository;
@@ -15,9 +14,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class DomainComputerServiceImpl implements DomainComputerService {
 
+  private final SortMapper sortMapper;
+
   private final DomainComputerRepository domainComputerRepository;
 
-  public DomainComputerServiceImpl(DomainComputerRepository domainComputerRepository) {
+  public DomainComputerServiceImpl(
+      SortMapper sortMapper,
+      DomainComputerRepository domainComputerRepository) {
+    this.sortMapper = sortMapper;
     this.domainComputerRepository = domainComputerRepository;
   }
 
@@ -30,7 +34,7 @@ public class DomainComputerServiceImpl implements DomainComputerService {
 
     return new PageBuilder<DomainComputer, DomainComputer>()
         .sourceEntries(domainComputerRepository.findAll(query, ou, searchScope))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 

@@ -11,6 +11,11 @@ bremersee:
       include-stack-trace: true
       include-cause: true
 
+  comparator:
+    converter:
+      argument-separator: ","
+      chain-separator: ";"
+
   domain-controller:
     company-name: ${COMPANY_NAME:bremersee.org}
     company-url: ${COMPANY_URL:https://bremersee.org}

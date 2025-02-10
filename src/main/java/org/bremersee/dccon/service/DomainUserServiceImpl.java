@@ -16,12 +16,10 @@
 
 package org.bremersee.dccon.service;
 
-import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
-
 import java.io.InputStream;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.bremersee.dccon.config.DomainControllerProperties;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.model.AvatarDefault;
 import org.bremersee.dccon.model.DomainUser;
 import org.bremersee.dccon.model.Password;
@@ -45,6 +43,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainUserServiceImpl implements DomainUserService {
 
+  private final SortMapper sortMapper;
+
   private final DomainUserRepository domainUserRepository;
 
   private final EmailService emailService;
@@ -54,15 +54,17 @@ public class DomainUserServiceImpl implements DomainUserService {
   /**
    * Instantiates a new domain user service.
    *
-   * @param properties the properties
+   * @param sortMapper the sort mapper
+   * @param domainUserValidator the domain user validator
    * @param domainUserRepository the domain user repository
    * @param emailService the email service
    */
   public DomainUserServiceImpl(
-      DomainControllerProperties properties,
+      SortMapper sortMapper,
       DomainUserValidator domainUserValidator,
       DomainUserRepository domainUserRepository,
       EmailService emailService) {
+    this.sortMapper = sortMapper;
     this.domainUserRepository = domainUserRepository;
     this.emailService = emailService;
     this.domainUserValidator = domainUserValidator;
@@ -93,7 +95,7 @@ public class DomainUserServiceImpl implements DomainUserService {
   public Page<DomainUser> getUsers(Pageable pageable, String query, Dn ou, TreeSearchScope scope) {
     return new PageBuilder<DomainUser, DomainUser>()
         .sourceEntries(domainUserRepository.findAll(query, ou, scope))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 

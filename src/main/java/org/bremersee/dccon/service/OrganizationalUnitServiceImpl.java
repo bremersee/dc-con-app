@@ -16,7 +16,6 @@
 
 package org.bremersee.dccon.service;
 
-import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.time.OffsetDateTime;
@@ -25,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.OrganizationalUnit;
@@ -46,6 +46,8 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   private final DomainControllerProperties properties;
 
+  private final SortMapper sortMapper;
+
   private final OrganizationalUnitRepository repository;
 
   @Getter
@@ -53,8 +55,10 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
 
   public OrganizationalUnitServiceImpl(
       DomainControllerProperties properties,
+      SortMapper sortMapper,
       OrganizationalUnitRepository repository) {
     this.properties = properties;
+    this.sortMapper = sortMapper;
     this.repository = repository;
     this.base = new OrganizationalUnit();
     this.base.setDn(properties.getBaseDn());
@@ -78,13 +82,13 @@ public class OrganizationalUnitServiceImpl implements OrganizationalUnitService,
     if (isEmpty(query) || query.length() <= 2) {
       return new PageBuilder<OrganizationalUnit, OrganizationalUnit>()
           .sourceEntries(ous)
-          .pageable(applyDefaults(pageable, null, true, null))
+          .pageable(sortMapper.applyDefaults(pageable, null, true, null))
           .build();
     }
     String lowerQuery = query.toLowerCase();
     return new PageBuilder<OrganizationalUnit, OrganizationalUnit>()
         .sourceEntries(ous.filter(ou -> contains(ou, lowerQuery)))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 

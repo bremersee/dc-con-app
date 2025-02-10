@@ -18,6 +18,7 @@ package org.bremersee.dccon.controller.ui.admin;
 
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
+import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
 import org.bremersee.dccon.controller.ui.components.PageableComponent;
 import org.bremersee.dccon.model.OrganizationUnitPage;
 import org.bremersee.dccon.service.OrganizationalUnitService;
@@ -37,7 +38,7 @@ import org.springframework.web.servlet.LocaleResolver;
  */
 @Controller
 public class OrganizationUnitsController extends AbstractController
-    implements PageableComponent {
+    implements PageableComponent, CurrentPageNameProvider {
 
   private final OrganizationalUnitService organizationalUnitService;
 
@@ -54,8 +55,13 @@ public class OrganizationUnitsController extends AbstractController
     return OU_SORT;
   }
 
+  @Override
+  public String getCurrentPageName() {
+    return "organizational-units";
+  }
+
   @RequestMapping(path = "/admin/organizational-units", method = RequestMethod.GET)
-  public String displayGroups(
+  public String displayOrganizationalUnits(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
       @RequestParam(name = QUERY, required = false) String query,
@@ -65,7 +71,6 @@ public class OrganizationUnitsController extends AbstractController
     OrganizationUnitPage ouPage = new OrganizationUnitPage(
         organizationalUnitService.getOrganizationalUnits(pageable, query));
     model.put("ouPage", ouPage);
-    model.put("currentPage", "organizational-units");
     return "admin/organizational-units";
   }
 

@@ -16,11 +16,10 @@
 
 package org.bremersee.dccon.service;
 
-import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
-
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.model.DomainGroup;
 import org.bremersee.dccon.model.DomainGroupMembers;
@@ -43,6 +42,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DomainGroupServiceImpl implements DomainGroupService {
 
+  private final SortMapper sortMapper;
+
   private final DomainGroupRepository domainGroupRepository;
 
   private DomainGroupValidator domainGroupValidator;
@@ -50,13 +51,13 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   /**
    * Instantiates a new domain group service.
    *
-   * @param properties the properties
    * @param domainGroupRepository the domain group repository
    */
   public DomainGroupServiceImpl(
-      final DomainControllerProperties properties,
+      final SortMapper sortMapper,
       final DomainGroupValidator domainGroupValidator,
       final DomainGroupRepository domainGroupRepository) {
+    this.sortMapper = sortMapper;
     this.domainGroupRepository = domainGroupRepository;
     this.domainGroupValidator = domainGroupValidator;
   }
@@ -78,7 +79,7 @@ public class DomainGroupServiceImpl implements DomainGroupService {
   public Page<DomainGroup> getGroups(Pageable pageable, String query, Dn ou, TreeSearchScope scope) {
     return new PageBuilder<DomainGroup, DomainGroup>()
         .sourceEntries(domainGroupRepository.findAll(query, ou, scope))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 

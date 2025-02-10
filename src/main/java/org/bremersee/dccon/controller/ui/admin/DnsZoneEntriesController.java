@@ -16,7 +16,7 @@
 
 package org.bremersee.dccon.controller.ui.admin;
 
-import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.comparator.model.SortOrder;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.CurrentPageNameProvider;
@@ -41,13 +41,17 @@ import org.springframework.web.servlet.LocaleResolver;
 public class DnsZoneEntriesController extends AbstractEditController
     implements CurrentPageNameProvider, PageableComponent, DnsZoneTypeComponent {
 
+  private final SortMapper sortMapper;
+
   private final DnsService dnsService;
 
   public DnsZoneEntriesController(
       DomainControllerProperties properties,
       LocaleResolver localeResolver,
+      SortMapper sortMapper,
       DnsService dnsService) {
     super(properties, localeResolver);
+    this.sortMapper = sortMapper;
     this.dnsService = dnsService;
   }
 
@@ -66,11 +70,11 @@ public class DnsZoneEntriesController extends AbstractEditController
       @RequestParam(name = ZONE_NAME) String zoneName,
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = DNS_ENTRY_SORT) SortOrders sort,
+      @RequestParam(name = SORT, defaultValue = DNS_ENTRY_SORT) SortOrder sort,
       @RequestParam(name = QUERY, required = false) String query,
       ModelMap model) {
 
-    Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
+    Pageable pageable = PageRequest.of(page, size, sortMapper.toSort(sort));
     DnsEntryPage dnsEntryPage = new DnsEntryPage(
         dnsService.getDnsEntries(zoneName, pageable, query));
     model.addAttribute("dnsEntryPage", dnsEntryPage);

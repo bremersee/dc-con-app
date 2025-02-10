@@ -21,7 +21,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.bremersee.comparator.model.SortOrders;
+import org.bremersee.comparator.model.SortOrder;
 import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.config.DomainControllerProperties;
 import org.bremersee.dccon.controller.ui.AbstractController;
@@ -51,13 +51,17 @@ import org.springframework.web.servlet.LocaleResolver;
 public class DhcpLeasesController extends AbstractController
     implements PageableComponent, CurrentPageNameProvider, RedirectComponent {
 
+  private final SortMapper sortMapper;
+
   private final DnsService dnsService;
 
   public DhcpLeasesController(
       DomainControllerProperties domainControllerProperties,
       LocaleResolver localeResolver,
+      SortMapper sortMapper,
       DnsService dnsService) {
     super(domainControllerProperties, localeResolver);
+    this.sortMapper = sortMapper;
     this.dnsService = dnsService;
   }
 
@@ -75,7 +79,7 @@ public class DhcpLeasesController extends AbstractController
   public String displayDhcpLeases(
       @RequestParam(name = PAGE, defaultValue = PAGE_DEFAULT) int page,
       @RequestParam(name = SIZE, defaultValue = SIZE_DEFAULT) int size,
-      @RequestParam(name = SORT, defaultValue = DHCP_LEASE_SORT) SortOrders sort,
+      @RequestParam(name = SORT, defaultValue = DHCP_LEASE_SORT) SortOrder sort,
       @RequestParam(name = QUERY, required = false) String query,
       @RequestParam(name = "ip", required = false) String ipAddress,
       ModelMap model) {
@@ -97,7 +101,7 @@ public class DhcpLeasesController extends AbstractController
           return getRedirectUri("dns-entry-edit", PAGE_AND_DNS_ENTRY_PARAMS, parameters);
         })
         .orElseGet(() -> {
-          Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sort));
+          Pageable pageable = PageRequest.of(page, size, sortMapper.toSort(sort));
           DhcpLeasePage dhcpLeasePage = new DhcpLeasePage(
               dnsService.getDhcpLeases(pageable, query));
           model.addAttribute("dhcpLeasePage", dhcpLeasePage);

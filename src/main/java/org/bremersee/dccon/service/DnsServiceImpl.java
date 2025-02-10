@@ -18,16 +18,19 @@ package org.bremersee.dccon.service;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.bremersee.comparator.spring.mapper.SortMapper.applyDefaults;
+import static java.util.Objects.requireNonNullElse;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.bremersee.comparator.ValueComparator;
+import org.bremersee.comparator.spring.mapper.SortMapper;
 import org.bremersee.dccon.ErrorCode;
 import org.bremersee.dccon.model.DhcpLease;
 import org.bremersee.dccon.model.DnsEntry;
@@ -58,6 +61,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   private static final Pattern IPV4_PATTERN = Pattern.compile(
       "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
+  private final SortMapper sortMapper;
+
   private final DnsZoneRepository dnsZoneRepository;
 
   private final DnsEntryRepository dnsEntryRepository;
@@ -67,10 +72,12 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
   private final CacheManager cacheManager;
 
   public DnsServiceImpl(
+      SortMapper sortMapper,
       DnsZoneRepository dnsZoneRepository,
       DnsEntryRepository dnsEntryRepository,
       DhcpRepository dhcpRepository,
       CacheManager cacheManager) {
+    this.sortMapper = sortMapper;
     this.dnsZoneRepository = dnsZoneRepository;
     this.dnsEntryRepository = dnsEntryRepository;
     this.dhcpRepository = dhcpRepository;
@@ -141,7 +148,17 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     return new PageBuilder<DnsEntry, DnsEntry>()
         .sourceEntries(dnsEntryRepository.getDnsEntries(zoneName))
         .sourceFilter(dnsEntry -> isQueryResult(dnsEntry, query))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
+        .targetSortFn(sortOrderItem -> {
+          if ("name".equalsIgnoreCase(sortOrderItem.getField())) {
+            return (Comparator<DnsEntry>) (o1, o2) -> {
+              String n1 = requireNonNullElse(o1.getName(), "").toLowerCase();
+              String n2 = requireNonNullElse(o2.getName(), "").toLowerCase();
+              return String.format("%255s", n1).compareTo(String.format("%255s", n2));
+            };
+          }
+          return new ValueComparator(sortOrderItem);
+        })
         .build();
   }
 
@@ -306,7 +323,7 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
     return new PageBuilder<DhcpLease, DhcpLease>()
         .sourceEntries(dhcpRepository.findAll())
         .sourceFilter(dhcpLease -> isQueryResult(dhcpLease, query))
-        .pageable(applyDefaults(pageable, null, true, null))
+        .pageable(sortMapper.applyDefaults(pageable, null, true, null))
         .build();
   }
 
