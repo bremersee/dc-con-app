@@ -131,6 +131,9 @@ public class WebSecurityConfiguration {
 
         .httpBasic(customizer -> customizer.realmName(appName))
 
+        .formLogin(form -> form
+            .loginPage("/login"))
+
         /*
         .formLogin(form -> form
             .loginPage("/login")

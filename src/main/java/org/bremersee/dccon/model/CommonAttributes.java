@@ -28,12 +28,12 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import org.ldaptive.dn.Dn;
 
 /**
@@ -46,6 +46,7 @@ import org.ldaptive.dn.Dn;
 @ToString(exclude = {"dn"})
 @EqualsAndHashCode(exclude = {"dn"})
 @NoArgsConstructor
+@SuperBuilder(toBuilder = true)
 public abstract class CommonAttributes implements Serializable, DistinguishedNameProvider {
 
   @Serial
