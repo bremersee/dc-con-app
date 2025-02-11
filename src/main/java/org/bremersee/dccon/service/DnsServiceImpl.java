@@ -154,6 +154,14 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
             return (Comparator<DnsEntry>) (o1, o2) -> {
               String n1 = requireNonNullElse(o1.getName(), "").toLowerCase();
               String n2 = requireNonNullElse(o2.getName(), "").toLowerCase();
+              if (DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n1)
+                  && !DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n2)) {
+                return -1;
+              }
+              if (!DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n1)
+                  && DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n2)) {
+                return 1;
+              }
               return String.format("%255s", n1).compareTo(String.format("%255s", n2));
             };
           }
