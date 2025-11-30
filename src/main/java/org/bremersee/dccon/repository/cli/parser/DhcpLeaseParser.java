@@ -83,7 +83,7 @@ public interface DhcpLeaseParser extends CommandExecutorResponseParser<List<Dhcp
   /**
    * The constant MANUFACTURER.
    */
-  String MANUFACTURER = " MANUFACTURER ";
+  String MANUFACTURER = " MANUFACTURER";
 
   /**
    * Default parser dhcp leases parser.

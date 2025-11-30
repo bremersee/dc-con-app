@@ -7,8 +7,7 @@
   <parent>
     <groupId>org.bremersee</groupId>
     <artifactId>common-service-parent</artifactId>
-    <!-- <version>3.1.2</version> -->
-    <version>3.2.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,7 +25,6 @@
 
     <start-class>org.bremersee.dccon.Application</start-class>
 
-    <lib-bundle.version>0.2.0-SNAPSHOT</lib-bundle.version>
     <dc-con-api-spring.version>3.0.0-SNAPSHOT</dc-con-api-spring.version>
 
     <!--suppress UnresolvedMavenProperty -->
@@ -94,18 +92,6 @@
       </url>
     </site>
   </distributionManagement>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.bremersee</groupId>
-        <artifactId>lib-bundle</artifactId>
-        <version>${lib-bundle.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <!--

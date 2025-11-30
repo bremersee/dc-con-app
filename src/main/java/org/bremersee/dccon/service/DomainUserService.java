@@ -124,6 +124,11 @@ public interface DomainUserService {
       String newPassword,
       boolean sendEmail);
 
+  void updateUserPassword(
+      @NotEmpty String userName,
+      @NotNull String oldPassword,
+      @NotNull String newPassword);
+
   /**
    * Update user password.
    *

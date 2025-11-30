@@ -152,8 +152,8 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
         .targetSortFn(sortOrderItem -> {
           if ("name".equalsIgnoreCase(sortOrderItem.getField())) {
             return (Comparator<DnsEntry>) (o1, o2) -> {
-              String n1 = requireNonNullElse(o1.getName(), "").toLowerCase();
-              String n2 = requireNonNullElse(o2.getName(), "").toLowerCase();
+              String n1 = requireNonNullElse(o1.getName(), "");
+              String n2 = requireNonNullElse(o2.getName(), "");
               if (DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n1)
                   && !DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n2)) {
                 return -1;
@@ -162,7 +162,38 @@ public class DnsServiceImpl implements DnsService, ErrorCode {
                   && DnsEntryRepository.ZONE_ENTRIES_NODE_NAME.equals(n2)) {
                 return 1;
               }
-              return String.format("%255s", n1).compareTo(String.format("%255s", n2));
+              if (DnsEntryType.PTR.equals(o1.getType()) && DnsEntryType.PTR.equals(o2.getType())) {
+                return String.format("%255s", n1).compareToIgnoreCase(String.format("%255s", n2));
+              }
+              return n1.compareToIgnoreCase(n2);
+            };
+          }
+          if ("value".equalsIgnoreCase(sortOrderItem.getField())) {
+            return (Comparator<DnsEntry>) (o1, o2) -> {
+              String n1 = requireNonNullElse(o1.getValue(), "");
+              String n2 = requireNonNullElse(o2.getValue(), "");
+              if (IPV4_PATTERN.matcher(n1).matches() && IPV4_PATTERN.matcher(n2).matches()) {
+                String[] a1 = n1.split("\\.");
+                String[] a2 = n2.split("\\.");
+                if (a1.length == a2.length) {
+                  for (int i = a1.length - 1; i >= 0; i--) {
+                    try {
+                      int i1 = Integer.parseInt(a1[i]);
+                      int i2 = Integer.parseInt(a2[i]);
+                      int r = Integer.compare(i1, i2);
+                      if (r != 0) {
+                        return r;
+                      }
+                    } catch (NumberFormatException e) {
+                      int r = a1[i].compareToIgnoreCase(a2[i]);
+                      if (r != 0) {
+                        return r;
+                      }
+                    }
+                  }
+                }
+              }
+              return n1.compareToIgnoreCase(n2);
             };
           }
           return new ValueComparator(sortOrderItem);

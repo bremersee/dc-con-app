@@ -196,7 +196,8 @@ spring:
 bremersee:
   domain-controller:
     cli:
-      samba-tool-credentials-options: "--simple-bind-dn='${bremersee.ldaptive.bind-dn}' --password='${bremersee.ldaptive.bind-credentials}'"
+      samba-tool-credentials-options: "-UAdministrator --password='${bremersee.ldaptive.bind-credentials}'"
+      #samba-tool-credentials-options: "--simple-bind-dn='${bremersee.ldaptive.bind-dn}' --password='${bremersee.ldaptive.bind-credentials}'"
       ssh:
         using-ssh: true
         ssh-command: ${SSH_COMMAND:ssh root@dc1}

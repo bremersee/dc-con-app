@@ -21,12 +21,12 @@ abstract class AbstractDnsEntryValidator implements CommandExecutorResponseValid
         || !response.getStdout().toLowerCase().contains(getExpectedResponse().toLowerCase())) {
 
       String error;
-      if (nonNull(response.getStdout())) {
+      if (nonNull(response.getStderr())) {
         int index = response.getStderr().indexOf('\n');
         if (index > 0) {
-          error = ": " + response.getStdout().substring(0, index);
+          error = ": " + response.getStderr().substring(0, index);
         } else {
-          error = ": " + response.getStdout();
+          error = ": " + response.getStderr();
         }
       } else {
         error = ".";

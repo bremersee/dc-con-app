@@ -17,6 +17,7 @@
 package org.bremersee.dccon.service;
 
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bremersee.comparator.spring.mapper.SortMapper;
@@ -28,10 +29,14 @@ import org.bremersee.dccon.repository.DomainUserRepository;
 import org.bremersee.dccon.repository.RepositoryMock;
 import org.bremersee.dccon.service.validator.DomainUserValidator;
 import org.bremersee.pagebuilder.PageBuilder;
+import org.bremersee.spring.security.ldaptive.authentication.LdaptiveAuthenticationManager;
 import org.ldaptive.dn.Dn;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 /**
@@ -47,39 +52,26 @@ public class DomainUserServiceImpl implements DomainUserService {
 
   private final DomainUserRepository domainUserRepository;
 
+  private AuthenticationManager authenticationManager;
+
   private final EmailService emailService;
 
   private DomainUserValidator domainUserValidator;
 
-  /**
-   * Instantiates a new domain user service.
-   *
-   * @param sortMapper the sort mapper
-   * @param domainUserValidator the domain user validator
-   * @param domainUserRepository the domain user repository
-   * @param emailService the email service
-   */
   public DomainUserServiceImpl(
       SortMapper sortMapper,
-      DomainUserValidator domainUserValidator,
       DomainUserRepository domainUserRepository,
-      EmailService emailService) {
+      EmailService emailService,
+      DomainUserValidator domainUserValidator) {
     this.sortMapper = sortMapper;
     this.domainUserRepository = domainUserRepository;
     this.emailService = emailService;
     this.domainUserValidator = domainUserValidator;
   }
 
-  /**
-   * Sets domain user validator.
-   *
-   * @param domainUserValidator the domain user validator
-   */
   @Autowired(required = false)
-  public void setDomainUserValidator(DomainUserValidator domainUserValidator) {
-    if (domainUserValidator != null) {
-      this.domainUserValidator = domainUserValidator;
-    }
+  public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+    this.authenticationManager = authenticationManager;
   }
 
   @Override
@@ -158,6 +150,18 @@ public class DomainUserServiceImpl implements DomainUserService {
           userName,
           newPassword);
     }
+  }
+
+  @Override
+  public void updateUserPassword(
+      String userName,
+      String oldPassword,
+      String newPassword) {
+
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+        userName, oldPassword);
+    authenticationManager.authenticate(authToken);
+    domainUserRepository.savePassword(userName, newPassword);
   }
 
   @Override
